@@ -1,0 +1,616 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Jul  3 17:28:48 2020
+
+@author: jelmer
+"""
+import math
+import random
+import numpy as np
+import nltk
+from scipy import stats
+from typing import Dict, List, Tuple
+
+def parse_yes_no(input_text: str) -> str:
+    return input_text.lower() in ['ja','jaa','yes','yeah','yep','sure','positive','1','true']
+
+def negation_counter(tokens: List[str]) -> int:
+    count: int = 0
+    for token in tokens:
+        if token in ['geen', 'niet']:   # or token[:2] == 'on':
+            count += 1
+    return count
+
+def fancy_names(stat: str) -> str:
+    fancynames: Dict[str,str] = {'means':'gemiddelde', 'stds':'standaarddeviatie','ns':'n', 'df':'het aantal vrijheidsgraden',
+                  'T':'T', 'p':'p', 'ss':'sum of squares','ms':'mean squares','F':'F','r2':'de correlatie'}
+    return fancynames[stat]
+
+def scan_yesno(input_text : str) -> [bool, bool]:
+    return False, parse_yes_no(input_text)
+
+def scan_protocol_choice(input_text : str):
+    if input_text not in ['1','2','3','4','5','6']:
+        return True, 'Sorry, voer uw antwoord opnieuw in in de vorm van een cijfer.'
+    else:
+        return False, 'Ok, hier is je opgave:<br>'
+
+def scan_indep(text :str, solution :Dict) -> [bool, str]:
+    #Determine which of the necessary elements are present in the answer
+    text: List[str] = nltk.word_tokenize(text.lower())
+    scorepoints: Dict[str, bool] = {'var': False, 'measure': False, 'level1': False, 'level2': False}
+    pairs = [(solution['independent'],'var'),(solution['independent_measure'],'measure'),(solution['levels'][0],'level1'),(solution['levels'][1],'level2')]
+    for pair in pairs:
+        if pair[0] in text:
+            scorepoints[pair[1]] = True
+        if pair[1] == 'measure':
+            if pair[0][:-1] + 've' in text:
+                scorepoints[pair[1]] = True
+    
+    #Determine the response of the chatbot
+    if False in list(scorepoints.values()):
+        output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
+        if not scorepoints['var']:
+            output += ' -de juiste onafhankelijke variabele<br>'
+        if not scorepoints['measure']:
+            output += ' -het juiste meetniveau<br>'
+        if scorepoints['level1'] != scorepoints['level2']:
+            output += ' -één niveau van de onafhankelijke variabele<br>'
+        elif not scorepoints['level1'] and not scorepoints['level2']:
+            output += ' -beide niveaus van de onafhankelijke variabele<br>'
+        return True, output
+    else:
+        return False, 'Mooi, deze beschrijving klopt. '
+    
+def scan_indep_anova(text: str, solution: Dict, num: int=1, between_subject=True) -> [bool, str]:
+    #Determine which of the necessary elements are present in the answer
+    text: List[str] = nltk.word_tokenize(text.lower())
+    n_key: str = 'independent' if num == 1 else 'independent' + str(num)
+    l_key: str = 'levels' if num == 1 else 'levels' + str(num)
+    scorepoints: Dict = {'factor': 'factor' in text, 
+                   'domain': 'between-subject' in text if between_subject else 'within-subject' in text, 
+                   'name': solution[n_key] in text, 
+                   'levels': [level in text for level in solution[l_key]]}
+    
+    #Determine the response of the chatbot
+    if False in list(scorepoints.values()):
+        output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
+        if not scorepoints['factor']:
+            output += ' -de stelling dat deze variabele een factor is<br>'
+        if not scorepoints['domain']:
+            output += ' -het domein van de variabele<br>'
+        if not scorepoints['name']:
+            output += ' -de naam van de variabele<br>'
+        if True not in scorepoints['levels']:
+            output += ' -alle niveaus van de onafhankelijke variabele<br>'
+        elif False in scorepoints['levels']:
+            output += ' -enkele niveaus van de onafhankelijke variabele<br>'
+        return True, output
+    else:
+        return False, 'Mooi, deze beschrijving klopt. '
+
+def scan_dep(text: str, solution: Dict) -> [bool, str]:
+    #Determine which of the necessary elements are present in the answer
+    text: List[str] = nltk.word_tokenize(text.lower())
+    scorepoints: Dict[str, bool] = {'var': False, 'measure': False}
+    pairs: List[Tuple[str,str]] = [(solution['dependent'],'var'),(solution['dependent_measure'],'measure')]
+    for pair in pairs:
+        if pair[0] in text:
+            scorepoints[pair[1]] = True
+        if pair[1] == 'measure':
+            if pair[0][:-1] + 've' in text:
+                scorepoints[pair[1]] = True
+    
+    #Determine the response of the chatbot
+    if False in list(scorepoints.values()):
+        output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
+        if not scorepoints['var']:
+            output += ' -de juiste afhankelijke variabele<br>'
+        if not scorepoints['measure']:
+            output += ' -het juiste meetniveau<br>'
+        return True, output
+    else:
+        return False, 'Mooi, deze beschrijving klopt. '
+    
+def scan_dep_anova(text: str, solution: Dict) -> [bool, str]:
+    text: str = nltk.word_tokenize(text.lower())
+    scorepoints: Dict[str, bool] = {'name': solution['dependent'] in text, 
+                   'measure': solution['dependent_measure'] in text, 
+                   'n_measure': all([x in text for x in [str(solution['dependent_n_measure']),'metingen','per','persoon']])}
+    
+    #Determine the response of the chatbot
+    if False in list(scorepoints.values()):
+        output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
+        if not scorepoints['name']:
+            output += ' -de naam van de afhankelijke variabele<br>'
+        if not scorepoints['measure']:
+            output += ' -het juiste meetniveau<br>'
+        if not scorepoints['n_measure']:
+            output += ' -het juiste aantal metingen per persoon'
+        return True, output
+    else:
+        return False, 'Mooi, deze beschrijving klopt. '
+    
+def scan_control(text: str, solution: Dict) -> [bool, str]:
+    tokens: List[str] = nltk.word_tokenize(text.lower())
+    control: float = solution['control']
+    n_negations: int = negation_counter(tokens)
+    scorepoints: Dict[str, bool] = {'experiment': 'experiment' in tokens, 
+                     'negations': control != bool(n_negations % 2) if 'experiment' in tokens else True}
+    
+    #Determine the response of the chatbot
+    if False in list(scorepoints.values()):
+        output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
+        if not scorepoints['experiment']:
+            output += ' -de stelling of het onderzoek een experiment is of niet<br>'
+        if not scorepoints['negations'] and control:
+            output += ' -je hebt ten onrechte gesteld dat het onderzoek geen experiment is<br>'
+        if not scorepoints['negations'] and not control:
+            output += ' -je hebt ten onrechte gesteld dat het onderzoek een experiment is<br>'
+        return True, output
+    else:
+        return False, 'Mooi, deze beschrijving klopt. '
+
+def scan_numbers(text: str, stat: str, solution: Dict, margin: float) -> [bool, str]:
+    tokens: List[str] = nltk.word_tokenize(text.lower())
+    numbers: List[float] = []
+    for t in tokens:
+        try:
+            numbers.append(float(t))
+        except ValueError:
+            pass
+            
+    #Compare the received numbers to the gold standards from the solution
+    goldnums: List[float] = solution[stat]
+    nums: List[List[float]] = [[n for n in numbers if goldnums[i] - margin < n and n < goldnums[i] + margin] for i in range(len(goldnums))]
+    scorepoints: List[int] = [1 if num !=[] else 0 for num in nums] #Binary representation for each number in the solution whether it is present in the answer
+    
+    #Determine the response of the chatbot
+    if 0 in scorepoints:
+        output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
+        if 1 not in scorepoints:
+            output += ' -Alle juiste waarden van ' + fancy_names(stat) + ' ontbreken<br>'
+        else:
+            output += ' -Een juiste waarde van ' + fancy_names(stat) + ' ontbreekt<br>'
+        return True, output
+    else:
+        return False, 'Mooi, deze cijfers kloppen. '
+    
+def scan_number(text: str, stat: str, solution: Dict, margin: float=0.01) -> [bool, str]:
+    tokens: List[str] = nltk.word_tokenize(text.lower())
+    numbers: List[float] = []
+    for t in tokens:
+        try:
+            numbers.append(float(t))
+        except ValueError:
+            pass
+            
+    #Compare the received numbers to the gold standard from the solution
+    gold: float = solution[stat][0]
+    num: List[bool] = [n for n in numbers if gold - margin < n and n < gold + margin]
+    scorepoints: Dict[str, bool] = {'num': num != []} #TODO: Add a check whether the order of the numbers is right
+    
+    #Determine the response of the chatbot
+    fancynames: Dict[str, str] = {'df':'het aantal vrijheidsgraden', 'raw_effect': 'het ruwe effect',
+                  'T':'T', 'p':'p', 'relative_effect': 'het relatieve effect', 'F': 'F','r2':'de correlatie','ns':'N'}
+    if False in list(scorepoints.values()):
+        output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
+        if not scorepoints['num']:
+            output += ' -De juiste waarde van ' + fancynames[stat] + '<br>'
+        return True, output
+    else:
+        return False, 'Mooi, dit cijfer klopt. '
+
+def scan_hypothesis(text: str, solution: Dict, num: int=1) -> [bool, str]:
+    #Remove potential dots to avoid confusion
+    l_key: str = 'levels' if num < 2 else 'levels' + str(num)    
+    tokens: List[str] = text.lower().replace('.','').split() #nltk.word_tokenize(text.lower())
+    sol_tokens: List[str] = solution['null'].split() #nltk.word_tokenize(solution['null'])
+    avgs: List[str] = ['mu(' + avg + ')' for avg in solution[l_key]]
+    mus: List[bool] = [avg in tokens for avg in avgs]
+    scorepoints: Dict[str, bool] = {'H0': 'h0:' in tokens,
+                   'sign': sol_tokens[2] in tokens, 
+                   'order': True}
+    
+    #if '==' not in sol_tokens:
+    #    if scorepoints['H0'] and scorepoints['sign'] and False not in mus:
+    #        for i in range(4):
+    #            if not tokens[i] == sol_tokens[i]:
+    #                scorepoints['order'] = False
+    
+    if False in list(scorepoints.values()) + mus:
+        output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
+        if not scorepoints['H0']:
+            output += ' -het "H0:" teken<br>'
+        if not scorepoints['sign']:
+            output += ' -het juiste vergelijkingsteken<br>'
+        if not scorepoints['order']:
+            output += ' -de symbolen staan niet in de juiste volgorde<br>'
+        if True not in mus:
+            output += ' -de populatiegemiddelden<br>'
+        elif False in mus:
+            output += ' -ten minste één van de populatiegemiddelden<br>'
+        return True, output
+    else:
+        return False, 'Mooi, deze hypothese klopt. '
+
+#Interaction hypothesis for two-way ANOVA
+def scan_hypothesis_anova(text: str, solution: Dict) -> [bool, str]:
+    #TODO: ADD INTERACTION HYPOTHESIS\
+    tokens: List[str] = nltk.word_tokenize(text.lower())
+    scorepoints: Dict[str, bool] = {'negation': negation_counter(tokens) == 1,
+                   'interaction': 'interactie' in tokens, 
+                   'pop': 'populatie' in tokens}
+    
+    if False in list(scorepoints.values()):
+        output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
+        if not scorepoints['negation']:
+            output += ' -niet gesteld dat er geen interactie is<br>'
+        if not scorepoints['interaction']:
+            output += ' -er wordt niet aangegeven dat het om interactie gaat<br>'
+        if not scorepoints['pop']:
+            output += ' -er wordt niet aangegeven dat het om de populatie gaat<br>'
+        return True, output
+    else:
+        return False, 'Mooi, deze hypothese klopt.'
+
+#Between-person hypothesis for within-subject ANOVA
+def scan_hypothesis_rmanova(text: str, solution: Dict) -> [bool, str]:
+    #TODO: ADD INTERACTION HYPOTHESIS
+    tokens: List[str] = nltk.word_tokenize(text.lower())
+    scorepoints: Dict[str, bool] = {'score': 'score' in tokens or 'scores' in tokens,
+                   'equal': 'gelijk' in tokens or 'gelijke' in tokens,
+                   'jacked': 'opgevoerde' in tokens, 
+                   'pop': 'populatie' in tokens}
+    
+    if False in list(scorepoints.values()):
+        output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
+        if not scorepoints['score']:
+            output += ' -niet gesteld dat het om de scores van de personen gaat<br>'
+        if not scorepoints['equal']:
+            output += ' -niet gesteld dat de personen gelijke scores hebben<br>'
+        if not scorepoints['jacked']:
+            output += ' -niet gesteld dat het om de opgevoerde metingen gaat<br>'
+        if not scorepoints['pop']:
+            output += ' -er wordt niet aangegeven dat het om de populatie gaat<br>'
+        return True, output
+    else:
+        return False, 'Mooi, deze hypothese klopt.'
+    
+def scan_decision(text: str, assignment: Dict, solution: Dict, anova: bool=False, num: int=1) -> [bool, str]:
+    #Define important variables necessary for checking the answer's components
+    tokens: List[str] = nltk.word_tokenize(text.lower().replace('.',''))
+    sol_tokens: List[str] = nltk.word_tokenize(solution['decision'])
+    l_key: str = 'levels' + str(num) if num > 1 else 'levels'
+    levels: List[str] = solution[l_key]
+    if not anova: #T-test
+        sterkte = solution['relative_effect'][0]
+        sterkte_tekst: str = 'sterk' if sterkte > 0.8 else 'matig' if sterkte > 0.5 else 'klein'
+    else:#One-way ANOVA
+        if not assignment['two_way'] and not 'jackedmeans' in list(assignment['data'].keys()):
+            sterkte: float = solution['r2'][0]
+        else: #Two-way and within-subject ANOVA
+            sterkte: float = solution['r2'][num]
+        sterkte_tekst: str = 'sterk' if sterkte > 0.2 else 'matig' if sterkte > 0.1 else 'klein'
+    rejected: bool = 'verworpen' in sol_tokens #Whether the null hypothesis is rejected
+    comparison: str = 'ongelijk' if anova else ['ongelijk','groter','kleiner'][assignment['hypothesis']]
+    ordersigns: List[str] = [levels[0], comparison, levels[1]] #A number of words which should appear in the answer sequentially
+    if not rejected:
+        ordersigns.insert(1, 'niet')
+    
+    #Detect whether the right phrases appear in the decision
+    mus: List[bool] = [x in tokens for x in levels]
+    scorepoints: Dict[str, bool] = {'H0': 'nulhypothese' in tokens or 'h0' in tokens,
+                   'p': 'p' in tokens or 'p-waarde' in tokens,
+                   'dpresent': 'verworpen' in tokens or 'behouden' in tokens,
+                   'decision1': 'verworpen' in tokens if rejected and ('nulhypothese' in tokens or 'h0' in tokens) else True,
+                   'decision2': 'behouden' in tokens if not rejected and ('nulhypothese' in tokens or 'h0' in tokens) else True,
+                   'effect': 'effect' in tokens if rejected else True,
+                   'strength': sterkte_tekst in tokens if rejected else True,
+                   'sign': (comparison in tokens) or ('gelijk' in tokens and comparison == 'ongelijk' and not rejected), 
+                   'negation': negation_counter(tokens) == 0 if rejected else negation_counter(tokens) == 1 or (negation_counter(tokens) == 0 and 'gelijk' in tokens),
+                   'pop': 'populatiegemiddelden' in tokens or 'populatiegemiddelde' in tokens or ('populatie' in tokens and ('gemiddelde' in tokens or 'gemiddeld' in tokens)),
+                   'order': True}
+    
+    if False in list(scorepoints.values()) or False in mus:
+        output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
+        if not scorepoints['H0']:
+            output += ' -de nulhypothese wordt niet genoemd<br>'
+        if not scorepoints['p']:
+            output += ' -de p-waarde wordt niet genoemd<br>'
+        if not scorepoints['dpresent']:
+            output += ' -er wordt niet genoemd of H0 wordt behouden of verworpen<br>'
+        if not scorepoints['decision1']:
+            output += ' -ten onrechte gesteld dat de nulhypothese wordt behouden als deze wordt verworpen<br>'
+        if not scorepoints['decision2']:
+            output += ' -ten onrechte gesteld dat de nulhypothese wordt verworpen als deze wordt behouden<br>'            
+        if not scorepoints['effect']:
+            output += ' -het effect wordt niet genoemd<br>'
+        if not scorepoints['strength']: 
+            output += ' -de sterkte wordt niet juist genoemd<br>'
+        if not True in mus:
+            output += ' -de populatiegemiddelden worden niet genoemd<br>'
+        elif False in mus:
+            output += ' -ten minste één van de populatiegemiddelden mist<br>'
+        if not scorepoints['sign']:
+            output += ' -hoe de populatiegemiddelden zich tot elkaar verhouden<br>'
+        if not scorepoints['negation']:
+            output += ' -ten onrechte een negatie toegevoegd of weggelaten bij de alternatieve hypothese<br>'
+        if not scorepoints['pop']:
+            output += ' -niet gesteld dat de beslissing over populatiegemiddelden gaat<br>'
+        if not scorepoints['order']:
+            output += ' -de populatiegemiddelden staan niet in de juiste volgorde<br>'
+        return True, output
+    else:
+        return False, 'Mooi, deze beslissing klopt. '    
+
+def scan_decision_anova(text: str, assignment: Dict, solution: Dict) -> [bool, str]:
+    #Define important variables necessary for checking the answer's components
+    tokens: List[str] = nltk.word_tokenize(text.lower().replace('.',''))
+    rejected = solution['p'][2] < 0.05
+    sterkte: float = solution['r2'][2]
+    sterkte_tekst: str = 'sterk' if sterkte > 0.2 else 'matig' if sterkte > 0.1 else 'klein'
+    
+    #Detect whether the right phrases appear in the decision
+    scorepoints: Dict[str, bool] = {'H0': 'nulhypothese' in tokens or 'h0' in tokens,
+                   'p': 'p' in tokens or 'p-waarde' in tokens,
+                   'dpresent': 'verworpen' in tokens or 'behouden' in tokens,
+                   'decision1': 'verworpen' in tokens if rejected and ('nulhypothese' in tokens or 'h0' in tokens) else True,
+                   'decision2': 'behouden' in tokens if not rejected and ('nulhypothese' in tokens or 'h0' in tokens) else True,
+                   'interact': 'interactie' in tokens if rejected else True,
+                   'strength': sterkte_tekst in tokens if rejected else True,
+                   'negation': negation_counter(tokens) == 0 if rejected else negation_counter(tokens) == 1 or (negation_counter(tokens) == 0 and 'gelijk' in tokens),
+                   'pop': 'populatiegemiddelde' in tokens or ('populatie' in tokens and ('gemiddelde' in tokens or 'gemiddeld' in tokens)),
+                   'indy1': solution['independent'] in tokens,
+                   'indy2': solution['independent2'] in tokens
+                   }
+    
+    if False in list(scorepoints.values()) or False in mus:
+        output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
+        if not scorepoints['H0']:
+            output += ' -de nulhypothese wordt niet genoemd<br>'
+        if not scorepoints['p']:
+            output += ' -de p-waarde wordt niet genoemd<br>'
+        if not scorepoints['dpresent']:
+            output += ' -er wordt niet genoemd of H0 wordt behouden of verworpen<br>'
+        if not scorepoints['decision1']:
+            output += ' -ten onrechte gesteld dat de nulhypothese wordt behouden als deze wordt verworpen<br>'
+        if not scorepoints['decision2']:
+            output += ' -ten onrechte gesteld dat de nulhypothese wordt verworpen als deze wordt behouden<br>'            
+        if not scorepoints['interact']:
+            output += ' -er wordt niet genoemd dat het om interactie gaat<br>'
+        if not scorepoints['strength']: 
+            output += ' -de sterkte wordt niet juist genoemd<br>'
+        if not scorepoints['negation']:
+            output += ' -ten onrechte een negatie toegevoegd of weggelaten bij de alternatieve hypothese<br>'
+        if not scorepoints['pop']:
+            output += ' -niet gesteld dat de beslissing over populatiegemiddelden gaat<br>'
+        if not scorepoints['indy1'] and not scorepoints['indy2']:
+            output += ' -de onafhankelijke variabelen worden niet genoemd<br>'
+        elif not scorepoints['indy1'] or not scorepoints['indy2']:
+            output += ' -één van de onafhankelijke variabelen wordt niet genoemd<br>'
+        return True, output
+    else:
+        return False, 'Mooi, deze beslissing klopt. '    
+
+def scan_decision_rmanova(text: str, assignment: Dict, solution: Dict) -> [bool, str]:
+    tokens: List[str] = nltk.word_tokenize(text.lower().replace('.',''))
+    rejected = solution['p'][1] < 0.05
+    sterkte: float = solution['r2'][1]
+    sterkte_tekst: str = 'sterk' if sterkte > 0.2 else 'matig' if sterkte > 0.1 else 'klein'
+    
+    #Detect whether the right phrases appear in the decision
+    scorepoints: Dict[str, bool] = {'H0': 'nulhypothese' in tokens or 'h0' in tokens,
+                   'p': 'p' in tokens or 'p-waarde' in tokens,
+                   'dpresent': 'verworpen' in tokens or 'behouden' in tokens,
+                   'decision1': 'verworpen' in tokens if rejected and ('nulhypothese' in tokens or 'h0' in tokens) else True,
+                   'decision2': 'behouden' in tokens if not rejected and ('nulhypothese' in tokens or 'h0' in tokens) else True,
+                   'strength': sterkte_tekst in tokens if rejected else True,
+                   'negation': negation_counter(tokens) == 0 if rejected else negation_counter(tokens) == 1 or (negation_counter(tokens) == 0 and 'gelijk' in tokens),
+                   'jacked': 'opgevoerde' in tokens, 
+                   'pop': 'populatie' in tokens
+                   }
+    if False in list(scorepoints.values()):
+        output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
+        if not scorepoints['H0']:
+            output += ' -de nulhypothese wordt niet genoemd<br>'
+        if not scorepoints['p']:
+            output += ' -de p-waarde wordt niet genoemd<br>'
+        if not scorepoints['dpresent']:
+            output += ' -er wordt niet genoemd of H0 wordt behouden of verworpen<br>'
+        if not scorepoints['decision1']:
+            output += ' -ten onrechte gesteld dat de nulhypothese wordt behouden als deze wordt verworpen<br>'
+        if not scorepoints['decision2']:
+            output += ' -ten onrechte gesteld dat de nulhypothese wordt verworpen als deze wordt behouden<br>'
+        if not scorepoints['strength']: 
+            output += ' -de sterkte wordt niet juist genoemd<br>'
+        if not scorepoints['negation']:
+            output += ' -ten onrechte een negatie toegevoegd of weggelaten bij de alternatieve hypothese<br>'
+        if not scorepoints['pop']:
+            output += ' -niet gesteld dat de beslissing over populatiegemiddelden gaat<br>'
+        if not scorepoints['jacked']:
+            output += ' -niet gesteld dat het om de opgevoerde metingen gaat<br>'
+        if not scorepoints['pop']:
+            output += ' -er wordt niet aangegeven dat het om de populatie gaat<br>'
+        return True, output
+    else:
+        return False, 'Mooi, deze beslissing klopt. '  
+    
+
+def scan_interpretation(text: str, solution: Dict, anova: bool=False, num: int=1) -> [bool, str]:
+    tokens: List[str] = nltk.word_tokenize(text.lower().replace('.',''))
+    #sol_tokens = solution['interpretation'].split()
+    i_key: str = 'independent' + str(num) if num > 1 else 'independent'
+    control: bool = solution['control']
+    scorepoints: Dict[str, bool] = {'cause': 'oorzaak' in tokens or 'veroorzaakt' in tokens,
+                   'effect': 'effect' in tokens, #if control else True,
+                   'unk': 'onbekend' in tokens if not control else True,
+                   'difference': 'verschil' in tokens, #if control else True,
+                   'var': solution[i_key] in tokens, #if control else True, 
+                   'prim': 'primaire verklaring' in text if not control else True,
+                   'alt': 'alternatieve verklaring' in text if not control else True
+                   }
+    
+    if False in list(scorepoints.values()):
+        output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
+        if not scorepoints['cause']:
+            output += ' -er wordt niet gesproken over de oorzaak van het effect<br>'
+        if not scorepoints['effect']:
+            output += ' -het effect wordt niet genoemd<br>'
+        if not scorepoints['unk']:
+            output += ' -niet gesteld dat de oorzaak van het effect onbekend is<br>'
+        if not scorepoints['difference']:
+            output += ' -er wordt niet genoemd dat er een verschil is tussen de twee niveaus van de onafhankelijke variabele<br>'
+        if not scorepoints['var']:
+            output += ' -de onafhankelijke variabele wordt niet genoemd<br>'
+        if not scorepoints['prim']:
+            output += ' -de primaire verklaring wordt niet genoemd<br>'
+        if not scorepoints['alt']:
+            output += ' -de alternatieve verlaring wordt niet genoemd<br>'
+        return True, output
+    else:
+        return False, 'Mooi, deze causale interpretatie klopt. '
+    
+def scan_interpretation_anova(text: str, solution: Dict) -> [bool, str]:
+    tokens: List[str] = nltk.word_tokenize(text.lower().replace('.',''))
+    #sol_tokens = solution['interpretation'].split()
+    control: bool = solution['control']
+    scorepoints: Dict[str, bool] = {'interact': 'interactie' in tokens,
+                   'unk': 'onbekend' in tokens if not control else True,
+                   'difference': 'verschil' in tokens, #if control else True,
+                   'prim': 'primaire verklaring' in text if not control else True,
+                   'alt': 'alternatieve verklaring' in text if not control else True,
+                   'indy1': solution['independent'] in tokens,
+                   'indy2': solution['independent'] in tokens
+                   }
+    
+    if False in list(scorepoints.values()):
+        output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
+        if not scorepoints['interact']:
+            output += ' -er niet gesteld dat deze causale interpretatie over interactie gaat<br>'
+        if not scorepoints['unk']:
+            output += ' -niet gesteld dat de oorzaak van het effect onbekend is<br>'
+        if not scorepoints['indy1'] and not scorepoints['indy2']:
+            output += ' -de onafhankelijke variabelen worden niet genoemd<br>'
+        elif not scorepoints['indy1'] or not scorepoints['indy2']:
+            output += ' -één van de onafhankelijke variabelen wordt niet genoemd<br>'
+        return True, output
+    else:
+        return False, 'Mooi, deze causale interpretatie klopt. '
+    
+def sim(gold_numbers :List, numbers :List, margin:float) -> True: #Return true if there is a similar number to num in the given list/float/integer in the solution
+    return [gold_numbers[i] - margin < numbers[i] and numbers[i] < gold_numbers[i] + margin for i in range(len(gold_numbers))]
+
+def scan_table_ttest(textfields: Dict, solution: Dict, margin:float=0.01) -> [bool, str]:
+    if type(textfields) != dict:
+        exit()
+        print('Wrong data sent to table scan function')
+    #Set all empty fields to zero to prevent type errors
+    for t in list(textfields.items()):
+        if textfields[t[0]] == '':
+            textfields[t[0]] = 0.0
+        else:
+            textfields[t[0]] = float(textfields[t[0]]) if textfields[t[0]].replace('.','').isdigit() else 0.0
+            
+    #Compare input with gold standard
+    meaninput :List = [textfields['mean' + str(i+1)] for i in range(len(solution['means']))]
+    stdinput :List  = [textfields['std' + str(i+1)] for i in range(len(solution['stds']))]
+    ninput :List  = [textfields['n' + str(i+1)] for i in range(len(solution['ns']))]
+    scorepoints :Dict = {'mean': sim(solution['means'], meaninput, margin),
+                   'std': sim(solution['stds'], stdinput, margin),
+                   'n': sim(solution['ns'], ninput, margin),
+                   }
+    if False in [all(x) for x in list(scorepoints.values())]:
+        output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
+        if not any(scorepoints['mean']):
+            output += ' -alle juiste gemiddelden<br>'
+        elif not all(scorepoints['mean']):    
+            output += ' -ten minste één juiste gemiddelde<br>'
+        if not any(scorepoints['std']):
+            output += ' -alle juiste standaardeviaties<br>'
+        elif not all(scorepoints['std']):    
+            output += ' -ten minste één juiste standaardeviatie<br>'
+        if not any(scorepoints['n']):
+            output += ' -alle juiste waarden van N<br>'
+        elif not all(scorepoints['n']):    
+            output += ' -ten minste één juiste waarde van N<br>'
+        return True, output
+    else:
+        return False, 'Mooi, deze tabel klopt. '
+    
+def scan_table(textfields: Dict, solution: Dict, margin:float=0.01) -> [bool, str]:
+    #Convert fieldinput to float
+    if type(textfields) != dict:
+        exit()
+        print('Wrong data sent to table scan function')
+    #Set all empty fields to zero to prevent type errors
+    for t in list(textfields.items()):
+        if textfields[t[0]] == '':
+            textfields[t[0]] = 0.0
+        else:
+            textfields[t[0]] = float(textfields[t[0]]) if textfields[t[0]].replace('.','').isdigit() else 0.0
+    
+    #Compare input with gold standard
+    dfinput :List = [textfields['df' + str(i+1)] for i in range(len(solution['df']))]
+    ssinput :List  = [textfields['ss' + str(i+1)] for i in range(len(solution['ss']))]
+    msinput :List  = [textfields['ms' + str(i+1)] for i in range(len(solution['ms']))]
+    finput :List  = [textfields['f' + str(i+1)] for i in range(len(solution['F']))]
+    pinput :List  = [textfields['p' + str(i+1)] for i in range(len(solution['p']))]
+    r2input :List  = [textfields['r2' + str(i+1)] for i in range(len(solution['r2']))]
+    scorepoints :Dict = {'df': sim(solution['df'], dfinput, margin),
+                   'ss': sim(solution['ss'], ssinput, margin),
+                   'ms': sim(solution['ms'], msinput, margin),
+                   'F':sim(solution['F'], finput, margin),
+                   'p': sim(solution['p'], pinput, margin),
+                   'r2': sim(solution['r2'], r2input, margin)
+                   }
+    if False in [all(x) for x in list(scorepoints.values())]:
+        output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
+        if not any(scorepoints['df']):
+            output += ' -alle juiste waarden van df<br>'
+        elif not all(scorepoints['df']):    
+            output += ' -ten minste één juiste waarde van df<br>'
+        if not any(scorepoints['ss']):
+            output += ' -alle juiste waarden van ss<br>'
+        elif not all(scorepoints['ss']):    
+            output += ' -ten minste één juiste waarde van ss<br>'
+        if not any(scorepoints['ms']):
+            output += ' -alle juiste waarden van ms<br>'
+        elif not all(scorepoints['ms']):    
+            output += ' -ten minste één juiste waarde van ms<br>'
+        if not any(scorepoints['F']):
+            output += ' -alle juiste waarden van F<br>'
+        elif not all(scorepoints['F']):    
+            output += ' -ten minste één juiste waarde van F<br>'
+        if not any(scorepoints['p']):
+            output += ' -alle juiste waarden van p<br>'
+        elif not all(scorepoints['p']):    
+            output += ' -ten minste één juiste waarde van p<br>'
+        if not any(scorepoints['r2']):
+            output += ' -alle juiste waarden van R<sup>2</sup><br>'
+        elif not all(scorepoints['r2']):    
+            output += ' -ten minste één juiste waarde van R<sup>2</sup><br>'
+        return True, output
+    else:
+        return False, 'Mooi, deze tabel klopt. '
+
+#Flexible scan function that checks the given answer for a list of keywords. These are given as a dictionary so
+#that they can be dynamically defined in the protocol function in interface.py where this function is called
+#If the given value for a keyword in keywords is false, this keyword is ignored and will no longer affect
+#the given feedback
+def scan_custom(text: str, solution: Dict, keywords: dict):
+    tokens: List[str] = nltk.word_tokenize(text.lower().replace('.',''))
+    scorepoints = dict([(key, key in tokens) for key in list(keywords.keys()) if keywords[key]])
+    
+    if False in list(scorepoints.values()):
+        output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
+        for key in list(scorepoints.keys()):
+            if not scorepoints[key]:
+                output += ' -de juist waarde van ' + key + ' wordt niet genoemd<br>'
+        
+        return True, output
+    else:
+        return False, 'Mooi, dit antwoord klopt. '
+
+
