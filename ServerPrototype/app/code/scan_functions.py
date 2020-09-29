@@ -30,8 +30,11 @@ def fancy_names(stat: str) -> str:
 def scan_yesno(input_text : str) -> [bool, bool]:
     return False, parse_yes_no(input_text)
 
+def scan_dummy(input_Text : str)  -> [bool, str]:
+    return False, ''
+
 def scan_protocol_choice(input_text : str):
-    if input_text not in ['1','2','3','4','5','6']:
+    if input_text not in ['1','2','3','4','5']:
         return True, 'Sorry, voer uw antwoord opnieuw in in de vorm van een cijfer.'
     else:
         return False, 'Ok, hier is je opgave:<br>'
@@ -113,31 +116,31 @@ def scan_dep(text: str, solution: Dict) -> [bool, str]:
     else:
         return False, 'Mooi, deze beschrijving klopt. '
     
-def scan_dep_anova(text: str, solution: Dict) -> [bool, str]:
-    text: str = nltk.word_tokenize(text.lower())
-    scorepoints: Dict[str, bool] = {'name': solution['dependent'] in text, 
-                   'measure': solution['dependent_measure'] in text, 
-                   'n_measure': all([x in text for x in [str(solution['dependent_n_measure']),'metingen','per','persoon']])}
-    
-    #Determine the response of the chatbot
-    if False in list(scorepoints.values()):
-        output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
-        if not scorepoints['name']:
-            output += ' -de naam van de afhankelijke variabele<br>'
-        if not scorepoints['measure']:
-            output += ' -het juiste meetniveau<br>'
-        if not scorepoints['n_measure']:
-            output += ' -het juiste aantal metingen per persoon'
-        return True, output
-    else:
-        return False, 'Mooi, deze beschrijving klopt. '
-    
 def scan_control(text: str, solution: Dict) -> [bool, str]:
     tokens: List[str] = nltk.word_tokenize(text.lower())
     control: float = solution['control']
     n_negations: int = negation_counter(tokens)
     scorepoints: Dict[str, bool] = {'experiment': 'experiment' in tokens, 
                      'negations': control != bool(n_negations % 2) if 'experiment' in tokens else True}
+    if 'experiment' in tokens or 'experimenteel' in tokens:
+        if control != bool(n_negations % 2):
+            return False, 'Mooi, deze beschrijving klopt.'
+        else:
+            if control:
+                return True, 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>-ten onrechte gesteld dat het onderzoek geen experiment is<br>'
+            else:
+                return True, 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>-ten onrechte gesteld dat het onderzoek een experiment is<br>'
+    elif 'passief-observerend' in tokens or ('passief' in tokens and 'observerend' in tokens):
+        if control == bool(n_negations % 2):
+            return False, 'Mooi, deze beschrijving klopt.'
+        else:
+            if control:
+                return True, 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>-ten onrechte gesteld dat het onderzoek passief-observerend is<br>'
+            else:
+                return True, 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>-ten onrechte gesteld dat het onderzoek niet passief-observerend is<br>'
+    else:
+        return True, 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>-de stelling of het onderzoek een experiment is of niet<br>'
+        
     
     #Determine the response of the chatbot
     if False in list(scorepoints.values()):
@@ -281,7 +284,6 @@ def scan_hypothesis_rmanova(text: str, solution: Dict) -> [bool, str]:
 def scan_decision(text: str, assignment: Dict, solution: Dict, anova: bool=False, num: int=1) -> [bool, str]:
     #Define important variables necessary for checking the answer's components
     tokens: List[str] = nltk.word_tokenize(text.lower().replace('.',''))
-    sol_tokens: List[str] = nltk.word_tokenize(solution['decision'])
     l_key: str = 'levels' + str(num) if num > 1 else 'levels'
     levels: List[str] = solution[l_key]
     if not anova: #T-test
@@ -293,7 +295,7 @@ def scan_decision(text: str, assignment: Dict, solution: Dict, anova: bool=False
         else: #Two-way and within-subject ANOVA
             sterkte: float = solution['r2'][num]
         sterkte_tekst: str = 'sterk' if sterkte > 0.2 else 'matig' if sterkte > 0.1 else 'klein'
-    rejected: bool = 'verworpen' in sol_tokens #Whether the null hypothesis is rejected
+    rejected: bool = solution['p'][num-1] < 0.05 #Whether the null hypothesis is rejected
     comparison: str = 'ongelijk' if anova else ['ongelijk','groter','kleiner'][assignment['hypothesis']]
     ordersigns: List[str] = [levels[0], comparison, levels[1]] #A number of words which should appear in the answer sequentially
     if not rejected:
@@ -303,10 +305,10 @@ def scan_decision(text: str, assignment: Dict, solution: Dict, anova: bool=False
     mus: List[bool] = [x in tokens for x in levels]
     scorepoints: Dict[str, bool] = {'H0': 'nulhypothese' in tokens or 'h0' in tokens,
                    'p': 'p' in tokens or 'p-waarde' in tokens,
-                   'dpresent': 'verworpen' in tokens or 'behouden' in tokens,
-                   'decision1': 'verworpen' in tokens if rejected and ('nulhypothese' in tokens or 'h0' in tokens) else True,
+                   'dpresent': 'verworpen' in tokens or 'behouden' in tokens or 'verwerpen' in tokens,
+                   'decision1': 'verworpen' in tokens or 'verwerpen' in tokens if rejected and ('nulhypothese' in tokens or 'h0' in tokens) else True,
                    'decision2': 'behouden' in tokens if not rejected and ('nulhypothese' in tokens or 'h0' in tokens) else True,
-                   'effect': 'effect' in tokens if rejected else True,
+                   'effect': ('effect' in tokens or 'hoofdeffect' in tokens) if rejected else True,
                    'strength': sterkte_tekst in tokens if rejected else True,
                    'sign': (comparison in tokens) or ('gelijk' in tokens and comparison == 'ongelijk' and not rejected), 
                    'negation': negation_counter(tokens) == 0 if rejected else negation_counter(tokens) == 1 or (negation_counter(tokens) == 0 and 'gelijk' in tokens),
@@ -355,8 +357,8 @@ def scan_decision_anova(text: str, assignment: Dict, solution: Dict) -> [bool, s
     #Detect whether the right phrases appear in the decision
     scorepoints: Dict[str, bool] = {'H0': 'nulhypothese' in tokens or 'h0' in tokens,
                    'p': 'p' in tokens or 'p-waarde' in tokens,
-                   'dpresent': 'verworpen' in tokens or 'behouden' in tokens,
-                   'decision1': 'verworpen' in tokens if rejected and ('nulhypothese' in tokens or 'h0' in tokens) else True,
+                   'dpresent': 'verworpen' in tokens or 'behouden' in tokens or 'verwerpen' in tokens,
+                   'decision1': 'verworpen' in tokens or 'verwerpen' in tokens if rejected and ('nulhypothese' in tokens or 'h0' in tokens) else True,
                    'decision2': 'behouden' in tokens if not rejected and ('nulhypothese' in tokens or 'h0' in tokens) else True,
                    'interact': 'interactie' in tokens if rejected else True,
                    'strength': sterkte_tekst in tokens if rejected else True,
@@ -444,7 +446,7 @@ def scan_interpretation(text: str, solution: Dict, anova: bool=False, num: int=1
     i_key: str = 'independent' + str(num) if num > 1 else 'independent'
     control: bool = solution['control']
     scorepoints: Dict[str, bool] = {'cause': 'oorzaak' in tokens or 'veroorzaakt' in tokens,
-                   'effect': 'effect' in tokens, #if control else True,
+                   'effect': 'effect' in tokens or 'hoofdeffect' in tokens, #if control else True,
                    'unk': 'onbekend' in tokens if not control else True,
                    'difference': 'verschil' in tokens, #if control else True,
                    'var': solution[i_key] in tokens, #if control else True, 

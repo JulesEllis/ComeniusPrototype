@@ -11,8 +11,8 @@ def index():
     controller :OuterController = OuterController()
     if flask.request.method == 'GET':
         controller.reset()
-        return render_template('index.html', display="Hoi wil je dit programma gebruiken in de testmodus of niet?", 
-                               form=form, skip=False, submit_field=0)
+        return render_template('index.html', display="Hoi, je kan in dit programma op twee manieren elementaire rapporten oefenen, namelijke in de standaardmodus en de tentamenmodus. Klik op de submit-knop om verder te gaan", 
+                               form=form, skip=False, submit_field=6)
     elif flask.request.method == 'POST':        
         #Isolate text fields
         textfields:list = [x for x in dir(form) if str(type(form.__getattribute__(x))) == "<class 'wtforms.fields.core.StringField'>"]
@@ -36,7 +36,7 @@ def index():
         if form.prev.data:
             output_text : str = controller.update({'inputtext': 'prev'})
         form.inputtext.data = ""
-        skip :bool = controller.skipable and controller.testmode
+        skip :bool = controller.skipable
         prev :bool = controller.prevable
         submit_field :int = controller.submit_field
         return render_template('index.html', display=output_text, form=form, skip=skip, prev=prev, submit_field=submit_field)

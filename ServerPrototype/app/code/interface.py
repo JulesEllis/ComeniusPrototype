@@ -21,7 +21,6 @@ class OuterController:
     class Controller:
         def __init__(self):
             self.assignments: Assignments = Assignments()
-            self.testmode: bool = False
             self.skipable: bool = False
             self.prevable: bool = False
             self.formmode: bool = False
@@ -30,20 +29,20 @@ class OuterController:
             self.solution : Dict = None
             self.protocol : List = self.intro_protocol()
             self.endstate : bool = False
-            self.submit_field : int = 0
+            self.submit_field : int = 6 #0 for one submit line, 1-5 for tables for each of the different reports and 6 for the intro
             self.table_shape = 0
-            #self.main_protocol()
         
         def reset(self):
             self.assignments: Assignments = Assignments()
-            self.testmode: bool = False
             self.skipable: bool = False
+            self.prevable: bool = False
+            self.formmode: bool = False
             self.index: int = 0
             self.assignment : Dict = None
             self.solution : Dict = None
             self.protocol : List = self.intro_protocol()
             self.endstate : bool = False
-            self.submit_field : int = 0
+            self.submit_field : int = 6
             self.table_shape = 0
         
         def update_form_ttest(self, textfields: Dict) -> List[str]:
@@ -80,7 +79,7 @@ class OuterController:
             if not self.assignment['two_way'] and not 'jackedmeans' in list(self.assignment['data'].keys()):
                 #One-way ANOVA
                 output[0].append(scan_indep_anova(textfields['inputtext1'], self.solution, num=1, between_subject=True)[1])
-                output[1].append(scan_dep_anova(textfields['inputtext2'], self.solution)[1])
+                output[1].append(scan_dep(textfields['inputtext2'], self.solution)[1])
                 output[2].append(scan_control(textfields['inputtext3'], self.solution)[1])
                 output[3].append(scan_hypothesis(textfields['inputtext4'], self.solution, num=1)[1])
                 output[5].append(scan_decision(textfields['inputtext5'], self.assignment, self.solution, anova=True)[1])
@@ -90,7 +89,7 @@ class OuterController:
                 #Two-way ANOVA
                 output[0].append(scan_indep_anova(textfields['inputtext1'], self.solution, num=1, between_subject=True)[1])
                 output[0].append(scan_indep_anova(textfields['inputtext12'], self.solution, num=2, between_subject=True)[1])
-                output[1].append(scan_dep_anova(textfields['inputtext2'], self.solution)[1])
+                output[1].append(scan_dep(textfields['inputtext2'], self.solution)[1])
                 output[2].append(scan_control(textfields['inputtext3'], self.solution)[1])
                 output[3].append(scan_hypothesis(textfields['inputtext4'], self.solution, num=1)[1])
                 output[3].append(scan_hypothesis(textfields['inputtext42'], self.solution, num=2)[1])
@@ -105,7 +104,7 @@ class OuterController:
             elif 'jackedmeans' in list(self.assignment['data'].keys()):
                 #Within-subject ANOVA
                 output[0].append(scan_indep_anova(textfields['inputtext1'], self.solution, num=1, between_subject=True)[1])
-                output[1].append(scan_dep_anova(textfields['inputtext2'], self.solution)[1])
+                output[1].append(scan_dep(textfields['inputtext2'], self.solution)[1])
                 output[2].append(scan_control(textfields['inputtext3'], self.solution)[1])
                 output[3].append(scan_hypothesis(textfields['inputtext4'], self.solution, num=1)[1])
                 output[3].append(scan_hypothesis_rmanova(textfields['inputtext42'], self.solution)[1])
@@ -117,19 +116,18 @@ class OuterController:
         
         def update(self, textfields: Dict) -> str:
             #Retrieve values from form text fields
-            input_text :str = textfields['inputtext']
-            #print('index = ' + str(self.index))
-            #print('submit_field = ' + str(self.submit_field))
-            #print('words: ' + self.protocol[0][0][:3])
+            input_text :str = textfields['inputtext'] if 'inputtext' in list(textfields.keys()) else ''
             
             #Scan the input text fields and and determine the correct response
             x, function, arguments = self.protocol[self.index]
             output_text = ''
-            if self.protocol[self.index][0][:3] == 'Vul' and input_text != 'skip' and input_text != 'prev':
+            if self.protocol[0][0][:3] == 'Hoi':
+                pass
+            elif self.protocol[self.index][0][:3] == 'Vul' and input_text != 'skip' and input_text != 'prev':
                 again, output_text = function(textfields, *arguments)
-            elif (input_text == 'skip' and self.testmode and self.skipable) or (input_text == 'prev' and self.prevable): #Hard-set again to false if the user wants to skip
+            elif (input_text == 'skip' and self.skipable) or (input_text == 'prev' and self.prevable): #Hard-set again to false if the user wants to skip
                 again = False
-            elif self.protocol[self.index][0][:3] == 'Gef' or self.protocol[0][0][:3] == 'Hoi' or self.protocol[self.index][0][:3] == 'Wil':
+            elif self.protocol[self.index][0][:3] == 'Gef' or self.protocol[self.index][0][:3] == 'Wil':
                 again, output = function(input_text, *arguments)
             elif self.protocol[0][0][:3] != 'Vul':
                 again, output_text = function(input_text, *arguments)
@@ -138,9 +136,8 @@ class OuterController:
             if self.endstate: #If end state has been reached
                 return 'Tot ziens!'
             if self.protocol[0][0][:3] == 'Hoi': #If intro protocol:
-                if output:
-                    self.testmode = True
                 self.protocol = self.choice_protocol()
+                self.submit_field = 0
                 return self.protocol[0][0]
             elif self.protocol[self.index][0][:3] == 'Gef':#If return protocol index 0
                 if output:
@@ -199,7 +196,7 @@ class OuterController:
                     self.index -= 1
                     self.submit_field = 0
                     return self.assignments.print_assignment(self.assignment) + '<br>' + self.protocol[self.index][0]
-                elif input_text == 'skip' and self.testmode and self.skipable:
+                elif input_text == 'skip' and self.skipable:
                     self.index += 1
                     self.submit_field = 0
                     return self.assignments.print_assignment(self.assignment) + '<br>' + self.protocol[self.index][0]
@@ -219,7 +216,7 @@ class OuterController:
                     self.prevable = False
                     self.protocol = self.return_protocol()
                     self.index = 0
-                    if input_text == 'skip' and self.testmode:
+                    if input_text == 'skip':
                         return self.protocol[self.index][0]
                     else:
                         return output_text + '<br>' + self.protocol[self.index][0]
@@ -239,7 +236,7 @@ class OuterController:
                     self.index += 1
                     if self.protocol[self.index][0][:3] == 'Vul':
                         self.submit_field = self.table_shape #Signal to the routes class that the next text field has to be a table
-                    if input_text == 'skip' and self.testmode and self.skipable:
+                    if input_text == 'skip' and self.skipable:
                         return self.assignments.print_assignment(self.assignment) + '<br>' + self.protocol[self.index][0]
                     else:    
                         return self.assignments.print_assignment(self.assignment) + '<br>' + output_text + self.protocol[self.index][0]
@@ -247,7 +244,7 @@ class OuterController:
                 print('ERROR SWITCHING PROTOCOLS')
                 
         def intro_protocol(self) -> List[Tuple]:
-            return [('Hoi, wil je dit programma gebruiken in de testmodus of niet?', scan_yesno, [])]
+            return [('Hoi, je kan in dit programma op twee manieren elementaire rapporten oefenen, namelijke in de standaardmodus en de tentamenmodus. Klik op de submit-knop om verder te gaan', scan_dummy, [])]
             
         def choice_protocol(self) -> List[Tuple]:
             return [('Wil je het rapport in tentamenmodus maken?',scan_yesno,[]),
@@ -286,13 +283,7 @@ class OuterController:
                     ('Beschrijf de afhankelijke variabele.',scan_dep,[self.solution] ),
                     ('Beschrijf de mate van controle.',scan_control,[self.solution] ),
                     ('Voer de nulhypothese in, geformuleerd met "H0" en "mu".',scan_hypothesis,[self.solution, 1] ),
-                    ('Vul de tabel hieronder in.',scan_table,[self.solution, 0.02]),
-                    #('Voer de juiste sum-of-squares waarden in voor de "within-group", "between-group" en "totaal" rijen van de ANOVA-tabel',scan_numbers,['ss',self.solution,0.01] ),        
-                    #('Voer de juiste vrijheidsgraden in voor de "within-group", "between-group" en "totaal" rijen van de ANOVA-tabel',scan_numbers,['df',self.solution,0.01] ),        
-                    #('Voer de juiste mean-squares waarden in voor de "within-group" en "between-group" rijen van de ANOVA-tabel',scan_numbers,['ms',self.solution,0.01] ),        
-                    #('Voer de juiste F-waarde in',scan_number,['F',self.solution,0.02] ),        
-                    #('Voer de juiste p-waarde in',scan_number,['p',self.solution,0.02] ),
-                    #('Voer de juiste r2 waarde in voor de "between-group" rij',scan_number,['r2',self.solution,0.01] ),        
+                    ('Vul de tabel hieronder in.',scan_table,[self.solution, 0.02]),     
                     ('Voer de beslissing in', scan_decision,[self.assignment,self.solution, True, 1])]
                 if self.solution['p'][0] < 0.05:
                     output.append(('Voer de causale interpretatie in.',scan_interpretation,[self.solution]))
@@ -304,13 +295,7 @@ class OuterController:
                     ('Voer de nulhypothese in voor de eerste onafhankelijke variabele, geformuleerd met "H0" en "mu".',scan_hypothesis,[self.solution, 1]),
                     ('Voer de nulhypothese in voor de tweede onafhankelijke variabele, geformuleerd met "H0" en "mu".',scan_hypothesis,[self.solution, 2]),
                     ('Voer de interactienulhypothese in, geformuleerd met "H0" en "mu".',scan_hypothesis_anova,[self.solution]),
-                    ('Vul de tabel hieronder in.',scan_table,[self.solution, 0.02]),
-                    #('Voer de juiste sum-of-squares waarden in voor "between-group", "factor A", "factor B", "AB-interactie", "within-group" en "totaal" rijen van de ANOVA-tabel',scan_numbers,['ss',self.solution,0.01]),        
-                    #('Voer de juiste vrijheidsgraden in voor de "between-group", "factor A", "factor B", "AB-interactie", "within-group" en "totaal" rijen van de ANOVA-tabel',scan_numbers,['df',self.solution,0.01]),        
-                    #('Voer de juiste mean-squares waarden in voor de "between-group", "factor A", "factor B", "AB-interactie", "within-group" en "totaal" rijen van de ANOVA-tabel',scan_numbers,['ms',self.solution,0.01]),        
-                    #('Voer de juiste F-waarden in voor factor A, factor B en voor de interactie',scan_number,['F',self.solution,0.02]),        
-                    #('Voer de juiste p-waarden in voor factor A, factor B en voor de interactie',scan_number,['p',self.solution,0.02]),
-                    #('Voer de juiste r2 waarde in voor factor A, factor B en voor de interactie',scan_number,['r2',self.solution,0.01]),        
+                    ('Vul de tabel hieronder in.',scan_table,[self.solution, 0.02]),    
                     ('Voer de beslissing in voor de eerste onafhankelijke variabele', scan_decision,[self.assignment,self.solution, True, 1]),
                     ('Voer de beslissing in voor de tweede onafhankelijke variabele', scan_decision,[self.assignment,self.solution, True, 2]),
                     ('Voer de beslissing in voor de interactie', scan_decision_anova,[self.assignment, self.solution])]
@@ -325,17 +310,11 @@ class OuterController:
         
         def rmanova_protocol(self) -> List[Tuple]:
             output :str = [('Beschrijf de onafhankelijke variabele.',scan_indep_anova,[self.solution,1,False]),
-                ('Beschrijf de afhankelijke variabele.',scan_dep_anova,[self.solution]),
+                ('Beschrijf de afhankelijke variabele (het aantal metingen per persoon hoef je niet te geven).',scan_dep,[self.solution]),
                 ('Beschrijf de mate van controle.',scan_control,[self.solution]),
                 ('Beschrijf de nulhypothese van de condities',scan_hypothesis,[self.solution,1]),
                 ('Beschrijf de nulhypothese van de subjecten',scan_hypothesis_rmanova,[self.solution]),
                 ('Vul de tabel hieronder in.',scan_table,[self.solution, 0.02]),
-                #('Voer de juiste sum-of-squares waarden in voor de "Factor A", "Factor B", "interactie" en "totaal" rijen van de ANOVA-tabel',scan_numbers,['ss',self.solution,0.01]),        
-                #('Voer de juiste vrijheidsgraden in voor de "Factor A", "Factor B", "interactie" en "totaal" rijen van de ANOVA-tabel',scan_numbers,['df',self.solution,0.01]),        
-                #('Voer de juiste mean-squares waarden in voor de "Factor A", "Factor B", "interactie" en "totaal" rijen van de ANOVA-tabel',scan_numbers,['ms',self.solution,0.01]),        
-                #('Voer de juiste F-waarden in voor factor A en factor B',scan_number,['F',self.solution,0.02]),        
-                #('Voer de juiste p-waarden in voor factor A en factor B',scan_number,['p',self.solution,0.02]),
-                #('Voer de juiste r2 waarde in voor factor A en factor B',scan_number,['r2',self.solution,0.01]),
                 ('Voer de beslissing in van de condities',scan_decision,[self.assignment,self.solution,True,1]),
                 ('Voer de beslissing in van de subjecten',scan_decision_rmanova,[self.assignment,self.solution])]
             if self.solution['p'][0] < 0.05 :
