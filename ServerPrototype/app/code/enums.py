@@ -1,9 +1,9 @@
 from enum import Enum
 
 #Enum of how representing the five report types, plus two numbers representing the generic input field and the
-#introductory page where there is no input field. These are used for the attributes "table_shape" and "submit_field"
+#introductory page where there is no input field. These are used for the attributes "report_type" and "submit_field"
 #With slightly different meanings. In "submit_field", the represent the shape of the page input, as a text field or table
-#In table_shape, they represent the report types in general.
+#In report_type, they represent the report types in general.
 class Task(Enum):
     TEXT_FIELD = 0
     TTEST_BETWEEN = 1

@@ -2,6 +2,7 @@ from flask import render_template, flash, redirect, url_for
 from app import app
 from app.forms import BaseForm, BigForm, SmallForm
 from app.code.interface import OuterController
+from app.code.enums import Task, Process
 import flask
 
 @app.route('/')
@@ -20,7 +21,7 @@ def index():
         
         if form.submit.data:
             output_text : str = controller.update(textdict)
-            form_shape = controller.table_shape
+            form_shape = controller.report_type.value
             if controller.formmode and form_shape > 0 and form_shape < 3:
                 form = SmallForm()
                 controller.formmode = False
@@ -38,7 +39,7 @@ def index():
         form.inputtext.data = ""
         skip :bool = controller.skipable
         prev :bool = controller.prevable
-        submit_field :int = controller.submit_field
+        submit_field :int = controller.submit_field.value
         return render_template('index.html', display=output_text, form=form, skip=skip, prev=prev, submit_field=submit_field)
     else:
         print('ERROR: INVALID METHOD')
@@ -49,23 +50,23 @@ def bigform():
     controller : OuterController = OuterController()
     if flask.request.method == 'POST':
         if form.submit.data:
-            form_shape = controller.table_shape
+            form_shape = controller.report_type.value
             textfields = [x for x in dir(form) if str(type(form.__getattribute__(x))) == "<class 'wtforms.fields.core.StringField'>"]
             textdict = dict([(x, form.__getattribute__(x).data) for x in textfields])
             instruction, outputfields = controller.update_form_anova(textdict)
             return render_template('bigform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape)
         elif form.nextt.data:
-            skip :bool = controller.skipable and controller.testmode
+            skip :bool = controller.skipable
             prev :bool = controller.prevable
-            submit_field :int = controller.submit_field
+            submit_field :int = controller.submit_field.value
             display = controller.protocol[0][0]
             form = BaseForm()
-            controller.table_shape = 0
+            controller.report_type = Task.TEXT_FIELD
             return render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=submit_field)
         else:
             print('ERROR: INVALID METHOD')
     #elif flask.request.method == 'GET':
-    #    form_shape = controller.table_shape
+    #    form_shape = controller.report_type
     #    return render_template('bigform.html', form=form, instruction='', displays=[[''] for i in range(7)], shape=form_shape)
     else:
         print('ERROR: INVALID METHOD')
@@ -76,23 +77,23 @@ def smallform():
     controller : OuterController = OuterController()
     if flask.request.method == 'POST':
         if form.submit.data:
-            form_shape = controller.table_shape
+            form_shape = controller.report_type.value
             textfields = [x for x in dir(form) if str(type(form.__getattribute__(x))) == "<class 'wtforms.fields.core.StringField'>"]
             textdict = dict([(x, form.__getattribute__(x).data) for x in textfields])
             instruction, outputfields = controller.update_form_ttest(textdict)
             return render_template('smallform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape)
         elif form.nextt.data:
-            skip :bool = controller.skipable and controller.testmode
+            skip :bool = controller.skipable
             prev :bool = controller.prevable
             submit_field :int = controller.submit_field
             display = controller.protocol[0][0]
             form = BaseForm()
-            controller.table_shape = 0
+            controller.report_type = Task.TEXT_FIELD
             return render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=submit_field)
         else:
             print('ERROR: INVALID METHOD')
     #elif flask.request.method == 'GET':
-    #    form_shape = controller.table_shape
+    #    form_shape = controller.report_type
     #    return render_template('smallform.html', form=form, instruction='', displays=[[''] for i in range(7)], shape=form_shape)
     else:
         print('ERROR: INVALID METHOD')

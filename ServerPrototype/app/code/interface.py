@@ -33,7 +33,7 @@ class OuterController:
             self.protocol : List = self.intro_protocol()
             self.endstate : bool = False
             self.submit_field : int = Task.INTRO
-            self.table_shape = Task.TEXT_FIELD
+            self.report_type = Task.TEXT_FIELD
         
         def reset(self):
             self.assignments: Assignments = Assignments()
@@ -46,7 +46,7 @@ class OuterController:
             self.protocol : List = self.intro_protocol()
             self.endstate : bool = False
             self.submit_field : int = Task.INTRO
-            self.table_shape = Task.TEXT_FIELD
+            self.report_type = Task.TEXT_FIELD
         
         def update_form_ttest(self, textfields: Dict) -> List[str]:
             output = [[] for i in range(12)]
@@ -70,11 +70,11 @@ class OuterController:
         
         def update_form_anova(self, textfields: Dict) -> List[str]:
             output = [[] for i in range(7)]
-            if self.table_shape == Task.ONEWAY_ANOVA:
+            if self.report_type == Task.ONEWAY_ANOVA:
                 instruction = self.assignments.print_anova(self.assignment)
-            elif self.table_shape == Task.TWOWAY_ANOVA:
+            elif self.report_type == Task.TWOWAY_ANOVA:
                 instruction = self.assignments.print_anova(self.assignment)
-            elif self.table_shape == Task.WITHIN_ANOVA:
+            elif self.report_type == Task.WITHIN_ANOVA:
                 instruction = self.assignments.print_rmanova(self.assignment)
             else:    
                 print('ERROR: INVALID TABLE SHAPE')
@@ -119,14 +119,13 @@ class OuterController:
         
         def update(self, textfields: Dict) -> str:
             #Retrieve values from form text fields
+            print(self.skipable)
             input_text :str = textfields['inputtext'] if 'inputtext' in list(textfields.keys()) else ''
             
             #Scan the input text fields and and determine the correct response
             _, function, arguments, process = self.protocol[self.index]
             output_text = ''
-            if process == Process.INTRO:
-                pass
-            elif process == Process.TABLE and input_text != 'skip' and input_text != 'prev':
+            if process == Process.TABLE and input_text != 'skip' and input_text != 'prev':
                 again, output_text = function(textfields, *arguments)
             elif (input_text == 'skip' and self.skipable) or (input_text == 'prev' and self.prevable): #Hard-set again to false if the user wants to skip
                 again = False
@@ -142,7 +141,7 @@ class OuterController:
                 self.protocol = self.choice_protocol()
                 self.submit_field = Task.TEXT_FIELD
                 return self.protocol[0][0]
-            elif process == Process.ANOTHER:#If return protocol index 0
+            elif process == Process.ANOTHER: #If return protocol index 0
                 if output:
                     self.index += 1
                     return self.protocol[self.index][0]
@@ -157,40 +156,41 @@ class OuterController:
                 if not again:
                     control: bool = random.choice([True,False])
                     hyp_type: int = random.choice([0,1,2])
-                    self.skipable = True
                     self.index = 0
                     if input_text == '1':
                         self.assignment = self.assignments.create_ttest(True, hyp_type, control)
                         self.solution = self.assignments.solve_ttest(self.assignment, {})
                         instruction = self.assignments.print_ttest(self.assignment)
                         self.protocol = self.ttest_protocol()
-                        self.table_shape = Task.TTEST_BETWEEN
+                        self.report_type = Task.TTEST_BETWEEN
                     if input_text == '2':
                         self.assignment = self.assignments.create_ttest(False, hyp_type, control)
                         self.solution = self.assignments.solve_ttest(self.assignment, {})
                         instruction = self.assignments.print_ttest(self.assignment)
                         self.protocol = self.ttest_protocol()
-                        self.table_shape = Task.TTEST_WITHIN
+                        self.report_type = Task.TTEST_WITHIN
                     if input_text == '3':
                         self.assignment = self.assignments.create_anova(False, control)
                         self.solution = self.assignments.solve_anova(self.assignment, {})
                         instruction = self.assignments.print_anova(self.assignment)
                         self.protocol = self.anova_protocol()
-                        self.table_shape = Task.ONEWAY_ANOVA
+                        self.report_type = Task.ONEWAY_ANOVA
                     if input_text == '4':
                         self.assignment = self.assignments.create_anova(True, control)
                         self.solution = self.assignments.solve_anova(self.assignment, {})
                         instruction = self.assignments.print_anova(self.assignment)
                         self.protocol = self.anova_protocol()
-                        self.table_shape = Task.TWOWAY_ANOVA
+                        self.report_type = Task.TWOWAY_ANOVA
                     if input_text == '5':
                         self.assignment = self.assignments.create_rmanova(control)
                         self.solution = self.assignments.solve_rmanova(self.assignment, {})
                         instruction = self.assignments.print_rmanova(self.assignment)
                         self.protocol = self.rmanova_protocol()
-                        self.table_shape = Task.WITHIN_ANOVA
+                        self.report_type = Task.WITHIN_ANOVA
                     if self.formmode:
                         self.protocol = self.return_protocol()
+                    else:
+                        self.skipable = True
                     return instruction + '<br>' + self.protocol[self.index][0]
                 else:
                     return output_text
@@ -229,7 +229,7 @@ class OuterController:
                         self.prevable = False
                     self.index -= 1
                     if self.protocol[self.index][3] == Process.TABLE:
-                        self.submit_field = self.table_shape
+                        self.submit_field = self.report_type
                     return self.assignments.print_assignment(self.assignment) + '<br>' + self.protocol[self.index][0]
                 elif again:
                     return self.assignments.print_assignment(self.assignment) + '<br>' + output_text
@@ -238,7 +238,7 @@ class OuterController:
                         self.prevable = True
                     self.index += 1
                     if self.protocol[self.index][3] == Process.TABLE:
-                        self.submit_field = self.table_shape #Signal to the routes class that the next text field has to be a table
+                        self.submit_field = self.report_type #Signal to the routes class that the next text field has to be a table
                     if input_text == 'skip' and self.skipable:
                         return self.assignments.print_assignment(self.assignment) + '<br>' + self.protocol[self.index][0]
                     else:    

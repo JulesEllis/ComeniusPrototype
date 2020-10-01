@@ -51,27 +51,21 @@ class Assignments:
         #Generate the datapoints as a dictionary of where the list of float entries is 
         #described by the variable name key
         if between_subject:
-            var: str = 'beroep'
-            beroepen: List[str] = ['arts', 'leraar', 'astronaut', 'loodgieter']
-            name1: str = random.choice(beroepen[:2])
-            beroepen.remove(name1)
-            name2: str = random.choice(beroepen)
+            varnames:List = [['beroep'] + random.sample(['arts','leraar','loodgieter','bouwvakker'], 2)]
         else:
-            name1: str = 'dag'
-            name2: str = 'nacht'
-            var: str = 'tijdstip'
+            varnames:List = [['tijdstip', 'dag', 'nacht']]
             
         #Create the assignment description
         instruction: str = 'Maak een elementair rapport van onderstaande data voor de hypothese dat '
         if hyp_type == 0:
-            instruction += 'de reactiesnelheid bij het ' + var + ' ' + name1 + ' gemiddeld ongelijk is aan die bij ' + name2 + '.<br><br>'
+            instruction += 'de reactiesnelheid bij het ' + varnames[0][0] + ' ' + varnames[0][1] + ' gemiddeld ongelijk is aan die bij ' + varnames[0][2] + '.<br><br>'
         if hyp_type == 1:
-            instruction += 'de reactiesnelheid bij het ' + var + ' ' + name1 + ' gemiddeld groter is dan die bij ' + name2 + '.<br><br>'
+            instruction += 'de reactiesnelheid bij het ' + varnames[0][0] + ' ' + varnames[0][1] + ' gemiddeld groter is dan die bij ' + varnames[0][2] + '.<br><br>'
         if hyp_type == 2:
-            instruction += "de reactiesnelheid bij het " + var + " " + name1 + " gemiddeld kleiner is dan die bij " + name2 + ".<br><br>"
+            instruction += "de reactiesnelheid bij het " + varnames[0][0] + " " + varnames[0][1] + " gemiddeld kleiner is dan die bij " + varnames[0][2] + ".<br><br>"
         instruction += "De persoon moet een tijdje achter een beeldscherm zo snel mogelijk op een knop" +" drukken zodra een wit vierkantje veranderd in een zwart vierkantje. De tijden tussen het veranderen" + " van het beeld en het indrukken van de knop worden gemeten en opgeteld. "        
         if between_subject:
-            instruction += 'De proefpersonen zijn allemaal ofwel ' + name1 + ' ofwel '+ name2 + '. De niveaus zijn: ' + name1 + '/' + name2 + '. '
+            instruction += 'De proefpersonen zijn allemaal ofwel ' + varnames[0][1] + ' ofwel '+ varnames[0][2] + '. De niveaus zijn: ' + varnames[0][1] + '/' + varnames[0][2] + '. '
             if control:
                 instruction += 'De personen van elk beroep zijn willekeurig geselecteerd. '
         else:
@@ -84,8 +78,8 @@ class Assignments:
                'hypothesis': hyp_type,
                'between_subject': between_subject,
                'control': control,
-               name1: [round(random.gauss(mean1,std1), 2) for i in range(n1)], 
-               name2: [round(random.gauss(mean2,std2), 2) for i in range(n2)]}
+               varnames[0][1]: [round(random.gauss(mean1,std1), 2) for i in range(n1)], 
+               varnames[0][2]: [round(random.gauss(mean2,std2), 2) for i in range(n2)]}
         
     def create_anova(self, two_way: bool, control: bool) -> Dict:
         output = {'two_way':two_way, 'control':control}
@@ -98,34 +92,46 @@ class Assignments:
             output['instruction'] = 'Maak een elementair rapport van de onderstaande data. De variabelen zijn nationaliteit, met niveaus Nederlands en Duits, geslacht met niveaus man en vrouw, en gewicht. '
         if control:
             output['instruction'] += 'De deelnemers zijn willekeurig gekozen. '
-            
+        
+        #Sample variable names
+        samplevars = [('Nationaliteit','Nederlands','Duits'), 
+                      ('Geslacht','Man','Vrouw'),
+                      ('Lievelingskleur','Rood','Blauw'),
+                      ('Religie','Christelijk','Moslim')]
+        
         #Generate summary statistics
         n: int = random.randint(9,16)
         if not two_way:
             output['data'] = {
-                  'varnames':[('Nationaliteit','Nederlands','Duits')],
+                  'varnames':random.sample(samplevars, 1),
                   'means':[round(random.uniform(60,120),2) for i in range(2)],
                   'stds':[round(random.uniform(5,30),2) for i in range(2)],
                   'ns': [n for i in range(2)]}
         else:
             output['data'] = {
-                  'varnames':[('Nationaliteit','Nederlands','Duits'), ('Geslacht','Man','Vrouw')],
+                  'varnames':random.sample(samplevars, 2),
                   'means':[round(random.uniform(60,120),2) for i in range(4)],
                   'stds':[round(random.uniform(5,30),2) for i in range(4)],
                   'ns': [n for i in range(4)]}
         return output
     
     def create_rmanova(self, control: bool) -> Dict:
+        #Determine variable shape and names
         output = {'control': control, 'two_way':False}
+        n_conditions = random.randint(2,4)
+        n_subjects = int(random.uniform(8,15))
+        samplevars = [['kwartaal','eerste', 'tweede', 'derde', 'vierde'], 
+                      ['seizoen','winter','lente','zomer','herfst'],
+                      ['maand','januari','februari','maart','april'],
+                      ['dag','maandag','dinsdag','woensdag','donderdag']]
+        
         output['instruction']: str = 'Maak een elementair rapport van de onderstaande data. De variabelen zijn kwartaal en gewicht. '
         if control:
             output['instruction'] += 'De subjecten in het experiment zijn willekeurig geselecteerd. '
-        n_conditions = random.randint(2,4)
-        n_subjects = int(random.uniform(8,15))
         true_means = [int(random.uniform(70,110)) for i in range(n_conditions)]
         true_stds = [int(random.uniform(5,30)) for i in range(n_conditions)]
         output['data'] = {
-                  'varnames':['eerste', 'tweede', 'derde', 'vierde'][:n_conditions],
+                  'varnames':[random.choice(samplevars)[:n_conditions+1]],
                   'scores':[[round(random.gauss(true_means[i], true_stds[i]),2) for j in range(n_subjects)] for i in range(n_conditions)]
                   }
         output['data']['means']: List = [round(np.mean(output['data']['scores'][i]),2) for i in range(n_conditions)]
@@ -185,13 +191,13 @@ class Assignments:
         data: Dict = assignment['data']
         n_conditions = len(data['means'])
         output_text = assignment['instruction'] + '<br><table style="width:45%">'
-        output_text += '<tr><td>Kwartaal</td>' + ''.join(['<td>'+x+'</td>' for x in ['Eerste','Tweede','Derde','Vierde'][:n_conditions]]) + '<td>Opgevoerde meting</td></tr>'
+        output_text += '<tr><td>'+assignment['data']['varnames'][0]+'</td>' + ''.join(['<td>'+x+'</td>' for x in assignment['data']['varnames'][1:n_conditions+1]]) + '<td>Opgevoerde meting</td></tr>'
         output_text += '<tr><td>Gemiddelde</td>' + ''.join(['<td>'+str(x)+'</td>' for x in data['means'][:n_conditions]]) + '<td>' + str(round(np.mean(data['jackedmeans']),2)) + '</td></tr>'
         output_text += '<tr><td>Standaardeviatie</td>' + ''.join(['<td>'+str(x)+'</td>' for x in data['stds'][:n_conditions]]) + '<td>' + str(round(np.std(data['jackedmeans']),2)) + '</td></tr>'
         output_text += '<tr><td>N</td><td>' + str(data['n_subjects']) + '</td></tr></table>'
         output_text += '<br>Originele scores:'
         output_text += '<br><table style="width:45%">'
-        output_text += '<tr><td>Subject</td>' + ''.join(['<td>'+x+'</td>' for x in ['Eerste','Tweede','Derde','Vierde'][:n_conditions]]) + '<td>Opgevoerde meting</td></tr>'
+        output_text += '<tr><td>Subject</td>' + ''.join(['<td>'+x+'</td>' for x in assignment['data']['varnames'][1:n_conditions+1]]) + '<td>Opgevoerde meting</td></tr>'
         for i in range(assignment['data']['n_subjects']):
             output_text += '<tr><td>'+str(i+1)+'</td>' + ''.join(['<td>'+str(x)+'</td>' for x in [data['scores'][j][i] for j in range(n_conditions)]]) + '<td>' + str(round(data['jackedmeans'][i],2)) + '</td></tr>'
         return output_text + '</table>'
@@ -381,10 +387,10 @@ class Assignments:
         solution['r2']: List[float] = [solution['ss'][0] / solution['ss'][3], solution['ss'][1] / solution['ss'][3]]
         
         #Textual parts of the report
-        solution['null']: str = 'h0:' + ' == '.join(['mu(' + x + ')' for x in data['varnames']])
+        solution['null']: str = 'h0:' + ' == '.join(['mu(' + x + ')' for x in data['varnames'][1:]])
         solution['null2']: str = 'h0: De personen hebben gelijke ware scores op de opgevoerde meting.'
         rejected: Tuple[str] = ('verworpen','ongelijk') if solution['p'][0] < 0.05 else ('behouden', 'gelijk')
-        solution['decision']: str = 'h0 ' + rejected[0] + ', de populatiegemiddelden van kwartalen ' + ' en '.join(data['varnames']) + ' zijn gemiddeld ' + rejected[1] + '.'
+        solution['decision']: str = 'h0 ' + rejected[0] + ', de populatiegemiddelden van kwartalen ' + ' en '.join(data['varnames'][1:]) + ' zijn gemiddeld ' + rejected[1] + '.'
         if assignment['control']:
             solution['interpretation']: str = 'Het verschil in '+solution['dependent']+' wordt veroorzaakt door de onafhankelijke variabele '+solution['independent']
         else:
