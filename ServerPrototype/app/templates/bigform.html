@@ -14,14 +14,14 @@
         
         <p>Voer de onafhankelijke variabele in
             {{ form.inputtext1.label }}<br>
-            {{ form.inputtext1(size=32) }}
+            {{ form.inputtext1(size=48) }}
         </p>
         <span style="color: blue;">{{ displays[0][0] | safe}}</span>
         
         {% if shape | int == 4 %}
         <p>Voer de tweede onafhankelijke variabele in
             {{ form.inputtext12.label }}<br>
-            {{ form.inputtext12(size=32) }}
+            {{ form.inputtext12(size=48) }}
         </p>
         
         <span style="color: blue;">{{ displays[0][1] | safe}}</span>
@@ -29,32 +29,32 @@
         
         <p>Voer de afhankelijke variabele in
             {{ form.inputtext2.label }}<br>
-            {{ form.inputtext2(size=32) }}
+            {{ form.inputtext2(size=48) }}
         </p>
         <span style="color: blue;">{{ displays[1][0] | safe}}</span>
         
         <p>Voer de mate van controle in
             {{ form.inputtext3.label }}<br>
-            {{ form.inputtext3(size=32) }}
+            {{ form.inputtext3(size=48) }}
         </p>
         <span style="color: blue;">{{ displays[2][0] | safe}}</span>
         
         <p>Voer de nulhypothese in
             {{ form.inputtext4.label }}<br>
-            {{ form.inputtext4(size=32) }}
+            {{ form.inputtext4(size=48) }}
         </p>
         <span style="color: blue;">{{ displays[3][0] | safe}}</span>
         
         {% if shape | int == 4 %}
         <p>Voer de tweede nulhypothese in
             {{ form.inputtext12.label }}<br>
-            {{ form.inputtext12(size=32) }}
+            {{ form.inputtext12(size=48) }}
         </p>
         <span style="color: blue;">{{ displays[3][1] | safe}}</span>
         
         <p>Voer de interactienulhypothese in
             {{ form.inputtext12.label }}<br>
-            {{ form.inputtext12(size=32) }}
+            {{ form.inputtext12(size=48) }}
         </p>
         <span style="color: blue;">{{ displays[3][2] | safe}}</span>
         {% endif %}
@@ -62,7 +62,7 @@
         {% if shape | int == 5 %}
         <p>Voer de nulhypothese van de subjecten in
             {{ form.inputtext12.label }}<br>
-            {{ form.inputtext12(size=32) }}
+            {{ form.inputtext12(size=48) }}
         </p>
         <span style="color: blue;">{{ displays[3][1] | safe}}</span>
         {% endif %}
@@ -104,19 +104,19 @@
         
         <p>Voer de beslissing in
             {{ form.inputtext5.label }}<br>
-            {{ form.inputtext5(size=32) }}
+            {{ form.inputtext5(size=48) }}
         </p>
         <span style="color: blue;">{{ displays[5][0] | safe}}</span>
         
         {% if shape | int == 4 %}
         <p>Voer de tweede beslissing in
             {{ form.inputtext52.label }}<br>
-            {{ form.inputtext52(size=32) }}
+            {{ form.inputtext52(size=48) }}
         </p>
         <span style="color: blue;">{{ displays[5][1] | safe}}</span>
         <p>Voer de interactiebeslissing in
             {{ form.inputtext52.label }}<br>
-            {{ form.inputtext52(size=32) }}
+            {{ form.inputtext52(size=48) }}
         </p>
         <span style="color: blue;">{{ displays[5][2] | safe}}</span>
         {% endif %}
@@ -124,26 +124,26 @@
         {% if shape | int == 5 %}
         <p>Voer de beslissing van de subjecten in
             {{ form.inputtext52.label }}<br>
-            {{ form.inputtext52(size=32) }}
+            {{ form.inputtext52(size=48) }}
         </p>
         <span style="color: blue;">{{ displays[5][1] | safe}}</span>
         {% endif %}
         
         <p>Voer de causale interpretatie in
             {{ form.inputtext6.label }}<br>
-            {{ form.inputtext6(size=32) }}
+            {{ form.inputtext6(size=48) }}
         </p>
         <span style="color: blue;">{{ displays[6][0] | safe}}</span>
         
         {% if shape | int == 4 %}
         <p>Voer de tweede causale interpretatie in
             {{ form.inputtext62.label }}<br>
-            {{ form.inputtext62(size=32) }}
+            {{ form.inputtext62(size=48) }}
         </p>
         <span style="color: blue;">{{ displays[6][1] | safe}}</span>
         <p>Voer de causale interpretatie van de interactie in
             {{ form.inputtext63.label }}<br>
-            {{ form.inputtext63(size=32) }}
+            {{ form.inputtext63(size=48) }}
         </p>
         <span style="color: blue;">{{ displays[6][2] | safe}}</span>
         {% endif %}
