@@ -86,16 +86,17 @@ class Assignments:
     def create_anova(self, two_way: bool, control: bool) -> Dict:
         output = {'two_way':two_way, 'control':control}
         output['instruction']: str = None
-        samplevars = [('Nationaliteit','Nederlands','Duits'), #Sample variable names
-                      ('Geslacht','Man','Vrouw'),
-                      ('Lievelingskleur','Rood','Blauw'),
-                      ('Religie','Christelijk','Moslim')]
+        samplevars = [['Nationaliteit','Nederlands','Duits'], #Sample variable names
+                      ['Geslacht','Man','Vrouw'],
+                      ['Lievelingskleur','Rood','Blauw'],
+                      ['Religie','Christelijk','Moslim']]
         if not two_way:
-            varnames = random.sample(samplevars, 1),
+            varnames = random.sample(samplevars, 1)
         else:
             varnames = random.sample(samplevars, 2)
         
         #Decide the variable names
+        print(varnames)
         if not two_way:
             output['instruction'] = 'Maak een elementair rapport van de onderstaande data. De variabelen zijn '+varnames[0][0]+', met niveaus '+' en '.join(varnames[0][1:])+', en gewicht. '
         else:
@@ -369,7 +370,7 @@ class Assignments:
         data: Dict = assignment['data']
         n_conditions = len(data['means'])
         solution['independent']: str = assignment['data']['varnames'][0][0]
-        solution['levels'] = assignment['data']['varnames'][0][1:n_conditions+1]
+        solution['levels'] = assignment['data']['varnames'][0][1:]
         solution['dependent']: str = 'gewicht'
         solution['dependent_measure']: str = 'kwantitatief'
         solution['dependent_n_measure']: int = n_conditions #Aantal metingen per persoon
