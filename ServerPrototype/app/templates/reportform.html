@@ -1,0 +1,27 @@
+<html>
+    <head>
+    <style>
+    table, td {
+        border: 1px solid black;
+    }
+    </style>
+    </head>
+    <body>
+        <h1 style="font-family:'Arial'">Oefeningsmodule voor elementaire rapporten</h1>
+        <form action="reportform" method="post" novalidate>
+        {{ form.hidden_tag() }}
+        {{ instruction | safe}}
+        
+        <p>Schrijf hieronder je beknopte rapport. 
+            {{ form.inputtext.label }}<br>
+            {{ form.inputtext(size=60) }}
+        </p>
+        <span style="color: blue;">{{ display | safe}}</span>
+        
+        <p>
+        {{ form.submit() }}
+        {{ form.nextt() }}
+        </p>
+    </form>
+    </body>
+</html>

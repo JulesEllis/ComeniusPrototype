@@ -29,6 +29,8 @@ class Assignments:
             return self.print_ttest(assignment) #T-Test
         elif 'jackedmeans' in list(assignment['data'].keys()):
             return self.print_rmanova(assignment) #Repeated-measures ANOVA
+        elif 'levels' in list(assignment.keys()):
+            return self.print_report(assignment) #Beknopt rapport
         else:
             return self.print_anova(assignment) #One-way or two-way ANOVA
         
@@ -96,7 +98,6 @@ class Assignments:
             varnames = random.sample(samplevars, 2)
         
         #Decide the variable names
-        print(varnames)
         if not two_way:
             output['instruction'] = 'Maak een elementair rapport van de onderstaande data. De variabelen zijn '+varnames[0][0]+', met niveaus '+' en '.join(varnames[0][1:])+', en gewicht. '
         else:
@@ -147,6 +148,21 @@ class Assignments:
         output['data']['n_conditions'] = n_conditions
         return output
     
+    def create_report(self, control: bool):
+        choice :int = random.choice([0,1,2])
+        output = {}
+        if choice == 0:
+            assignment = self.create_anova(False, control)
+            output = {**assignment, **self.solve_anova(assignment, {})}
+        if choice == 1:
+            assignment = self.create_anova(True, control)
+            output = {**assignment, **self.solve_anova(assignment, {})}
+        if choice == 2:
+            assignment = self.create_rmanova(control)
+            output = {**assignment, **self.solve_rmanova(assignment, {})}
+        output['assignment_type'] = choice
+        return output
+            
     def print_ttest(self, assignment: Dict) -> str:
         output_text = assignment['instruction'] + '<br>'
         varnames: List[str] = assignment['data']['varnames'][0]
@@ -207,7 +223,42 @@ class Assignments:
         for i in range(assignment['data']['n_subjects']):
             output_text += '<tr><td>'+str(i+1)+'</td>' + ''.join(['<td>'+str(x)+'</td>' for x in [data['scores'][j][i] for j in range(n_conditions)]]) + '<td>' + str(round(data['jackedmeans'][i],2)) + '</td></tr>'
         return output_text + '</table>'
-        
+    
+    def print_report(self, assignment: Dict) -> str:
+        output:str = ''
+        print(assignment)
+        data:dict = assignment['data']
+        names = ['df','ss','ms','F','p','r2']
+        if assignment['assignment_type'] == 0:
+            output += self.print_anova(assignment)
+            output += '<p><table style="width:20%">'
+            output += '<tr><td>Bron</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td></tr>'
+            output += '<tr><td>Between</td>'+''.join(['<td>'+str(assignment[x][0])+'</td>' for x in names if len(assignment[x]) > 0])+'</tr>'
+            output += '<tr><td>Within</td>'+''.join(['<td>'+str(assignment[x][1])+'</td>' for x in names if len(assignment[x]) > 1])+'</tr>'
+            output += '<tr><td>Total</td>'+''.join(['<td>'+str(assignment[x][2])+'</td>' for x in names if len(assignment[x]) > 2])+'</tr>'
+            output += '</table></p>'
+        if assignment['assignment_type'] == 1:
+            output += self.print_anova(assignment)
+            output += '<p><table style="width:20%">'
+            output += '<tr><td>Bron</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td></tr>'
+            output += '<tr><td>Between</td>'+''.join(['<td>'+str(assignment[x][0])+'</td>' for x in names[:3]])+'</tr>'
+            output += '<tr><td>'+data['varnames'][0][0]+'</td>'+''.join(['<td>'+str(assignment[x][1])+'</td>' for x in names[:3]])+''.join(['<td>'+str(assignment[x][0])+'</td>' for x in names[3:]])+'</tr>'
+            output += '<tr><td>'+data['varnames'][1][0]+'</td>'+''.join(['<td>'+str(assignment[x][2])+'</td>' for x in names[:3]])+''.join(['<td>'+str(assignment[x][1])+'</td>' for x in names[3:]])+'</tr>'
+            output += '<tr><td>Interaction</td>'+''.join(['<td>'+str(assignment[x][3])+'</td>' for x in names[:3]])+''.join(['<td>'+str(assignment[x][2])+'</td>' for x in names[3:]])+'</tr>'
+            output += '<tr><td>Within</td>'+''.join(['<td>'+str(assignment[x][4])+'</td>' for x in names[:3]])+'</tr>'
+            output += '<tr><td>Total</td>'+''.join(['<td>'+str(assignment[x][5])+'</td>' for x in names[:2]])+'</tr>'
+            output += '</table></p>'
+        if assignment['assignment_type'] == 2:
+            output += self.print_rmanova(assignment)
+            output += '<p><table style="width:20%">'
+            output += '<tr><td>Bron</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td></tr>'
+            output += '<tr><td>'+data['varnames'][0][0]+'</td>'+''.join(['<td>'+str(assignment[x][0])+'</td>' for x in names if len(assignment[x]) > 0])+'</tr>'
+            output += '<tr><td>Persoon</td>'+''.join(['<td>'+str(assignment[x][1])+'</td>' for x in names if len(assignment[x]) > 1])+'</tr>'
+            output += '<tr><td>Interactie</td>'+''.join(['<td>'+str(assignment[x][0])+'</td>' for x in names if len(assignment[x]) > 2])+'</tr>'
+            output += '<tr><td>Total</td>'+''.join(['<td>'+str(assignment[x][3])+'</td>' for x in names if len(assignment[x]) > 3])+'</tr>'
+            output += '</table></p>'
+        return output
+            
     #Calculate internally all of the numbers and string values the student has to present
     def solve_ttest(self, assignment: Dict, solution: Dict) -> Dict:
         numbers: List = [assignment['data']['A'], assignment['data']['B']]
@@ -284,7 +335,6 @@ class Assignments:
                 solution['interpretation']: str = 'De oorzaak van het effect is het verschil tussen de niveaus van de variabele ' + solution['independent'] + '.'
             else:
                 solution['interpretation']: str = 'De oorzaak van het effect is onbekend. '
-
         return solution
     
     def solve_anova(self, assignment: Dict, solution: Dict) -> Dict:

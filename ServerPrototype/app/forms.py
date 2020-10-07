@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField
 from wtforms.validators import DataRequired
 
 class BaseForm(FlaskForm):
@@ -57,7 +57,6 @@ class SmallForm(FlaskForm):
     submit = SubmitField('Enter')
     nextt = SubmitField('Next')
 
-
 class BigForm(FlaskForm):
     inputtext1 = StringField('', validators=[DataRequired()])
     inputtext2 = StringField('', validators=[DataRequired()])
@@ -104,3 +103,13 @@ class BigForm(FlaskForm):
     r21 = StringField('')
     r22 = StringField('')
     r23 = StringField('')
+    
+class ReportForm(FlaskForm):
+    inputtext = TextAreaField('', validators=[DataRequired()])
+    submit = SubmitField('Enter')
+    nextt = SubmitField('Next')
+    
+    
+    
+    
+    

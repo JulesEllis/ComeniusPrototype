@@ -34,7 +34,7 @@ def scan_dummy(input_Text : str)  -> [bool, str]:
     return False, ''
 
 def scan_protocol_choice(input_text : str):
-    if input_text not in ['1','2','3','4','5']:
+    if input_text not in ['1','2','3','4','5','6']:
         return True, 'Sorry, voer uw antwoord opnieuw in in de vorm van een cijfer.'
     else:
         return False, 'Ok, hier is je opgave:<br>'
@@ -43,7 +43,7 @@ def scan_indep(text :str, solution :Dict) -> [bool, str]:
     #Determine which of the necessary elements are present in the answer
     text: List[str] = nltk.word_tokenize(text.lower())
     scorepoints: Dict[str, bool] = {'var': False, 'measure': False, 'level1': False, 'level2': False}
-    pairs = [(solution['independent'],'var'),(solution['independent_measure'],'measure'),(solution['levels'][0],'level1'),(solution['levels'][1],'level2')]
+    pairs = [(solution['independent'].lower(),'var'),(solution['independent_measure'].lower(),'measure'),(solution['levels'][0].lower(),'level1'),(solution['levels'][1].lower(),'level2')]
     for pair in pairs:
         if pair[0] in text:
             scorepoints[pair[1]] = True
@@ -73,8 +73,8 @@ def scan_indep_anova(text: str, solution: Dict, num: int=1, between_subject=True
     l_key: str = 'levels' if num == 1 else 'levels' + str(num)
     scorepoints: Dict = {'factor': 'factor' in text, 
                    'domain': 'between-subject' in text if between_subject else 'within-subject' in text, 
-                   'name': solution[n_key] in text, 
-                   'levels': [level in text for level in solution[l_key]]}
+                   'name': solution[n_key].lower() in text, 
+                   'levels': [level.lower() in text for level in solution[l_key]]}
     
     #Determine the response of the chatbot
     if False in list(scorepoints.values()):
@@ -97,7 +97,7 @@ def scan_dep(text: str, solution: Dict) -> [bool, str]:
     #Determine which of the necessary elements are present in the answer
     text: List[str] = nltk.word_tokenize(text.lower())
     scorepoints: Dict[str, bool] = {'var': False, 'measure': False}
-    pairs: List[Tuple[str,str]] = [(solution['dependent'],'var'),(solution['dependent_measure'],'measure')]
+    pairs: List[Tuple[str,str]] = [(solution['dependent'].lower(),'var'),(solution['dependent_measure'],'measure')]
     for pair in pairs:
         if pair[0] in text:
             scorepoints[pair[1]] = True
@@ -332,9 +332,9 @@ def scan_decision(text: str, assignment: Dict, solution: Dict, anova: bool=False
         if not scorepoints['strength']: 
             output += ' -de sterkte wordt niet juist genoemd<br>'
         if not True in mus:
-            output += ' -de populatiegemiddelden worden niet genoemd<br>'
+            output += ' -de niveaus van de onafhankelijke variabele worden niet genoemd<br>'
         elif False in mus:
-            output += ' -ten minste één van de populatiegemiddelden mist<br>'
+            output += ' -ten minste één niveau van de onafhankelijke variabele mist<br>'
         if not scorepoints['sign']:
             output += ' -hoe de populatiegemiddelden zich tot elkaar verhouden<br>'
         if not scorepoints['negation']:
@@ -368,7 +368,7 @@ def scan_decision_anova(text: str, assignment: Dict, solution: Dict) -> [bool, s
                    'indy2': solution['independent2'] in tokens
                    }
     
-    if False in list(scorepoints.values()) or False in mus:
+    if False in list(scorepoints.values()):
         output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
         if not scorepoints['H0']:
             output += ' -de nulhypothese wordt niet genoemd<br>'

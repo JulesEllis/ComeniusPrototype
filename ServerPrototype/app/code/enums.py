@@ -11,7 +11,8 @@ class Task(Enum):
     ONEWAY_ANOVA = 3
     TWOWAY_ANOVA = 4
     WITHIN_ANOVA = 5
-    INTRO = 6
+    REPORT = 6
+    INTRO = 7
     
 #Variable indicating whether and how the given function from the protocol index should be called
 #e.g. as bool, bool, or bool, str, or not at all

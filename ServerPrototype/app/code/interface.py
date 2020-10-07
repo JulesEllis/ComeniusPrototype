@@ -117,9 +117,13 @@ class OuterController:
                 output[4].append(scan_table(textfields, self.solution)[1])
             return instruction, output
         
+        def update_form_report(self, textfields: Dict) -> List[str]:
+            instruction = self.print_assignment()
+            feedback = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br> -alles'
+            return instruction, feedback
+        
         def update(self, textfields: Dict) -> str:
             #Retrieve values from form text fields
-            print(self.skipable)
             input_text :str = textfields['inputtext'] if 'inputtext' in list(textfields.keys()) else ''
             
             #Scan the input text fields and and determine the correct response
@@ -130,6 +134,7 @@ class OuterController:
             elif (input_text == 'skip' and self.skipable) or (input_text == 'prev' and self.prevable): #Hard-set again to false if the user wants to skip
                 again = False
             elif process == Process.ANOTHER or process == Process.YES_NO:
+                self.report_type = Task.INTRO
                 again, output = function(input_text, *arguments)
             elif process != Process.TABLE:
                 again, output_text = function(input_text, *arguments)
@@ -187,7 +192,12 @@ class OuterController:
                         instruction = self.assignments.print_rmanova(self.assignment)
                         self.protocol = self.rmanova_protocol()
                         self.report_type = Task.WITHIN_ANOVA
-                    if self.formmode:
+                    if input_text == '6':
+                        self.assignment = self.assignments.create_report(control)
+                        self.solution = {}
+                        instruction = self.assignments.print_report(self.assignment)
+                        self.report_type = Task.REPORT
+                    if self.formmode or input_text == '6':
                         self.protocol = self.return_protocol()
                     else:
                         self.skipable = True
