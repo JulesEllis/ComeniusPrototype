@@ -91,10 +91,11 @@ def smallform():
         
     if flask.request.method == 'POST':
         if form.submit.data:
+            form_shape = controller.report_type.value
             textfields = [x for x in dir(form) if str(type(form.__getattribute__(x))) == "<class 'wtforms.fields.core.StringField'>"]
             textdict = dict([(x, form.__getattribute__(x).data) for x in textfields])
-            instruction, output = controller.update_form_ttest(textdict)
-            return render_template('smallform.html', form=form, instruction=instruction, display=output)
+            instruction, outputfields = controller.update_form_ttest(textdict)
+            return render_template('smallform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames)
         elif form.nextt.data:
             skip :bool = controller.skipable
             prev :bool = controller.prevable
