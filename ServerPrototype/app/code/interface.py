@@ -119,9 +119,9 @@ class OuterController:
         
         def update_form_report(self, textfields: Dict) -> List[str]:
             instruction = self.print_assignment()
-            feedback = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br> -p-waarde niet genoemd\n'\
-            ' -niveaus van de onafhankelijke variabele niet genoemd\n -H0 niet genoemd\n -sterkte niet genoemd\n'\
-            ' -primaire verklaring niet genoemd\n -alternatieve verklaring niet genoemd\n -niet genoemd dat het om een effect gaat\n'\
+            feedback = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br> -p-waarde niet genoemd<br>'\
+            ' -niveaus van de onafhankelijke variabele niet genoemd<br> -H0 niet genoemd<br> -sterkte niet genoemd<br>'\
+            ' -primaire verklaring niet genoemd<br> -alternatieve verklaring niet genoemd<br> -niet genoemd dat het om een effect gaat<br>'\
             ' -onafhankelijke variabele niet genoemd'
             return instruction, feedback
         
