@@ -9,6 +9,7 @@ import math
 import random
 import numpy as np
 import nltk
+from nltk import CFG, Tree
 from scipy import stats
 from typing import Dict, List, Tuple
 
@@ -500,7 +501,7 @@ def scan_interpretation_anova(text: str, solution: Dict) -> [bool, str]:
         return True, output
     else:
         return False, 'Mooi, deze causale interpretatie klopt. '
-    
+
 def sim(gold_numbers :List, numbers :List, margin:float) -> True: #Return true if there is a similar number to num in the given list/float/integer in the solution
     return [gold_numbers[i] - margin < numbers[i] and numbers[i] < gold_numbers[i] + margin for i in range(len(gold_numbers))]
 
