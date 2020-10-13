@@ -149,7 +149,7 @@ class Assignments:
         return output
     
     def create_report(self, control: bool):
-        choice :int = random.choice([0,1,2])
+        choice :int = 1 #random.choice([0,1,2])
         output = {}
         #if choice == 0:
         #    assignment = self.create_anova(False, control)
