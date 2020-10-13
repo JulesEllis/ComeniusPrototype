@@ -241,12 +241,12 @@ class Assignments:
             output += self.print_anova(assignment)
             output += '<p><table style="width:20%">'
             output += '<tr><td>Bron</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td></tr>'
-            output += '<tr><td>Between</td>'+''.join(['<td>'+str(assignment[x][0])+'</td>' for x in names[:3]])+'</tr>'
-            output += '<tr><td>'+data['varnames'][0][0]+'</td>'+''.join(['<td>'+str(assignment[x][1])+'</td>' for x in names[:3]])+''.join(['<td>'+str(assignment[x][0])+'</td>' for x in names[3:]])+'</tr>'
-            output += '<tr><td>'+data['varnames'][1][0]+'</td>'+''.join(['<td>'+str(assignment[x][2])+'</td>' for x in names[:3]])+''.join(['<td>'+str(assignment[x][1])+'</td>' for x in names[3:]])+'</tr>'
-            output += '<tr><td>Interaction</td>'+''.join(['<td>'+str(assignment[x][3])+'</td>' for x in names[:3]])+''.join(['<td>'+str(assignment[x][2])+'</td>' for x in names[3:]])+'</tr>'
-            output += '<tr><td>Within</td>'+''.join(['<td>'+str(assignment[x][4])+'</td>' for x in names[:3]])+'</tr>'
-            output += '<tr><td>Total</td>'+''.join(['<td>'+str(assignment[x][5])+'</td>' for x in names[:2]])+'</tr>'
+            output += '<tr><td>Between</td>'+''.join(['<td>'+str(round(assignment[x][0],2))+'</td>' for x in names[:3]])+'</tr>'
+            output += '<tr><td>'+data['varnames'][0][0]+'</td>'+''.join(['<td>'+str(round(assignment[x][1],2))+'</td>' for x in names[:3]])+''.join(['<td>'+str(assignment[x][0])+'</td>' for x in names[3:]])+'</tr>'
+            output += '<tr><td>'+data['varnames'][1][0]+'</td>'+''.join(['<td>'+str(round(assignment[x][2],2))+'</td>' for x in names[:3]])+''.join(['<td>'+str(assignment[x][1])+'</td>' for x in names[3:]])+'</tr>'
+            output += '<tr><td>Interaction</td>'+''.join(['<td>'+str(round(assignment[x][3],2))+'</td>' for x in names[:3]])+''.join(['<td>'+str(assignment[x][2])+'</td>' for x in names[3:]])+'</tr>'
+            output += '<tr><td>Within</td>'+''.join(['<td>'+str(round(assignment[x][4],2))+'</td>' for x in names[:3]])+'</tr>'
+            output += '<tr><td>Total</td>'+''.join(['<td>'+str(round(assignment[x][5],2))+'</td>' for x in names[:2]])+'</tr>'
             output += '</table></p>'
         if assignment['assignment_type'] == 2:
             output += self.print_rmanova(assignment)
