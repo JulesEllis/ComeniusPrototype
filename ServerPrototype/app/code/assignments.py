@@ -151,15 +151,15 @@ class Assignments:
     def create_report(self, control: bool):
         choice :int = random.choice([0,1,2])
         output = {}
-        if choice == 0:
-            assignment = self.create_anova(False, control)
-            output = {**assignment, **self.solve_anova(assignment, {})}
-        if choice == 1:
-            assignment = self.create_anova(True, control)
-            output = {**assignment, **self.solve_anova(assignment, {})}
-        if choice == 2:
-            assignment = self.create_rmanova(control)
-            output = {**assignment, **self.solve_rmanova(assignment, {})}
+        #if choice == 0:
+        #    assignment = self.create_anova(False, control)
+        #    output = {**assignment, **self.solve_anova(assignment, {})}
+        #if choice == 1:
+        assignment = self.create_anova(True, control)
+        output = {**assignment, **self.solve_anova(assignment, {})}
+        #if choice == 2:
+        #    assignment = self.create_rmanova(control)
+        #    output = {**assignment, **self.solve_rmanova(assignment, {})}
         output['assignment_type'] = choice
         return output
             

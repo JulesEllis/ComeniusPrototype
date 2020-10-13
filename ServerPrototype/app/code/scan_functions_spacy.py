@@ -122,14 +122,34 @@ def scan_decision_new(text: str, assignment: Dict, solution: Dict, anova: bool=F
         return False, 'Mooi, deze beslissing klopt. '
 
 def scan_interpretation(text: str, solution: Dict, anova: bool=False, num: int=1) -> [bool, str]:
-    tokens: List[str] = nltk.word_tokenize(text.lower().replace('.',''))
-    #sol_tokens = solution['interpretation'].split()
+    nl_nlp = spacy.load('nl')
+    doc = nl_nlp(text.lower())
+    
     i_key: str = 'independent' + str(num) if num > 1 else 'independent'
     independent = solution[i_key]
+    dependent = solution['dependent']
     control: bool = solution['control']
-    criteria = ['cause', 'effect', 'unk', 'difference', 'var', 'dep', 'prim', 'alt']
+    criteria = ['cause', 'effect', 'unk', 'var', 'dep', 'prim', 'alt', 'cause_alignment'] #Replace effect with verschil?
     scorepoints = dict([(name, False) for name in criteria])
+    scorepoints['prim'] = 'primaire' in [x.text for x in doc]
+    scorepoints['alt'] = 'alternatieve' in [x.text for x in doc] if control else True
+    scorepoints['unk'] = 'onbekend' in [x.text for x in doc] if not control else True
+    #TODO: verbind 'onbekend' met 'oorzaak is' en daaran verwandte uitdrukkingen
     
+    causeverbs = [x for x in doc if x.text in ['veroorzaakt', 'heeft', 'beinvloedt', 'beinvloed']]
+    scorepoints['cause'] = any(causeverbs)
+    if scorepoints['cause']:
+        effect_children = descendants(causeverbs[0])
+        scorepoints['effect'] = 'effect' in [x.text for x in effect_children]
+        scorepoints['var'] = independent in [x.text for x in effect_children]
+        scorepoints['dep'] = dependent in [x.text for x in effect_children]
+        if [x for x in causeverbs[0].ancestors] != []:
+            if [x for x in [y for y in causeverbs[0].ancestors][0].children] != []:
+                verklaring_children = [x for x in [y for y in causeverbs[0].ancestors][0].children]
+                if control: 
+                    scorepoints['cause_alignment'] = 'primaire' in verklaring_children and not 'alternatieve' in verklaring_children 
+                else:
+                    scorepoints['cause_alignment'] = not 'primaire' in verklaring_children and 'alternatieve' in verklaring_children
     
     if False in list(scorepoints.values()):
         output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
@@ -139,8 +159,6 @@ def scan_interpretation(text: str, solution: Dict, anova: bool=False, num: int=1
             output += ' -het effect wordt niet genoemd<br>'
         if not scorepoints['unk']:
             output += ' -niet gesteld dat de oorzaak van het effect onbekend is<br>'
-        if not scorepoints['difference']:
-            output += ' -er wordt niet genoemd dat er een verschil is tussen de twee niveaus van de onafhankelijke variabele<br>'
         if not scorepoints['var']:
             output += ' -de onafhankelijke variabele wordt niet genoemd<br>'
         if not scorepoints['dep']:
@@ -149,6 +167,8 @@ def scan_interpretation(text: str, solution: Dict, anova: bool=False, num: int=1
             output += ' -de primaire verklaring wordt niet genoemd<br>'
         if not scorepoints['alt']:
             output += ' -de alternatieve verlaring wordt niet genoemd<br>'
+        if not scorepoints['cause_alignment']:
+            output += ' -de alternatieve verlaring en primaire verklaring zijn omgekeerd aangegeven<br>'
         return True, output
     else:
         return False, 'Mooi, deze causale interpretatie klopt. '
