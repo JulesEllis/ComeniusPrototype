@@ -25,12 +25,12 @@ class Assignments:
         
     #Checks the nature of the given assignment and returns the output of the right print function
     def print_assignment(self, assignment: Dict) -> str:
-        if 'A' in list(assignment['data'].keys()):
+        if 'levels' in list(assignment.keys()):
+            return self.print_report(assignment) #Beknopt rapport
+        elif 'A' in list(assignment['data'].keys()):
             return self.print_ttest(assignment) #T-Test
         elif 'jackedmeans' in list(assignment['data'].keys()):
             return self.print_rmanova(assignment) #Repeated-measures ANOVA
-        elif 'levels' in list(assignment.keys()):
-            return self.print_report(assignment) #Beknopt rapport
         else:
             return self.print_anova(assignment) #One-way or two-way ANOVA
         
@@ -148,18 +148,26 @@ class Assignments:
         output['data']['n_conditions'] = n_conditions
         return output
     
-    def create_report(self, control: bool):
-        choice :int = 1 #random.choice([0,1,2])
+    def create_report(self, control: bool, choice: int=0):
+        if choice == 0:
+            choice = random.choice([1,2,3,4,5])
+        hyp_type = random.choice([0,1,2])
         output = {}
-        #if choice == 0:
-        #    assignment = self.create_anova(False, control)
-        #    output = {**assignment, **self.solve_anova(assignment, {})}
-        #if choice == 1:
-        assignment = self.create_anova(True, control)
-        output = {**assignment, **self.solve_anova(assignment, {})}
-        #if choice == 2:
-        #    assignment = self.create_rmanova(control)
-        #    output = {**assignment, **self.solve_rmanova(assignment, {})}
+        if choice == 1:
+            assignment = self.create_ttest(True, hyp_type, control)
+            output = {**assignment, **self.solve_ttest(assignment, {})}
+        if choice == 2:
+            assignment = self.create_ttest(False, hyp_type, control)
+            output = {**assignment, **self.solve_ttest(assignment, {})}
+        if choice == 3:
+            assignment = self.create_anova(False, control)
+            output = {**assignment, **self.solve_anova(assignment, {})}
+        if choice == 4:
+            assignment = self.create_anova(True, control)
+            output = {**assignment, **self.solve_anova(assignment, {})}
+        if choice == 5:
+            assignment = self.create_rmanova(control)
+            output = {**assignment, **self.solve_rmanova(assignment, {})}
         output['assignment_type'] = choice
         return output
             
@@ -226,18 +234,45 @@ class Assignments:
     
     def print_report(self, assignment: Dict) -> str:
         output:str = ''
-        print(assignment)
         data:dict = assignment['data']
         names = ['df','ss','ms','F','p','r2']
-        if assignment['assignment_type'] == 0:
+        if assignment['assignment_type'] == 1:
+            output += self.print_ttest(assignment)
+            output += '<p><table style="width:20%">'
+            output += '<tr><td>'+str(data['varnames'][0][0])+'</td><td>Gemiddelde</td><td>Standaarddeviatie</td><td>N</td></tr>'
+            output += '<tr><td>'+str(data['varnames'][0][1])+'</td><td>'+str(round(assignment['means'][0],2))+'</td><td>'+str(round(assignment['stds'][0],2))+'</td><td>'+str(assignment['ns'][0])+'</td></tr>'
+            output += '<tr><td>'+str(data['varnames'][0][2])+'</td><td>'+str(round(assignment['means'][1],2))+'</td><td>'+str(round(assignment['stds'][1],2))+'</td><td>'+str(assignment['ns'][1])+'</td></tr>'
+            output += '</table></p><p><table style="width:20%">'
+            output += '<tr><td>Statistiek</td><td>Waarde</td></tr>'
+            output += '<tr><td>Vrijheidsgraden (df)</td><td>'+str(assignment['df'][0])+'</td></tr>'
+            output += '<tr><td>Ruw effect</td><td>'+str(round(assignment['raw_effect'][0],2))+'</td></tr>'
+            output += '<tr><td>Relatief effect</td><td>'+str(round(assignment['relative_effect'][0],2))+'</td></tr>'
+            output += '<tr><td>T</td><td>'+str(round(assignment['T'][0],2))+'</td></tr>'
+            output += '<tr><td>p</td><td>'+str(round(assignment['p'][0],2))+'</td></tr>'
+            output += '</table></p>'
+        if assignment['assignment_type'] == 2:
+            output += self.print_ttest(assignment)
+            output += '<p><table style="width:20%">'
+            output += '<tr><td>'+str(data['varnames'][0][0])+'</td><td>Gemiddelde</td><td>Standaarddeviatie</td><td>N</td></tr>'
+            output += '<tr><td>'+str(data['varnames'][0][1])+'</td><td>'+str(round(assignment['means'][0],2))+'</td><td>'+str(round(assignment['stds'][0],2))+'</td><td>'+str(round(assignment['ns'][0],2))+'</td></tr>'
+            output += '<tr><td>'+str(data['varnames'][0][2])+'</td><td>'+str(round(assignment['means'][1],2))+'</td><td>'+str(round(assignment['stds'][1],2))+'</td><td>'+str(round(assignment['ns'][0],2))+'</td></tr>'
+            output += '</table></p><p><table style="width:20%">'
+            output += '<tr><td>Statistiek</td><td>Waarde</td></tr>'
+            output += '<tr><td>Vrijheidsgraden (df)</td><td>'+str(assignment['df'][0])+'</td></tr>'
+            output += '<tr><td>Ruw effect</td><td>'+str(round(assignment['raw_effect'][0],2))+'</td></tr>'
+            output += '<tr><td>Relatief effect</td><td>'+str(round(assignment['relative_effect'][0],2))+'</td></tr>'
+            output += '<tr><td>T</td><td>'+str(round(assignment['T'][0],2))+'</td></tr>'
+            output += '<tr><td>p</td><td>'+str(round(assignment['p'][0],2))+'</td></tr>'
+            output += '</table></p>'
+        if assignment['assignment_type'] == 3:
             output += self.print_anova(assignment)
             output += '<p><table style="width:20%">'
             output += '<tr><td>Bron</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td></tr>'
-            output += '<tr><td>Between</td>'+''.join(['<td>'+str(assignment[x][0])+'</td>' for x in names if len(assignment[x]) > 0])+'</tr>'
-            output += '<tr><td>Within</td>'+''.join(['<td>'+str(assignment[x][1])+'</td>' for x in names if len(assignment[x]) > 1])+'</tr>'
-            output += '<tr><td>Total</td>'+''.join(['<td>'+str(assignment[x][2])+'</td>' for x in names if len(assignment[x]) > 2])+'</tr>'
+            output += '<tr><td>Between</td>'+''.join(['<td>'+str(round(assignment[x][0],2))+'</td>' for x in names if len(assignment[x]) > 0])+'</tr>'
+            output += '<tr><td>Within</td>'+''.join(['<td>'+str(round(assignment[x][1],2))+'</td>' for x in names if len(assignment[x]) > 1])+'</tr>'
+            output += '<tr><td>Total</td>'+''.join(['<td>'+str(round(assignment[x][2],2))+'</td>' for x in names if len(assignment[x]) > 2])+'</tr>'
             output += '</table></p>'
-        if assignment['assignment_type'] == 1:
+        if assignment['assignment_type'] == 4:
             output += self.print_anova(assignment)
             output += '<p><table style="width:20%">'
             output += '<tr><td>Bron</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td></tr>'
@@ -248,14 +283,14 @@ class Assignments:
             output += '<tr><td>Within</td>'+''.join(['<td>'+str(round(assignment[x][4],2))+'</td>' for x in names[:3]])+'</tr>'
             output += '<tr><td>Total</td>'+''.join(['<td>'+str(round(assignment[x][5],2))+'</td>' for x in names[:2]])+'</tr>'
             output += '</table></p>'
-        if assignment['assignment_type'] == 2:
+        if assignment['assignment_type'] == 5:
             output += self.print_rmanova(assignment)
             output += '<p><table style="width:20%">'
             output += '<tr><td>Bron</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td></tr>'
-            output += '<tr><td>'+data['varnames'][0][0]+'</td>'+''.join(['<td>'+str(assignment[x][0])+'</td>' for x in names if len(assignment[x]) > 0])+'</tr>'
-            output += '<tr><td>Persoon</td>'+''.join(['<td>'+str(assignment[x][1])+'</td>' for x in names if len(assignment[x]) > 1])+'</tr>'
-            output += '<tr><td>Interactie</td>'+''.join(['<td>'+str(assignment[x][0])+'</td>' for x in names if len(assignment[x]) > 2])+'</tr>'
-            output += '<tr><td>Total</td>'+''.join(['<td>'+str(assignment[x][3])+'</td>' for x in names if len(assignment[x]) > 3])+'</tr>'
+            output += '<tr><td>'+data['varnames'][0][0]+'</td>'+''.join(['<td>'+str(round(assignment[x][0],2))+'</td>' for x in names if len(assignment[x]) > 0])+'</tr>'
+            output += '<tr><td>Persoon</td>'+''.join(['<td>'+str(round(assignment[x][1],2))+'</td>' for x in names if len(assignment[x]) > 1])+'</tr>'
+            output += '<tr><td>Interactie</td>'+''.join(['<td>'+str(round(assignment[x][0],2))+'</td>' for x in names if len(assignment[x]) > 2])+'</tr>'
+            output += '<tr><td>Total</td>'+''.join(['<td>'+str(round(assignment[x][3],2))+'</td>' for x in names if len(assignment[x]) > 3])+'</tr>'
             output += '</table></p>'
         return output
             

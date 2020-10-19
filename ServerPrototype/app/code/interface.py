@@ -13,6 +13,7 @@ from scipy import stats
 from app.code.enums import Process, Task
 from app.code.assignments import Assignments
 from app.code.scan_functions import *
+from app.code.scan_functions_spacy import *
 from typing import Dict, List, Callable, Tuple
 """
 VRAGEN VOLGEND SKYPEGESPREK
@@ -160,7 +161,7 @@ class OuterController:
                 self.formmode = output
                 self.index += 1
                 return self.protocol[self.index][0]
-            elif process == Process.CHOOSE_REPORT: #If choice protocol index 1 or return protocol index 2
+            elif process == Process.CHOOSE_ANALYSIS: #If choice protocol index 1 or return protocol index 2
                 if not again:
                     control: bool = random.choice([True,False])
                     hyp_type: int = random.choice([0,1,2])
@@ -196,15 +197,23 @@ class OuterController:
                         self.protocol = self.rmanova_protocol()
                         self.report_type = Task.WITHIN_ANOVA
                     if input_text == '6':
-                        self.assignment = self.assignments.create_report(control)
-                        self.solution = {}
-                        instruction = self.assignments.print_report(self.assignment)
-                        self.report_type = Task.REPORT
-                    if self.formmode or input_text == '6':
+                        self.protocol = self.report_choice_protocol()
+                        return self.protocol[self.index][0]
+                    if self.formmode and not input_text == '6':
                         self.protocol = self.return_protocol()
                     else:
                         self.skipable = True
                     return instruction + '<br>' + self.protocol[self.index][0]
+                else:
+                    return output_text
+            elif process == Process.CHOOSE_REPORT:
+                control: bool = random.choice([True,False])
+                if not again:
+                    self.report_type = Task.REPORT
+                    self.assignment = self.assignments.create_report(control, int(input_text))
+                    self.solution = {}
+                    self.protocol = self.return_protocol()
+                    instruction = self.assignments.print_report(self.assignment)
                 else:
                     return output_text
             elif process == Process.TABLE: #Main report protocols during table question
@@ -265,15 +274,18 @@ class OuterController:
             
         def choice_protocol(self) -> List[Tuple]:
             return [('Wil je het rapport in tentamenmodus maken?',scan_yesno,[], Process.YES_NO),
-                    ('Wat voor soort elementair rapport wil je oefenen?<br>(1) T-toets onafhankelijke variabelen<br>(2) T-toets voor gekoppelde paren<br>(3) One-way ANOVA<br>(4) Two-way ANOVA<br>(5) Repeated Measures Anova', 
-                     scan_protocol_choice, [], Process.CHOOSE_REPORT)]
+                    ('Wat voor soort elementair rapport wil je oefenen?<br>(1) T-toets onafhankelijke variabelen<br>(2) T-toets voor gekoppelde paren<br>(3) One-way ANOVA<br>(4) Two-way ANOVA<br>(5) Repeated Measures Anova<br>(6) Beknopt Rapport', 
+                     scan_protocol_choice, [], Process.CHOOSE_ANALYSIS)]
+                    
+        def report_choice_protocol(self) -> List[Tuple]:
+            return [('Van wat voor analyse wil je een beknopt rapport maken?<br>(1) T-toets onafhankelijke variabelen<br>(2) T-toets voor gekoppelde paren<br>(3) One-way ANOVA<br>(4) Two-way ANOVA<br>(5) Repeated Measures Anova',scan_report_choice,[],Process.CHOOSE_REPORT)]
             
         def return_protocol(self) -> List[Tuple]:
             return [('Gefeliciteerd, je elementair rapport is af! Wil je nog een opgave doen?',
                      scan_yesno,[], Process.ANOTHER),
                     ('Wil je het rapport in tentamenmodus maken?',scan_yesno,[], Process.YES_NO),
-                    ('Wat voor soort elementair rapport wil je oefenen?<br>(1) T-toets onafhankelijke variabelen<br>(2) T-toets voor gekoppelde paren<br>(3) One-way ANOVA<br>(4) Two-way ANOVA<br>(5) Repeated Measures Anova', 
-                     scan_protocol_choice, [], Process.CHOOSE_REPORT)]
+                    ('Wat voor soort elementair rapport wil je oefenen?<br>(1) T-toets onafhankelijke variabelen<br>(2) T-toets voor gekoppelde paren<br>(3) One-way ANOVA<br>(4) Two-way ANOVA<br>(5) Repeated Measures Anova<br>(6) Beknopt Rapport', 
+                     scan_protocol_choice, [], Process.CHOOSE_ANALYSIS)]
         
         def ttest_protocol(self) -> List[Tuple]:
             output : List[Tuple] = [('Beschrijf de onafhankelijke variabele.', scan_indep, [self.solution], Process.QUESTION),

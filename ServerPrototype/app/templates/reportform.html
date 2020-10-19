@@ -13,8 +13,8 @@
         {{ instruction | safe}}
         
         <p>Schrijf hieronder je beknopte rapport. 
-            {{ form.inputtext.label }}<br>
-            {{ form.inputtext(size=60) }}
+            {{ form.inputtext.label(id='input') }}<br>
+            {{ form.inputtext(size=120) }}
         </p>
         <span style="color: blue;">{{ display | safe}}</span>
         

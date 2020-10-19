@@ -21,6 +21,7 @@ class Process(Enum):
     QUESTION = 1
     LAST_QUESTION = 2
     YES_NO = 3
-    CHOOSE_REPORT = 4
-    TABLE = 5
-    ANOTHER = 6
+    CHOOSE_ANALYSIS = 4
+    CHOOSE_REPORT = 5
+    TABLE = 6
+    ANOTHER = 7

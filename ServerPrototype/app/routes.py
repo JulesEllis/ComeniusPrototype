@@ -23,7 +23,7 @@ def index():
         if form.submit.data:
             output_text : str = controller.update(textdict)
             if controller.assignment != None: #Retrieve variable names
-                varnames = controller.assignment['data']['varnames']
+                varnames:list = controller.assignment['data']['varnames']
             form_shape = controller.report_type.value
             if controller.formmode and form_shape > 0 and form_shape < 3:
                 form = SmallForm()

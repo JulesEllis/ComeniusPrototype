@@ -40,6 +40,12 @@ def scan_protocol_choice(input_text : str):
     else:
         return False, 'Ok, hier is je opgave:<br>'
 
+def scan_report_choice(input_text : str):
+    if input_text not in ['1','2','3','4','5','6']:
+        return True, 'Sorry, voer uw antwoord opnieuw in in de vorm van een cijfer.'
+    else:
+        return False, 'Ok, hier is je opgave:<br>'
+
 def scan_indep(text :str, solution :Dict) -> [bool, str]:
     #Determine which of the necessary elements are present in the answer
     text: List[str] = nltk.word_tokenize(text.lower())
