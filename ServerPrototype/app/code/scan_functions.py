@@ -214,13 +214,14 @@ def scan_number(text: str, stat: str, solution: Dict, margin: float=0.01) -> [bo
 
 def scan_hypothesis(text: str, solution: Dict, num: int=1) -> [bool, str]:
     #Remove potential dots to avoid confusion
-    l_key: str = 'levels' if num < 2 else 'levels' + str(num)    
+    l_key: str = 'levels' if num < 2 else 'levels' + str(num)
+    print(solution['hypothesis'])
+    sign:str = ['==','<=','>='][solution['hypothesis']] if 'hypothesis' in list(solution.keys()) else '=='
     tokens: List[str] = text.lower().replace('.','').split() #nltk.word_tokenize(text.lower())
-    sol_tokens: List[str] = solution['null'].split() #nltk.word_tokenize(solution['null'])
-    avgs: List[str] = ['mu(' + avg + ')' for avg in solution[l_key]]
+    avgs: List[str] = ['mu(' + avg.lower() + ')' for avg in solution[l_key]]
     mus: List[bool] = [avg in tokens for avg in avgs]
     scorepoints: Dict[str, bool] = {'H0': 'h0:' in tokens,
-                   'sign': sol_tokens[2] in tokens, 
+                   'sign': sign in tokens, 
                    'order': True}
     
     #if '==' not in sol_tokens:
@@ -288,6 +289,7 @@ def scan_hypothesis_rmanova(text: str, solution: Dict) -> [bool, str]:
     else:
         return False, 'Mooi, deze hypothese klopt.'
     
+"""
 def scan_decision(text: str, assignment: Dict, solution: Dict, anova: bool=False, num: int=1) -> [bool, str]:
     #Define important variables necessary for checking the answer's components
     tokens: List[str] = nltk.word_tokenize(text.lower().replace('.',''))
@@ -507,6 +509,7 @@ def scan_interpretation_anova(text: str, solution: Dict) -> [bool, str]:
         return True, output
     else:
         return False, 'Mooi, deze causale interpretatie klopt. '
+"""
 
 def sim(gold_numbers :List, numbers :List, margin:float) -> True: #Return true if there is a similar number to num in the given list/float/integer in the solution
     return [gold_numbers[i] - margin < numbers[i] and numbers[i] < gold_numbers[i] + margin for i in range(len(gold_numbers))]
@@ -524,8 +527,11 @@ def scan_table_ttest(textfields: Dict, solution: Dict, margin:float=0.01) -> [bo
             
     #Compare input with gold standard
     meaninput :List = [textfields['mean' + str(i+1)] for i in range(len(solution['means']))]
+    print(solution['means'])
     stdinput :List  = [textfields['std' + str(i+1)] for i in range(len(solution['stds']))]
+    print(solution['stds'])
     ninput :List  = [textfields['n' + str(i+1)] for i in range(len(solution['ns']))]
+    print(solution['ns'])
     scorepoints :Dict = {'mean': sim(solution['means'], meaninput, margin),
                    'std': sim(solution['stds'], stdinput, margin),
                    'n': sim(solution['ns'], ninput, margin),

@@ -299,6 +299,7 @@ class Assignments:
         numbers: List = [assignment['data']['A'], assignment['data']['B']]
         names: List[str] = assignment['data']['varnames'][0][1:]
         between_subject: bool = assignment['between_subject']
+        solution['hypothesis'] = assignment['hypothesis']
         
         if not between_subject:
             #Differential scores

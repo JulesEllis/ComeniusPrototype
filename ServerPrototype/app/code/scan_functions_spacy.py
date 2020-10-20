@@ -30,7 +30,7 @@ def descendants(node) -> List[Token]:
         output += descendants(child)
     return output
 
-def scan_decision(text: str, assignment: Dict={'hypothesis':0}, solution: Dict={'relative_effect':[0.5],'p':[0.02],'levels':['nederlands','duits']}, anova: bool=False, num: int=1) -> [bool, str]:
+def scan_decision(text: str, assignment: Dict={'hypothesis':0}, solution: Dict={'relative_effect':[0.5],'p':[0.01],'levels':['nederlands','duits']}, anova: bool=False, num: int=1) -> [bool, str]:
     nl_nlp = spacy.load('nl')
     doc = nl_nlp(text.lower())
     criteria = ['hyp_rejected', 'hyp_present', 'right_comparison', 'right_negation',
@@ -38,6 +38,7 @@ def scan_decision(text: str, assignment: Dict={'hypothesis':0}, solution: Dict={
                 'effect_present', 'strength_present', 'right_strength']#,'p_present',
                # 'p_comparison']
     l_key: str = 'levels' + str(num) if num > 1 else 'levels'
+    levels = solution[l_key]
     scorepoints = dict([(name, False) for name in criteria])
     
     ## H0
@@ -57,28 +58,28 @@ def scan_decision(text: str, assignment: Dict={'hypothesis':0}, solution: Dict={
                    x.text =='gelijk' or x.text == 'ongelijk' or x.text == 'kleiner']
     if comparisons != []:
         comptree:List = descendants(comparisons[0])
-        
         not_present = 'niet' in [x.text for x in comptree]
-        scorepoints['right_comparison'] = comparisons[0].text == gold_comp
+        scorepoints['right_comparison'] = comparisons[0].text == gold_comp or (gold_comp == 'ongelijk' and comparisons[0].text == 'gelijk')
         if gold_comp == 'ongelijk' and comparisons[0].text == 'ongelijk':
-            scorepoints['right_negation'] = not_present != solution['p'][num-1] < 0.05
+            scorepoints['right_negation'] = not_present != (solution['p'][num-1] < 0.05)
         elif gold_comp == 'ongelijk' and comparisons[0].text == 'gelijk':
-            scorepoints['right_negation'] = not_present == solution['p'][num-1] < 0.05
+            scorepoints['right_negation'] = not_present == (solution['p'][num-1] < 0.05)
         else:
-            scorepoints['right_negation'] = not_present != solution['p'][num-1] < 0.05
+            scorepoints['right_negation'] = not_present != (solution['p'][num-1] < 0.05)
         levels:List = solution[l_key] #dummy values
         scorepoints['level_present'] = any([x in [y.text for y in comptree] for x in levels])
         scorepoints['both_present'] = all([x in [y.text for y in comptree] for x in levels])
         
-        mean = [x for x in comparisons[0].children if x.text == 'gemiddelde']
-        mean_2 = [x for x in comparisons[0].children if x.text == 'populatiegemiddelde']
+        mean = [x for x in comptree if x.text == 'gemiddelde']
+        mean_2 = [x for x in comptree if x.text == 'populatiegemiddelde']
         scorepoints['mean_present'] = any(mean) or any(mean_2)
         if scorepoints['mean_present']:
             meanroot = mean[0] if any(mean) else mean_2[0] if any(mean_2) else None
             meantree:list = descendants(meanroot)
             scorepoints['pop_present'] = any(mean_2) or 'populatie' in [x.text for x in meantree]
-            scorepoints['level_present'] = any([x in [y.text for y in doc] for x in levels]) or scorepoints['level_present']
-            scorepoints['both_present'] = all([x in [y.text for y in doc] for x in levels]) or scorepoints['both_present']
+            
+    scorepoints['level_present'] = any([x in [y.text for y in doc] for x in levels]) or scorepoints['level_present']
+    scorepoints['both_present'] = all([x in [y.text for y in doc] for x in levels]) or scorepoints['both_present']
         
     ## STRENGTH
     ## bools=effect_present, strength_present, right_strength, 
@@ -97,7 +98,10 @@ def scan_decision(text: str, assignment: Dict={'hypothesis':0}, solution: Dict={
         scorepoints['effect_present'] = True
         scorepoints['strength_present'] = any([x in [y.text for y in e_tree] for x in ['klein','matig','sterk']])
         scorepoints['right_strength'] = gold_strength in [x.text for x in e_tree]
-        
+    if solution['p'][num - 1] > 0.05:
+        for x in ['effect_present','strength_present','right_strength']:
+            scorepoints[x] = True
+    
     ## P-VALUE
     ## bools=p_present, p_comparison
     if False in list(scorepoints.values()):
@@ -128,8 +132,12 @@ def scan_decision(text: str, assignment: Dict={'hypothesis':0}, solution: Dict={
     else:
         return False, 'Mooi, deze beslissing klopt. '
 
+#text = 'H0 verworpen, het populatiegemiddelde van Nederlands is niet gelijk aan dat van Duits, er is een klein effect'
+#print(scan_decision(text)[1])
+#displacy.serve(nl_nlp(text))
+
 def scan_decision_anova(text: str, assignment:Dict={}, solution: Dict={'independent':'nationaliteit',
-                        'independent2':'geslacht','p':[None,None,0.02],'r2':[None,None,0.40]}) -> [bool, str]:
+                        'independent2':'geslacht','p':[None,None,0.10],'r2':[None,None,0.40]}) -> [bool, str]:
     #Define important variables necessary for checking the answer's components
     nl_nlp = spacy.load('nl')
     doc = nl_nlp(text.lower())
@@ -159,14 +167,17 @@ def scan_decision_anova(text: str, assignment:Dict={}, solution: Dict={'independ
         scorepoints['effect_present'] = True
         scorepoints['strength_present'] = any([x in [y.text for y in e_tree] for x in ['klein','matig','sterk']])
         scorepoints['right_strength'] = gold_strength in [x.text for x in e_tree]
+    if solution['p'][2] > 0.05:
+        for x in ['effect_present','strength_present','right_strength']:
+            scorepoints[x] = True
     
     #H0
-    hyp_statement = [x for x in doc if x.text == 'verworpen' or 
-                   x.text =='behouden' or x.text == 'verwerpen']
+    rejected = solution['p'][2] < 0.05
+    hyp_statement = [x for x in doc if x.text in ['verworpen','verwerpen','verwerp','behouden','behoud']]
     if any(hyp_statement):
-        scorepoints['H0'] = not hyp_statement[0].text == 'behouden'
+        scorepoints['hyp_rejected'] = rejected != (hyp_statement[0].text in ['behouden', 'behoud'])
         children = hyp_statement[0].children
-        scorepoints['dpresent'] = any([x for x in children if x.text == 'h0' or x.text == 'nulhypothese'])
+        scorepoints['hyp_present'] = any([x for x in children if x.text == 'h0' or x.text == 'nulhypothese'])
     
     if False in list(scorepoints.values()):
         output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
@@ -247,6 +258,9 @@ def scan_decision_rmanova(text: str, assignment: Dict, solution: Dict={'independ
         scorepoints['effect_present'] = True
         scorepoints['strength_present'] = any([x in [y.text for y in e_tree] for x in ['klein','matig','sterk']])
         scorepoints['right_strength'] = gold_strength in [x.text for x in e_tree]
+    if solution['p'][1] > 0.05:
+        for x in ['effect_present','strength_present','right_strength']:
+            scorepoints[x] = True
     
     #Detect whether the right phrases appear in the decision
     if False in list(scorepoints.values()):
