@@ -38,7 +38,7 @@ def scan_decision(text: str, assignment: Dict={'hypothesis':0}, solution: Dict={
                 'effect_present', 'strength_present', 'right_strength']#,'p_present',
                # 'p_comparison']
     l_key: str = 'levels' + str(num) if num > 1 else 'levels'
-    levels = solution[l_key]
+    levels = [x.lower() for x in solution[l_key]]
     scorepoints = dict([(name, False) for name in criteria])
     
     ## H0
@@ -66,18 +66,17 @@ def scan_decision(text: str, assignment: Dict={'hypothesis':0}, solution: Dict={
             scorepoints['right_negation'] = not_present == (solution['p'][num-1] < 0.05)
         else:
             scorepoints['right_negation'] = not_present != (solution['p'][num-1] < 0.05)
-        levels:List = solution[l_key] #dummy values
         scorepoints['level_present'] = any([x in [y.text for y in comptree] for x in levels])
         scorepoints['both_present'] = all([x in [y.text for y in comptree] for x in levels])
         
-        mean = [x for x in comptree if x.text == 'gemiddelde']
-        mean_2 = [x for x in comptree if x.text == 'populatiegemiddelde']
-        scorepoints['mean_present'] = any(mean) or any(mean_2)
-        if scorepoints['mean_present']:
-            meanroot = mean[0] if any(mean) else mean_2[0] if any(mean_2) else None
-            meantree:list = descendants(meanroot)
-            scorepoints['pop_present'] = any(mean_2) or 'populatie' in [x.text for x in meantree]
-            
+        
+    mean = [x for x in doc if x.text == 'gemiddelde']
+    mean_2 = [x for x in doc if x.text == 'populatiegemiddelde']
+    scorepoints['mean_present'] = any(mean) or any(mean_2)
+    #if scorepoints['mean_present']:
+        #meanroot = mean[0] if any(mean) else mean_2[0] if any(mean_2) else None
+        #meantree:list = descendants(meanroot)
+    scorepoints['pop_present'] = any(mean_2) or 'populatie' in [x.text for x in doc]
     scorepoints['level_present'] = any([x in [y.text for y in doc] for x in levels]) or scorepoints['level_present']
     scorepoints['both_present'] = all([x in [y.text for y in doc] for x in levels]) or scorepoints['both_present']
         
@@ -98,9 +97,11 @@ def scan_decision(text: str, assignment: Dict={'hypothesis':0}, solution: Dict={
         scorepoints['effect_present'] = True
         scorepoints['strength_present'] = any([x in [y.text for y in e_tree] for x in ['klein','matig','sterk']])
         scorepoints['right_strength'] = gold_strength in [x.text for x in e_tree]
-    if solution['p'][num - 1] > 0.05:
+    if solution['p'][num - 1] > 0.05 or solution['p'][num - 1] == math.nan:
         for x in ['effect_present','strength_present','right_strength']:
             scorepoints[x] = True
+    print(scorepoints)
+    print(solution)
     
     ## P-VALUE
     ## bools=p_present, p_comparison
@@ -123,7 +124,7 @@ def scan_decision(text: str, assignment: Dict={'hypothesis':0}, solution: Dict={
         if not scorepoints['both_present'] and scorepoints['level_present']:
             output += ' -enkele niveaus van de onafhankelijke variabele weggelaten<br>'
         if not scorepoints['effect_present']:
-            output += ' -het effect wordt niet genoemd<br>'
+            output += ' -de effectgrootte wordt niet genoemd<br>'
         if scorepoints['effect_present'] and not scorepoints['strength_present']:
             output += ' -de sterkte van het effect wordt niet genoemd<br>'
         elif scorepoints['effect_present'] and not scorepoints['right_strength']:
@@ -196,7 +197,7 @@ def scan_decision_anova(text: str, assignment:Dict={}, solution: Dict={'independ
         elif not scorepoints['indy2'] or not scorepoints['indy2']:
             output += ' -een van de onafhankelijke variabelen ontbreekt<br>'
         if not scorepoints['effect_present']:
-            output += ' -het effect wordt niet genoemd<br>'
+            output += ' -de effectgrootte wordt niet genoemd<br>'
         if scorepoints['effect_present'] and not scorepoints['strength_present']:
             output += ' -de sterkte van het effect wordt niet genoemd<br>'
         elif scorepoints['effect_present'] and not scorepoints['right_strength']:
@@ -280,7 +281,7 @@ def scan_decision_rmanova(text: str, assignment: Dict, solution: Dict={'independ
         if not scorepoints['jacked']:
             output += ' -niet gesteld dat het over de opgevoerde gemiddelden gaat'
         if not scorepoints['effect_present']:
-            output += ' -het effect wordt niet genoemd<br>'
+            output += ' -de effectgrootte wordt niet genoemd<br>'
         if scorepoints['effect_present'] and not scorepoints['strength_present']:
             output += ' -de sterkte van het effect wordt niet genoemd<br>'
         elif scorepoints['effect_present'] and not scorepoints['right_strength']:
@@ -352,7 +353,8 @@ def scan_interpretation_anova(text: str, solution: Dict={'independent':'national
     tokens = [x.text for x in doc]
     
     control: bool = solution['control']
-    levels=solution['levels'];levels2=solution['levels2']
+    levels=[x.lower() for x in solution['levels']]
+    levels2=[x.lower() for x in solution['levels2']]
     criteria = ['unk','prim','alt','dep','indylevels', 'indy2']
     scorepoints = dict([(name, False) for name in criteria])
     

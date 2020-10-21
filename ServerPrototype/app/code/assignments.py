@@ -36,7 +36,7 @@ class Assignments:
         
     #Creates the assignment's data as a tuple of floats
     #If the assignment is a within-subject T-test, n1 and n2 have the same number of samples
-    def create_ttest(self, between_subject: bool, hyp_type: int, control: bool) -> Dict:         
+    def create_ttest(self, between_subject: bool, hyp_type: int, control: bool, elementary:bool=True) -> Dict:         
         #Number of datapoints for the both types of the independent variable
         n1: int = random.randint(9,16)
         if between_subject:
@@ -58,7 +58,8 @@ class Assignments:
             varnames:List = [['Tijdstip', 'Dag', 'Nacht']]
             
         #Create the assignment description
-        instruction: str = 'Maak een elementair rapport van onderstaande data voor de hypothese dat '
+        report_type = 'elementair' if elementary else 'beknopt'
+        instruction: str = 'Maak een '+report_type+' rapport van onderstaande data voor de hypothese dat '
         if hyp_type == 0:
             instruction += 'de reactiesnelheid bij het ' + varnames[0][0] + ' ' + varnames[0][1] + ' gemiddeld ongelijk is aan die bij ' + varnames[0][2] + '.<br><br>'
         if hyp_type == 1:
@@ -67,11 +68,11 @@ class Assignments:
             instruction += "de reactiesnelheid bij het " + varnames[0][0] + " " + varnames[0][1] + " gemiddeld kleiner is dan die bij " + varnames[0][2] + ".<br><br>"
         instruction += "De persoon moet een tijdje achter een beeldscherm zo snel mogelijk op een knop" +" drukken zodra een wit vierkantje veranderd in een zwart vierkantje. De tijden tussen het veranderen" + " van het beeld en het indrukken van de knop worden gemeten en opgeteld. "        
         if between_subject:
-            instruction += 'De proefpersonen zijn allemaal ofwel ' + varnames[0][1] + ' ofwel '+ varnames[0][2] + '. De niveaus zijn: ' + varnames[0][1] + '/' + varnames[0][2] + '. '
+            instruction += 'De proefpersonen zijn allemaal ofwel ' + varnames[0][1] + ' ofwel '+ varnames[0][2] + '. De niveaus zijn: ' + varnames[0][1] + '/' + varnames[0][2] + '. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
             if control:
                 instruction += 'De personen van elk beroep zijn willekeurig geselecteerd. '
         else:
-            instruction += 'De proefpersonen werden tweemaal getoetst op hun reactiesnelheid, een keer overdag en een keer s\'nachts. ' + 'De niveaus zijn dag/nacht. '
+            instruction += 'De proefpersonen werden tweemaal getoetst op hun reactiesnelheid, een keer overdag en een keer s\'nachts. ' + 'De niveaus zijn dag/nacht. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
             if control:
                 instruction += 'De volgorde van de toetsen was gerandomiseerd. '
         
@@ -85,7 +86,7 @@ class Assignments:
                'B': [round(random.gauss(mean2,std2), 2) for i in range(n2)]}
                }
         
-    def create_anova(self, two_way: bool, control: bool) -> Dict:
+    def create_anova(self, two_way: bool, control: bool, elementary:bool=True) -> Dict:
         output = {'two_way':two_way, 'control':control}
         output['instruction']: str = None
         samplevars = [['Nationaliteit','Nederlands','Duits'], #Sample variable names
@@ -98,10 +99,11 @@ class Assignments:
             varnames = random.sample(samplevars, 2)
         
         #Decide the variable names
+        report_type = 'elementair' if elementary else 'beknopt'
         if not two_way:
-            output['instruction'] = 'Maak een elementair rapport van de onderstaande data. De variabelen zijn '+varnames[0][0]+', met niveaus '+' en '.join(varnames[0][1:])+', en gewicht. '
+            output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn '+varnames[0][0]+', met niveaus '+' en '.join(varnames[0][1:])+', en gewicht. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
         else:
-            output['instruction'] = 'Maak een elementair rapport van de onderstaande data. De variabelen zijn '+varnames[0][0]+', met niveaus '+' en '.join(varnames[0][1:])+', '+varnames[1][0]+' met niveaus '+' en '.join(varnames[1][1:])+', en gewicht. '
+            output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn '+varnames[0][0]+', met niveaus '+' en '.join(varnames[0][1:])+', '+varnames[1][0]+' met niveaus '+' en '.join(varnames[1][1:])+', en gewicht. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
         if control:
             output['instruction'] += 'De deelnemers zijn willekeurig gekozen. '
 
@@ -121,7 +123,7 @@ class Assignments:
                   'ns': [n for i in range(4)]}
         return output
     
-    def create_rmanova(self, control: bool) -> Dict:
+    def create_rmanova(self, control: bool, elementary:bool=True) -> Dict:
         #Determine variable shape and names
         output = {'control': control, 'two_way':False}
         n_conditions = random.randint(2,4)
@@ -132,7 +134,8 @@ class Assignments:
                       ['Dag','Maandag','Dinsdag','Woensdag','Donderdag']]
         varnames = [random.choice(samplevars)[:n_conditions+1]]
         
-        output['instruction']: str = 'Maak een elementair rapport van de onderstaande data. De variabelen zijn '+varnames[0][0]+' en gewicht. '
+        report_type = 'elementair' if elementary else 'beknopt'
+        output['instruction']: str = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn '+varnames[0][0]+' en gewicht. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
         if control:
             output['instruction'] += 'De subjecten in het experiment zijn willekeurig geselecteerd. '
         true_means = [int(random.uniform(70,110)) for i in range(n_conditions)]
@@ -154,19 +157,19 @@ class Assignments:
         hyp_type = random.choice([0,1,2])
         output = {}
         if choice == 1:
-            assignment = self.create_ttest(True, hyp_type, control)
+            assignment = self.create_ttest(True, hyp_type, control, False)
             output = {**assignment, **self.solve_ttest(assignment, {})}
         if choice == 2:
-            assignment = self.create_ttest(False, hyp_type, control)
+            assignment = self.create_ttest(False, hyp_type, control, False)
             output = {**assignment, **self.solve_ttest(assignment, {})}
         if choice == 3:
-            assignment = self.create_anova(False, control)
+            assignment = self.create_anova(False, control, False)
             output = {**assignment, **self.solve_anova(assignment, {})}
         if choice == 4:
-            assignment = self.create_anova(True, control)
+            assignment = self.create_anova(True, control, False)
             output = {**assignment, **self.solve_anova(assignment, {})}
         if choice == 5:
-            assignment = self.create_rmanova(control)
+            assignment = self.create_rmanova(control, False)
             output = {**assignment, **self.solve_rmanova(assignment, {})}
         output['assignment_type'] = choice
         return output

@@ -215,7 +215,6 @@ def scan_number(text: str, stat: str, solution: Dict, margin: float=0.01) -> [bo
 def scan_hypothesis(text: str, solution: Dict, num: int=1) -> [bool, str]:
     #Remove potential dots to avoid confusion
     l_key: str = 'levels' if num < 2 else 'levels' + str(num)
-    print(solution['hypothesis'])
     sign:str = ['==','<=','>='][solution['hypothesis']] if 'hypothesis' in list(solution.keys()) else '=='
     tokens: List[str] = text.lower().replace('.','').split() #nltk.word_tokenize(text.lower())
     avgs: List[str] = ['mu(' + avg.lower() + ')' for avg in solution[l_key]]

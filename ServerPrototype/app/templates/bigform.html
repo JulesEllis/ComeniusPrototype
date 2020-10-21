@@ -47,22 +47,22 @@
         
         {% if shape | int == 4 %}
         <p>Voer de tweede nulhypothese in
-            {{ form.inputtext12.label }}<br>
-            {{ form.inputtext12(size=48) }}
+            {{ form.inputtext42.label }}<br>
+            {{ form.inputtext42(size=48) }}
         </p>
         <span style="color: blue;">{{ displays[3][1] | safe}}</span>
         
         <p>Voer de interactienulhypothese in
-            {{ form.inputtext12.label }}<br>
-            {{ form.inputtext12(size=48) }}
+            {{ form.inputtext42.label }}<br>
+            {{ form.inputtext42(size=48) }}
         </p>
         <span style="color: blue;">{{ displays[3][2] | safe}}</span>
         {% endif %}
         
         {% if shape | int == 5 %}
         <p>Voer de nulhypothese van de subjecten in
-            {{ form.inputtext12.label }}<br>
-            {{ form.inputtext12(size=48) }}
+            {{ form.inputtext42.label }}<br>
+            {{ form.inputtext42(size=48) }}
         </p>
         <span style="color: blue;">{{ displays[3][1] | safe}}</span>
         {% endif %}
@@ -115,8 +115,8 @@
         </p>
         <span style="color: blue;">{{ displays[5][1] | safe}}</span>
         <p>Voer de interactiebeslissing in
-            {{ form.inputtext52.label }}<br>
-            {{ form.inputtext52(size=48) }}
+            {{ form.inputtext53.label }}<br>
+            {{ form.inputtext53(size=48) }}
         </p>
         <span style="color: blue;">{{ displays[5][2] | safe}}</span>
         {% endif %}
