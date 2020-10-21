@@ -97,7 +97,7 @@ def scan_decision(text: str, assignment: Dict={'hypothesis':0}, solution: Dict={
         scorepoints['effect_present'] = True
         scorepoints['strength_present'] = any([x in [y.text for y in e_tree] for x in ['klein','matig','sterk']])
         scorepoints['right_strength'] = gold_strength in [x.text for x in e_tree]
-    if solution['p'][num - 1] > 0.05 or solution['p'][num - 1] == math.nan:
+    if solution['p'][num - 1] > 0.05 or math.isnan(solution['p'][num - 1]):
         for x in ['effect_present','strength_present','right_strength']:
             scorepoints[x] = True
     print(scorepoints)
