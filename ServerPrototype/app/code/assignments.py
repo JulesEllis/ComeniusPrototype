@@ -349,12 +349,14 @@ class Assignments:
             
         #Calculate p
         solution['p']: List = None
-        if assignment['hypothesis'] == 1 and solution['T'][0] < 0 or assignment['hypothesis'] == 2 and solution['T'][0] > 0:
-            solution['p'] = [1 - stats.t.sf(np.abs(solution['T'][0]), solution['df'][0])]
+        if assignment['hypothesis'] == 1 and solution['raw_effect'][0] < 0 or assignment['hypothesis'] == 2 and solution['raw_effect'][0] > 0:
+            solution['p'] = [1.0]
+        #elif assignment['hypothesis'] == 1 and solution['T'][0] < 0 or assignment['hypothesis'] == 2 and solution['T'][0] > 0:
+        #    solution['p'] = [1 - stats.t.sf(np.abs(solution['T'][0]), solution['df'][0])]
         else:
             solution['p']= [stats.t.sf(np.abs(solution['T'][0]), solution['df'][0])]
         if assignment['hypothesis'] == 0:
-            solution['p'][0] *= 2
+            solution['p'][0] = min(solution['p'][0] * 2, 1.0)
             
         #Determine textual conclusions
         #Decision
@@ -397,10 +399,10 @@ class Assignments:
             ssm: float = sum([(data['means'][i] - mean) ** 2 for i in range(len(data['ns']))]) * (sum(data['ns']) - 1)
             sse: float = sum([(data['ns'][i] - 1) * (data['stds'][i]) ** 2 for i in range(len(data['ns']))])
             solution['ss']: List[float] = [ssm, sse, ssm + sse]
-            solution['df']: List[float] = [len(data['ns']) - 1, len(data['ns']) - sum(data['ns']), sum(data['ns']) - 1]
+            solution['df']: List[float] = [len(data['ns']) - 1, abs(len(data['ns']) - sum(data['ns'])), sum(data['ns']) - 1]
             solution['ms']: List[float] = [solution['ss'][i]/solution['df'][i] for i in range(2)]
             solution['F']: List[float] = [solution['ms'][0] / solution['ms'][1]]
-            solution['p']: List[float] = [stats.f.cdf(solution['F'][0],solution['df'][0],solution['df'][1]) * 2]
+            solution['p']: List[float] = [stats.f.cdf(abs(solution['F'][0]),solution['df'][0],solution['df'][1])]
             solution['r2']: List[float] = [solution['ss'][0]/solution['ss'][2]]
             
             #Verbal parts of the report
@@ -429,7 +431,7 @@ class Assignments:
             solution['ss']: List[float] = [ssbetween, ssa, ssb, ssbetween - ssa - ssb, sswithin, ssbetween + sswithin]
             solution['ms']: List[float] = [solution['ss'][i] / solution['df'][i] for i in range(5)]
             solution['F']: List[float] = [solution['ms'][1] / solution['ms'][4], solution['ms'][2] / solution['ms'][4], solution['ms'][3] / solution['ms'][4]]
-            solution['p']: List[float] = [stats.f.cdf(solution['F'][i],solution['df'][i + 1],solution['df'][4]) * 2 for i in range(3)]
+            solution['p']: List[float] = [stats.f.cdf(abs(solution['F'][i]),solution['df'][i + 1],solution['df'][4]) for i in range(3)]
             solution['r2']: List[float] = [solution['ss'][1] / solution['ss'][5], solution['ss'][2] / solution['ss'][5], solution['ss'][3] / solution['ss'][5]]
             
             #Verbal parts of the report
@@ -478,7 +480,7 @@ class Assignments:
         solution['ss'] = [ssk, ssp, ssi, sstotal]
         solution['ms']: List[float] = [solution['ss'][i] / solution['df'][i] for i in range(4)]
         solution['F']: List[float] = [solution['ms'][0] / solution['ms'][2], solution['ms'][1] / solution['ms'][2]]
-        solution['p']: List[float] = [stats.f.cdf(i,solution['df'][i], solution['df'][2]) for i in range(2)]
+        solution['p']: List[float] = [stats.f.cdf(solution['F'][i],solution['df'][i], solution['df'][2]) for i in range(2)]
         solution['r2']: List[float] = [solution['ss'][0] / solution['ss'][3], solution['ss'][1] / solution['ss'][3]]
         
         #Textual parts of the report
