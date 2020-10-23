@@ -23,7 +23,6 @@ VRAGEN VOLGEND SKYPEGESPREK
 class OuterController:
     class Controller:
         def __init__(self):
-            print()
             self.assignments: Assignments = Assignments()
             self.skipable: bool = False
             self.prevable: bool = False
@@ -34,7 +33,7 @@ class OuterController:
             self.protocol : List = self.intro_protocol()
             self.endstate : bool = False
             self.submit_field : int = Task.INTRO
-            self.report_type = Task.TEXT_FIELD
+            self.analysis_type = Task.TEXT_FIELD
         
         def reset(self):
             self.assignments: Assignments = Assignments()
@@ -47,7 +46,7 @@ class OuterController:
             self.protocol : List = self.intro_protocol()
             self.endstate : bool = False
             self.submit_field : int = Task.INTRO
-            self.report_type = Task.TEXT_FIELD
+            self.analysis_type = Task.TEXT_FIELD
         
         def update_form_ttest(self, textfields: Dict) -> List[str]:
             output = [[] for i in range(12)]
@@ -71,11 +70,11 @@ class OuterController:
         
         def update_form_anova(self, textfields: Dict) -> List[str]:
             output = [[] for i in range(7)]
-            if self.report_type == Task.ONEWAY_ANOVA:
+            if self.analysis_type == Task.ONEWAY_ANOVA:
                 instruction = self.assignments.print_anova(self.assignment)
-            elif self.report_type == Task.TWOWAY_ANOVA:
+            elif self.analysis_type == Task.TWOWAY_ANOVA:
                 instruction = self.assignments.print_anova(self.assignment)
-            elif self.report_type == Task.WITHIN_ANOVA:
+            elif self.analysis_type == Task.WITHIN_ANOVA:
                 instruction = self.assignments.print_rmanova(self.assignment)
             else:    
                 print('ERROR: INVALID TABLE SHAPE')
@@ -135,10 +134,13 @@ class OuterController:
             output_text = ''
             if process == Process.TABLE and input_text != 'skip' and input_text != 'prev':
                 again, output_text = function(textfields, *arguments)
+            elif process == Process.CHOOSE_ANALYSIS:
+                analysis = textfields['selectanalysis']
+                report = textfields['selectreport']
             elif (input_text == 'skip' and self.skipable) or (input_text == 'prev' and self.prevable): #Hard-set again to false if the user wants to skip
                 again = False
             elif process == Process.ANOTHER or process == Process.YES_NO:
-                self.report_type = Task.INTRO
+                self.analysis_type = Task.INTRO
                 again, output = function(input_text, *arguments)
             elif process != Process.TABLE:
                 again, output_text = function(input_text, *arguments)
@@ -148,11 +150,12 @@ class OuterController:
                 return 'Tot ziens!'
             if process == Process.INTRO: #If intro protocol:
                 self.protocol = self.choice_protocol()
-                self.submit_field = Task.TEXT_FIELD
+                self.submit_field = Task.CHOICE
                 return self.protocol[0][0]
             elif process == Process.ANOTHER: #If return protocol index 0
                 if output:
                     self.index += 1
+                    self.submit_field = Task.CHOICE
                     return self.protocol[self.index][0]
                 else:
                     self.endstate = True
@@ -162,60 +165,63 @@ class OuterController:
                 self.index += 1
                 return self.protocol[self.index][0]
             elif process == Process.CHOOSE_ANALYSIS: #If choice protocol index 1 or return protocol index 2
-                if not again:
-                    control: bool = random.choice([True,False])
-                    hyp_type: int = random.choice([0,1,2])
-                    self.index = 0
-                    if input_text == '1':
-                        self.assignment = self.assignments.create_ttest(True, hyp_type, control)
-                        self.solution = self.assignments.solve_ttest(self.assignment, {})
-                        instruction = self.assignments.print_ttest(self.assignment)
-                        self.protocol = self.ttest_protocol()
-                        self.report_type = Task.TTEST_BETWEEN
-                    if input_text == '2':
-                        self.assignment = self.assignments.create_ttest(False, hyp_type, control)
-                        self.solution = self.assignments.solve_ttest(self.assignment, {})
-                        instruction = self.assignments.print_ttest(self.assignment)
-                        self.protocol = self.ttest_protocol()
-                        self.report_type = Task.TTEST_WITHIN
-                    if input_text == '3':
-                        self.assignment = self.assignments.create_anova(False, control)
-                        self.solution = self.assignments.solve_anova(self.assignment, {})
-                        instruction = self.assignments.print_anova(self.assignment)
-                        self.protocol = self.anova_protocol()
-                        self.report_type = Task.ONEWAY_ANOVA
-                    if input_text == '4':
-                        self.assignment = self.assignments.create_anova(True, control)
-                        self.solution = self.assignments.solve_anova(self.assignment, {})
-                        instruction = self.assignments.print_anova(self.assignment)
-                        self.protocol = self.anova_protocol()
-                        self.report_type = Task.TWOWAY_ANOVA
-                    if input_text == '5':
-                        self.assignment = self.assignments.create_rmanova(control)
-                        self.solution = self.assignments.solve_rmanova(self.assignment, {})
-                        instruction = self.assignments.print_rmanova(self.assignment)
-                        self.protocol = self.rmanova_protocol()
-                        self.report_type = Task.WITHIN_ANOVA
-                    if input_text == '6':
-                        self.protocol = self.report_choice_protocol()
-                        return self.protocol[self.index][0]
-                    if self.formmode and not input_text == '6':
-                        self.protocol = self.return_protocol()
-                    else:
-                        self.skipable = True
-                    return instruction + '<br>' + self.protocol[self.index][0]
-                else:
-                    return output_text
-            elif process == Process.CHOOSE_REPORT:
                 control: bool = random.choice([True,False])
-                if not again:
-                    self.report_type = Task.REPORT
-                    self.assignment = self.assignments.create_report(control, int(input_text))
+                hyp_type: int = random.choice([0,1,2])
+                #Select analysis
+                if analysis == 'T-toets onafhankelijke variabelen':
+                    self.assignment = self.assignments.create_ttest(True, hyp_type, control)
+                    self.solution = self.assignments.solve_ttest(self.assignment, {})
+                    instruction = self.assignments.print_ttest(self.assignment)
+                    self.analysis_type = Task.TTEST_BETWEEN
+                if analysis == 'T-toets voor gekoppelde paren':
+                    self.assignment = self.assignments.create_ttest(False, hyp_type, control)
+                    self.solution = self.assignments.solve_ttest(self.assignment, {})
+                    instruction = self.assignments.print_ttest(self.assignment)
+                    self.analysis_type = Task.TTEST_WITHIN
+                if analysis == 'One-way ANOVA':
+                    self.assignment = self.assignments.create_anova(False, control)
+                    self.solution = self.assignments.solve_anova(self.assignment, {})
+                    instruction = self.assignments.print_anova(self.assignment)
+                    self.analysis_type = Task.ONEWAY_ANOVA
+                if analysis == 'Two-way ANOVA':
+                    self.assignment = self.assignments.create_anova(True, control)
+                    self.solution = self.assignments.solve_anova(self.assignment, {})
+                    instruction = self.assignments.print_anova(self.assignment)
+                    self.analysis_type = Task.TWOWAY_ANOVA
+                if analysis == 'Repeated Measures Anova':
+                    self.assignment = self.assignments.create_rmanova(control)
+                    self.solution = self.assignments.solve_rmanova(self.assignment, {})
+                    instruction = self.assignments.print_rmanova(self.assignment)
+                    self.analysis_type = Task.WITHIN_ANOVA
+                
+                #Select report type
+                self.index = 0
+                if report == 'Elementair rapport (oefenmodus)' or 'Elementair rapport (tentamenmodus)':
+                    self.skipable = True
+                    self.submit_field = Task.TEXT_FIELD
+                    if analysis == 'T-toets onafhankelijke variabelen':
+                        self.protocol = self.ttest_protocol()
+                    if analysis == 'T-toets voor gekoppelde paren':
+                        self.protocol = self.ttest_protocol()
+                    if analysis == 'One-way ANOVA':
+                        self.protocol = self.anova_protocol()
+                    if analysis == 'Two-way ANOVA':
+                        self.protocol = self.anova_protocol()
+                    if analysis == 'Repeated Measures Anova':
+                        self.protocol = self.rmanova_protocol()
+                if report == 'Elementair rapport (tentamenmodus)':
+                    self.skipable = False
+                    self.formmode = True
+                    self.protocol = self.return_protocol()
+                if report == 'Beknopt rapport':
+                    self.skipable = False
+                    self.formmode= True
+                    self.assignment = self.assignments.create_report(control, self.analysis_type.value)
+                    self.analysis_type = Task.REPORT
                     self.solution = {}
                     self.protocol = self.return_protocol()
                     instruction = self.assignments.print_report(self.assignment)
-                else:
-                    return output_text
+                return instruction + '<br>' + self.protocol[self.index][0]
             elif process == Process.TABLE: #Main report protocols during table question
                 if input_text == 'prev' and self.prevable:
                     self.index -= 1
@@ -251,7 +257,7 @@ class OuterController:
                         self.prevable = False
                     self.index -= 1
                     if self.protocol[self.index][3] == Process.TABLE:
-                        self.submit_field = self.report_type
+                        self.submit_field = self.analysis_type
                     return self.assignments.print_assignment(self.assignment) + '<br>' + self.protocol[self.index][0]
                 elif again:
                     return self.assignments.print_assignment(self.assignment) + '<br>' + output_text
@@ -260,7 +266,7 @@ class OuterController:
                         self.prevable = True
                     self.index += 1
                     if self.protocol[self.index][3] == Process.TABLE:
-                        self.submit_field = self.report_type #Signal to the routes class that the next text field has to be a table
+                        self.submit_field = self.analysis_type #Signal to the routes class that the next text field has to be a table
                     if input_text == 'skip' and self.skipable:
                         return self.assignments.print_assignment(self.assignment) + '<br>' + self.protocol[self.index][0]
                     else:    
@@ -269,23 +275,16 @@ class OuterController:
                 print('ERROR SWITCHING PROTOCOLS')
                 
         def intro_protocol(self) -> List[Tuple]:
-            return [('Hoi, je kan in dit programma op twee manieren elementaire rapporten oefenen, namelijke in de standaardmodus en de tentamenmodus. Klik op de submit-knop om verder te gaan', 
+            return [('Hoi, je kan in dit programma op twee manieren elementaire rapporten oefenen, namelijke in de standaardmodus en de tentamenmodus. Klik op de enter-knop om verder te gaan', 
                      scan_dummy, [], Process.INTRO)]
             
         def choice_protocol(self) -> List[Tuple]:
-            return [('Wil je het rapport in tentamenmodus maken?',scan_yesno,[], Process.YES_NO),
-                    ('Wat voor soort elementair rapport wil je oefenen?<br>(1) T-toets onafhankelijke variabelen<br>(2) T-toets voor gekoppelde paren<br>(3) One-way ANOVA<br>(4) Two-way ANOVA<br>(5) Repeated Measures Anova<br>(6) Beknopt Rapport', 
-                     scan_protocol_choice, [], Process.CHOOSE_ANALYSIS)]
-                    
-        def report_choice_protocol(self) -> List[Tuple]:
-            return [('Van wat voor analyse wil je een beknopt rapport maken?<br>(1) T-toets onafhankelijke variabelen<br>(2) T-toets voor gekoppelde paren<br>(3) One-way ANOVA<br>(4) Two-way ANOVA<br>(5) Repeated Measures Anova',scan_report_choice,[],Process.CHOOSE_REPORT)]
+            return [('Voer hieronder het soort opgave in dat je wil oefenen.<br><br>',scan_yesno,[], Process.CHOOSE_ANALYSIS)]
             
         def return_protocol(self) -> List[Tuple]:
             return [('Gefeliciteerd, je elementair rapport is af! Wil je nog een opgave doen?',
                      scan_yesno,[], Process.ANOTHER),
-                    ('Wil je het rapport in tentamenmodus maken?',scan_yesno,[], Process.YES_NO),
-                    ('Wat voor soort elementair rapport wil je oefenen?<br>(1) T-toets onafhankelijke variabelen<br>(2) T-toets voor gekoppelde paren<br>(3) One-way ANOVA<br>(4) Two-way ANOVA<br>(5) Repeated Measures Anova<br>(6) Beknopt Rapport', 
-                     scan_protocol_choice, [], Process.CHOOSE_ANALYSIS)]
+                    ('Voer hieronder het soort opgave in wat je wil oefenen.<br><br>',scan_yesno,[], Process.CHOOSE_ANALYSIS)]
         
         def ttest_protocol(self) -> List[Tuple]:
             output : List[Tuple] = [('Beschrijf de onafhankelijke variabele.', scan_indep, [self.solution], Process.QUESTION),
@@ -340,7 +339,6 @@ class OuterController:
                     output.append(('Voer de causale interpretatie voor de interactie in.',scan_interpretation_anova,[self.solution], Process.QUESTION))
             output[-1] = (output[-1][0], output[-1][1], output[-1][2], Process.LAST_QUESTION)
             return output
-                    
         
         def rmanova_protocol(self) -> List[Tuple]:
             output :str = [('Beschrijf de onafhankelijke variabele.',scan_indep_anova,[self.solution,1,False], Process.QUESTION),

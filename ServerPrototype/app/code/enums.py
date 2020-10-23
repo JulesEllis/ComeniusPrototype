@@ -13,6 +13,7 @@ class Task(Enum):
     WITHIN_ANOVA = 5
     REPORT = 6
     INTRO = 7
+    CHOICE = 8
     
 #Variable indicating whether and how the given function from the protocol index should be called
 #e.g. as bool, bool, or bool, str, or not at all
@@ -22,6 +23,5 @@ class Process(Enum):
     LAST_QUESTION = 2
     YES_NO = 3
     CHOOSE_ANALYSIS = 4
-    CHOOSE_REPORT = 5
-    TABLE = 6
-    ANOTHER = 7
+    TABLE = 5
+    ANOTHER = 6
