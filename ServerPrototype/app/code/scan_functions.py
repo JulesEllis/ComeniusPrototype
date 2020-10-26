@@ -287,7 +287,124 @@ def scan_hypothesis_rmanova(text: str, solution: Dict) -> [bool, str]:
         return True, output
     else:
         return False, 'Mooi, deze hypothese klopt.'
+
+def sim(gold_numbers :List, numbers :List, margin:float) -> True: #Return true if there is a similar number to num in the given list/float/integer in the solution
+    return [gold_numbers[i] - margin < numbers[i] and numbers[i] < gold_numbers[i] + margin for i in range(len(gold_numbers))]
+
+def scan_table_ttest(textfields: Dict, solution: Dict, margin:float=0.01) -> [bool, str]:
+    if type(textfields) != dict:
+        exit()
+        print('Wrong data sent to table scan function')
+    #Set all empty fields to zero to prevent type errors
+    for t in list(textfields.items()):
+        if textfields[t[0]] == '':
+            textfields[t[0]] = 0.0
+        else:
+            textfields[t[0]] = float(textfields[t[0]]) if textfields[t[0]].replace('.','').isdigit() else 0.0
+            
+    #Compare input with gold standard
+    meaninput :List = [textfields['mean' + str(i+1)] for i in range(len(solution['means']))]
+    print(solution['means'])
+    stdinput :List  = [textfields['std' + str(i+1)] for i in range(len(solution['stds']))]
+    print(solution['stds'])
+    ninput :List  = [textfields['n' + str(i+1)] for i in range(len(solution['ns']))]
+    print(solution['ns'])
+    scorepoints :Dict = {'mean': sim(solution['means'], meaninput, margin),
+                   'std': sim(solution['stds'], stdinput, margin),
+                   'n': sim(solution['ns'], ninput, margin),
+                   }
+    if False in [all(x) for x in list(scorepoints.values())]:
+        output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
+        if not any(scorepoints['mean']):
+            output += ' -alle juiste gemiddelden<br>'
+        elif not all(scorepoints['mean']):    
+            output += ' -ten minste één juiste gemiddelde<br>'
+        if not any(scorepoints['std']):
+            output += ' -alle juiste standaardeviaties<br>'
+        elif not all(scorepoints['std']):    
+            output += ' -ten minste één juiste standaardeviatie<br>'
+        if not any(scorepoints['n']):
+            output += ' -alle juiste waarden van N<br>'
+        elif not all(scorepoints['n']):    
+            output += ' -ten minste één juiste waarde van N<br>'
+        return True, output
+    else:
+        return False, 'Mooi, deze tabel klopt. '
     
+def scan_table(textfields: Dict, solution: Dict, margin:float=0.01) -> [bool, str]:
+    #Convert fieldinput to float
+    if type(textfields) != dict:
+        exit()
+        print('Wrong data sent to table scan function')
+    #Set all empty fields to zero to prevent type errors
+    for t in list(textfields.items()):
+        if textfields[t[0]] == '':
+            textfields[t[0]] = 0.0
+        else:
+            textfields[t[0]] = float(textfields[t[0]]) if textfields[t[0]].replace('.','').isdigit() else 0.0
+    
+    #Compare input with gold standard
+    dfinput :List = [textfields['df' + str(i+1)] for i in range(len(solution['df']))]
+    ssinput :List  = [textfields['ss' + str(i+1)] for i in range(len(solution['ss']))]
+    msinput :List  = [textfields['ms' + str(i+1)] for i in range(len(solution['ms']))]
+    finput :List  = [textfields['f' + str(i+1)] for i in range(len(solution['F']))]
+    pinput :List  = [textfields['p' + str(i+1)] for i in range(len(solution['p']))]
+    r2input :List  = [textfields['r2' + str(i+1)] for i in range(len(solution['r2']))]
+    scorepoints :Dict = {'df': sim(solution['df'], dfinput, margin),
+                   'ss': sim(solution['ss'], ssinput, margin),
+                   'ms': sim(solution['ms'], msinput, margin),
+                   'F':sim(solution['F'], finput, margin),
+                   'p': sim(solution['p'], pinput, margin),
+                   'r2': sim(solution['r2'], r2input, margin)
+                   }
+    if False in [all(x) for x in list(scorepoints.values())]:
+        output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
+        if not any(scorepoints['df']):
+            output += ' -alle juiste waarden van df<br>'
+        elif not all(scorepoints['df']):    
+            output += ' -ten minste één juiste waarde van df<br>'
+        if not any(scorepoints['ss']):
+            output += ' -alle juiste waarden van ss<br>'
+        elif not all(scorepoints['ss']):    
+            output += ' -ten minste één juiste waarde van ss<br>'
+        if not any(scorepoints['ms']):
+            output += ' -alle juiste waarden van ms<br>'
+        elif not all(scorepoints['ms']):    
+            output += ' -ten minste één juiste waarde van ms<br>'
+        if not any(scorepoints['F']):
+            output += ' -alle juiste waarden van F<br>'
+        elif not all(scorepoints['F']):    
+            output += ' -ten minste één juiste waarde van F<br>'
+        if not any(scorepoints['p']):
+            output += ' -alle juiste waarden van p<br>'
+        elif not all(scorepoints['p']):    
+            output += ' -ten minste één juiste waarde van p<br>'
+        if not any(scorepoints['r2']):
+            output += ' -alle juiste waarden van R<sup>2</sup><br>'
+        elif not all(scorepoints['r2']):    
+            output += ' -ten minste één juiste waarde van R<sup>2</sup><br>'
+        return True, output
+    else:
+        return False, 'Mooi, deze tabel klopt. '
+
+#Flexible scan function that checks the given answer for a list of keywords. These are given as a dictionary so
+#that they can be dynamically defined in the protocol function in interface.py where this function is called
+#If the given value for a keyword in keywords is false, this keyword is ignored and will no longer affect
+#the given feedback
+def scan_custom(text: str, solution: Dict, keywords: dict):
+    tokens: List[str] = nltk.word_tokenize(text.lower().replace('.',''))
+    scorepoints = dict([(key, key in tokens) for key in list(keywords.keys()) if keywords[key]])
+    
+    if False in list(scorepoints.values()):
+        output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
+        for key in list(scorepoints.keys()):
+            if not scorepoints[key]:
+                output += ' -de juist waarde van ' + key + ' wordt niet genoemd<br>'
+        
+        return True, output
+    else:
+        return False, 'Mooi, dit antwoord klopt. '
+
 """
 def scan_decision(text: str, assignment: Dict, solution: Dict, anova: bool=False, num: int=1) -> [bool, str]:
     #Define important variables necessary for checking the answer's components
@@ -509,122 +626,3 @@ def scan_interpretation_anova(text: str, solution: Dict) -> [bool, str]:
     else:
         return False, 'Mooi, deze causale interpretatie klopt. '
 """
-
-def sim(gold_numbers :List, numbers :List, margin:float) -> True: #Return true if there is a similar number to num in the given list/float/integer in the solution
-    return [gold_numbers[i] - margin < numbers[i] and numbers[i] < gold_numbers[i] + margin for i in range(len(gold_numbers))]
-
-def scan_table_ttest(textfields: Dict, solution: Dict, margin:float=0.01) -> [bool, str]:
-    if type(textfields) != dict:
-        exit()
-        print('Wrong data sent to table scan function')
-    #Set all empty fields to zero to prevent type errors
-    for t in list(textfields.items()):
-        if textfields[t[0]] == '':
-            textfields[t[0]] = 0.0
-        else:
-            textfields[t[0]] = float(textfields[t[0]]) if textfields[t[0]].replace('.','').isdigit() else 0.0
-            
-    #Compare input with gold standard
-    meaninput :List = [textfields['mean' + str(i+1)] for i in range(len(solution['means']))]
-    print(solution['means'])
-    stdinput :List  = [textfields['std' + str(i+1)] for i in range(len(solution['stds']))]
-    print(solution['stds'])
-    ninput :List  = [textfields['n' + str(i+1)] for i in range(len(solution['ns']))]
-    print(solution['ns'])
-    scorepoints :Dict = {'mean': sim(solution['means'], meaninput, margin),
-                   'std': sim(solution['stds'], stdinput, margin),
-                   'n': sim(solution['ns'], ninput, margin),
-                   }
-    if False in [all(x) for x in list(scorepoints.values())]:
-        output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
-        if not any(scorepoints['mean']):
-            output += ' -alle juiste gemiddelden<br>'
-        elif not all(scorepoints['mean']):    
-            output += ' -ten minste één juiste gemiddelde<br>'
-        if not any(scorepoints['std']):
-            output += ' -alle juiste standaardeviaties<br>'
-        elif not all(scorepoints['std']):    
-            output += ' -ten minste één juiste standaardeviatie<br>'
-        if not any(scorepoints['n']):
-            output += ' -alle juiste waarden van N<br>'
-        elif not all(scorepoints['n']):    
-            output += ' -ten minste één juiste waarde van N<br>'
-        return True, output
-    else:
-        return False, 'Mooi, deze tabel klopt. '
-    
-def scan_table(textfields: Dict, solution: Dict, margin:float=0.01) -> [bool, str]:
-    #Convert fieldinput to float
-    if type(textfields) != dict:
-        exit()
-        print('Wrong data sent to table scan function')
-    #Set all empty fields to zero to prevent type errors
-    for t in list(textfields.items()):
-        if textfields[t[0]] == '':
-            textfields[t[0]] = 0.0
-        else:
-            textfields[t[0]] = float(textfields[t[0]]) if textfields[t[0]].replace('.','').isdigit() else 0.0
-    
-    #Compare input with gold standard
-    dfinput :List = [textfields['df' + str(i+1)] for i in range(len(solution['df']))]
-    ssinput :List  = [textfields['ss' + str(i+1)] for i in range(len(solution['ss']))]
-    msinput :List  = [textfields['ms' + str(i+1)] for i in range(len(solution['ms']))]
-    finput :List  = [textfields['f' + str(i+1)] for i in range(len(solution['F']))]
-    pinput :List  = [textfields['p' + str(i+1)] for i in range(len(solution['p']))]
-    r2input :List  = [textfields['r2' + str(i+1)] for i in range(len(solution['r2']))]
-    scorepoints :Dict = {'df': sim(solution['df'], dfinput, margin),
-                   'ss': sim(solution['ss'], ssinput, margin),
-                   'ms': sim(solution['ms'], msinput, margin),
-                   'F':sim(solution['F'], finput, margin),
-                   'p': sim(solution['p'], pinput, margin),
-                   'r2': sim(solution['r2'], r2input, margin)
-                   }
-    if False in [all(x) for x in list(scorepoints.values())]:
-        output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
-        if not any(scorepoints['df']):
-            output += ' -alle juiste waarden van df<br>'
-        elif not all(scorepoints['df']):    
-            output += ' -ten minste één juiste waarde van df<br>'
-        if not any(scorepoints['ss']):
-            output += ' -alle juiste waarden van ss<br>'
-        elif not all(scorepoints['ss']):    
-            output += ' -ten minste één juiste waarde van ss<br>'
-        if not any(scorepoints['ms']):
-            output += ' -alle juiste waarden van ms<br>'
-        elif not all(scorepoints['ms']):    
-            output += ' -ten minste één juiste waarde van ms<br>'
-        if not any(scorepoints['F']):
-            output += ' -alle juiste waarden van F<br>'
-        elif not all(scorepoints['F']):    
-            output += ' -ten minste één juiste waarde van F<br>'
-        if not any(scorepoints['p']):
-            output += ' -alle juiste waarden van p<br>'
-        elif not all(scorepoints['p']):    
-            output += ' -ten minste één juiste waarde van p<br>'
-        if not any(scorepoints['r2']):
-            output += ' -alle juiste waarden van R<sup>2</sup><br>'
-        elif not all(scorepoints['r2']):    
-            output += ' -ten minste één juiste waarde van R<sup>2</sup><br>'
-        return True, output
-    else:
-        return False, 'Mooi, deze tabel klopt. '
-
-#Flexible scan function that checks the given answer for a list of keywords. These are given as a dictionary so
-#that they can be dynamically defined in the protocol function in interface.py where this function is called
-#If the given value for a keyword in keywords is false, this keyword is ignored and will no longer affect
-#the given feedback
-def scan_custom(text: str, solution: Dict, keywords: dict):
-    tokens: List[str] = nltk.word_tokenize(text.lower().replace('.',''))
-    scorepoints = dict([(key, key in tokens) for key in list(keywords.keys()) if keywords[key]])
-    
-    if False in list(scorepoints.values()):
-        output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
-        for key in list(scorepoints.keys()):
-            if not scorepoints[key]:
-                output += ' -de juist waarde van ' + key + ' wordt niet genoemd<br>'
-        
-        return True, output
-    else:
-        return False, 'Mooi, dit antwoord klopt. '
-
-

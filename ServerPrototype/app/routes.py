@@ -13,7 +13,8 @@ def index():
     varnames = [['dummy1'],['dummy2']]
     if flask.request.method == 'GET':
         controller.reset()
-        return render_template('index.html', display="Hoi, je kan in dit programma op twee manieren elementaire rapporten oefenen, namelijke in de standaardmodus en de tentamenmodus. Klik op de submit-knop om verder te gaan", 
+        instruction = controller.protocol[0][0]
+        return render_template('index.html', display=instruction, 
                                form=form, skip=False, submit_field=7, varnames=varnames)
     elif flask.request.method == 'POST':        
         #Isolate text fields
@@ -112,7 +113,7 @@ def smallform():
     else:
         print('ERROR: INVALID METHOD')
         
-@app.route('/reportform', methods=['GET','POST'])
+@app.route('/reportform', methods=['POST'])
 def reportform():
     form = ReportForm()
     controller : OuterController = OuterController()
@@ -130,6 +131,7 @@ def reportform():
             submit_field :int = controller.submit_field
             display = controller.protocol[0][0]
             form = BaseForm()
+            form.inputtext.data = ""
             controller.analysis_type = Task.TEXT_FIELD
             return render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=submit_field, varnames=varnames)
         else:

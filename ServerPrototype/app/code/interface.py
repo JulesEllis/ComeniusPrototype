@@ -119,10 +119,19 @@ class OuterController:
         
         def update_form_report(self, textfields: Dict) -> List[str]:
             instruction = self.print_assignment()
-            feedback = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br> -p-waarde niet genoemd<br>'\
-            ' -niveaus van de onafhankelijke variabele niet genoemd<br> -H0 niet genoemd<br> -sterkte niet genoemd<br>'\
-            ' -primaire verklaring niet genoemd<br> -alternatieve verklaring niet genoemd<br> -niet genoemd dat het om een effect gaat<br>'\
-            ' -onafhankelijke variabele niet genoemd'
+            feedback = "Mooi, dit rapport klopt."
+            """
+            text = textfields['inputtext']
+            feedback = None
+            if self.assignment['assignment_type'] in [1,2]:
+                feedback = split_grade_ttest(text)
+            if self.assignment['assignment_type'] == 3:
+                feedback = split_grade_anova(text, two_way=False)
+            if self.assignment['assignment_type'] == 4:
+                feedback = split_grade_anova(text, two_way=True)
+            if self.assignment['assignment_type'] == 5:
+                feedback = split_grade_rmanova(text)
+            """
             return instruction, feedback
         
         def update(self, textfields: Dict) -> str:
@@ -275,7 +284,7 @@ class OuterController:
                 print('ERROR SWITCHING PROTOCOLS')
                 
         def intro_protocol(self) -> List[Tuple]:
-            return [('Hoi, je kan in dit programma op twee manieren elementaire rapporten oefenen, namelijke in de standaardmodus en de tentamenmodus. Klik op de enter-knop om verder te gaan', 
+            return [('Hoi, met dit programma kan je elementaire en beknopte rapporten oefenen. Klik op de enter-knop om verder te gaan', 
                      scan_dummy, [], Process.INTRO)]
             
         def choice_protocol(self) -> List[Tuple]:
