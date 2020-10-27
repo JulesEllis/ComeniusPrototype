@@ -466,6 +466,7 @@ class Assignments:
         solution['dependent_measure']: str = 'kwantitatief'
         solution['dependent_n_measure']: int = n_conditions #Aantal metingen per persoon
         solution['control']: bool = assignment['control']
+        solution['rmanova']: bool = True
         
         #Numerical parts of the report
         #Order of rows: Kwartaal, Persoon, Interactie, Totaal
