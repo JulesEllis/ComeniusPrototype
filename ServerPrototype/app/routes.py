@@ -36,7 +36,7 @@ def index():
                 controller.formmode = False
                 instruction = controller.print_assignment()
                 return render_template('bigform.html', form=form, instruction=instruction, displays=[[''] for i in range(7)], shape=form_shape, varnames=varnames)
-            elif form_shape == 6:
+            elif form_shape == 7:
                 form = ReportForm()
                 controller.formmode = False
                 instruction = controller.print_assignment()

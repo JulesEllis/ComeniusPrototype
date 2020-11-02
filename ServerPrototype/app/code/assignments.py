@@ -151,6 +151,19 @@ class Assignments:
         output['data']['n_conditions'] = n_conditions
         return output
     
+	#Variantie ware scores
+	#Variantie voorspelde scores
+
+	#Tabel predictoren
+	#-B
+	#-Standaard error
+	#-t
+	#-p
+	def create_mregression(self, control: bool):
+		means: list[float] = [random.uniform(20,40) for x in range(3)]
+        means: list[float] = [random.uniform(5,15) for x in range(3)]
+        
+	
     def create_report(self, control: bool, choice: int=0):
         if choice == 0:
             choice = random.choice([1,2,3,4,5])
