@@ -215,61 +215,112 @@ def detect_strength(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]:
         output.append(' -de sterkte van het effect wordt niet juist genoemd')
     return output
 
-def detect_primary(sent:Doc, solution:dict, num:int) -> List[str]:
+def detect_unk(sent:Doc, solution:dict):
     #Define variables
-    criteria:list = ['cause', 'effect', 'unk', 'var', 'dep', 'prim', 'alt', 'cause_alignment']
+    criteria:list=['unk','two']
     scorepoints = dict([(x,False) for x in criteria])
-    i_key: str = 'independent' + str(num) if num > 1 else 'independent'
-    independent = solution[i_key]
-    dependent = solution['dependent']
-    control: bool = solution['control']
+    control = solution['control']
+    tokens = [x.text for x in sent]
     output:List[str] = []
     
     #Controleer input
-    scorepoints['prim'] = 'primaire' in [x.text for x in doc] if not control else True
-    scorepoints['alt'] = 'alternatieve' in [x.text for x in doc] if not control else True
-    scorepoints['unk'] = 'onbekend' in [x.text for x in doc] if not control else True
-    causeverbs = [x for x in doc if x.text in ['veroorzaakt', 'heeft', 'beinvloedt', 'beinvloed','verantwoordelijk', 'oorzaak']]
-    effect = [x for x in doc if x.text == 'effect']    
-    if any(causeverbs) or any(effect):
-        if any(causeverbs) and any(effect):
-            effect_children = descendants(causeverbs[0]) + descendants(effect[0])
-            ancestors = [x for x in causeverbs[0].ancestors] + [x for x in effect[0].ancestors]
-        elif any(causeverbs):
-            effect_children = descendants(causeverbs[0])
-            ancestors = [x for x in causeverbs[0].ancestors]
-        else:
-            effect_children = descendants(effect[0])
-            ancestors = [x for x in effect[0].ancestors]
-        scorepoints['cause'] = causeverbs != []
-        scorepoints['effect'] = effect != []
-        scorepoints['var'] = independent in [x.text for x in effect_children]
+    scorepoints['unk'] = 'onbekend' in tokens if not control else True
+    scorepoints['two'] = 'twee' in tokens or 'meerdere' in tokens if not control else ('een' in tokens or 'één' in tokens)
+    
+    #Add strings
+    if not scorepoints['two']:
+        output.append(' -niet juist genoemd hoeveel mogelijke interpretaties er zijn')
+    if not scorepoints['unk']:
+        output.append(' -niet gesteld dat de oorzaak van het effect onbekend is')
+    return output
+    
+    
+def detect_primary(sent:Doc, solution:dict, num:int=1) -> List[str]:
+    #Define variables
+    criteria:list = ['cause', 'ind', 'dep', 'prim', 'neg', 'alignment']
+    scorepoints = dict([(x,False) for x in criteria])
+    i_key: str = 'independent' + str(num) if num > 1 else 'independent'
+    independent = solution[i_key].lower()
+    dependent = solution['dependent'].lower()
+    control: bool = solution['control']
+    rejected = solution['p'][num-1]
+    tokens = [x.text for x in sent] 
+    output:List[str] = []
+    
+    #Controleer input
+    scorepoints['prim'] = 'primaire' in tokens if not control else True
+    scorepoints['neg'] = bool(negation_counter(tokens) % 2) != rejected
+    causeverbs = [x for x in sent if x.text in ['veroorzaakt', 'heeft', 'beinvloedt', 'beinvloed','verantwoordelijk', 'oorzaak']] 
+    if any(causeverbs):
+        effect_children = descendants(causeverbs[0])
+        print([x.text for x in effect_children])
+        scorepoints['cause'] = True
+        scorepoints['ind'] = independent in [x.text for x in effect_children]
         scorepoints['dep'] = dependent in [x.text for x in effect_children]
-        if ancestors != []:
-            if [x for x in [y for y in ancestors[0].children]] != []:
-                verklaring_children = [x.text for x in [y for y in ancestors][0].children]
-                if control: 
-                    scorepoints['cause_alignment'] = 'primaire' in verklaring_children and not 'alternatieve' in verklaring_children 
-                else:
-                    scorepoints['cause_alignment'] = not 'primaire' in verklaring_children and 'alternatieve' in verklaring_children
+    if scorepoints['ind'] and scorepoints['dep']:
+        indynode = sent[tokens.index(independent)]
+        depnode = sent[tokens.index(dependent)]
+        if indynode.dep_ == 'nsubj' and depnode.dep_ == 'obj': #Omgekeerde causaliteit
+            scorepoints['alignment'] = True
     
     #Add strings
     if not scorepoints['cause']:
         output.append(' -er wordt niet gesproken over de oorzaak van het effect')
-    if not scorepoints['effect']:
-        output.append(' -het effect wordt niet genoemd')
-    if not scorepoints['unk']:
-        output.append(' -niet gesteld dat de oorzaak van het effect onbekend is')
-    if not scorepoints['var']:
-        output.append(' -de onafhankelijke variabele wordt niet genoemd')
+    if not scorepoints['neg']:
+        output.append(' -ten onrechte een negatie toegevoegd of weggelaten bij de primaire verklaring')
+    if not scorepoints['ind']:
+        output.append(' -de onafhankelijke variabele wordt niet genoemd bij de primaire verklaring')
     if not scorepoints['dep']:
-        output.append(' -de afhankelijke variabele wordt niet genoemd')
+        output.append(' -de afhankelijke variabele wordt niet genoemd bij de primaire verklaring')
+    if scorepoints['ind'] and scorepoints['dep'] and not scorepoints['alignment']:
+        output.append(' -het causale verband tussen de afhankelijke en onafhankelijke variabele is niet juist aangegeven')
     if not scorepoints['prim']:
-        output.append(' -de primaire verklaring wordt niet genoemd')
+        output.append(' -de primaire verlaring wordt niet genoemd')
+    return output
+
+def detect_alternative(sent:Doc, solution:dict, num:int=1) -> List[str]:
+    #Define variables
+    criteria = ['alt','ind','dep','content','relation_type']
+    scorepoints = dict([(x,False) for x in criteria])
+    i_key: str = 'independent' + str(num) if num > 1 else 'independent'
+    independent = solution[i_key].lower()
+    dependent = solution['dependent'].lower()
+    control: bool = solution['control']
+    #rejected: bool = solution['p'][num-1] < 0.05
+    tokens = [x.text for x in sent]
+    output:List[str] = []
+    
+    #Controleer input
+    scorepoints['alt'] = 'alternatieve' in [x.text for x in sent] if not control else True
+    causeverbs = [x for x in sent if x.text in ['veroorzaakt', 'heeft', 'beinvloedt', 'beinvloed','verantwoordelijk', 'oorzaak']] 
+    if any(causeverbs):
+        effect_children = descendants(causeverbs[0])
+        tokens2 = [x.text for x in effect_children]
+        scorepoints['cause'] = True
+        scorepoints['ind'] = independent in tokens2
+        scorepoints['dep'] = dependent in tokens2
+    if scorepoints['ind'] and scorepoints['dep']:
+        indynode = sent[tokens.index(independent)]
+        depnode = sent[tokens.index(dependent)]
+        if indynode.dep_ == 'obj' and depnode.dep_ == 'nsubj': #Omgekeerde causaliteit
+            scorepoints['relation_type'] = True
+        if indynode.dep_ == 'obj' and depnode.dep_ == 'obj': #Storende variabele
+            scorepoints['relation_type'] = True
+        #cause2 = [x for x in descendants(causeverbs[])]
+    else:
+        scorepoints['relation_type'] = True
+    
+    #Add strings
+    if not scorepoints['cause']:
+        output.append(' -niet duidelijk genoemd hoe het effect wordt veroorzaakt bij de alternatieve verklaring')
+    if not scorepoints['ind']:
+        output.append(' -de onafhankelijke variabele wordt niet genoemd bij de alternatieve verklaring')
+    if not scorepoints['dep']:
+        output.append(' -de afhankelijke variabele wordt niet genoemd bij de alternatieve verklaring')
     if not scorepoints['alt']:
         output.append(' -de alternatieve verlaring wordt niet genoemd')
-    if not scorepoints['cause_alignment'] and scorepoints['prim'] and scorepoints['alt']:
-        output.append(' -de alternatieve verlaring en primaire verklaring zijn omgekeerd aangegeven')
+    if not scorepoints['relation_type']:
+        output.append(' -de relatie tussen de onafhankelijke en afhankelijke variabele is niet geldig hier omdat dit een alternatieve verklaring is')
     return output
 
 def scan_decision(doc:Doc, solution:dict, anova:bool, num:int=1) -> [bool, List[str]]:
@@ -301,10 +352,36 @@ def scan_decision_rmanova(doc:Doc, solution:dict, anova:bool, num:int=1) -> [boo
         return False, 'Mooi, deze beslissing klopt.'
     else:
         return True, '\n'.join(output)
+    
+def scan_interpretation(doc:Doc, solution:dict, anova:bool, num:int=1):
+    output = ['Er ontbreekt nog wat aan je antwoord, namelijk:']
+    unk_sents = [x for x in doc.sents if 'mogelijk' in [y.text for y in x]]
+    if unk_sents != []:
+        output.extend(detect_unk(unk_sents[0], solution))
+    else:
+        output.append(' -niet genoemd hoeveel mogelijke interpretaties er zijn')
+    primair_sents = [x for x in doc.sents if 'primaire' in [y.text for y in x]]
+    if primair_sents != []:
+        output.extend(detect_primary(primair_sents[0], solution))
+    else:
+        output.append(' -de primaire verklaring wordt niet genoemd')
+    if not solution['control']:
+        alt_sents = [x for x in doc.sents if 'alternatieve' in [y.text for y in x]]
+        #displacy.serve(alt_sents[0])
+        if alt_sents != []:
+            output.extend(detect_alternative(alt_sents[0], solution))
+        else:
+            output.append(' -de alternatieve verklaring wordt niet genoemd')
+    if len(output) == 1:
+        return False, 'Mooi, deze interpretatie klopt.'
+    else:
+        return True, '\n'.join(output)
 
 nl_nlp = spacy.load('nl')
-doc = nl_nlp("H0 verworpen, het gemiddelde van Nederlands is gemiddeld ongelijk aan dat van Duits in de populatie. Er is een sterk effect".lower())
-feedback = scan_decision(doc,
-              {'relative_effect':[0.9],'p':[0.01],'levels':['nederlands','duits'],'hypothesis':0},
+doc = nl_nlp("Geen experiment, dus de echte oorzaak is onbekend en er zijn meerdere verklaringen mogelijk. "\
+             'De primaire verklaring is dat nationaliteit invloed heeft op gewicht. De alternatieve verklaring '\
+             'is dat huidskleiur invloed heeft op gewicht en huidskleur ook invloed heeft op nationaliteit'.lower())
+feedback = scan_interpretation(doc,
+              {'relative_effect':[0.9],'p':[0.01],'levels':['nederlands','duits'],'hypothesis':0,'independent':'nationaliteit','dependent':'gewicht','control':False},
               False)[1]
 print(feedback)

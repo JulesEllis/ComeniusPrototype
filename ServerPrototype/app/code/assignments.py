@@ -25,14 +25,19 @@ class Assignments:
         
     #Checks the nature of the given assignment and returns the output of the right print function
     def print_assignment(self, assignment: Dict) -> str:
-        if 'levels' in list(assignment.keys()):
+        if assignment['assignment_type'] == 7:
             return self.print_report(assignment) #Beknopt rapport
-        elif 'A' in list(assignment['data'].keys()):
+        elif assignment['assignment_type'] in [1,2]:
             return self.print_ttest(assignment) #T-Test
-        elif 'jackedmeans' in list(assignment['data'].keys()):
+        elif assignment['assignment_type'] in [3,4]:
+            return self.print_anova(assignment) #Repeated-measures ANOVA
+        elif assignment['assignment_type'] == 5:
             return self.print_rmanova(assignment) #Repeated-measures ANOVA
+        elif assignment['assignment_type'] == 6:
+            return self.print_mregression(assignment) #Repeated-measures ANOVA
         else:
-            return self.print_anova(assignment) #One-way or two-way ANOVA
+            print('ERROR: ASSIGNMENT TYPE NOT RECOGNIZED')
+            return None
         
     #Creates the assignment's data as a tuple of floats
     #If the assignment is a within-subject T-test, n1 and n2 have the same number of samples
@@ -151,18 +156,23 @@ class Assignments:
         output['data']['n_conditions'] = n_conditions
         return output
     
-	#Variantie ware scores
-	#Variantie voorspelde scores
-
-	#Tabel predictoren
-	#-B
-	#-Standaard error
-	#-t
-	#-p
-	def create_mregression(self, control: bool):
-		means: list[float] = [random.uniform(20,40) for x in range(3)]
-        means: list[float] = [random.uniform(5,15) for x in range(3)]
-        
+    def create_mregression(self, control: bool, elementary:bool=False):
+        report_type = 'elementair' if elementary else 'beknopt'
+        output = {}
+        n_subjects = int(random.uniform(40,60))
+        n_predictors = 3
+        output['ns'] = [n_subjects]
+        mean1: float = random.uniform(70,100); std1: float = random.uniform(5,10)
+        mean2: float = random.uniform(mean1 - 10,mean1 + 10); std2: float = random.uniform(5,10)
+        output['predscores']: list[float] = [random.uniform(mean1,std1) for x in range(n_subjects)]
+        output['realscores']: list[float] = [random.uniform(mean2,std2) for x in range(n_subjects)]
+        output['data']: dict={'varnames':['Intercept','Sociale vaardigheden', 'Depressieve gedachten', 'Eetlust']}
+        output['predictor_b'] = [np.mean([output['predscores']])] + [random.gauss(0,2) for i in range(n_predictors)]
+        output['predictor_se'] = [np.std([output['predscores']])] + [random.gauss(0,2) for i in range(n_predictors)]
+        output['dependent'] = 'Gewicht'
+        output['correlations'] = [random.random() for i in range(int((n_predictors ** 2 - n_predictors) * 0.5))]
+        output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn '+' en '.join(output['data']['varnames'][1:])+' als predictoren en '+output['dependent']+' als criterium. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
+        return output
 	
     def create_report(self, control: bool, choice: int=0):
         if choice == 0:
@@ -184,6 +194,9 @@ class Assignments:
         if choice == 5:
             assignment = self.create_rmanova(control, False)
             output = {**assignment, **self.solve_rmanova(assignment, {})}
+        if choice == 6:    
+            assignment = self.create_mregression(control, False)
+            output = {**assignment, **self.solve_mregression(assignment, {})}
         output['assignment_type'] = choice
         return output
             
@@ -248,6 +261,13 @@ class Assignments:
             output_text += '<tr><td>'+str(i+1)+'</td>' + ''.join(['<td>'+str(x)+'</td>' for x in [data['scores'][j][i] for j in range(n_conditions)]]) + '<td>' + str(round(data['jackedmeans'][i],2)) + '</td></tr>'
         return output_text + '</table>'
     
+    def print_mregression(self, assignment: Dict):
+        output_text = assignment['instruction'] + '<br>'
+        output_text += '<br><table style="width:30%">'
+        output_text += '<tr><td>Statistiek</td><td>N</td><td>Variantie geobserveerde scores</td><td>Variantie voorspelde scores</td></tr>'
+        output_text += '<tr><td>Waarde</td><td>'+str(assignment['ns'][0])+'</td><td>'+str(round(np.std(assignment['realscores']) ** 2,2))+'</td><td>'+str(round(np.std(assignment['predscores']) ** 2,2))+'</td></tr>'
+        return output_text + '</table>'
+    
     def print_report(self, assignment: Dict) -> str:
         output:str = ''
         data:dict = assignment['data']
@@ -286,7 +306,7 @@ class Assignments:
             output += '<tr><td>Bron</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td></tr>'
             output += '<tr><td>Between</td>'+''.join(['<td>'+str(round(assignment[x][0],2))+'</td>' for x in names if len(assignment[x]) > 0])+'</tr>'
             output += '<tr><td>Within</td>'+''.join(['<td>'+str(round(assignment[x][1],2))+'</td>' for x in names if len(assignment[x]) > 1])+'</tr>'
-            output += '<tr><td>Total</td>'+''.join(['<td>'+str(round(assignment[x][2],2))+'</td>' for x in names if len(assignment[x]) > 2])+'</tr>'
+            output += '<tr><td>Totaal</td>'+''.join(['<td>'+str(round(assignment[x][2],2))+'</td>' for x in names if len(assignment[x]) > 2])+'</tr>'
             output += '</table></p>'
         if assignment['assignment_type'] == 4:
             output += self.print_anova(assignment)
@@ -297,7 +317,7 @@ class Assignments:
             output += '<tr><td>'+data['varnames'][1][0]+'</td>'+''.join(['<td>'+str(round(assignment[x][2],2))+'</td>' for x in names[:3]])+''.join(['<td>'+str(round(assignment[x][1],2))+'</td>' for x in names[3:]])+'</tr>'
             output += '<tr><td>Interaction</td>'+''.join(['<td>'+str(round(assignment[x][3],2))+'</td>' for x in names[:3]])+''.join(['<td>'+str(round(assignment[x][2],2))+'</td>' for x in names[3:]])+'</tr>'
             output += '<tr><td>Within</td>'+''.join(['<td>'+str(round(assignment[x][4],2))+'</td>' for x in names[:3]])+'</tr>'
-            output += '<tr><td>Total</td>'+''.join(['<td>'+str(round(assignment[x][5],2))+'</td>' for x in names[:2]])+'</tr>'
+            output += '<tr><td>Totaal</td>'+''.join(['<td>'+str(round(assignment[x][5],2))+'</td>' for x in names[:2]])+'</tr>'
             output += '</table></p>'
         if assignment['assignment_type'] == 5:
             output += self.print_rmanova(assignment)
@@ -306,7 +326,32 @@ class Assignments:
             output += '<tr><td>'+data['varnames'][0][0]+'</td>'+''.join(['<td>'+str(round(assignment[x][0],2))+'</td>' for x in names if len(assignment[x]) > 0])+'</tr>'
             output += '<tr><td>Persoon</td>'+''.join(['<td>'+str(round(assignment[x][1],2))+'</td>' for x in names if len(assignment[x]) > 1])+'</tr>'
             output += '<tr><td>Interactie</td>'+''.join(['<td>'+str(round(assignment[x][0],2))+'</td>' for x in names if len(assignment[x]) > 2])+'</tr>'
-            output += '<tr><td>Total</td>'+''.join(['<td>'+str(round(assignment[x][3],2))+'</td>' for x in names if len(assignment[x]) > 3])+'</tr>'
+            output += '<tr><td>Totaal</td>'+''.join(['<td>'+str(round(assignment[x][3],2))+'</td>' for x in names if len(assignment[x]) > 3])+'</tr>'
+            output += '</table></p>'
+        if assignment['assignment_type'] == 6:
+            output += self.print_mregression(assignment)
+            output += '<p><table style="width:20%">'
+            output += '<tr><td>Bron</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td></tr>'
+            output += '<tr><td>Regressie</td>'+''.join(['<td>'+str(round(assignment[x][0],2))+'</td>' for x in names])+'</tr>'
+            output += '<tr><td>Residu</td>'+''.join(['<td>'+str(round(assignment[x][1],2))+'</td>' for x in names[:3]])+'</tr>'
+            output += '<tr><td>Totaal</td>'+''.join(['<td>'+str(round(assignment[x][2],2))+'</td>' for x in names[:2]])+'</tr>'
+            output += '</table></p>'
+            
+            output += '<p><table style="width:20%">'
+            output += '<tr><td>Predictor</td><td>Beta</td><td>Standaarderror</td><td>T</td><td>p</td></tr>'
+            for i in range(len(data['varnames'])):
+                output += '<tr><td>'+data['varnames'][i]+'</td><td>'+str(round(assignment['predictor_b'][i],2))+'</td><td>'+str(round(assignment['predictor_se'][i],2))+'</td><td>'+str(round(assignment['predictor_t'][i],2))+'</td><td>'+str(round(assignment['predictor_p'][i],2))+'</td></tr>'
+            output += '</table></p>'
+            
+            output += '<p><table style="width:20%">'
+            output += '<tr><td>Correlatie</td>' + ''.join(['<td>'+x+'</td>' for x in data['varnames'][1:]]) + '</tr>'
+            ind:int = 0
+            cors = assignment['correlations']
+            print(cors)
+            n_predictors = len(data['varnames'])-1
+            for i in range(n_predictors):
+                output += '<tr><td>'+data['varnames'][i+1]+'</td>'+''.join('<td>'+str(round(x,2))+'</td>' for x in cors[ind:ind+n_predictors-1-i])+''.join(['<td></td>' for x in range(i+1)])+'</tr>'
+                ind += n_predictors - i -1
             output += '</table></p>'
         return output
             
@@ -507,7 +552,30 @@ class Assignments:
         else:
             solution['interpretation']: str = 'De echte verklaring is onbekend, de primaire verklaring is dat, de alternatieve is dat het verschil in '+solution['dependent']+' wordt veroorzaakt door de onafhankelijke variabele '+solution['independent']
         return solution
+    
+    def solve_mregression(self, assignment: Dict, solution:Dict) -> Dict:
+        N = assignment['ns'][0]
         
+        #Compute p-values
+        solution['predictor_t'] = [assignment['predictor_b'][i]/assignment['predictor_se'][i] for i in range(len(assignment['predictor_b']))]
+        solution['predictor_p'] = [stats.t.sf(x,N - 3 - 1) for x in solution['predictor_t']]
+    
+        #compute ANOVA table
+        ssreg = (N-1) * np.std(assignment['predscores']) ** 2
+        sstotal = (N-1) * np.std(assignment['realscores']) ** 2
+        solution['df']: list[int] = [3, N-3-1, N-1]
+        solution['ss']: list[float] = [ssreg, sstotal - ssreg, sstotal]
+        solution['ms']: List[float] = [solution['ss'][i] / solution['df'][i] for i in range(2)]
+        solution['F']: List[float] = [solution['ms'][0] / solution['ms'][1]]
+        solution['p']: List[float] = [stats.f.cdf(solution['F'][0],solution['df'][0], solution['df'][1])]
+        solution['r2']: List[float] = [ssreg/sstotal]
+        
+        #Verbal answers
+        solution['null'] = 'H0: ' + ' == '.join(['beta(' + str(i) + ')' for i in range(1,4)]) + ' == 0'
+        #TODO: decision
+        #TODO: interpretation
+        return solution
+    
     def print_struct(self, d: Dict):
         for key, value in list(d.items()):
             print(key + ': ' + str(value))

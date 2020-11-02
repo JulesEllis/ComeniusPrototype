@@ -39,7 +39,7 @@ def index():
             elif form_shape == 7:
                 form = ReportForm()
                 controller.formmode = False
-                instruction = controller.print_assignment()
+                instruction = output_text
                 return render_template('reportform.html', form=form, instruction=instruction, display='')
         if form.skip.data:
             output_text : str = controller.update({'inputtext': 'skip'})

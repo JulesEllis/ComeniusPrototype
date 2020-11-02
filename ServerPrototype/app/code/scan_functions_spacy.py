@@ -405,11 +405,11 @@ def split_grade_ttest(text: str) -> str:
     return scan_decision(text)[1] + '\n' + scan_interpretation(text)[1]
     
     
-nl_nlp = spacy.load('nl')
-txt = 'H0 behouden, het populatiegemiddelde van nederlands is gelijk aan dat van duits in de populatie'\
-' experiment, dus er is slechts een verklaring mogelijk: de alternatieve verklaring is dat de onafhankelijke variabele nationaliteit'\
-' invloed heeft op de afhankelijke variabele gewicht. Het effect is sterk'
-print(split_grade_ttest(txt))
+#nl_nlp = spacy.load('nl')
+#txt = 'H0 behouden, het populatiegemiddelde van nederlands is gelijk aan dat van duits in de populatie'\
+#' experiment, dus er is slechts een verklaring mogelijk: de alternatieve verklaring is dat de onafhankelijke variabele nationaliteit'\
+#' invloed heeft op de afhankelijke variabele gewicht. Het effect is sterk'
+#print(split_grade_ttest(txt))
     
 
 #text = 'nationaliteit heeft dezelfde invloed op gewicht bij man als bij vrouw in de variabele geslacht'

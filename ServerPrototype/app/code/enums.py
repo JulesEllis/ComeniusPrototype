@@ -11,7 +11,7 @@ class Task(Enum):
     ONEWAY_ANOVA = 3
     TWOWAY_ANOVA = 4
     WITHIN_ANOVA = 5
-	MREGRESSION = 6
+    MREGRESSION = 6
     REPORT = 7
     INTRO = 8
     CHOICE = 9

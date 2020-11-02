@@ -202,6 +202,13 @@ class OuterController:
                     self.solution = self.assignments.solve_rmanova(self.assignment, {})
                     instruction = self.assignments.print_rmanova(self.assignment)
                     self.analysis_type = Task.WITHIN_ANOVA
+                if analysis == 'Multiple-regressieanalyse':
+                    #self.assignment = self.assignments.create_mregression(control)
+                    #self.solution = self.assignments.solve_mregression(self.assignment, {})
+                    #instruction = self.assignments.print_mregression(self.assignment)
+                    self.analysis_type = Task.MREGRESSION
+                    if report != 'Beknopt rapport':
+                        return self.protocol[self.index][0] + '<span style="color: blue;">Sorry, bij multiple regressie kan je alleen een beknopt rapport maken.</span>'
                 
                 #Select report type
                 self.index = 0
