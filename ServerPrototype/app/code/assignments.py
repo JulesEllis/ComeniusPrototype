@@ -162,17 +162,17 @@ class Assignments:
         report_type = 'elementair' if elementary else 'beknopt'
         output = {'assignment_type':6}
         n_subjects = int(random.uniform(40,60))
-        n_predictors = 3
+        n_predictors = random.choice([3,4,5,6])
         output['ns'] = [n_subjects]
         mean1: float = random.uniform(70,100); std1: float = random.uniform(10,15)
         mean2: float = random.uniform(mean1 - 5,mean1 + 5); std2: float = random.uniform(10,15)
         output['predscores']: list[float] = [random.gauss(mean1,std1) for x in range(n_subjects)]
         output['realscores']: list[float] = [random.gauss(mean2,std2) for x in range(n_subjects)]
-        output['data']: dict={'varnames':['Intercept','Sociale vaardigheden', 'Depressieve gedachten', 'Eetlust']}
+        output['data']: dict={'varnames':['Intercept','Sociale vaardigheden', 'Depressieve gedachten', 'Eetlust','Intelligentie','Assertiviteit','Ervaren geluk'][:n_predictors+1]}
         output['predictor_b'] = [np.mean([output['predscores']])] + [random.gauss(0,2) for i in range(n_predictors)]
         output['predictor_se'] = [np.std([output['predscores']])] + [abs(random.gauss(1,1)) for i in range(n_predictors)]
         output['dependent'] = 'Gewicht'
-        output['correlations'] = [random.random() for i in range(int(((n_predictors + 1) ** 2 - n_predictors - 1) * 0.5))]
+        #output['correlations'] = [random.random() for i in range(int(((n_predictors + 1) ** 2 - n_predictors - 1) * 0.5))]
         output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn '+' en '.join(output['data']['varnames'][1:])+' als predictoren en '+output['dependent']+' als criterium. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
         return output
 	
@@ -263,11 +263,11 @@ class Assignments:
         return output_text + '</table>'
     
     def print_mregression(self, assignment: Dict):
-        output_text = assignment['instruction'] + '<br>'
-        output_text += '<br><table style="width:30%">'
-        output_text += '<tr><td>Statistiek</td><td>N</td><td>Variantie geobserveerde scores</td><td>Variantie voorspelde scores</td></tr>'
-        output_text += '<tr><td>Waarde</td><td>'+str(assignment['ns'][0])+'</td><td>'+str(round(np.std(assignment['realscores']) ** 2,2))+'</td><td>'+str(round(np.std(assignment['predscores']) ** 2,2))+'</td></tr>'
-        return output_text + '</table>'
+        output_text = assignment['instruction'] #+ '<br>'
+        #output_text += '<br><table style="width:30%">'
+        #output_text += '<tr><td>Statistiek</td><td>N</td><td>Variantie geobserveerde scores</td><td>Variantie voorspelde scores</td></tr>'
+        #output_text += '<tr><td>Waarde</td><td>'+str(assignment['ns'][0])+'</td><td>'+str(round(np.std(assignment['realscores']) ** 2,2))+'</td><td>'+str(round(np.std(assignment['predscores']) ** 2,2))+'</td></tr>'
+        return output_text #+ '</table>'
     
     def print_report(self, assignment: Dict) -> str:
         output:str = ''
@@ -344,16 +344,16 @@ class Assignments:
                 output += '<tr><td>'+data['varnames'][i]+'</td><td>'+str(round(assignment['predictor_b'][i],2))+'</td><td>'+str(round(assignment['predictor_se'][i],2))+'</td><td>'+str(round(assignment['predictor_t'][i],2))+'</td><td>'+str(round(assignment['predictor_p'][i],2))+'</td></tr>'
             output += '</table></p>'
             
-            output += '<p><table style="width:20%">'
-            cornames:list = [assignment['dependent']] + data['varnames'][1:]
-            output += '<tr><td>Correlatie</td>' + ''.join(['<td>'+x+'</td>' for x in cornames]) + '</tr>'
-            cors:list = assignment['correlations']
-            n_factors:int = len(data['varnames'])
-            ind:int = 0
-            for i in range(n_factors):
-                output += '<tr><td>'+cornames[i]+'</td>'+''.join('<td>'+str(round(x,2))+'</td>' for x in cors[ind:ind+i])+''.join(['<td></td>' for x in range(n_factors-i)])+'</tr>'
-                ind += i
-            output += '</table></p>'
+            #output += '<p><table style="width:20%">'
+            #cornames:list = [assignment['dependent']] + data['varnames'][1:]
+            #output += '<tr><td>Correlatie</td>' + ''.join(['<td>'+x+'</td>' for x in cornames]) + '</tr>'
+            #cors:list = assignment['correlations']
+            #n_factors:int = len(data['varnames'])
+            #ind:int = 0
+            #for i in range(n_factors):
+            #    output += '<tr><td>'+cornames[i]+'</td>'+''.join('<td>'+str(round(x,2))+'</td>' for x in cors[ind:ind+i])+''.join(['<td></td>' for x in range(n_factors-i)])+'</tr>'
+            #    ind += i
+            #output += '</table></p>'
         return output
             
     #Calculate internally all of the numbers and string values the student has to present
@@ -362,6 +362,7 @@ class Assignments:
         names: List[str] = assignment['data']['varnames'][0][1:]
         between_subject: bool = assignment['between_subject']
         solution['hypothesis'] = assignment['hypothesis']
+        solution['assignment_type'] = assignment['assignment_type']
         
         if not between_subject:
             #Differential scores
@@ -440,6 +441,7 @@ class Assignments:
     def solve_anova(self, assignment: Dict, solution: Dict) -> Dict:
         data: Dict = assignment['data']
         two_way: bool = assignment['two_way']
+        solution['assignment_type'] = assignment['assignment_type']
         
         solution['independent']: str = data['varnames'][0][0]
         solution['dependent']: str = 'Gewicht'
@@ -525,7 +527,7 @@ class Assignments:
         solution['dependent_measure']: str = 'kwantitatief'
         solution['dependent_n_measure']: int = n_conditions #Aantal metingen per persoon
         solution['control']: bool = assignment['control']
-        solution['rmanova']: bool = True
+        solution['assignment_type'] = assignment['assignment_type']
         
         #Numerical parts of the report
         #Order of rows: Kwartaal, Persoon, Interactie, Totaal
@@ -556,6 +558,7 @@ class Assignments:
     
     def solve_mregression(self, assignment: Dict, solution:Dict) -> Dict:
         N = assignment['ns'][0]
+        solution['assignment_type'] = assignment['assignment_type']
         
         #Compute p-values
         solution['predictor_t'] = [assignment['predictor_b'][i]/assignment['predictor_se'][i] for i in range(len(assignment['predictor_b']))]

@@ -187,11 +187,11 @@ def detect_strength(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]:
     output:List[str] = []
     
     #Controleer input
-    if not anova: #T-test
+    if solution['assignment_type'] in [1,2]: #T-test
         sterkte = solution['relative_effect'][0]
         gold_strength: str = 'sterk' if sterkte > 0.8 else 'matig' if sterkte > 0.5 else 'klein'
     else:#One-way ANOVA
-        if not solution['two_way'] and not 'rmanova' in list(solution.keys()):
+        if solution['assignment_type'] == 3: #One-way ANOVA
             sterkte: float = solution['r2'][0]
         else: #Two-way and within-subject ANOVA
             sterkte: float = solution['r2'][num]
