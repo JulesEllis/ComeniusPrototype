@@ -86,6 +86,7 @@ class Assignments:
                'hypothesis': hyp_type,
                'between_subject': between_subject,
                'control': control,
+               'assignment_type':1 if between_subject else 2,
                'data':{'varnames': varnames,
                'A': [round(random.gauss(mean1,std1), 2) for i in range(n1)], 
                'B': [round(random.gauss(mean2,std2), 2) for i in range(n2)]}
@@ -94,6 +95,7 @@ class Assignments:
     def create_anova(self, two_way: bool, control: bool, elementary:bool=True) -> Dict:
         output = {'two_way':two_way, 'control':control}
         output['instruction']: str = None
+        output['assignment_type']: int = 4 if two_way else 3
         samplevars = [['Nationaliteit','Nederlands','Duits'], #Sample variable names
                       ['Geslacht','Man','Vrouw'],
                       ['Lievelingskleur','Rood','Blauw'],
@@ -130,7 +132,7 @@ class Assignments:
     
     def create_rmanova(self, control: bool, elementary:bool=True) -> Dict:
         #Determine variable shape and names
-        output = {'control': control, 'two_way':False}
+        output = {'control': control, 'two_way':False, 'assignment_type':5}
         n_conditions = random.randint(2,4)
         n_subjects = int(random.uniform(8,15))
         samplevars = [['Kwartaal','Eerste', 'Tweede', 'Derde', 'Vierde'], 
@@ -158,19 +160,19 @@ class Assignments:
     
     def create_mregression(self, control: bool, elementary:bool=False):
         report_type = 'elementair' if elementary else 'beknopt'
-        output = {}
+        output = {'assignment_type':6}
         n_subjects = int(random.uniform(40,60))
         n_predictors = 3
         output['ns'] = [n_subjects]
-        mean1: float = random.uniform(70,100); std1: float = random.uniform(5,10)
-        mean2: float = random.uniform(mean1 - 10,mean1 + 10); std2: float = random.uniform(5,10)
-        output['predscores']: list[float] = [random.uniform(mean1,std1) for x in range(n_subjects)]
-        output['realscores']: list[float] = [random.uniform(mean2,std2) for x in range(n_subjects)]
+        mean1: float = random.uniform(70,100); std1: float = random.uniform(10,15)
+        mean2: float = random.uniform(mean1 - 5,mean1 + 5); std2: float = random.uniform(10,15)
+        output['predscores']: list[float] = [random.gauss(mean1,std1) for x in range(n_subjects)]
+        output['realscores']: list[float] = [random.gauss(mean2,std2) for x in range(n_subjects)]
         output['data']: dict={'varnames':['Intercept','Sociale vaardigheden', 'Depressieve gedachten', 'Eetlust']}
         output['predictor_b'] = [np.mean([output['predscores']])] + [random.gauss(0,2) for i in range(n_predictors)]
-        output['predictor_se'] = [np.std([output['predscores']])] + [random.gauss(0,2) for i in range(n_predictors)]
+        output['predictor_se'] = [np.std([output['predscores']])] + [abs(random.gauss(1,1)) for i in range(n_predictors)]
         output['dependent'] = 'Gewicht'
-        output['correlations'] = [random.random() for i in range(int((n_predictors ** 2 - n_predictors) * 0.5))]
+        output['correlations'] = [random.random() for i in range(int(((n_predictors + 1) ** 2 - n_predictors - 1) * 0.5))]
         output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn '+' en '.join(output['data']['varnames'][1:])+' als predictoren en '+output['dependent']+' als criterium. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
         return output
 	
@@ -178,7 +180,6 @@ class Assignments:
         if choice == 0:
             choice = random.choice([1,2,3,4,5])
         hyp_type = random.choice([0,1,2])
-        output = {}
         if choice == 1:
             assignment = self.create_ttest(True, hyp_type, control, False)
             output = {**assignment, **self.solve_ttest(assignment, {})}
@@ -344,14 +345,14 @@ class Assignments:
             output += '</table></p>'
             
             output += '<p><table style="width:20%">'
-            output += '<tr><td>Correlatie</td>' + ''.join(['<td>'+x+'</td>' for x in data['varnames'][1:]]) + '</tr>'
+            cornames:list = [assignment['dependent']] + data['varnames'][1:]
+            output += '<tr><td>Correlatie</td>' + ''.join(['<td>'+x+'</td>' for x in cornames]) + '</tr>'
+            cors:list = assignment['correlations']
+            n_factors:int = len(data['varnames'])
             ind:int = 0
-            cors = assignment['correlations']
-            print(cors)
-            n_predictors = len(data['varnames'])-1
-            for i in range(n_predictors):
-                output += '<tr><td>'+data['varnames'][i+1]+'</td>'+''.join('<td>'+str(round(x,2))+'</td>' for x in cors[ind:ind+n_predictors-1-i])+''.join(['<td></td>' for x in range(i+1)])+'</tr>'
-                ind += n_predictors - i -1
+            for i in range(n_factors):
+                output += '<tr><td>'+cornames[i]+'</td>'+''.join('<td>'+str(round(x,2))+'</td>' for x in cors[ind:ind+i])+''.join(['<td></td>' for x in range(n_factors-i)])+'</tr>'
+                ind += i
             output += '</table></p>'
         return output
             
@@ -568,7 +569,7 @@ class Assignments:
         solution['ms']: List[float] = [solution['ss'][i] / solution['df'][i] for i in range(2)]
         solution['F']: List[float] = [solution['ms'][0] / solution['ms'][1]]
         solution['p']: List[float] = [stats.f.cdf(solution['F'][0],solution['df'][0], solution['df'][1])]
-        solution['r2']: List[float] = [ssreg/sstotal]
+        solution['r2']: List[float] = [min(ssreg/sstotal,1.00)]
         
         #Verbal answers
         solution['null'] = 'H0: ' + ' == '.join(['beta(' + str(i) + ')' for i in range(1,4)]) + ' == 0'

@@ -118,7 +118,7 @@ class OuterController:
             return instruction, output
         
         def update_form_report(self, textfields: Dict) -> List[str]:
-            instruction = self.print_assignment()
+            instruction = self.assignments.print_report(self.assignment)
             feedback = "Mooi, dit rapport klopt."
             """
             text = textfields['inputtext']
@@ -237,6 +237,7 @@ class OuterController:
                     self.solution = {}
                     self.protocol = self.return_protocol()
                     instruction = self.assignments.print_report(self.assignment)
+                    return instruction
                 return instruction + '<br>' + self.protocol[self.index][0]
             elif process == Process.TABLE: #Main report protocols during table question
                 if input_text == 'prev' and self.prevable:

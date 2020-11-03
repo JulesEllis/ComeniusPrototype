@@ -104,29 +104,29 @@ def scan_decision(text: str, assignment: Dict={'hypothesis':0}, solution: Dict={
     ## P-VALUE
     ## bools=p_present, p_comparison
     if False in list(scorepoints.values()):
-        output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:\n'
+        output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
         if not scorepoints['hyp_rejected']:
-            output += ' -ten onrechte gesteld dat de hypothese wordt verworpen als deze wordt behouden of andersom\n'
+            output += ' -ten onrechte gesteld dat de hypothese wordt verworpen als deze wordt behouden of andersom<br>'
         if not scorepoints['hyp_present']:
-            output += ' -hypothese niet genoemd\n'
+            output += ' -hypothese niet genoemd<br>'
         if not scorepoints['right_comparison']:
-            output += ' -niveaus in de populatie niet of niet juist met elkaar vergeleken\n'
+            output += ' -niveaus in de populatie niet of niet juist met elkaar vergeleken<br>'
         if not scorepoints['right_negation']:
-            output += ' -ten onrechte een negatie toegevoegd of weggelaten bij het vergelijken van de niveaus\n'
+            output += ' -ten onrechte een negatie toegevoegd of weggelaten bij het vergelijken van de niveaus<br>'
         if not scorepoints['mean_present']:
-            output += ' -niet genoemd dat de beslissing om populatiegemiddelden gaat\n'
+            output += ' -niet genoemd dat de beslissing om populatiegemiddelden gaat<br>'
         if not scorepoints['pop_present']:
-            output += ' -niet gesteld dat de beslissing over de populatie gaat\n'
+            output += ' -niet gesteld dat de beslissing over de populatie gaat<br>'
         if not scorepoints['level_present']:
-            output += ' -de niveaus van de onafhankelijke variabele worden niet genoemd\n'
+            output += ' -de niveaus van de onafhankelijke variabele worden niet genoemd<br>'
         if not scorepoints['both_present'] and scorepoints['level_present']:
-            output += ' -enkele niveaus van de onafhankelijke variabele weggelaten\n'
+            output += ' -enkele niveaus van de onafhankelijke variabele weggelaten<br>'
         if not scorepoints['effect_present']:
-            output += ' -de effectgrootte wordt niet genoemd\n'
+            output += ' -de effectgrootte wordt niet genoemd<br>'
         if scorepoints['effect_present'] and not scorepoints['strength_present']:
-            output += ' -de sterkte van het effect wordt niet genoemd\n'
+            output += ' -de sterkte van het effect wordt niet genoemd<br>'
         elif scorepoints['effect_present'] and not scorepoints['right_strength']:
-            output += ' -de sterkte van het effect wordt niet juist genoemd\n'
+            output += ' -de sterkte van het effect wordt niet juist genoemd<br>'
         return True, output
     else:
         return False, 'Mooi, deze beslissing klopt. '
@@ -179,27 +179,27 @@ def scan_decision_anova(text: str, assignment:Dict={}, solution: Dict={'independ
         scorepoints['hyp_present'] = any([x for x in children if x.text == 'h0' or x.text == 'nulhypothese'])
     
     if False in list(scorepoints.values()):
-        output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:\n'
+        output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
         if not scorepoints['hyp_rejected']:
-            output += ' -ten onrechte gesteld dat de hypothese wordt verworpen als deze wordt behouden of andersom\n'
+            output += ' -ten onrechte gesteld dat de hypothese wordt verworpen als deze wordt behouden of andersom<br>'
         if not scorepoints['hyp_present']:
-            output += ' -hypothese niet genoemd\n'
+            output += ' -hypothese niet genoemd<br>'
         if not scorepoints['right_negation']:
-            output += ' -ten onrechte een negatie toegevoegd of weggelaten bij het vergelijken van de niveaus\n'
+            output += ' -ten onrechte een negatie toegevoegd of weggelaten bij het vergelijken van de niveaus<br>'
         if not scorepoints['mean_present']:
-            output += ' -niet genoemd dat de beslissing om populatiegemiddelden gaat\n'
+            output += ' -niet genoemd dat de beslissing om populatiegemiddelden gaat<br>'
         if not scorepoints['pop_present']:
-            output += ' -niet gesteld dat de beslissing over de populatie gaat\n'
+            output += ' -niet gesteld dat de beslissing over de populatie gaat<br>'
         if not scorepoints['indy1'] and not scorepoints['indy2']:
-            output += ' -de onafhankelijke variabelen ontbreken\n'
+            output += ' -de onafhankelijke variabelen ontbreken<br>'
         elif not scorepoints['indy2'] or not scorepoints['indy2']:
-            output += ' -een van de onafhankelijke variabelen ontbreekt\n'
+            output += ' -een van de onafhankelijke variabelen ontbreekt<br>'
         if not scorepoints['effect_present']:
-            output += ' -de effectgrootte wordt niet genoemd\n'
+            output += ' -de effectgrootte wordt niet genoemd<br>'
         if scorepoints['effect_present'] and not scorepoints['strength_present']:
-            output += ' -de sterkte van het effect wordt niet genoemd\n'
+            output += ' -de sterkte van het effect wordt niet genoemd<br>'
         elif scorepoints['effect_present'] and not scorepoints['right_strength']:
-            output += ' -de sterkte van het effect wordt niet juist genoemd\n'
+            output += ' -de sterkte van het effect wordt niet juist genoemd<br>'
         return True, output
     else:
         return False, 'Mooi, deze beslissing klopt. ' 
@@ -263,27 +263,27 @@ def scan_decision_rmanova(text: str, assignment: Dict, solution: Dict={'independ
     
     #Detect whether the right phrases appear in the decision
     if False in list(scorepoints.values()):
-        output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:\n'
+        output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
         if not scorepoints['hyp_rejected']:
-            output += ' -ten onrechte gesteld dat de hypothese wordt verworpen als deze wordt behouden of andersom\n'
+            output += ' -ten onrechte gesteld dat de hypothese wordt verworpen als deze wordt behouden of andersom<br>'
         if not scorepoints['hyp_present']:
-            output += ' -hypothese niet genoemd\n'
+            output += ' -hypothese niet genoemd<br>'
         if not scorepoints['right_comparison']:
-            output += ' -niveaus in de populatie niet of niet juist met elkaar vergeleken\n'
+            output += ' -niveaus in de populatie niet of niet juist met elkaar vergeleken<br>'
         if not scorepoints['right_negation']:
-            output += ' -ten onrechte een negatie toegevoegd of weggelaten bij het vergelijken van de niveaus\n'
+            output += ' -ten onrechte een negatie toegevoegd of weggelaten bij het vergelijken van de niveaus<br>'
         if not scorepoints['mean_present']:
-            output += ' -niet genoemd dat de beslissing om populatiegemiddelden gaat\n'
+            output += ' -niet genoemd dat de beslissing om populatiegemiddelden gaat<br>'
         if not scorepoints['pop_present']:
-            output += ' -niet gesteld dat de beslissing over de populatie gaat\n'
+            output += ' -niet gesteld dat de beslissing over de populatie gaat<br>'
         if not scorepoints['jacked']:
             output += ' -niet gesteld dat het over de opgevoerde gemiddelden gaat'
         if not scorepoints['effect_present']:
-            output += ' -de effectgrootte wordt niet genoemd\n'
+            output += ' -de effectgrootte wordt niet genoemd<br>'
         if scorepoints['effect_present'] and not scorepoints['strength_present']:
-            output += ' -de sterkte van het effect wordt niet genoemd\n'
+            output += ' -de sterkte van het effect wordt niet genoemd<br>'
         elif scorepoints['effect_present'] and not scorepoints['right_strength']:
-            output += ' -de sterkte van het effect wordt niet juist genoemd\n'
+            output += ' -de sterkte van het effect wordt niet juist genoemd<br>'
         return True, output
     else:
         return False, 'Mooi, deze beslissing klopt. '
@@ -329,23 +329,23 @@ def scan_interpretation(text: str, solution: Dict={'control':False, 'dependent':
                     scorepoints['cause_alignment'] = not 'primaire' in verklaring_children and 'alternatieve' in verklaring_children
     
     if False in list(scorepoints.values()):
-        output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:\n'
+        output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
         if not scorepoints['cause']:
-            output += ' -er wordt niet gesproken over de oorzaak van het effect\n'
+            output += ' -er wordt niet gesproken over de oorzaak van het effect<br>'
         if not scorepoints['effect']:
-            output += ' -het effect wordt niet genoemd\n'
+            output += ' -het effect wordt niet genoemd<br>'
         if not scorepoints['unk']:
-            output += ' -niet gesteld dat de oorzaak van het effect onbekend is\n'
+            output += ' -niet gesteld dat de oorzaak van het effect onbekend is<br>'
         if not scorepoints['var']:
-            output += ' -de onafhankelijke variabele wordt niet genoemd\n'
+            output += ' -de onafhankelijke variabele wordt niet genoemd<br>'
         if not scorepoints['dep']:
-            output += ' -de afhankelijke variabele wordt niet genoemd\n'
+            output += ' -de afhankelijke variabele wordt niet genoemd<br>'
         if not scorepoints['prim']:
-            output += ' -de primaire verklaring wordt niet genoemd\n'
+            output += ' -de primaire verklaring wordt niet genoemd<br>'
         if not scorepoints['alt']:
-            output += ' -de alternatieve verlaring wordt niet genoemd\n'
+            output += ' -de alternatieve verlaring wordt niet genoemd<br>'
         if not scorepoints['cause_alignment'] and scorepoints['prim'] and scorepoints['alt']:
-            output += ' -de alternatieve verlaring en primaire verklaring zijn omgekeerd aangegeven\n'
+            output += ' -de alternatieve verlaring en primaire verklaring zijn omgekeerd aangegeven<br>'
         return True, output
     else:
         return False, 'Mooi, deze causale interpretatie klopt. '
@@ -380,19 +380,19 @@ def scan_interpretation_anova(text: str, solution: Dict={'independent':'national
         scorepoints['indy2'] = solution['independent'] in tokens if ind_nr == 2 else solution['independent2'] in tokens if ind_nr == 1 else False
     
     if False in list(scorepoints.values()):
-        output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:\n'
+        output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
         if not scorepoints['prim']:
-            output += ' -de primaire verklaring wordt niet genoemd\n'
+            output += ' -de primaire verklaring wordt niet genoemd<br>'
         if not scorepoints['alt']:
-            output += ' -de alternatieve verlaring wordt niet genoemd\n'
+            output += ' -de alternatieve verlaring wordt niet genoemd<br>'
         if not scorepoints['unk']:
-            output += ' -niet gesteld dat de echte oorzaak van het effect onbekend is\n'
+            output += ' -niet gesteld dat de echte oorzaak van het effect onbekend is<br>'
         if not scorepoints['dep']:
-            output += ' -afhankelijke variabele niet genoemd is\n'
+            output += ' -afhankelijke variabele niet genoemd is<br>'
         if not scorepoints['indylevels']:
-            output += ' -één van de onafhankelijke variabelen of de niveaus daarvan worden niet genoemd\n'
+            output += ' -één van de onafhankelijke variabelen of de niveaus daarvan worden niet genoemd<br>'
         if not scorepoints['indy2'] and scorepoints['indylevels']:
-            output += ' -ten minste één van de onafhankelijke variabelen wordt niet genoemd'
+            output += ' -ten minste één van de onafhankelijke variabelen wordt niet genoemd<br>'
         return True, output
     else:
         return False, 'Mooi, deze causale interpretatie klopt. '
@@ -402,7 +402,7 @@ def split_grade_ttest(text: str) -> str:
     doc = nl_nlp(text.lower())
     tokens = [x.text for x in doc]
     sents = list(doc.sents)
-    return scan_decision(text)[1] + '\n' + scan_interpretation(text)[1]
+    return scan_decision(text)[1] + '<br>' + scan_interpretation(text)[1]
     
     
 #nl_nlp = spacy.load('nl')
