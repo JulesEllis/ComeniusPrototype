@@ -10,6 +10,7 @@ import random
 import numpy as np
 import nltk
 from scipy import stats
+from scipy.stats.distributions import chi2
 from typing import Dict, List, Tuple
 #import typing
 #from typing import *
@@ -161,16 +162,26 @@ class Assignments:
     def create_mregression(self, control: bool, elementary:bool=False):
         report_type = 'elementair' if elementary else 'beknopt'
         output = {'assignment_type':6}
-        n_subjects = int(random.uniform(40,60))
         n_predictors = random.choice([3,4,5,6])
-        output['ns'] = [n_subjects]
-        mean1: float = random.uniform(70,100); std1: float = random.uniform(10,15)
-        mean2: float = random.uniform(mean1 - 5,mean1 + 5); std2: float = random.uniform(10,15)
-        output['predscores']: list[float] = [random.gauss(mean1,std1) for x in range(n_subjects)]
-        output['realscores']: list[float] = [random.gauss(mean2,std2) for x in range(n_subjects)]
+        N = int(200 * random.random())
+        output['ns'] = [N]
+        
+        p = random.random()
+        s = 3 * random.random()
+        output['var_obs'] = (1 + chi2.ppf(p, df=10)) * 10 ** s
+        r2 = random.random() ** 2
+        output['var_pred'] = output['var_obs'] * r2
+        print(output['var_pred'])
+        #n_subjects = int(random.uniform(40,60))
+        #output['ns'] = [n_subjects]
+        #mean1: float = random.uniform(70,100); std1: float = random.uniform(10,15)
+        #mean2: float = random.uniform(mean1 - 5,mean1 + 5); std2: float = random.uniform(10,15)
+        #output['predscores']: list[float] = [random.gauss(mean1,std1) for x in range(n_subjects)]
+        #output['realscores']: list[float] = [random.gauss(mean2,std2) for x in range(n_subjects)]
         output['data']: dict={'varnames':['Intercept','Sociale vaardigheden', 'Depressieve gedachten', 'Eetlust','Intelligentie','Assertiviteit','Ervaren geluk'][:n_predictors+1]}
-        output['predictor_b'] = [np.mean([output['predscores']])] + [random.gauss(0,2) for i in range(n_predictors)]
-        output['predictor_se'] = [np.std([output['predscores']])] + [abs(random.gauss(1,1)) for i in range(n_predictors)]
+        output['predictor_beta'] = [np.mean([random.uniform(60,120)])] + [random.gauss(0,2) for i in range(n_predictors)]
+        output['predictor_b'] = [x * np.sqrt(output['var_pred']) for x in output['predictor_beta']]
+        output['predictor_se'] = [output['var_pred'] ** 0.5] + [abs(random.gauss(1,1)) for i in range(n_predictors)]
         output['dependent'] = 'Gewicht'
         #output['correlations'] = [random.random() for i in range(int(((n_predictors + 1) ** 2 - n_predictors - 1) * 0.5))]
         output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn '+' en '.join(output['data']['varnames'][1:])+' als predictoren en '+output['dependent']+' als criterium. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
@@ -263,11 +274,11 @@ class Assignments:
         return output_text + '</table>'
     
     def print_mregression(self, assignment: Dict):
-        output_text = assignment['instruction'] #+ '<br>'
-        #output_text += '<br><table style="width:30%">'
-        #output_text += '<tr><td>Statistiek</td><td>N</td><td>Variantie geobserveerde scores</td><td>Variantie voorspelde scores</td></tr>'
-        #output_text += '<tr><td>Waarde</td><td>'+str(assignment['ns'][0])+'</td><td>'+str(round(np.std(assignment['realscores']) ** 2,2))+'</td><td>'+str(round(np.std(assignment['predscores']) ** 2,2))+'</td></tr>'
-        return output_text #+ '</table>'
+        output_text = assignment['instruction'] + '<br>'
+        output_text += '<br><table style="width:30%">'
+        output_text += '<tr><td>Statistiek</td><td>N</td><td>Variantie geobserveerde scores</td><td>Variantie voorspelde scores</td></tr>'
+        output_text += '<tr><td>Waarde</td><td>'+str(assignment['ns'][0])+'</td><td>'+str(round(assignment['var_obs'],2))+'</td><td>'+str(round(assignment['var_pred'],2))+'</td></tr>'
+        return output_text + '</table>'
     
     def print_report(self, assignment: Dict) -> str:
         output:str = ''
@@ -339,9 +350,9 @@ class Assignments:
             output += '</table></p>'
             
             output += '<p><table style="width:20%">'
-            output += '<tr><td>Predictor</td><td>Beta</td><td>Standaarderror</td><td>T</td><td>p</td></tr>'
+            output += '<tr><td>Predictor</td><td>b</td><td>Beta</td><td>Standaarderror</td><td>T</td><td>p</td></tr>'
             for i in range(len(data['varnames'])):
-                output += '<tr><td>'+data['varnames'][i]+'</td><td>'+str(round(assignment['predictor_b'][i],2))+'</td><td>'+str(round(assignment['predictor_se'][i],2))+'</td><td>'+str(round(assignment['predictor_t'][i],2))+'</td><td>'+str(round(assignment['predictor_p'][i],2))+'</td></tr>'
+                output += '<tr><td>'+data['varnames'][i]+'</td><td>'+str(round(assignment['predictor_b'][i],2))+'</td><td>'+str(round(assignment['predictor_beta'][i],2))+'</td><td>'+str(round(assignment['predictor_se'][i],2))+'</td><td>'+str(round(assignment['predictor_t'][i],2))+'</td><td>'+str(round(assignment['predictor_p'][i],2))+'</td></tr>'
             output += '</table></p>'
             
             #output += '<p><table style="width:20%">'
@@ -565,8 +576,8 @@ class Assignments:
         solution['predictor_p'] = [stats.t.sf(x,N - 3 - 1) for x in solution['predictor_t']]
     
         #compute ANOVA table
-        ssreg = (N-1) * np.std(assignment['predscores']) ** 2
-        sstotal = (N-1) * np.std(assignment['realscores']) ** 2
+        ssreg = (N-1) * assignment['var_pred']
+        sstotal = (N-1) * assignment['var_obs']
         solution['df']: list[int] = [3, N-3-1, N-1]
         solution['ss']: list[float] = [ssreg, sstotal - ssreg, sstotal]
         solution['ms']: List[float] = [solution['ss'][i] / solution['df'][i] for i in range(2)]
@@ -579,7 +590,7 @@ class Assignments:
         #TODO: decision
         #TODO: interpretation
         return solution
-    
+        
     def print_struct(self, d: Dict):
         for key, value in list(d.items()):
             print(key + ': ' + str(value))
