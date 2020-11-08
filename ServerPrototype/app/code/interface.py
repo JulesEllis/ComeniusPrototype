@@ -115,19 +115,18 @@ class OuterController:
         
         def update_form_report(self, textfields: Dict) -> List[str]:
             instruction = self.assignments.print_report(self.assignment)
-            feedback = "Mooi, dit rapport klopt."
-            """
             text = textfields['inputtext']
             feedback = None
             if self.assignment['assignment_type'] in [1,2]:
-                feedback = split_grade_ttest(text)
+                feedback = split_grade_ttest(text, self.solution)
             if self.assignment['assignment_type'] == 3:
-                feedback = split_grade_anova(text, two_way=False)
+                feedback = split_grade_anova(text, self.solution, two_way=False)
             if self.assignment['assignment_type'] == 4:
-                feedback = split_grade_anova(text, two_way=True)
+                feedback = split_grade_anova(text, self.solution, two_way=True)
             if self.assignment['assignment_type'] == 5:
-                feedback = split_grade_rmanova(text)
-            """
+                feedback = split_grade_rmanova(text, self.solution)
+            if self.assignment['assignment_type'] == 6:
+                feedback = split_grade_mregression(text, self.solution)
             return instruction, feedback
         
         def update(self, textfields: Dict) -> str:
@@ -230,7 +229,7 @@ class OuterController:
                     self.formmode= True
                     self.assignment = self.assignments.create_report(control, self.analysis_type.value)
                     self.analysis_type = Task.REPORT
-                    self.solution = {}
+                    self.solution = self.assignment
                     self.protocol = self.return_protocol()
                     instruction = self.assignments.print_report(self.assignment)
                     return instruction

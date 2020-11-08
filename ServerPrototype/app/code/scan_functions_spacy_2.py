@@ -10,6 +10,7 @@ import random
 import numpy as np
 import nltk
 import spacy
+import re
 from copy import copy
 from spacy.tokens.token import Token
 from spacy.tokens.doc import Doc
@@ -115,7 +116,7 @@ def detect_interaction(sent:Doc, solution:dict, anova:bool) -> List[str]:
     output:List[str] = []
     
     #Controleer input
-    interactie_list = [x for x in doc if x.text == 'interactie']
+    interactie_list = [x for x in sent if x.text == 'interactie']
     if interactie_list != []:
         int_descendants = descendants(interactie_list[0])
         scorepoints['interactie'] = True
@@ -146,7 +147,7 @@ def detect_true_scores(sent:Doc, solution:dict) -> List[str]:
     
     #Controleer inpur
     gold_comp = 'ongelijk'
-    comparisons = [x for x in doc if x.text == 'groter' or 
+    comparisons = [x for x in sent if x.text == 'groter' or 
                    x.text =='gelijk' or x.text == 'ongelijk' or x.text == 'kleiner']
     if comparisons != []:
         comptree:List = descendants(comparisons[0])
@@ -169,13 +170,13 @@ def detect_true_scores(sent:Doc, solution:dict) -> List[str]:
             
     #Add strings
     if not scorepoints['right_comparison']:
-        output += ' -niveaus in de populatie niet of niet juist met elkaar vergeleken\n'
+        output += ' -niveaus in de populatie niet of niet juist met elkaar vergeleken<br>'
     if not scorepoints['right_negation']:
-        output += ' -ten onrechte een negatie toegevoegd of weggelaten bij het vergelijken van de niveaus\n'
+        output += ' -ten onrechte een negatie toegevoegd of weggelaten bij het vergelijken van de niveaus<br>'
     if not scorepoints['mean_present']:
-        output += ' -niet genoemd dat de beslissing om populatiegemiddelden gaat\n'
+        output += ' -niet genoemd dat de beslissing om populatiegemiddelden gaat<br>'
     if not scorepoints['pop_present']:
-        output += ' -niet gesteld dat de beslissing over de populatie gaat\n'
+        output += ' -niet gesteld dat de beslissing over de populatie gaat<br>'
     if not scorepoints['jacked']:
         output += ' -niet gesteld dat het over de opgevoerde gemiddelden gaat'
     return output
@@ -225,15 +226,18 @@ def detect_unk(sent:Doc, solution:dict):
     
     #Controleer input
     scorepoints['unk'] = 'onbekend' in tokens if not control else True
-    scorepoints['two'] = 'twee' in tokens or 'meerdere' in tokens if not control else ('een' in tokens or 'één' in tokens)
+    print('Een in tokens: ' + str('een' in tokens or 'meerdere' in tokens))
+    scorepoints['two'] = ('een' in tokens) or ('één' in tokens) if control else ('twee' in tokens) or ('meerdere' in tokens)
+    print('meerdere' in tokens)
+    print(scorepoints['two'])
     
     #Add strings
     if not scorepoints['two']:
         output.append(' -niet juist genoemd hoeveel mogelijke interpretaties er zijn')
     if not scorepoints['unk']:
         output.append(' -niet gesteld dat de oorzaak van het effect onbekend is')
+    print(output)
     return output
-    
     
 def detect_primary(sent:Doc, solution:dict, num:int=1) -> List[str]:
     #Define variables
@@ -253,10 +257,10 @@ def detect_primary(sent:Doc, solution:dict, num:int=1) -> List[str]:
     causeverbs = [x for x in sent if x.text in ['veroorzaakt', 'heeft', 'beinvloedt', 'beinvloed','verantwoordelijk', 'oorzaak']] 
     if any(causeverbs):
         effect_children = descendants(causeverbs[0])
-        print([x.text for x in effect_children])
         scorepoints['cause'] = True
         scorepoints['ind'] = independent in [x.text for x in effect_children]
         scorepoints['dep'] = dependent in [x.text for x in effect_children]
+    scorepoints['dep'] = scorepoints['dep'] or dependent in [x.text for x in sent]
     if scorepoints['ind'] and scorepoints['dep']:
         indynode = sent[tokens.index(independent)]
         depnode = sent[tokens.index(dependent)]
@@ -299,6 +303,7 @@ def detect_alternative(sent:Doc, solution:dict, num:int=1) -> List[str]:
         scorepoints['cause'] = True
         scorepoints['ind'] = independent in tokens2
         scorepoints['dep'] = dependent in tokens2
+    scorepoints['dep'] = scorepoints['dep'] or dependent in [x.text for x in sent]
     if scorepoints['ind'] and scorepoints['dep']:
         indynode = sent[tokens.index(independent)]
         depnode = sent[tokens.index(dependent)]
@@ -323,39 +328,57 @@ def detect_alternative(sent:Doc, solution:dict, num:int=1) -> List[str]:
         output.append(' -de relatie tussen de onafhankelijke en afhankelijke variabele is niet geldig hier omdat dit een alternatieve verklaring is')
     return output
 
-def scan_decision(doc:Doc, solution:dict, anova:bool, num:int=1) -> [bool, List[str]]:
-    output = ['Er ontbreekt nog wat aan je antwoord, namelijk:']
+def detect_report_stat(doc:Doc, stat:str, value:str, margin=0.01) -> List[str]:
+    tokens:list[str] = [x.text for x in doc]
+    for i in range(len(tokens) - 2):
+        t3:str = tokens[i+2]
+        if t3.replace('.','').replace('-','').isdigit():
+            t1:str = tokens[i]
+            t2:str = tokens[i+1]
+            if t1 == stat.lower() and t2 in ['==','='] and float(t3) < value + margin and float(t3) > value - margin:
+                return []
+    return [' -de juiste waarde van '+stat+' wordt niet genoemd']
+
+def detect_name(doc:Doc, names:List[str], label:str) -> List[str]:
+    tokens = [x.text for x in doc]
+    if [x in tokens for x in names] == []:
+        return [' -'+label+' niet genoemd']
+    else:
+        return ['']
+
+def scan_decision(doc:Doc, solution:dict, anova:bool, num:int=1, prefix=True) -> [bool, List[str]]:
+    output = ['Er ontbreekt nog wat aan je antwoord, namelijk:'] if prefix else []
     output.extend(detect_h0(doc, solution, num))
     output.extend(detect_comparison(doc, solution, anova, num))
     output.extend(detect_strength(doc, solution, anova, num))
     if len(output) == 1:
-        return False, 'Mooi, deze beslissing klopt.'
+        return False, 'Mooi, deze interpretatie klopt.' if prefix else ''
     else:
-        return True, '\n'.join(output)
+        return True, '<br>'.join(output)
     
-def scan_decision_anova(doc:Doc, solution:dict, anova:bool, num:int=1) -> [bool, List[str]]:
-    output = ['Er ontbreekt nog wat aan je antwoord, namelijk:']
+def scan_decision_anova(doc:Doc, solution:dict, anova:bool, num:int=1, prefix=True) -> [bool, List[str]]:
+    output = ['Er ontbreekt nog wat aan je antwoord, namelijk:'] if prefix else []
     output.extend(detect_h0(doc, solution, num))
     output.extend(detect_interaction(doc, solution, anova))
     output.extend(detect_strength(doc, solution, anova, num))
     if len(output) == 1:
-        return False, 'Mooi, deze beslissing klopt.'
+        return False, 'Mooi, deze interpretatie klopt.' if prefix else ''
     else:
-        return True, '\n'.join(output)
+        return True, '<br>'.join(output)
     
-def scan_decision_rmanova(doc:Doc, solution:dict, anova:bool, num:int=1) -> [bool, List[str]]:
-    output = ['Er ontbreekt nog wat aan je antwoord, namelijk:']
+def scan_decision_rmanova(doc:Doc, solution:dict, anova:bool, num:int=1, prefix=True) -> [bool, List[str]]:
+    output = ['Er ontbreekt nog wat aan je antwoord, namelijk:'] if prefix else []
     output.extend(detect_h0(doc, solution, num))
     output.extend(detect_true_scores(doc, solution))
     output.extend(detect_strength(doc, solution, anova, num))
     if len(output) == 1:
-        return False, 'Mooi, deze beslissing klopt.'
+        return False, 'Mooi, deze interpretatie klopt.' if prefix else ''
     else:
-        return True, '\n'.join(output)
+        return True, '<br>'.join(output)
     
-def scan_interpretation(doc:Doc, solution:dict, anova:bool, num:int=1):
-    output = ['Er ontbreekt nog wat aan je antwoord, namelijk:']
-    unk_sents = [x for x in doc.sents if 'mogelijk' in [y.text for y in x]]
+def scan_interpretation(doc:Doc, solution:dict, anova:bool, num:int=1, prefix=True):
+    output = ['Er ontbreekt nog wat aan je antwoord, namelijk:'] if prefix else []
+    unk_sents = [x for x in doc.sents if 'mogelijk' in [y.text for y in x] or 'mogelijke' in [y.text for y in x]]
     if unk_sents != []:
         output.extend(detect_unk(unk_sents[0], solution))
     else:
@@ -373,15 +396,30 @@ def scan_interpretation(doc:Doc, solution:dict, anova:bool, num:int=1):
         else:
             output.append(' -de alternatieve verklaring wordt niet genoemd')
     if len(output) == 1:
-        return False, 'Mooi, deze interpretatie klopt.'
+        return False, 'Mooi, deze interpretatie klopt.' if prefix else ''
     else:
-        return True, '\n'.join(output)
+        return True, '<br>'.join(output)
 
-nl_nlp = spacy.load('nl')
-doc = nl_nlp("Geen experiment, dus de echte oorzaak is onbekend en er zijn meerdere verklaringen mogelijk. "\
-             'De primaire verklaring is dat nationaliteit invloed heeft op gewicht. De alternatieve verklaring '\
-             'is dat huidskleiur invloed heeft op gewicht en huidskleur ook invloed heeft op nationaliteit'.lower())
-feedback = scan_interpretation(doc,
-              {'relative_effect':[0.9],'p':[0.01],'levels':['nederlands','duits'],'hypothesis':0,'independent':'nationaliteit','dependent':'gewicht','control':False},
-              False)[1]
-print(feedback)
+def split_grade_ttest(text: str, solution:dict) -> str:
+    nl_nlp = spacy.load('nl')
+    doc = nl_nlp(text.lower())
+    output:str = ''
+    output += '<br>'+'<br>'.join(detect_name(doc, ['T-test'], 'naam van de analyse'))
+    output += '<br>'+'<br>'.join(detect_report_stat(doc, 'T', solution['T'][0]))
+    output += '<br>'+'<br>'.join(detect_report_stat(doc, 'p', solution['p'][0]))
+    output += '<br>' + scan_decision(doc, solution, anova=False, prefix=False)[1]
+    if solution['p'][0] < 0.05:
+        output += '<br>' + scan_interpretation(doc, solution, anova=False, prefix=False)[1]
+    if output.replace('<br>','') == '':
+        return 'Mooi, dit beknopt rapport bevat alle juiste details!'
+    else:
+        return 'Er ontbreekt nog wat aan je antwoord, namelijk:' + re.sub(r'<br>(<br>)+', '<br>', output)
+    
+    
+def split_grade_anova(text: str, solution:dict) -> str:
+    nl_nlp = spacy.load('nl')
+    doc = nl_nlp(text.lower())
+    sents = list(doc.sents)
+    output:str = ''
+    return output
+    

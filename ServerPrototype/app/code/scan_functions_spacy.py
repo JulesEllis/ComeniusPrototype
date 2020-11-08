@@ -397,12 +397,7 @@ def scan_interpretation_anova(text: str, solution: Dict={'independent':'national
     else:
         return False, 'Mooi, deze causale interpretatie klopt. '
 
-def split_grade_ttest(text: str) -> str:
-    nl_nlp = spacy.load('nl')
-    doc = nl_nlp(text.lower())
-    tokens = [x.text for x in doc]
-    sents = list(doc.sents)
-    return scan_decision(text)[1] + '<br>' + scan_interpretation(text)[1]
+
     
     
 #nl_nlp = spacy.load('nl')

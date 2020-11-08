@@ -121,7 +121,7 @@ def reportform():
         
     if flask.request.method == 'POST':
         if form.submit.data:
-            textfields = [x for x in dir(form) if str(type(form.__getattribute__(x))) == "<class 'wtforms.fields.core.StringField'>"]
+            textfields = [x for x in dir(form) if str(type(form.__getattribute__(x))) == "<class 'wtforms.fields.simple.TextAreaField'>"]
             textdict = dict([(x, form.__getattribute__(x).data) for x in textfields])
             instruction, output = controller.update_form_report(textdict)
             return render_template('reportform.html', form=form, instruction=instruction, display=output)

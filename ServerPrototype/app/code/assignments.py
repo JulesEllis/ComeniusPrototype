@@ -181,7 +181,7 @@ class Assignments:
         output['data']: dict={'varnames':['Intercept','Sociale vaardigheden', 'Depressieve gedachten', 'Eetlust','Intelligentie','Assertiviteit','Ervaren geluk'][:n_predictors+1]}
         output['predictor_beta'] = [np.mean([random.uniform(60,120)])] + [random.gauss(0,2) for i in range(n_predictors)]
         output['predictor_b'] = [x * np.sqrt(output['var_pred']) for x in output['predictor_beta']]
-        output['predictor_se'] = [output['var_pred'] ** 0.5] + [abs(random.gauss(1,1)) for i in range(n_predictors)]
+        output['predictor_se'] = [output['var_pred'] ** 0.5] + [abs(random.gauss(0,2)) for i in range(n_predictors)]
         output['dependent'] = 'Gewicht'
         #output['correlations'] = [random.random() for i in range(int(((n_predictors + 1) ** 2 - n_predictors - 1) * 0.5))]
         output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn '+' en '.join(output['data']['varnames'][1:])+' als predictoren en '+output['dependent']+' als criterium. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
