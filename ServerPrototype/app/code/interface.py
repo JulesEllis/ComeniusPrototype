@@ -117,8 +117,10 @@ class OuterController:
             instruction = self.assignments.print_report(self.assignment)
             text = textfields['inputtext']
             feedback = None
-            if self.assignment['assignment_type'] in [1,2]:
-                feedback = split_grade_ttest(text, self.solution)
+            if self.assignment['assignment_type'] == 1:
+                feedback = split_grade_ttest(text, self.solution, between_subject=True)
+            if self.assignment['assignment_type'] == 2:
+                feedback = split_grade_ttest(text, self.solution, between_subject=False)
             if self.assignment['assignment_type'] == 3:
                 feedback = split_grade_anova(text, self.solution, two_way=False)
             if self.assignment['assignment_type'] == 4:

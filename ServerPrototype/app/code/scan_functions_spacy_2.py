@@ -52,9 +52,15 @@ def detect_h0(sent:Doc, solution:dict, num:int=1) -> List[str]:
     
     #Add strings
     if not scorepoints['hyp_rejected']:
-        output.append(' -ten onrechte gesteld dat de hypothese wordt verworpen als deze wordt behouden of andersom')
+        if num < 2:
+            output.append(' -ten onrechte gesteld dat de hypothese wordt verworpen als deze wordt behouden of andersom')
+        else:
+            output.append(' -ten onrechte gesteld dat de hypothese van factor '+str(num)+' wordt verworpen als deze wordt behouden of andersom')
     if not scorepoints['hyp_present']:
-        output.append(' -hypothese niet genoemd')
+        if num < 2:
+            output.append(' -hypothese niet genoemd')
+        else:
+            output.append(' -hypothese van factor '+str(num)+' niet genoemd')
     return output
 
 def detect_comparison(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]:
@@ -62,6 +68,7 @@ def detect_comparison(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]
     criteria = ['right_comparison', 'right_negation', 'mean_present', 'pop_present', 'level_present', 'both_present']
     scorepoints = dict([(x,False) for x in criteria])
     output:List[str] = []
+    tokens = [y.text for y in sent]
     levels=solution['levels' + str(num) if num > 1 else 'levels']
     
     #Controleer input
@@ -78,8 +85,6 @@ def detect_comparison(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]
             scorepoints['right_negation'] = not_present == (solution['p'][num-1] < 0.05)
         else:
             scorepoints['right_negation'] = not_present != (solution['p'][num-1] < 0.05)
-        scorepoints['level_present'] = any([x in [y.text for y in comptree] for x in levels])
-        scorepoints['both_present'] = all([x in [y.text for y in comptree] for x in levels])
         
         
     mean = [x for x in sent if x.text == 'gemiddelde']
@@ -88,23 +93,42 @@ def detect_comparison(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]
     #if scorepoints['mean_present']:
         #meanroot = mean[0] if any(mean) else mean_2[0] if any(mean_2) else None
         #meantree:list = descendants(meanroot)
-    scorepoints['pop_present'] = any(mean_2) or 'populatie' in [x.text for x in sent]
-    scorepoints['level_present'] = any([x in [y.text for y in sent] for x in levels]) or scorepoints['level_present']
-    scorepoints['both_present'] = all([x in [y.text for y in sent] for x in levels]) or scorepoints['both_present']
+    scorepoints['pop_present'] = any(mean_2) or 'populatie' in tokens
+    level_bools:list[bool] = [x in tokens for x in levels]
+    scorepoints['level_present'] = any(level_bools) #or scorepoints['level_present']
+    scorepoints['both_present'] = all(level_bools)# or scorepoints['both_present']
     
     #Add strings:
     if not scorepoints['right_comparison']:
-        output.append(' -niveaus in de populatie niet of niet juist met elkaar vergeleken')
+        if num < 2:
+            output.append(' -niveaus in de populatie niet of niet juist met elkaar vergeleken')
+        else:
+            output.append(' -niveaus van factor '+str(num)+' in de populatie niet of niet juist met elkaar vergeleken')
     if not scorepoints['right_negation']:
-        output.append(' -ten onrechte een negatie toegevoegd of weggelaten bij het vergelijken van de niveaus')
+        if num < 2:
+            output.append(' -ten onrechte een negatie toegevoegd of weggelaten bij het vergelijken van de niveaus')
+        else:
+            output.append(' -ten onrechte een negatie toegevoegd of weggelaten bij het vergelijken van de niveaus van factor '+str(num))
     if not scorepoints['mean_present']:
-        output.append(' -niet genoemd dat de beslissing om populatiegemiddelden gaat')
+        if num < 2:
+            output.append(' -niet genoemd dat de beslissing om populatiegemiddelden gaat')
+        else:
+            output.append(' -niet genoemd dat de beslissing van factor '+str(num)+'  om populatiegemiddelden gaat')
     if not scorepoints['pop_present']:
-        output.append(' -niet gesteld dat de beslissing over de populatie gaat')
+        if num < 2:
+            output.append(' -niet gesteld dat de beslissing over de populatie gaat')
+        else:
+            output.append(' -niet gesteld dat de beslissing van factor '+str(num)+' over de populatie gaat')
     if not scorepoints['level_present']:
-        output.append(' -de niveaus van de onafhankelijke variabele worden niet genoemd')
+        if num < 2:
+            output.append(' -de niveaus van de onafhankelijke variabele worden niet genoemd')
+        else:
+            output.append(' -de niveaus van de onafhankelijke variabele van factor '+str(num)+'  worden niet genoemd')
     if not scorepoints['both_present'] and scorepoints['level_present']:
-        output.append(' -enkele niveaus van de onafhankelijke variabele weggelaten')
+        if num < 2:
+            output.append(' -enkele niveaus van de onafhankelijke variabele weggelaten')
+        else:
+            output.append(' -enkele niveaus van de onafhankelijke variabele van factor '+str(num)+' weggelaten')
     return output
 
 def detect_interaction(sent:Doc, solution:dict, anova:bool) -> List[str]:
@@ -127,15 +151,15 @@ def detect_interaction(sent:Doc, solution:dict, anova:bool) -> List[str]:
         
     #Add strings
     if not scorepoints['interactie']:
-        output.append(' -niet gesteld dat deze beslissing over interactie gaat')
+        output.append(' -niet gesteld dat de interactiebeslissing over interactie gaat')
     if not scorepoints['right_negation']:
-        output.append('')
+        output.append(' -ten onrechte een negatie toegevoegd of weggelaten bij de interactiebeslissing')
     if not scorepoints['pop_present']:
-        output.append(' -niet gesteld dat deze beslissing over de populatie gaat')
+        output.append(' -niet gesteld dat de interactiebeslissing over de populatie gaat')
     if not scorepoints['indy1'] and not scorepoints['indy2']:
-        output.append(' -de onafhankelijke variabelen ontbreken')
+        output.append(' -de onafhankelijke variabelen ontbreken bij de interactiebeslissing')
     elif not scorepoints['indy2'] or not scorepoints['indy2']:
-        output.append(' -een van de onafhankelijke variabelen ontbreekt')
+        output.append(' -een van de onafhankelijke variabelen ontbreekt bij de interactiebeslissing')
     return output
 
 def detect_true_scores(sent:Doc, solution:dict) -> List[str]:
@@ -170,15 +194,15 @@ def detect_true_scores(sent:Doc, solution:dict) -> List[str]:
             
     #Add strings
     if not scorepoints['right_comparison']:
-        output += ' -niveaus in de populatie niet of niet juist met elkaar vergeleken<br>'
+        output.append(' -niveaus in de populatie niet of niet juist met elkaar vergeleken')
     if not scorepoints['right_negation']:
-        output += ' -ten onrechte een negatie toegevoegd of weggelaten bij het vergelijken van de niveaus<br>'
+        output.append(' -ten onrechte een negatie toegevoegd of weggelaten bij het vergelijken van de niveaus')
     if not scorepoints['mean_present']:
-        output += ' -niet genoemd dat de beslissing om populatiegemiddelden gaat<br>'
+        output.append(' -niet genoemd dat de beslissing om populatiegemiddelden gaat')
     if not scorepoints['pop_present']:
-        output += ' -niet gesteld dat de beslissing over de populatie gaat<br>'
+        output.append(' -niet gesteld dat de beslissing over de populatie gaat')
     if not scorepoints['jacked']:
-        output += ' -niet gesteld dat het over de opgevoerde gemiddelden gaat'
+        output.append(' -niet gesteld dat het over de opgevoerde gemiddelden gaat')
     return output
     
 def detect_strength(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]:
@@ -195,7 +219,7 @@ def detect_strength(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]:
         if solution['assignment_type'] == 3: #One-way ANOVA
             sterkte: float = solution['r2'][0]
         else: #Two-way and within-subject ANOVA
-            sterkte: float = solution['r2'][num]
+            sterkte: float = solution['r2'][num-1]
         gold_strength: str = 'sterk' if sterkte > 0.2 else 'matig' if sterkte > 0.1 else 'klein'
     effect = [x for x in sent if x.lemma_ == 'effect']
     if effect != []:
@@ -209,11 +233,20 @@ def detect_strength(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]:
             
     #Add strings
     if not scorepoints['effect_present']:
-        output.append(' -de effectgrootte wordt niet genoemd')
+        if num < 2:
+            output.append(' -de effectgrootte wordt niet genoemd')
+        else:
+            output.append(' -de effectgrootte van factor '+str(num)+' wordt niet genoemd')
     if scorepoints['effect_present'] and not scorepoints['strength_present']:
-        output.append(' -de sterkte van het effect wordt niet genoemd')
+        if num < 2:
+             output.append(' -de sterkte van het effect wordt niet genoemd')
+        else:
+             output.append(' -de sterkte van het effect van factor '+str(num)+' wordt niet genoemd')
     elif scorepoints['effect_present'] and not scorepoints['right_strength']:
-        output.append(' -de sterkte van het effect wordt niet juist genoemd')
+        if num < 2:
+            output.append(' -de sterkte van het effect wordt niet juist genoemd')
+        else:
+            output.append(' -de sterkte van het effect van factor '+str(num)+' wordt niet juist genoemd')
     return output
 
 def detect_unk(sent:Doc, solution:dict):
@@ -226,17 +259,13 @@ def detect_unk(sent:Doc, solution:dict):
     
     #Controleer input
     scorepoints['unk'] = 'onbekend' in tokens if not control else True
-    print('Een in tokens: ' + str('een' in tokens or 'meerdere' in tokens))
     scorepoints['two'] = ('een' in tokens) or ('één' in tokens) if control else ('twee' in tokens) or ('meerdere' in tokens)
-    print('meerdere' in tokens)
-    print(scorepoints['two'])
     
     #Add strings
     if not scorepoints['two']:
         output.append(' -niet juist genoemd hoeveel mogelijke interpretaties er zijn')
     if not scorepoints['unk']:
         output.append(' -niet gesteld dat de oorzaak van het effect onbekend is')
-    print(output)
     return output
     
 def detect_primary(sent:Doc, solution:dict, num:int=1) -> List[str]:
@@ -328,16 +357,20 @@ def detect_alternative(sent:Doc, solution:dict, num:int=1) -> List[str]:
         output.append(' -de relatie tussen de onafhankelijke en afhankelijke variabele is niet geldig hier omdat dit een alternatieve verklaring is')
     return output
 
-def detect_report_stat(doc:Doc, stat:str, value:str, margin=0.01) -> List[str]:
+def detect_report_stat(doc:Doc, stat:str, value:str, aliases:list=[], num:int=1, margin=0.01) -> List[str]:
     tokens:list[str] = [x.text for x in doc]
     for i in range(len(tokens) - 2):
         t3:str = tokens[i+2]
         if t3.replace('.','').replace('-','').isdigit():
             t1:str = tokens[i]
             t2:str = tokens[i+1]
-            if t1 == stat.lower() and t2 in ['==','='] and float(t3) < value + margin and float(t3) > value - margin:
-                return []
-    return [' -de juiste waarde van '+stat+' wordt niet genoemd']
+            if t1 == stat.lower() or t1 in aliases: 
+                if t2 in ['==','='] and float(t3) < value + margin and float(t3) > value - margin:
+                    return []
+    if num < 2:        
+        return [' -de juiste waarde van '+stat+' wordt niet genoemd']
+    else:
+        return [' -de juiste waarde van '+stat+' voor factor '+str(num)+' wordt niet genoemd']
 
 def detect_name(doc:Doc, names:List[str], label:str) -> List[str]:
     tokens = [x.text for x in doc]
@@ -351,7 +384,8 @@ def scan_decision(doc:Doc, solution:dict, anova:bool, num:int=1, prefix=True) ->
     output.extend(detect_h0(doc, solution, num))
     output.extend(detect_comparison(doc, solution, anova, num))
     output.extend(detect_strength(doc, solution, anova, num))
-    if len(output) == 1:
+    correct:bool = len(output) == 1 if prefix else output == []
+    if correct:
         return False, 'Mooi, deze interpretatie klopt.' if prefix else ''
     else:
         return True, '<br>'.join(output)
@@ -361,7 +395,8 @@ def scan_decision_anova(doc:Doc, solution:dict, anova:bool, num:int=1, prefix=Tr
     output.extend(detect_h0(doc, solution, num))
     output.extend(detect_interaction(doc, solution, anova))
     output.extend(detect_strength(doc, solution, anova, num))
-    if len(output) == 1:
+    correct:bool = len(output) == 1 if prefix else output == []
+    if correct:
         return False, 'Mooi, deze interpretatie klopt.' if prefix else ''
     else:
         return True, '<br>'.join(output)
@@ -371,7 +406,8 @@ def scan_decision_rmanova(doc:Doc, solution:dict, anova:bool, num:int=1, prefix=
     output.extend(detect_h0(doc, solution, num))
     output.extend(detect_true_scores(doc, solution))
     output.extend(detect_strength(doc, solution, anova, num))
-    if len(output) == 1:
+    correct:bool = len(output) == 1 if prefix else output == []
+    if correct:
         return False, 'Mooi, deze interpretatie klopt.' if prefix else ''
     else:
         return True, '<br>'.join(output)
@@ -395,16 +431,38 @@ def scan_interpretation(doc:Doc, solution:dict, anova:bool, num:int=1, prefix=Tr
             output.extend(detect_alternative(alt_sents[0], solution))
         else:
             output.append(' -de alternatieve verklaring wordt niet genoemd')
-    if len(output) == 1:
+    correct:bool = len(output) == 1 if prefix else output == []
+    if correct:
         return False, 'Mooi, deze interpretatie klopt.' if prefix else ''
     else:
         return True, '<br>'.join(output)
 
-def split_grade_ttest(text: str, solution:dict) -> str:
+def scan_predictors(doc:Doc, solution:dict, prefix:bool=True) -> [bool, List[str]]:
+    tokens = [x.text for x in doc]
+    output = ['Er ontbreekt nog wat aan je antwoord, namelijk:'] if prefix else []
+    varnames = solution['data']['varnames'][1:]
+    for x in varnames:
+        if ' ' in x:
+            names = x.split()
+            if not all([y in tokens for y in names]):
+                output.append(' -predictor ' + x + ' niet genoemd.')
+        else:
+            if not x in tokens:
+                output.append(' -predictor ' + x + ' niet genoemd.')
+    for i in range(len(varnames)):
+        output.extend(detect_report_stat(doc, 'de p-waarde van '+varnames[i], solution['predictor_p'][i+1]))
+    correct:bool = len(output) == 1 if prefix else output == []
+    if correct:
+        return False, 'Mooi, deze interpretatie klopt.' if prefix else ''
+    else:
+        return True, '<br>'.join(output)
+
+def split_grade_ttest(text: str, solution:dict, between_subject:bool) -> str:
     nl_nlp = spacy.load('nl')
     doc = nl_nlp(text.lower())
+    label2:str = 'between-subject' if between_subject else 'within-subject'
     output:str = ''
-    output += '<br>'+'<br>'.join(detect_name(doc, ['T-test'], 'naam van de analyse'))
+    output += '<br>'+'<br>'.join(detect_name(doc, [label2,'T-test'], 'naam van de analyse'))
     output += '<br>'+'<br>'.join(detect_report_stat(doc, 'T', solution['T'][0]))
     output += '<br>'+'<br>'.join(detect_report_stat(doc, 'p', solution['p'][0]))
     output += '<br>' + scan_decision(doc, solution, anova=False, prefix=False)[1]
@@ -416,10 +474,59 @@ def split_grade_ttest(text: str, solution:dict) -> str:
         return 'Er ontbreekt nog wat aan je antwoord, namelijk:' + re.sub(r'<br>(<br>)+', '<br>', output)
     
     
-def split_grade_anova(text: str, solution:dict) -> str:
+def split_grade_anova(text: str, solution:dict, two_way:bool) -> str:
     nl_nlp = spacy.load('nl')
     doc = nl_nlp(text.lower())
-    sents = list(doc.sents)
+    label2:str = 'two-way' if two_way else 'one-way'
     output:str = ''
-    return output
+    output += '<br>'+'<br>'.join(detect_name(doc, [label2, 'ANOVA'], 'naam van de analyse'))
+    if not two_way:
+        output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][0]))
+        output += '<br>'+'<br>'.join(detect_report_stat(doc, 'p', solution['p'][0]))
+        output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][0], aliases=['r2']))
+        output += '<br>' + scan_decision(doc, solution, anova=True, prefix=False)[1]
+        if solution['p'][0] < 0.05:
+            output += '<br>' + scan_interpretation(doc, solution, anova=True, prefix=False)[1]
+    else:
+        for i in range(3):
+            output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][0], num=i+1))
+            output += '<br>'+'<br>'.join(detect_report_stat(doc, 'p', solution['p'][0], num=i+1))
+            output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][0], aliases=['r2'], num=i+1))
+            if i < 2:
+                output += '<br>' + scan_decision(doc, solution, anova=True, num=i+1, prefix=False)[1]
+            else:
+                output += '<br>' + scan_decision_anova(doc, solution, anova=True, num=i+1, prefix=False)[1]
+            if solution['p'][0] < 0.05:
+                output += '<br>' + scan_interpretation(doc, solution, anova=True, num=i+1, prefix=False)[1]
+    if output.replace('<br>','') == '':
+        return 'Mooi, dit beknopt rapport bevat alle juiste details!'
+    else:
+        return 'Er ontbreekt nog wat aan je antwoord, namelijk:' + re.sub(r'<br>(<br>)+', '<br>', output)
+        
+def split_grade_rmanova(text: str, solution:dict) -> str:
+    nl_nlp = spacy.load('nl')
+    doc = nl_nlp(text.lower())
+    output:str = ''
+    output += '<br>'+'<br>'.join(detect_name(doc, ['repeated-measures', 'ANOVA'], 'naam van de analyse'))
+    output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][0]))
+    output += '<br>'+'<br>'.join(detect_report_stat(doc, 'p', solution['p'][0]))
+    output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][0], aliases=['r2']))
+    output += '<br>' + scan_decision(doc, solution, anova=True, num=1, prefix=False)[1]
+    output += '<br>' + scan_decision_rmanova(doc, solution, anova=True, num=2, prefix=False)[1]
+    if solution['p'][0] < 0.05:
+        output += '<br>' + scan_interpretation(doc, solution, anova=True, prefix=False)[1]
+    return re.sub(r'<br>(<br>)+', '<br>', output)
+        
+def split_grade_mregression(text:str, solution:dict) -> str:
+    nl_nlp = spacy.load('nl')
+    doc = nl_nlp(text.lower())
+    output:str = ''
+    output += '<br>'+'<br>'.join(detect_name(doc, ['regressieanalyse'], 'naam van de analyse'))
+    output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][0]))
+    output += '<br>'+'<br>'.join(detect_report_stat(doc, 'p', solution['p'][0]))
+    output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][0], aliases=['r2']))
+    output += '<br>' + scan_predictors(doc, solution, prefix=False)[1]
+    return re.sub(r'<br>(<br>)+', '<br>', output)
     
+    
+        

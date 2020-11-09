@@ -171,13 +171,6 @@ class Assignments:
         output['var_obs'] = (1 + chi2.ppf(p, df=10)) * 10 ** s
         r2 = random.random() ** 2
         output['var_pred'] = output['var_obs'] * r2
-        print(output['var_pred'])
-        #n_subjects = int(random.uniform(40,60))
-        #output['ns'] = [n_subjects]
-        #mean1: float = random.uniform(70,100); std1: float = random.uniform(10,15)
-        #mean2: float = random.uniform(mean1 - 5,mean1 + 5); std2: float = random.uniform(10,15)
-        #output['predscores']: list[float] = [random.gauss(mean1,std1) for x in range(n_subjects)]
-        #output['realscores']: list[float] = [random.gauss(mean2,std2) for x in range(n_subjects)]
         output['data']: dict={'varnames':['Intercept','Sociale vaardigheden', 'Depressieve gedachten', 'Eetlust','Intelligentie','Assertiviteit','Ervaren geluk'][:n_predictors+1]}
         output['predictor_beta'] = [np.mean([random.uniform(60,120)])] + [random.gauss(0,2) for i in range(n_predictors)]
         output['predictor_b'] = [x * np.sqrt(output['var_pred']) for x in output['predictor_beta']]
