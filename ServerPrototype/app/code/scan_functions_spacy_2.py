@@ -69,7 +69,7 @@ def detect_comparison(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]
     scorepoints = dict([(x,False) for x in criteria])
     output:List[str] = []
     tokens = [y.text for y in sent]
-    levels=solution['levels' + str(num) if num > 1 else 'levels']
+    levels=[x.lower() for x in solution['levels' + str(num) if num > 1 else 'levels']]
     
     #Controleer input
     gold_comp = 'ongelijk' if anova else ['ongelijk','groter','kleiner'][solution['hypothesis']]
@@ -95,6 +95,9 @@ def detect_comparison(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]
         #meantree:list = descendants(meanroot)
     scorepoints['pop_present'] = any(mean_2) or 'populatie' in tokens
     level_bools:list[bool] = [x in tokens for x in levels]
+    print(levels)
+    print(tokens)
+    print(level_bools)
     scorepoints['level_present'] = any(level_bools) #or scorepoints['level_present']
     scorepoints['both_present'] = all(level_bools)# or scorepoints['both_present']
     
@@ -293,7 +296,9 @@ def detect_primary(sent:Doc, solution:dict, num:int=1) -> List[str]:
     if scorepoints['ind'] and scorepoints['dep']:
         indynode = sent[tokens.index(independent)]
         depnode = sent[tokens.index(dependent)]
-        if indynode.dep_ == 'nsubj' and depnode.dep_ == 'obj': #Omgekeerde causaliteit
+        if indynode.dep_ == 'nsubj' and depnode.dep_ == 'obj': #Normale causaliteit
+            scorepoints['alignment'] = True
+        if indynode.dep_ == 'obj' and depnode.dep_ == 'ROOT': #Consistent verkeerde parse in spacy
             scorepoints['alignment'] = True
     
     #Add strings
@@ -306,14 +311,14 @@ def detect_primary(sent:Doc, solution:dict, num:int=1) -> List[str]:
     if not scorepoints['dep']:
         output.append(' -de afhankelijke variabele wordt niet genoemd bij de primaire verklaring')
     if scorepoints['ind'] and scorepoints['dep'] and not scorepoints['alignment']:
-        output.append(' -het causale verband tussen de afhankelijke en onafhankelijke variabele is niet juist aangegeven')
+        output.append(' -het causale verband tussen de afhankelijke en onafhankelijke variabele is niet juist aangegeven bij de primaire verklaring')
     if not scorepoints['prim']:
         output.append(' -de primaire verlaring wordt niet genoemd')
     return output
 
 def detect_alternative(sent:Doc, solution:dict, num:int=1) -> List[str]:
     #Define variables
-    criteria = ['alt','ind','dep','content','relation_type']
+    criteria = ['alt','ind','dep','cause','relation_type']
     scorepoints = dict([(x,False) for x in criteria])
     i_key: str = 'independent' + str(num) if num > 1 else 'independent'
     independent = solution[i_key].lower()
@@ -343,6 +348,7 @@ def detect_alternative(sent:Doc, solution:dict, num:int=1) -> List[str]:
         #cause2 = [x for x in descendants(causeverbs[])]
     else:
         scorepoints['relation_type'] = True
+    print([(x.text, x.dep_) for x in sent])
     
     #Add strings
     if not scorepoints['cause']:
@@ -466,8 +472,8 @@ def split_grade_ttest(text: str, solution:dict, between_subject:bool) -> str:
     output += '<br>'+'<br>'.join(detect_report_stat(doc, 'T', solution['T'][0]))
     output += '<br>'+'<br>'.join(detect_report_stat(doc, 'p', solution['p'][0]))
     output += '<br>' + scan_decision(doc, solution, anova=False, prefix=False)[1]
-    if solution['p'][0] < 0.05:
-        output += '<br>' + scan_interpretation(doc, solution, anova=False, prefix=False)[1]
+    #if solution['p'][0] < 0.05:
+    output += '<br>' + scan_interpretation(doc, solution, anova=False, prefix=False)[1]
     if output.replace('<br>','') == '':
         return 'Mooi, dit beknopt rapport bevat alle juiste details!'
     else:
@@ -485,8 +491,8 @@ def split_grade_anova(text: str, solution:dict, two_way:bool) -> str:
         output += '<br>'+'<br>'.join(detect_report_stat(doc, 'p', solution['p'][0]))
         output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][0], aliases=['r2']))
         output += '<br>' + scan_decision(doc, solution, anova=True, prefix=False)[1]
-        if solution['p'][0] < 0.05:
-            output += '<br>' + scan_interpretation(doc, solution, anova=True, prefix=False)[1]
+        #if solution['p'][0] < 0.05:
+        output += '<br>' + scan_interpretation(doc, solution, anova=True, prefix=False)[1]
     else:
         for i in range(3):
             output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][0], num=i+1))
@@ -496,8 +502,8 @@ def split_grade_anova(text: str, solution:dict, two_way:bool) -> str:
                 output += '<br>' + scan_decision(doc, solution, anova=True, num=i+1, prefix=False)[1]
             else:
                 output += '<br>' + scan_decision_anova(doc, solution, anova=True, num=i+1, prefix=False)[1]
-            if solution['p'][0] < 0.05:
-                output += '<br>' + scan_interpretation(doc, solution, anova=True, num=i+1, prefix=False)[1]
+            #if solution['p'][0] < 0.05:
+            output += '<br>' + scan_interpretation(doc, solution, anova=True, num=i+1, prefix=False)[1]
     if output.replace('<br>','') == '':
         return 'Mooi, dit beknopt rapport bevat alle juiste details!'
     else:
@@ -513,8 +519,8 @@ def split_grade_rmanova(text: str, solution:dict) -> str:
     output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][0], aliases=['r2']))
     output += '<br>' + scan_decision(doc, solution, anova=True, num=1, prefix=False)[1]
     output += '<br>' + scan_decision_rmanova(doc, solution, anova=True, num=2, prefix=False)[1]
-    if solution['p'][0] < 0.05:
-        output += '<br>' + scan_interpretation(doc, solution, anova=True, prefix=False)[1]
+    #if solution['p'][0] < 0.05:
+    output += '<br>' + scan_interpretation(doc, solution, anova=True, prefix=False)[1]
     return re.sub(r'<br>(<br>)+', '<br>', output)
         
 def split_grade_mregression(text:str, solution:dict) -> str:
