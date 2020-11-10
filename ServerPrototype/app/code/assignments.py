@@ -268,10 +268,10 @@ class Assignments:
     
     def print_mregression(self, assignment: Dict):
         output_text = assignment['instruction'] + '<br>'
-        output_text += '<br><table style="width:30%">'
-        output_text += '<tr><td>Statistiek</td><td>N</td><td>Variantie geobserveerde scores</td><td>Variantie voorspelde scores</td></tr>'
-        output_text += '<tr><td>Waarde</td><td>'+str(assignment['ns'][0])+'</td><td>'+str(round(assignment['var_obs'],2))+'</td><td>'+str(round(assignment['var_pred'],2))+'</td></tr>'
-        return output_text + '</table>'
+        #output_text += '<br><table style="width:30%">'
+        #output_text += '<tr><td>Statistiek</td><td>N</td><td>Variantie geobserveerde scores</td><td>Variantie voorspelde scores</td></tr>'
+        #output_text += '<tr><td>Waarde</td><td>'+str(assignment['ns'][0])+'</td><td>'+str(round(assignment['var_obs'],2))+'</td><td>'+str(round(assignment['var_pred'],2))+'</td></tr>'
+        return output_text #+ '</table>'
     
     def print_report(self, assignment: Dict) -> str:
         output:str = ''
