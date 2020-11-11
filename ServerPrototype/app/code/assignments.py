@@ -8,7 +8,6 @@ Created on Tue Jun 30 16:03:09 2020
 import math
 import random
 import numpy as np
-import nltk
 from scipy import stats
 from scipy.stats.distributions import chi2
 from typing import Dict, List, Tuple
@@ -162,9 +161,10 @@ class Assignments:
     def create_mregression(self, control: bool, elementary:bool=False):
         report_type = 'elementair' if elementary else 'beknopt'
         output = {'assignment_type':6}
-        n_predictors = random.choice([3,4,5,6])
         N = int(200 * random.random())
         output['ns'] = [N]
+        n_predictors = random.choice([3,4,5,6])
+        output['n_predictors'] = n_predictors
         
         p = random.random()
         s = 3 * random.random()
@@ -172,9 +172,6 @@ class Assignments:
         r2 = random.random() ** 2
         output['var_pred'] = output['var_obs'] * r2
         output['data']: dict={'varnames':['Intercept','Sociale vaardigheden', 'Depressieve gedachten', 'Eetlust','Intelligentie','Assertiviteit','Ervaren geluk'][:n_predictors+1]}
-        output['predictor_beta'] = [np.mean([random.uniform(60,120)])] + [random.gauss(0,2) for i in range(n_predictors)]
-        output['predictor_b'] = [x * np.sqrt(output['var_pred']) for x in output['predictor_beta']]
-        output['predictor_se'] = [output['var_pred'] ** 0.5] + [abs(random.gauss(0,2)) for i in range(n_predictors)]
         output['dependent'] = 'Gewicht'
         #output['correlations'] = [random.random() for i in range(int(((n_predictors + 1) ** 2 - n_predictors - 1) * 0.5))]
         output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn '+' en '.join(output['data']['varnames'][1:])+' als predictoren en '+output['dependent']+' als criterium. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
@@ -563,10 +560,6 @@ class Assignments:
     def solve_mregression(self, assignment: Dict, solution:Dict) -> Dict:
         N = assignment['ns'][0]
         solution['assignment_type'] = assignment['assignment_type']
-        
-        #Compute p-values
-        solution['predictor_t'] = [assignment['predictor_b'][i]/assignment['predictor_se'][i] for i in range(len(assignment['predictor_b']))]
-        solution['predictor_p'] = [stats.t.sf(x,N - 3 - 1) for x in solution['predictor_t']]
     
         #compute ANOVA table
         ssreg = (N-1) * assignment['var_pred']
@@ -575,8 +568,17 @@ class Assignments:
         solution['ss']: list[float] = [ssreg, sstotal - ssreg, sstotal]
         solution['ms']: List[float] = [solution['ss'][i] / solution['df'][i] for i in range(2)]
         solution['F']: List[float] = [solution['ms'][0] / solution['ms'][1]]
-        solution['p']: List[float] = [stats.f.cdf(solution['F'][0],solution['df'][0], solution['df'][1])]
+        solution['p']: List[float] = [1-stats.f.cdf(solution['F'][0],solution['df'][0], solution['df'][1])]
         solution['r2']: List[float] = [min(ssreg/sstotal,1.00)]
+        
+        #Compute p-values
+        n_predictors = assignment['n_predictors']
+        solution['predictor_p'] = [random.random() * 0.05 if random.choice([True, False]) else random.random() * 0.95 + 0.05 for x in range(n_predictors+1)]
+        solution['predictor_t'] = [stats.t.isf(solution['predictor_p'][i],1,N - 3 - 1) for i in range(n_predictors+1)]
+        solution['predictor_beta'] = [np.mean([random.uniform(60,120)])] + [abs(random.gauss(0,0.5)) for i in range(n_predictors)]
+        solution['predictor_b'] = [x * np.sqrt(assignment['var_pred']) for x in solution['predictor_beta']]
+        solution['predictor_se'] = [solution['predictor_b'][i]/solution['predictor_t'][i] for i in range(n_predictors+1)]
+        
         
         #Verbal answers
         solution['null'] = 'H0: ' + ' == '.join(['beta(' + str(i) + ')' for i in range(1,4)]) + ' == 0'

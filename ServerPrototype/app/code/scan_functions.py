@@ -406,6 +406,8 @@ def scan_custom(text: str, solution: Dict, keywords: dict):
         return False, 'Mooi, dit antwoord klopt. '
 
 """
+OLD DECISION + CAUSAL INTERPRETATION FUNCTIONS
+
 def scan_decision(text: str, assignment: Dict, solution: Dict, anova: bool=False, num: int=1) -> [bool, str]:
     #Define important variables necessary for checking the answer's components
     tokens: List[str] = nltk.word_tokenize(text.lower().replace('.',''))

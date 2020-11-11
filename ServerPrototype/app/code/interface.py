@@ -9,11 +9,12 @@ import math
 import random
 import numpy as np
 import os
+import spacy
 from scipy import stats
 from app.code.enums import Process, Task
 from app.code.assignments import Assignments
-from app.code.scan_functions import *
-from app.code.scan_functions_spacy_2 import *
+from app.code.scan_functions import * #Regular scan functions
+from app.code.scan_functions_spacy import * #Scan functions for decision and interpretation
 from typing import Dict, List, Callable, Tuple
 
 class OuterController:
@@ -30,6 +31,7 @@ class OuterController:
             self.endstate : bool = False
             self.submit_field : int = Task.INTRO
             self.analysis_type = Task.TEXT_FIELD
+            self.nl_nlp = spacy.load('nl')
         
         def reset(self):
             self.assignments: Assignments = Assignments()
@@ -47,6 +49,7 @@ class OuterController:
         def update_form_ttest(self, textfields: Dict) -> List[str]:
             output = [[] for i in range(12)]
             instruction = self.assignments.print_ttest(self.assignment)
+            
             output[0].append(scan_indep(textfields['inputtext1'], self.solution)[1])
             output[1].append(scan_dep(textfields['inputtext2'], self.solution)[1])
             output[2].append(scan_control(textfields['inputtext3'], self.solution)[1])
@@ -58,8 +61,8 @@ class OuterController:
             output[8].append(scan_number(textfields['inputtext8'], 'T', self.solution)[1])
             output[9].append(scan_number(textfields['inputtext8'], 'p', self.solution)[1])
             
-            output[10].append(scan_decision(textfields['inputtext9'], self.solution)[1])
-            output[11].append(scan_interpretation(textfields['inputtext10'], self.solution)[1])
+            output[10].append(scan_decision(self.nl_nlp(textfields['inputtext9'].lower()), self.solution, anova=False)[1])
+            output[11].append(scan_interpretation(self.nl_nlp(textfields['inputtext10'].lower()), self.solution, anova=False)[1])
             
             output[3].append(scan_table_ttest(textfields, self.solution)[1])
             return instruction, output
@@ -81,8 +84,8 @@ class OuterController:
                 output[1].append(scan_dep(textfields['inputtext2'], self.solution)[1])
                 output[2].append(scan_control(textfields['inputtext3'], self.solution)[1])
                 output[3].append(scan_hypothesis(textfields['inputtext4'], self.solution, num=1)[1])
-                output[5].append(scan_decision(textfields['inputtext5'], self.solution, anova=True)[1])
-                output[6].append(scan_interpretation(textfields['inputtext6'], self.solution, anova=True, num=1)[1])
+                output[5].append(scan_decision(self.nl_nlp(textfields['inputtext5'].lower()), self.solution, anova=True)[1])
+                output[6].append(scan_interpretation(self.nl_nlp(textfields['inputtext6'].lower()), self.solution, anova=True, num=1)[1])
                 output[4].append(scan_table(textfields, self.solution)[1])
             elif self.assignment['two_way']:
                 #Two-way ANOVA
@@ -93,12 +96,12 @@ class OuterController:
                 output[3].append(scan_hypothesis(textfields['inputtext4'], self.solution, num=1)[1])
                 output[3].append(scan_hypothesis(textfields['inputtext42'], self.solution, num=2)[1])
                 output[3].append(scan_hypothesis_anova(textfields['inputtext43'], self.solution)[1])
-                output[5].append(scan_decision(textfields['inputtext5'], self.solution, anova=True, num=1)[1])
-                output[5].append(scan_decision(textfields['inputtext52'], self.solution, anova=True, num=2)[1])
-                output[5].append(scan_decision_anova(textfields['inputtext53'], self.solution)[1])
-                output[6].append(scan_interpretation(textfields['inputtext6'], self.solution, anova=True, num=1)[1])
-                output[6].append(scan_interpretation(textfields['inputtext62'], self.solution, anova=True, num=2)[1])
-                output[6].append(scan_interpretation_anova(textfields['inputtext63'], self.solution)[1])
+                output[5].append(scan_decision(self.nl_nlp(textfields['inputtext5'].lower()), self.solution, anova=True, num=1)[1])
+                output[5].append(scan_decision(self.nl_nlp(textfields['inputtext52'].lower()), self.solution, anova=True, num=2)[1])
+                output[5].append(scan_decision_anova(self.nl_nlp(textfields['inputtext53'].lower()), self.solution)[1])
+                output[6].append(scan_interpretation(self.nl_nlp(textfields['inputtext6'].lower()), self.solution, anova=True, num=1)[1])
+                output[6].append(scan_interpretation(self.nl_nlp(textfields['inputtext62'].lower()), self.solution, anova=True, num=2)[1])
+                output[6].append(scan_interpretation_anova(self.nl_nlp(textfields['inputtext63'].lower()), self.solution)[1])
                 output[4].append(scan_table(textfields, self.solution)[1])
             elif 'jackedmeans' in list(self.assignment['data'].keys()):
                 #Within-subject ANOVA
@@ -107,9 +110,9 @@ class OuterController:
                 output[2].append(scan_control(textfields['inputtext3'], self.solution)[1])
                 output[3].append(scan_hypothesis(textfields['inputtext4'], self.solution, num=1)[1])
                 output[3].append(scan_hypothesis_rmanova(textfields['inputtext42'], self.solution)[1])
-                output[5].append(scan_decision(textfields['inputtext5'], self.solution, anova=True)[1])
-                output[5].append(scan_decision_rmanova(textfields['inputtext52'], self.solution)[1])
-                output[6].append(scan_interpretation(textfields['inputtext6'], self.solution, anova=True, num=1)[1])
+                output[5].append(scan_decision(self.nl_nlp(textfields['inputtext5'].lower()), self.solution, anova=True)[1])
+                output[5].append(scan_decision_rmanova(self.nl_nlp(textfields['inputtext52'].lower()), self.solution)[1])
+                output[6].append(scan_interpretation(self.nl_nlp(textfields['inputtext6'].lower()), self.solution, anova=True, num=1)[1])
                 output[4].append(scan_table(textfields, self.solution)[1])
             return instruction, output
         
@@ -149,7 +152,10 @@ class OuterController:
                 self.analysis_type = Task.INTRO
                 again, output = function(input_text, *arguments)
             elif process != Process.TABLE:
-                again, output_text = function(input_text, *arguments)
+                if function in [scan_decision, scan_decision_anova, scan_decision_rmanova, scan_interpretation, scan_interpretation_anova]:
+                    again, output_text = function(self.nl_nlp(input_text), *arguments)
+                else:
+                    again, output_text = function(input_text, *arguments)
             
             #Execute the correct response
             if self.endstate: #If end state has been reached
@@ -317,8 +323,7 @@ class OuterController:
                 output.insert(5, ('Voer de waarden van N voor beide niveaus van de onafhankelijke variabele in, gescheiden door een spatie.', scan_numbers, ['ns', self.solution, 0.01], Process.QUESTION))
             else:
                 output.insert(5, ('Voer de waarde van N in.',scan_number,['ns', self.solution, 0.01], Process.QUESTION))
-            if self.solution['p'][0] < 0.05:
-                output.append(('Voer de causale interpretatie in.',scan_interpretation,[self.solution], Process.QUESTION))
+            output.append(('Voer de causale interpretatie in.',scan_interpretation,[self.solution], Process.QUESTION))
             output[-1] = (output[-1][0], output[-1][1], output[-1][2], Process.LAST_QUESTION)
             return output
         
@@ -345,12 +350,12 @@ class OuterController:
                     ('Voer de beslissing in voor de eerste onafhankelijke variabele', scan_decision,[self.solution, True, 1], Process.QUESTION),
                     ('Voer de beslissing in voor de tweede onafhankelijke variabele', scan_decision,[self.solution, True, 2], Process.QUESTION),
                     ('Voer de beslissing in voor de interactie', scan_decision_anova,[self.solution], Process.QUESTION)]
-                if self.solution['p'][0] < 0.05:
-                    output.append(('Voer de causale interpretatie voor de eerste factor in.',scan_interpretation,[self.solution, True, 1], Process.QUESTION))
-                if self.solution['p'][1] < 0.05:
-                    output.append(('Voer de causale interpretatie voor de tweede factor in.',scan_interpretation,[self.solution, True, 2], Process.QUESTION))
-                if self.solution['p'][2] < 0.05:
-                    output.append(('Voer de causale interpretatie voor de interactie in.',scan_interpretation_anova,[self.solution], Process.QUESTION))
+                #if self.solution['p'][0] < 0.05:
+                output.append(('Voer de causale interpretatie voor de eerste factor in.',scan_interpretation,[self.solution, True, 1], Process.QUESTION))
+                #if self.solution['p'][1] < 0.05:
+                output.append(('Voer de causale interpretatie voor de tweede factor in.',scan_interpretation,[self.solution, True, 2], Process.QUESTION))
+                #if self.solution['p'][2] < 0.05:
+                output.append(('Voer de causale interpretatie voor de interactie in.',scan_interpretation_anova,[self.solution], Process.QUESTION))
             output[-1] = (output[-1][0], output[-1][1], output[-1][2], Process.LAST_QUESTION)
             return output
         
@@ -362,10 +367,8 @@ class OuterController:
                 ('Beschrijf de nulhypothese van de subjecten',scan_hypothesis_rmanova,[self.solution], Process.QUESTION),
                 ('Vul de tabel hieronder in.',scan_table,[self.solution, 0.02], Process.TABLE),
                 ('Voer de beslissing in van de condities',scan_decision,[self.solution,True,1], Process.QUESTION),
-                ('Voer de beslissing in van de subjecten',scan_decision_rmanova,[self.solution], Process.QUESTION)]
-            if self.solution['p'][0] < 0.05 :
-                output.append(('Voer de causale interpretatie voor de condities in.',scan_interpretation,[self.solution, True, 1], Process.QUESTION))
-            output[-1] = (output[-1][0], output[-1][1], output[-1][2], Process.LAST_QUESTION)
+                ('Voer de beslissing in van de subjecten',scan_decision_rmanova,[self.solution], Process.QUESTION),
+                ('Voer de causale interpretatie voor de condities in.',scan_interpretation,[self.solution, True, 1], Process.LAST_QUESTION)]
             return output
         
         def print_assignment(self):
