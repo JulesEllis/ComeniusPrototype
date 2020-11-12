@@ -64,7 +64,7 @@ def bigform():
     if flask.request.method == 'POST':
         if form.submit.data:
             form_shape = controller.analysis_type.value
-            textfields = [x for x in dir(form) if str(type(form.__getattribute__(x))) == "<class 'wtforms.fields.core.StringField'>"]
+            textfields = [x for x in dir(form) if str(type(form.__getattribute__(x))) in ["<class 'wtforms.fields.core.StringField'>","<class 'wtforms.fields.simple.TextAreaField'>"]]
             textdict = dict([(x, form.__getattribute__(x).data) for x in textfields])
             instruction, outputfields = controller.update_form_anova(textdict)
             return render_template('bigform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames)
@@ -93,7 +93,7 @@ def smallform():
     if flask.request.method == 'POST':
         if form.submit.data:
             form_shape = controller.analysis_type.value
-            textfields = [x for x in dir(form) if str(type(form.__getattribute__(x))) == "<class 'wtforms.fields.core.StringField'>"]
+            textfields = [x for x in dir(form) if str(type(form.__getattribute__(x))) in ["<class 'wtforms.fields.core.StringField'>","<class 'wtforms.fields.simple.TextAreaField'>"]]
             textdict = dict([(x, form.__getattribute__(x).data) for x in textfields])
             instruction, outputfields = controller.update_form_ttest(textdict)
             return render_template('smallform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames)

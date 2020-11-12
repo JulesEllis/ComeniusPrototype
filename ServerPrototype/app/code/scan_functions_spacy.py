@@ -276,7 +276,7 @@ def detect_primary(sent:Doc, solution:dict, num:int=1) -> List[str]:
     independent = solution[i_key].lower()
     dependent = solution['dependent'].lower()
     control: bool = solution['control']
-    rejected = solution['p'][num-1]
+    rejected = solution['p'][num-1] < 0.05
     tokens = [x.text for x in sent] 
     output:List[str] = []
     
@@ -296,6 +296,8 @@ def detect_primary(sent:Doc, solution:dict, num:int=1) -> List[str]:
         if indynode.dep_ == 'nsubj' and depnode.dep_ == 'obj': #Normale causaliteit
             scorepoints['alignment'] = True
         if indynode.dep_ == 'obj' and depnode.dep_ == 'ROOT': #Consistent verkeerde parse in spacy
+            scorepoints['alignment'] = True
+        if indynode.dep_ == 'nsubj' and depnode.dep_ == 'nmod': #Consistent verkeerde parse in spacy
             scorepoints['alignment'] = True
     
     #Add strings
@@ -320,7 +322,7 @@ def detect_primary_interaction(sent:Doc, solution:dict) -> List[str]:
     output:list = []
     var1levels:list[bool] = [x in tokens for x in [x.lower() for x in solution['levels']]]
     var2levels:list[bool] = [x in tokens for x in [x.lower() for x in solution['levels2']]]
-    rejected = solution['p'][2] < 2
+    rejected = solution['p'][2] < 0.05
     
     # Fill scorepoints
     scorepoints['dep'] = solution['dependent'].lower() in tokens
@@ -329,17 +331,16 @@ def detect_primary_interaction(sent:Doc, solution:dict) -> List[str]:
     scorepoints['same'] = 'dezelfde' in tokens or 'gelijk' in tokens or 'gelijke' in tokens
     scorepoints['negation'] = bool(negation_counter(tokens) % 2) != rejected
     if scorepoints['dep']:
-        print(scorepoints)
         dep_node = sent[tokens.index(solution['dependent'].lower())]    
         if scorepoints['indy1']:
             indy1node = sent[tokens.index(solution['independent'].lower())]
-            if (indy1node.dep_ == 'nsubj' and dep_node.dep_ == 'obj') or (indy1node.dep_ == 'obj' and dep_node.dep_ == 'ROOT'):
+            if (indy1node.dep_ == 'nsubj' and dep_node.dep_ == 'obj') or (indy1node.dep_ == 'obj' and dep_node.dep_ == 'ROOT') or (indy1node.dep_ == 'nsubj' and dep_node.dep_ == 'nmod'):
                 scorepoints['interaction'] = True
                 scorepoints['level_present'] = any(var2levels)
                 scorepoints['both_levels'] = all(var2levels)
         if scorepoints['indy2']:
             indy2node = sent[tokens.index(solution['independent'].lower())]
-            if (indy2node.dep_ == 'nsubj' and dep_node.dep_ == 'obj') or (indy2node.dep_ == 'obj' and dep_node.dep_ == 'ROOT'):
+            if (indy2node.dep_ == 'nsubj' and dep_node.dep_ == 'obj') or (indy2node.dep_ == 'obj' and dep_node.dep_ == 'ROOT') or (indy1node.dep_ == 'nsubj' and dep_node.dep_ == 'nmod'):
                 scorepoints['interaction'] = True
                 scorepoints['level_present'] = any(var1levels)
                 scorepoints['both_levels'] = all(var1levels)
@@ -394,7 +395,6 @@ def detect_alternative(sent:Doc, solution:dict, num:int=1) -> List[str]:
             scorepoints['relation_type'] = True
     else:
         scorepoints['relation_type'] = True
-    print([(x.text, x.dep_) for x in sent])
     
     #Add strings
     if not scorepoints['cause']:

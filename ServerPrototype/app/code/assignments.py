@@ -400,6 +400,7 @@ class Assignments:
             sp: float = math.sqrt(
                     ((solution['ns'][0] - 1) * solution['stds'][0] ** 2 + (solution['ns'][1] - 1) * solution['stds'][1] ** 2)
                     / solution['df'][0])
+            solution['sp'] = sp
             solution['relative_effect']: List = [solution['raw_effect'][0] / sp]
             solution['T']: List = [solution['relative_effect'][0] * math.sqrt(1 / (1 / solution['ns'][0] + 1 / solution['ns'][1]))]
         else:

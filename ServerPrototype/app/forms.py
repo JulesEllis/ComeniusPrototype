@@ -7,7 +7,7 @@ from wtforms.validators import DataRequired
 class BaseForm(FlaskForm):
     inputtext = StringField('', validators=[DataRequired()])
     a_choices = ['T-toets onafhankelijke variabelen','T-toets voor gekoppelde paren','One-way ANOVA','Two-way ANOVA','Repeated Measures Anova','Multiple-regressieanalyse']
-    r_choices = ['Beknopt rapport', 'Elementair rapport (oefenmodus)', 'Elementair rapport (tentamenmodus)']
+    r_choices = ['Elementair rapport (oefenmodus)', 'Elementair rapport (tentamenmodus)', 'Beknopt rapport']
     selectanalysis = SelectField(label='Kies je analyse', choices=a_choices)
     selectreport = SelectField(label='Kies wat voor rapport je wil oefenen', choices=r_choices)
     submit = SubmitField('Enter')
@@ -57,8 +57,8 @@ class SmallForm(FlaskForm):
     inputtext7 = StringField('', validators=[DataRequired()])
     inputtext8 = StringField('', validators=[DataRequired()])
     inputtext9 = StringField('', validators=[DataRequired()])
-    inputtext10 = StringField('', validators=[DataRequired()])
-    inputtext11 = StringField('', validators=[DataRequired()])
+    inputtext10 = TextAreaField('', validators=[DataRequired()]) #StringField('', validators=[DataRequired()])
+    inputtext11 = TextAreaField('', validators=[DataRequired()]) #StringField('', validators=[DataRequired()])
     
     submit = SubmitField('Enter')
     nextt = SubmitField('Next')
@@ -68,17 +68,17 @@ class BigForm(FlaskForm):
     inputtext2 = StringField('', validators=[DataRequired()])
     inputtext3 = StringField('', validators=[DataRequired()])
     inputtext4 = StringField('', validators=[DataRequired()])
-    inputtext5 = StringField('', validators=[DataRequired()])
-    inputtext6 = StringField('', validators=[DataRequired()])
+    inputtext5 = TextAreaField('', validators=[DataRequired()]) #StringField('', validators=[DataRequired()])
+    inputtext6 = TextAreaField('', validators=[DataRequired()]) #StringField('', validators=[DataRequired()])
     
     #Fields for 2-way ANOVA only
     inputtext12 = StringField('', validators=[DataRequired()])
     inputtext42 = StringField('', validators=[DataRequired()])
     inputtext43 = StringField('', validators=[DataRequired()])
-    inputtext52 = StringField('', validators=[DataRequired()])
-    inputtext53 = StringField('', validators=[DataRequired()])
-    inputtext62 = StringField('', validators=[DataRequired()])
-    inputtext63 = StringField('', validators=[DataRequired()])
+    inputtext52 = TextAreaField('', validators=[DataRequired()]) #StringField('', validators=[DataRequired()])
+    inputtext53 = TextAreaField('', validators=[DataRequired()]) #StringField('', validators=[DataRequired()])
+    inputtext62 = TextAreaField('', validators=[DataRequired()]) #StringField('', validators=[DataRequired()])
+    inputtext63 = TextAreaField('', validators=[DataRequired()]) #StringField('', validators=[DataRequired()])
     
     submit = SubmitField('Enter')
     nextt = SubmitField('Next')

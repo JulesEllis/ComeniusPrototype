@@ -59,12 +59,14 @@ class OuterController:
             output[6].append(scan_number(textfields['inputtext6'], 'raw_effect', self.solution)[1])
             output[7].append(scan_number(textfields['inputtext7'], 'relative_effect', self.solution)[1])
             output[8].append(scan_number(textfields['inputtext8'], 'T', self.solution)[1])
-            output[9].append(scan_number(textfields['inputtext8'], 'p', self.solution)[1])
+            output[9].append(scan_number(textfields['inputtext9'], 'p', self.solution)[1])
             
-            output[10].append(scan_decision(self.nl_nlp(textfields['inputtext9'].lower()), self.solution, anova=False)[1])
-            output[11].append(scan_interpretation(self.nl_nlp(textfields['inputtext10'].lower()), self.solution, anova=False)[1])
+            output[10].append(scan_decision(self.nl_nlp(textfields['inputtext10'].lower()), self.solution, anova=False)[1])
+            output[11].append(scan_interpretation(self.nl_nlp(textfields['inputtext11'].lower()), self.solution, anova=False)[1])
             
             output[3].append(scan_table_ttest(textfields, self.solution)[1])
+            #print(self.assignment)
+            #print(self.solution)
             return instruction, output
         
         def update_form_anova(self, textfields: Dict) -> List[str]:

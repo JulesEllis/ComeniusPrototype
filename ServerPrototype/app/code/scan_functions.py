@@ -191,23 +191,19 @@ def scan_number(text: str, stat: str, solution: Dict, margin: float=0.01) -> [bo
     tokens: List[str] = nltk.word_tokenize(text.lower())
     numbers: List[float] = []
     for t in tokens:
-        try:
+        if t.replace('.','').replace('-','').isdigit():
             numbers.append(float(t))
-        except ValueError:
-            pass
             
     #Compare the received numbers to the gold standard from the solution
     gold: float = solution[stat][0]
-    num: List[bool] = [n for n in numbers if gold - margin < n and n < gold + margin]
-    scorepoints: Dict[str, bool] = {'num': num != []} #TODO: Add a check whether the order of the numbers is right
+    right_number: List[bool] = [n for n in numbers if gold - margin < n and n < gold + margin]
     
     #Determine the response of the chatbot
     fancynames: Dict[str, str] = {'df':'het aantal vrijheidsgraden', 'raw_effect': 'het ruwe effect',
                   'T':'T', 'p':'p', 'relative_effect': 'het relatieve effect', 'F': 'F','r2':'de correlatie','ns':'N'}
-    if False in list(scorepoints.values()):
-        output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
-        if not scorepoints['num']:
-            output += ' -De juiste waarde van ' + fancynames[stat] + '<br>'
+    if right_number == []:
+        output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'\
+        ' -De juiste waarde van ' + fancynames[stat] + '<br>'
         return True, output
     else:
         return False, 'Mooi, dit cijfer klopt. '
@@ -304,11 +300,8 @@ def scan_table_ttest(textfields: Dict, solution: Dict, margin:float=0.01) -> [bo
             
     #Compare input with gold standard
     meaninput :List = [textfields['mean' + str(i+1)] for i in range(len(solution['means']))]
-    print(solution['means'])
     stdinput :List  = [textfields['std' + str(i+1)] for i in range(len(solution['stds']))]
-    print(solution['stds'])
     ninput :List  = [textfields['n' + str(i+1)] for i in range(len(solution['ns']))]
-    print(solution['ns'])
     scorepoints :Dict = {'mean': sim(solution['means'], meaninput, margin),
                    'std': sim(solution['stds'], stdinput, margin),
                    'n': sim(solution['ns'], ninput, margin),
