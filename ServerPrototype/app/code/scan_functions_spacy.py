@@ -51,7 +51,7 @@ def detect_h0(sent:Doc, solution:dict, num:int=1) -> List[str]:
         scorepoints['hyp_present'] = any([x for x in children if x.text == 'h0' or x.text == 'nulhypothese'])
     
     #Add strings
-    if not scorepoints['hyp_rejected']:
+    if not scorepoints['hyp_rejected'] and scorepoints['hyp_present']:
         if num < 2:
             output.append(' -ten onrechte gesteld dat de hypothese wordt verworpen als deze wordt behouden of andersom')
         else:
@@ -144,8 +144,8 @@ def detect_interaction(sent:Doc, solution:dict, anova:bool) -> List[str]:
     if interactie_list != []:
         int_descendants = descendants(interactie_list[0])
         scorepoints['interactie'] = True
-        scorepoints['indy1'] = solution['independent'] in [x.text for x in int_descendants]
-        scorepoints['indy2'] = solution['independent2'] in [x.text for x in int_descendants]
+        scorepoints['indy1'] = solution['independent'].lower() in [x.text for x in int_descendants]
+        scorepoints['indy2'] = solution['independent2'].lower() in [x.text for x in int_descendants]
         scorepoints['pop_present'] = 'populatie' in [x.text for x in int_descendants]
         scorepoints['right_negation'] = bool(negation_counter(tokens) % 2) != rejected
         
@@ -285,11 +285,10 @@ def detect_primary(sent:Doc, solution:dict, num:int=1) -> List[str]:
     scorepoints['neg'] = bool(negation_counter(tokens) % 2) != rejected
     causeverbs = [x for x in sent if x.text in ['veroorzaakt', 'heeft', 'beinvloedt', 'beinvloed','verantwoordelijk', 'oorzaak']] 
     if any(causeverbs):
-        effect_children = descendants(causeverbs[0])
+        #effect_children = descendants(causeverbs[0])
         scorepoints['cause'] = True
-        scorepoints['ind'] = independent in [x.text for x in effect_children]
-        scorepoints['dep'] = dependent in [x.text for x in effect_children]
-    scorepoints['dep'] = scorepoints['dep'] or dependent in [x.text for x in sent]
+    scorepoints['dep'] = dependent in [x.text for x in sent]
+    scorepoints['ind'] = independent in [x.text for x in sent]
     if scorepoints['ind'] and scorepoints['dep']:
         indynode = sent[tokens.index(independent.lower())]
         depnode = sent[tokens.index(dependent.lower())]
@@ -326,10 +325,10 @@ def detect_primary_interaction(sent:Doc, solution:dict) -> List[str]:
     
     # Fill scorepoints
     scorepoints['dep'] = solution['dependent'].lower() in tokens
-    scorepoints['ind1'] = solution['independent'].lower() in tokens
-    scorepoints['ind2'] = solution['independent2'].lower() in tokens
+    scorepoints['indy1'] = solution['independent'].lower() in tokens
+    scorepoints['indy2'] = solution['independent2'].lower() in tokens
     scorepoints['same'] = 'dezelfde' in tokens or 'gelijk' in tokens or 'gelijke' in tokens
-    scorepoints['negation'] = bool(negation_counter(tokens) % 2) != rejected
+    scorepoints['negation'] = bool(negation_counter(tokens) % 2) == rejected
     if scorepoints['dep']:
         dep_node = sent[tokens.index(solution['dependent'].lower())]    
         if scorepoints['indy1']:
@@ -339,7 +338,7 @@ def detect_primary_interaction(sent:Doc, solution:dict) -> List[str]:
                 scorepoints['level_present'] = any(var2levels)
                 scorepoints['both_levels'] = all(var2levels)
         if scorepoints['indy2']:
-            indy2node = sent[tokens.index(solution['independent'].lower())]
+            indy2node = sent[tokens.index(solution['independent2'].lower())]
             if (indy2node.dep_ == 'nsubj' and dep_node.dep_ == 'obj') or (indy2node.dep_ == 'obj' and dep_node.dep_ == 'ROOT') or (indy1node.dep_ == 'nsubj' and dep_node.dep_ == 'nmod'):
                 scorepoints['interaction'] = True
                 scorepoints['level_present'] = any(var1levels)
@@ -412,9 +411,9 @@ def detect_alternative(sent:Doc, solution:dict, num:int=1) -> List[str]:
 def detect_alternative_interaction(sent:Doc, solution:dict) -> List[str]:
     output:list = []
     tokens = [x.text for x in sent]
-    if not 'storende' in tokens and 'variabelen' in tokens:
+    if not ('storende' in tokens and 'variabelen' in tokens):
         output.append(' -niet gesteld dat storende variabelen een mogelijkheid zijn voor de alternatieve verklaring')
-    if not 'omgekeerde' in tokens and 'causaliteit' in tokens:
+    if not ('omgekeerde' in tokens and 'causaliteit' in tokens):
         output.append(' -niet gesteld dat ongekeerde causaliteit een mogelijkheid is voor de alternatieve verklaring')
     return output
 
@@ -510,8 +509,8 @@ def scan_interpretation_anova(doc:Doc, solution:dict, num:int=3, prefix=True):
         output.extend(detect_primary_interaction(primair_sents[0], solution))
     else:
         output.append(' -de primaire verklaring wordt niet genoemd')
-    # EXPLICIETE ALTERNATIEVE VERKLARINGEN HOEVEN NIET BIJ INTERACTIE, STATISTIEK VOOR DE PSYCHOLOGIE 3 PAGINA 80
-    #if not solution['control']:
+    # EXPLICIETE ALTERNATIEVE VERKLARINGEN HOEVEN NIET BIJ INTERACTIE, STATISMogelijke alternatieve verklaringen zijn storende variabelen en omgekeerde causaliteitTIEK VOOR DE PSYCHOLOGIE 3 PAGINA 80
+    if not solution['control']:
         alt_sents = [x for x in doc.sents if 'alternatieve' in [y.text for y in x]]
         if alt_sents != []:
             output.extend(detect_alternative_interaction(alt_sents[0], solution))

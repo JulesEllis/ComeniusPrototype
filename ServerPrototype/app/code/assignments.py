@@ -50,10 +50,10 @@ class Assignments:
             n2: int = n1
         
         #Take random means and standard deviations for both types of the independent variable
-        mean1: float = random.uniform(20,40)
-        std1: float = random.uniform(5,10)
-        mean2: float = random.uniform(40,60)
-        std2: float = random.uniform(5,10)
+        mean1: float = random.uniform(50, 200)
+        std1: float = random.uniform(5,15) if between_subject else random.uniform(1,2) 
+        mean2: float = random.uniform(50, 200)
+        std2: float = random.uniform(5,15) if between_subject else random.uniform(1,2)
         
         #Generate the datapoints as a dictionary of where the list of float entries is 
         #described by the variable name key
@@ -71,7 +71,7 @@ class Assignments:
             instruction += 'de reactiesnelheid bij het ' + varnames[0][0] + ' ' + varnames[0][1] + ' gemiddeld groter is dan die bij ' + varnames[0][2] + '.<br><br>'
         if hyp_type == 2:
             instruction += "de reactiesnelheid bij het " + varnames[0][0] + " " + varnames[0][1] + " gemiddeld kleiner is dan die bij " + varnames[0][2] + ".<br><br>"
-        instruction += "De persoon moet een tijdje achter een beeldscherm zo snel mogelijk op een knop" +" drukken zodra een wit vierkantje veranderd in een zwart vierkantje. De tijden tussen het veranderen" + " van het beeld en het indrukken van de knop worden gemeten en opgeteld. "        
+        instruction += "De persoon moet een tijdje achter een beeldscherm zo snel mogelijk op een knop" +" drukken zodra een wit vierkantje veranderd in een zwart vierkantje. De milliseconden tussen het veranderen" + " van het beeld en het indrukken van de knop worden gemeten en opgeteld. "        
         if between_subject:
             instruction += 'De proefpersonen zijn allemaal ofwel ' + varnames[0][1] + ' ofwel '+ varnames[0][2] + '. De niveaus zijn: ' + varnames[0][1] + '/' + varnames[0][2] + '. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
             if control:
@@ -119,14 +119,14 @@ class Assignments:
         if not two_way:
             output['data'] = {
                   'varnames':varnames,
-                  'means':[round(random.uniform(60,120),2) for i in range(2)],
-                  'stds':[round(random.uniform(5,30),2) for i in range(2)],
+                  'means':[round(random.uniform(50,120),2) for i in range(2)],
+                  'stds':[round(random.uniform(5,15),2) for i in range(2)],
                   'ns': [n for i in range(2)]}
         else:
             output['data'] = {
                   'varnames':varnames,
-                  'means':[round(random.uniform(60,120),2) for i in range(4)],
-                  'stds':[round(random.uniform(5,30),2) for i in range(4)],
+                  'means':[round(random.uniform(50,120),2) for i in range(4)],
+                  'stds':[round(random.uniform(5,15),2) for i in range(4)],
                   'ns': [n for i in range(4)]}
         return output
     
@@ -145,8 +145,8 @@ class Assignments:
         output['instruction']: str = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn '+varnames[0][0]+' en gewicht. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
         if control:
             output['instruction'] += 'De subjecten in het experiment zijn willekeurig geselecteerd. '
-        true_means = [int(random.uniform(70,110)) for i in range(n_conditions)]
-        true_stds = [int(random.uniform(5,30)) for i in range(n_conditions)]
+        true_means = [int(random.uniform(50,120)) for i in range(n_conditions)]
+        true_stds = [int(random.uniform(5,20)) for i in range(n_conditions)]
         output['data'] = {
                   'varnames':varnames,
                   'scores':[[round(random.gauss(true_means[i], true_stds[i]),2) for j in range(n_subjects)] for i in range(n_conditions)]
@@ -465,7 +465,7 @@ class Assignments:
             solution['df']: List[float] = [len(data['ns']) - 1, abs(len(data['ns']) - sum(data['ns'])), sum(data['ns']) - 1]
             solution['ms']: List[float] = [solution['ss'][i]/solution['df'][i] for i in range(2)]
             solution['F']: List[float] = [solution['ms'][0] / solution['ms'][1]]
-            solution['p']: List[float] = [stats.f.cdf(abs(solution['F'][0]),solution['df'][0],solution['df'][1])]
+            solution['p']: List[float] = [1 - stats.f.cdf(abs(solution['F'][0]),solution['df'][0],solution['df'][1])]
             solution['r2']: List[float] = [solution['ss'][0]/solution['ss'][2]]
             
             #Verbal parts of the report
@@ -494,7 +494,7 @@ class Assignments:
             solution['ss']: List[float] = [ssbetween, ssa, ssb, ssbetween - ssa - ssb, sswithin, ssbetween + sswithin]
             solution['ms']: List[float] = [solution['ss'][i] / solution['df'][i] for i in range(5)]
             solution['F']: List[float] = [solution['ms'][1] / solution['ms'][4], solution['ms'][2] / solution['ms'][4], solution['ms'][3] / solution['ms'][4]]
-            solution['p']: List[float] = [stats.f.cdf(abs(solution['F'][i]),solution['df'][i + 1],solution['df'][4]) for i in range(3)]
+            solution['p']: List[float] = [1 - stats.f.cdf(abs(solution['F'][i]),solution['df'][i + 1],solution['df'][4]) for i in range(3)]
             solution['r2']: List[float] = [solution['ss'][1] / solution['ss'][5], solution['ss'][2] / solution['ss'][5], solution['ss'][3] / solution['ss'][5]]
             
             #Verbal parts of the report
@@ -544,7 +544,7 @@ class Assignments:
         solution['ss'] = [ssk, ssp, ssi, sstotal]
         solution['ms']: List[float] = [solution['ss'][i] / solution['df'][i] for i in range(4)]
         solution['F']: List[float] = [solution['ms'][0] / solution['ms'][2], solution['ms'][1] / solution['ms'][2]]
-        solution['p']: List[float] = [stats.f.cdf(solution['F'][i],solution['df'][i], solution['df'][2]) for i in range(2)]
+        solution['p']: List[float] = [1 - stats.f.cdf(solution['F'][i],solution['df'][i], solution['df'][2]) for i in range(2)]
         solution['r2']: List[float] = [solution['ss'][0] / solution['ss'][3], solution['ss'][1] / solution['ss'][3]]
         
         #Textual parts of the report
