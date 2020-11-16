@@ -86,6 +86,7 @@ class Assignments:
                'hypothesis': hyp_type,
                'between_subject': between_subject,
                'control': control,
+               'dependent': 'reactiesnelheid',
                'assignment_type':1 if between_subject else 2,
                'data':{'varnames': varnames,
                'A': [round(random.gauss(mean1,std1), 2) for i in range(n1)], 
@@ -94,6 +95,7 @@ class Assignments:
         
     def create_anova(self, two_way: bool, control: bool, elementary:bool=True) -> Dict:
         output = {'two_way':two_way, 'control':control}
+        output['dependent'] = 'gewicht'
         output['instruction']: str = None
         output['assignment_type']: int = 4 if two_way else 3
         samplevars = [['Nationaliteit','Nederlands','Duits'], #Sample variable names
@@ -133,6 +135,7 @@ class Assignments:
     def create_rmanova(self, control: bool, elementary:bool=True) -> Dict:
         #Determine variable shape and names
         output = {'control': control, 'two_way':False, 'assignment_type':5}
+        output['dependent'] = 'gewicht'
         n_conditions = random.randint(2,4)
         n_subjects = int(random.uniform(8,15))
         samplevars = [['Kwartaal','Eerste', 'Tweede', 'Derde', 'Vierde'], 
@@ -172,7 +175,7 @@ class Assignments:
         r2 = random.random() ** 2
         output['var_pred'] = output['var_obs'] * r2
         output['data']: dict={'varnames':['Intercept','Sociale vaardigheden', 'Depressieve gedachten', 'Eetlust','Intelligentie','Assertiviteit','Ervaren geluk'][:n_predictors+1]}
-        output['dependent'] = 'Gewicht'
+        output['dependent'] = 'gewicht'
         #output['correlations'] = [random.random() for i in range(int(((n_predictors + 1) ** 2 - n_predictors - 1) * 0.5))]
         output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn '+' en '.join(output['data']['varnames'][1:])+' als predictoren en '+output['dependent']+' als criterium. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
         return output
@@ -375,7 +378,7 @@ class Assignments:
         else:
             solution['independent']: str = 'Tijdstip'
             
-        solution['dependent']: str = 'reactiesnelheid'
+        solution['dependent']: str = assignment['dependent']
         solution['dependent_measure']: str = 'kwantitatief'
         solution['independent_measure']: str = 'kwalitatief'
         solution['levels']: List[str] = assignment['data']['varnames'][0][1:]
@@ -446,7 +449,7 @@ class Assignments:
         solution['assignment_type'] = assignment['assignment_type']
         
         solution['independent']: str = data['varnames'][0][0]
-        solution['dependent']: str = 'Gewicht'
+        solution['dependent']: str = assignment['dependent']
         solution['dependent_measure']: str = 'kwantitatief'
         solution['dependent_n_measure']: int = 1 #Aantal metingen per persoon
         solution['levels']: List[str] = data['varnames'][0][1:]
@@ -525,7 +528,7 @@ class Assignments:
         n_conditions = len(data['means'])
         solution['independent']: str = assignment['data']['varnames'][0][0]
         solution['levels'] = assignment['data']['varnames'][0][1:]
-        solution['dependent']: str = 'gewicht'
+        solution['dependent']: str = assignment['dependent']
         solution['dependent_measure']: str = 'kwantitatief'
         solution['dependent_n_measure']: int = n_conditions #Aantal metingen per persoon
         solution['control']: bool = assignment['control']

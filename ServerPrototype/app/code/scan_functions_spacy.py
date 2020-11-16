@@ -131,6 +131,42 @@ def detect_comparison(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]
             output.append(' -enkele niveaus van de onafhankelijke variabele van factor '+str(num)+' weggelaten')
     return output
 
+def detect_comparison_mreg(sent:Doc, solution:dict) -> List[str]:
+    #Define variables
+    criteria = ['bigger', 'neg', 'sign', 'propvar', 'zero_present', 'conj']
+    scorepoints = dict([(x,False) for x in criteria])
+    output:List[str] = []
+    rejected = solution['p'][0] < 0.05
+    tokens = [y.text for y in sent]
+    
+    #Controleer input
+    scorepoints['neg'] = bool(negation_counter(tokens) % 2) != rejected
+    scorepoints['sign'] = 'significant' in [x.text for x in sent]
+    scorepoints['propvar'] = all([y in [x.text for x in sent] for y in ['proportie','verklaarde','variantie']])
+    bigger_present = [x for x in sent if x.text == 'groter']
+    if bigger_present != []:
+        scorepoints['bigger'] = True
+        comptree:List = descendants(bigger_present[0])
+        zero = [x for x in comptree if x.text == 'nul' or x.text == '0']
+        if zero != []:
+            scorepoints['zero_present'] = True
+            scorepoints['conj'] = zero[0].dep_ == 'obl'
+    
+    #Add strings:
+    if not scorepoints['bigger']:
+        output.append(' -niet genoemd of het proportie verklaarde variantie significant groter dan nul is')
+    if not scorepoints['neg'] and scorepoints['bigger']:
+        output.append(' -ten onrechte een negatie toegevoegd of weggelaten bij de beslissing over het proportie verklaarde variantie')
+    if not scorepoints['sign'] and scorepoints['bigger']:
+        output.append(' -niet genoemd of het verschil van het proportie verklaarde variantie met nul significant is')
+    if not scorepoints['propvar'] and scorepoints['bigger']:
+        output.append(' -het proportie verklaarde variantie word niet genoemd')
+    if not scorepoints['zero_present'] and scorepoints['bigger']:
+        output.append(' -nul niet genoemd bij de vergelijking van het proportie verklaarde variantie')
+    if not scorepoints['conj'] and scorepoints['bigger']: #TODO FIX CONJ
+        output.append(' -het proportie verklaarde variantie word niet juist vergeleken met nul')    
+    return output
+
 def detect_interaction(sent:Doc, solution:dict, anova:bool) -> List[str]:
     #Define variables
     criteria = ['interactie','indy1','indy2','pop_present','right_negation']
@@ -434,7 +470,7 @@ def detect_report_stat(doc:Doc, stat:str, value:str, aliases:list=[], num:int=1,
 
 def detect_name(doc:Doc, names:List[str], label:str) -> List[str]:
     tokens = [x.text for x in doc]
-    if any([x in tokens for x in names]) == []:
+    if all([x.lower() in tokens for x in names]):
         return ['']
     else:
         return [' -'+label+' niet genoemd']
@@ -522,7 +558,7 @@ def scan_interpretation_anova(doc:Doc, solution:dict, num:int=3, prefix=True):
     else:
         return True, '<br>'.join(output)
 
-def scan_predictors(doc:Doc, solution:dict, prefix:bool=True) -> [bool, List[str]]:
+def scan_predictors(doc:Doc, solution:dict, prefix:bool=True):
     tokens = [x.text for x in doc]
     output = ['Er ontbreekt nog wat aan je antwoord, namelijk:'] if prefix else []
     varnames = [x.lower() for x in solution['data']['varnames'][1:]]
@@ -544,14 +580,15 @@ def scan_predictors(doc:Doc, solution:dict, prefix:bool=True) -> [bool, List[str
         return True, '<br>'.join(output)
 
 #def scan_design(doc:Doc, solution:dict, prefix:bool=True) -> [bool, List[str]]:
-#    TODO: scan design
+#    print(solution['assignment_type'])
+#    return False, 'Mooi, deze interpretatie klopt.' if prefix else ''
 
 def split_grade_ttest(text: str, solution:dict, between_subject:bool) -> str:
     nl_nlp = spacy.load('nl')
     doc = nl_nlp(text.lower())
-    label2:str = 'between-subject' if between_subject else 'within-subject'
+    label2:str = ['between','-','subject'] if between_subject else ['within','-','subject']
     output:str = ''
-    output += '<br>'+'<br>'.join(detect_name(doc, [label2,'T-test'], 'naam van de analyse'))
+    output += '<br>'+'<br>'.join(detect_name(doc, label2+['t','-','test'], 'naam van de analyse'))
     output += '<br>'+'<br>'.join(detect_report_stat(doc, 'T', solution['T'][0]))
     output += '<br>'+'<br>'.join(detect_report_stat(doc, 'p', solution['p'][0]))
     output += '<br>' + scan_decision(doc, solution, anova=False, prefix=False)[1]
@@ -566,9 +603,9 @@ def split_grade_ttest(text: str, solution:dict, between_subject:bool) -> str:
 def split_grade_anova(text: str, solution:dict, two_way:bool) -> str:
     nl_nlp = spacy.load('nl')
     doc = nl_nlp(text.lower())
-    label2:str = 'two-way' if two_way else 'one-way'
+    label2:str = ['two','-','way'] if two_way else ['one','-','way']
     output:str = ''
-    output += '<br>'+'<br>'.join(detect_name(doc, [label2, 'anova'], 'naam van de analyse'))
+    output += '<br>'+'<br>'.join(detect_name(doc, label2 + ['anova'], 'naam van de analyse'))
     if not two_way:
         output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][0]))
         output += '<br>'+'<br>'.join(detect_report_stat(doc, 'p', solution['p'][0]))
@@ -596,7 +633,8 @@ def split_grade_rmanova(text: str, solution:dict) -> str:
     nl_nlp = spacy.load('nl')
     doc = nl_nlp(text.lower())
     output:str = ''
-    output += '<br>'+'<br>'.join(detect_name(doc, ['repeated-measures', 'ANOVA'], 'naam van de analyse'))
+    output += '<br>'+'<br>'.join(detect_name(doc, ['repeated-measures', 'anova'], 'naam van de analyse'))
+    output += '<br>'+'<br>'.join(detect_comparison_mreg(doc, solution))
     output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][0]))
     output += '<br>'+'<br>'.join(detect_report_stat(doc, 'p', solution['p'][0]))
     output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][0], aliases=['r2']))
@@ -604,19 +642,27 @@ def split_grade_rmanova(text: str, solution:dict) -> str:
     output += '<br>' + scan_decision_rmanova(doc, solution, anova=True, num=2, prefix=False)[1]
     #if solution['p'][0] < 0.05:
     #output += '<br>' + scan_interpretation(doc, solution, anova=True, prefix=False)[1]
-    return re.sub(r'<br>(<br>)+', '<br>', output)
+    if output.replace('<br>','') == '':
+        return 'Mooi, dit beknopt rapport bevat alle juiste details!'
+    else:
+        return 'Er ontbreekt nog wat aan je antwoord, namelijk:' + re.sub(r'<br>(<br>)+', '<br>', output)
         
 def split_grade_mregression(text:str, solution:dict) -> str:
     nl_nlp = spacy.load('nl')
     doc = nl_nlp(text.lower())
     output:str = ''
     output += '<br>'+'<br>'.join(detect_name(doc, ['regressieanalyse'], 'naam van de analyse'))
+    output += '<br>'+'<br>'.join(detect_comparison_mreg(doc, solution))
     output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][0]))
     output += '<br>'+'<br>'.join(detect_report_stat(doc, 'p', solution['p'][0]))
     output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][0], aliases=['r2']))
     output += '<br>' + scan_predictors(doc, solution, prefix=False)[1]
-    return re.sub(r'<br>(<br>)+', '<br>', output)
+    if output.replace('<br>','') == '':
+        return 'Mooi, dit beknopt rapport bevat alle juiste details!'
+    else:
+        return 'Er ontbreekt nog wat aan je antwoord, namelijk:' + re.sub(r'<br>(<br>)+', '<br>', output)
     
+import spacy
 def print_dissection(text:str):
     nl_nlp = spacy.load('nl')
     doc = nl_nlp(text)
