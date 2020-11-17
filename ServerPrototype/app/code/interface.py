@@ -113,7 +113,7 @@ class OuterController:
                 output[3].append(scan_hypothesis(textfields['inputtext4'], self.solution, num=1)[1])
                 output[3].append(scan_hypothesis_rmanova(textfields['inputtext42'], self.solution)[1])
                 output[5].append(scan_decision(self.nl_nlp(textfields['inputtext5'].lower()), self.solution, anova=True)[1])
-                output[5].append(scan_decision_rmanova(self.nl_nlp(textfields['inputtext52'].lower()), self.solution)[1])
+                output[5].append(scan_decision_rmanova(self.nl_nlp(textfields['inputtext52'].lower()), self.solution, num=2)[1])
                 output[6].append(scan_interpretation(self.nl_nlp(textfields['inputtext6'].lower()), self.solution, anova=True, num=1)[1])
                 output[4].append(scan_table(textfields, self.solution)[1])
             return instruction, output

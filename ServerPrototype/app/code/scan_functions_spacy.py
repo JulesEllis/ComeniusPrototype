@@ -206,27 +206,21 @@ def detect_true_scores(sent:Doc, solution:dict) -> List[str]:
     output:List[str] = []
     
     #Controleer inpur
-    gold_comp = 'ongelijk'
-    comparisons = [x for x in sent if x.text == 'groter' or 
-                   x.text =='gelijk' or x.text == 'ongelijk' or x.text == 'kleiner']
+    comparisons = [x for x in sent if x.text =='gelijk' or x.text == 'ongelijk']
     if comparisons != []:
         comptree:List = descendants(comparisons[0])
-        
         not_present = 'niet' in [x.text for x in comptree]
-        scorepoints['right_comparison'] = comparisons[0].text == gold_comp
+        scorepoints['right_comparison'] = comparisons[0].text in ['gelijk','ongelijk']
         if comparisons[0].text == 'ongelijk':
             scorepoints['right_negation'] = not_present != rejected
         elif comparisons[0].text == 'gelijk':
             scorepoints['right_negation'] = not_present == rejected
-        scorepoints['jacked'] = 'opgevoerde' in [x.text for x in comptree]
+    scorepoints['jacked'] = 'opgevoerde' in [x.text for x in sent]
         
-        mean = [x for x in comparisons[0].children if x.text == 'gemiddelde']
-        mean_2 = [x for x in comparisons[0].children if x.text == 'populatiegemiddelde']
-        scorepoints['mean_present'] = any(mean) or any(mean_2)
-        if scorepoints['mean_present']:
-            meanroot = mean[0] if any(mean) else mean_2[0] if any(mean_2) else None
-            meantree:list = descendants(meanroot)
-            scorepoints['pop_present'] = any(mean_2) or 'populatie' in [x.text for x in meantree]
+    mean = [x for x in sent if x.text == 'gemiddelde']
+    mean_2 = [x for x in sent if x.text == 'populatiegemiddelde']
+    scorepoints['mean_present'] = any(mean) or any(mean_2)
+    scorepoints['pop_present'] = any(mean_2) or 'populatie' in [x.text for x in sent]
             
     #Add strings
     if not scorepoints['right_comparison']:
@@ -234,7 +228,7 @@ def detect_true_scores(sent:Doc, solution:dict) -> List[str]:
     if not scorepoints['right_negation']:
         output.append(' -ten onrechte een negatie toegevoegd of weggelaten bij het vergelijken van de niveaus')
     if not scorepoints['mean_present']:
-        output.append(' -niet genoemd dat de beslissing om populatiegemiddelden gaat')
+        output.append(' -niet genoemd dat de beslissing om gemiddelden gaat')
     if not scorepoints['pop_present']:
         output.append(' -niet gesteld dat de beslissing over de populatie gaat')
     if not scorepoints['jacked']:
@@ -334,6 +328,12 @@ def detect_primary(sent:Doc, solution:dict, num:int=1) -> List[str]:
             scorepoints['alignment'] = True
         if indynode.dep_ == 'nsubj' and depnode.dep_ == 'nmod': #Consistent verkeerde parse in spacy
             scorepoints['alignment'] = True
+        if indynode.dep_ == 'obl' and depnode.dep_ == 'obj': #Consistent verkeerde parse in spacy
+            scorepoints['alignment'] = True
+        if indynode.dep_ == 'ROOT' and depnode.dep_ == 'obj': #Consistent verkeerde parse in spacy
+            scorepoints['alignment'] = True
+        if indynode.dep_ == 'obj' and depnode.dep_ == 'nmod': #Consistent verkeerde parse in spacy
+            scorepoints['alignment'] = True
     
     #Add strings
     if not scorepoints['cause']:
@@ -426,6 +426,16 @@ def detect_alternative(sent:Doc, solution:dict, num:int=1) -> List[str]:
         depnode = sent[tokens.index(dependent.lower())]
         if indynode.dep_ == 'obj' and depnode.dep_ == 'nsubj': #Omgekeerde causaliteit
             scorepoints['relation_type'] = True
+        if indynode.dep_ == 'ROOT' and depnode.dep_ == 'obj': #Consistent verkeerde parse in spacy
+            scorepoints['relation_type'] = True
+        if indynode.dep_ == 'nmod' and depnode.dep_ == 'nsubj': #Consistent verkeerde parse in spacy
+            scorepoints['relation_type'] = True
+        if indynode.dep_ == 'obj' and depnode.dep_ == 'obl': #Consistent verkeerde parse in spacy
+            scorepoints['relation_type'] = True
+        if indynode.dep_ == 'obj' and depnode.dep_ == 'ROOT': #Consistent verkeerde parse in spacy
+            scorepoints['relation_type'] = True
+        if indynode.dep_ == 'nmod' and depnode.dep_ == 'obj': #Consistent verkeerde parse in spacy
+            scorepoints['relation_type'] = True
         if indynode.dep_ == 'obj' and depnode.dep_ == 'obj': #Storende variabele
             scorepoints['relation_type'] = True
     else:
@@ -499,7 +509,7 @@ def scan_decision_anova(doc:Doc, solution:dict, num:int=1, prefix=True) -> [bool
     
 def scan_decision_rmanova(doc:Doc, solution:dict, num:int=1, prefix=True) -> [bool, List[str]]:
     output = ['Er ontbreekt nog wat aan je antwoord, namelijk:'] if prefix else []
-    output.extend(detect_h0(doc, solution, num))
+    output.extend(detect_h0(doc, solution, 2))
     output.extend(detect_true_scores(doc, solution))
     output.extend(detect_strength(doc, solution, True, num))
     correct:bool = len(output) == 1 if prefix else output == []
@@ -510,11 +520,11 @@ def scan_decision_rmanova(doc:Doc, solution:dict, num:int=1, prefix=True) -> [bo
     
 def scan_interpretation(doc:Doc, solution:dict, anova:bool, num:int=1, prefix=True):
     output = ['Er ontbreekt nog wat aan je antwoord, namelijk:'] if prefix else []
-    unk_sents = [x for x in doc.sents if 'mogelijk' in [y.text for y in x] or 'mogelijke' in [y.text for y in x]]
+    unk_sents = [x for x in doc.sents if any([y in [z.text for z in x] for y in ['mogelijk','mogelijke','verklaring','verklaringen']])]
     if unk_sents != []:
         output.extend(detect_unk(unk_sents[0], solution))
     else:
-        output.append(' -niet genoemd hoeveel mogelijke interpretaties er zijn')
+        output.append(' -niet genoemd hoeveel mogelijke verklaringen er zijn')
     primair_sents = [x for x in doc.sents if 'primaire' in [y.text for y in x]]
     if primair_sents != []:
         output.extend(detect_primary(primair_sents[0], solution, num))
