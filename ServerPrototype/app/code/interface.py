@@ -143,7 +143,7 @@ class OuterController:
             #Scan the input text fields and and determine the correct response
             _, function, arguments, process = self.protocol[self.index]
             output_text = ''
-            if process == Process.TABLE and input_text != 'skip' and input_text != 'prev':
+            if process == Process.TABLE and input_text != 'skip' and input_text != 'prev':                
                 again, output_text = function(textfields, *arguments)
             elif process == Process.CHOOSE_ANALYSIS:
                 analysis = textfields['selectanalysis']
@@ -155,9 +155,9 @@ class OuterController:
                 again, output = function(input_text, *arguments)
             elif process != Process.TABLE:
                 if function in [scan_decision, scan_decision_anova, scan_decision_rmanova, scan_interpretation, scan_interpretation_anova]:
-                    again, output_text = function(self.nl_nlp(input_text), *arguments)
+                    again, output_text = function(self.nl_nlp(input_text.lower()), *arguments)
                 else:
-                    again, output_text = function(input_text, *arguments)
+                    again, output_text = function(input_text.lower(), *arguments)
             
             #Execute the correct response
             if self.endstate: #If end state has been reached
@@ -320,12 +320,12 @@ class OuterController:
                ('Voer de het relatieve effect in dat je hebt berekend.',scan_number,['relative_effect', self.solution, 0.01], Process.QUESTION),
                ('Voer de T-waarde in.',scan_number,['T', self.solution, 0.02], Process.QUESTION),
                ('Voer de p-waarde in.',scan_number,['p', self.solution, 0.02], Process.QUESTION),
-               ('Voer de beslissing in',scan_decision,[self.solution], Process.QUESTION)]
+               ('Voer de beslissing in',scan_decision,[self.solution, False], Process.QUESTION)]
             if self.assignment['between_subject']:
                 output.insert(5, ('Voer de waarden van N voor beide niveaus van de onafhankelijke variabele in, gescheiden door een spatie.', scan_numbers, ['ns', self.solution, 0.01], Process.QUESTION))
             else:
                 output.insert(5, ('Voer de waarde van N in.',scan_number,['ns', self.solution, 0.01], Process.QUESTION))
-            output.append(('Voer de causale interpretatie in.',scan_interpretation,[self.solution], Process.QUESTION))
+            output.append(('Voer de causale interpretatie in.',scan_interpretation,[self.solution, False], Process.QUESTION))
             output[-1] = (output[-1][0], output[-1][1], output[-1][2], Process.LAST_QUESTION)
             return output
         
@@ -339,7 +339,7 @@ class OuterController:
                     ('Vul de tabel hieronder in.',scan_table,[self.solution, 0.02], Process.TABLE),     
                     ('Voer de beslissing in', scan_decision,[self.solution, True, 1], Process.QUESTION)]
                 if self.solution['p'][0] < 0.05:
-                    output.append(('Voer de causale interpretatie in.',scan_interpretation,[self.solution], Process.QUESTION))
+                    output.append(('Voer de causale interpretatie in.',scan_interpretation,[self.solution, True], Process.QUESTION))
             else:
                 output :str = [('Beschrijf de eerste onafhankelijke variabele.',scan_indep_anova,[self.solution], Process.QUESTION),
                     ('Beschrijf de tweede onafhankelijke variabele.',scan_indep_anova,[self.solution,2], Process.QUESTION),

@@ -386,7 +386,7 @@ class Assignments:
         #Determine null hypothesis and control measure
         sign: List[str] = ['==','<=','>='][assignment['hypothesis']]
         solution['null']: str = 'h0: mu(' + names[0] + ') ' + sign + ' mu(' + names[1] + ')'
-        solution['control']: str = 'experiment' if assignment['control'] else 'geen experiment'
+        solution['control']: str = assignment['control']#'experiment' if assignment['control'] else 'geen experiment'
         
         #Calculate numerical aggregates of datapoints
         solution['means']: List = [np.mean(numbers[0]), np.mean(numbers[1])]

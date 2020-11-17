@@ -87,7 +87,7 @@ def scan_indep_anova(text: str, solution: Dict, num: int=1, between_subject=True
     if False in list(scorepoints.values()):
         output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
         if not scorepoints['factor']:
-            output += ' -de stelling dat deze variabele een factor is<br>'
+            output += ' -de uitspraak dat deze variabele een factor is<br>'
         if not scorepoints['domain']:
             output += ' -het domein van de variabele<br>'
         if not scorepoints['name']:
@@ -131,29 +131,31 @@ def scan_control(text: str, solution: Dict) -> [bool, str]:
                      'negations': control != bool(n_negations % 2) if 'experiment' in tokens else True}
     if 'experiment' in tokens or 'experimenteel' in tokens:
         if control != bool(n_negations % 2):
-            return False, 'Mooi, deze beschrijving klopt.'
+            return False, 'Mooi, deze beschrijving klopt. '
         else:
             if control:
                 return True, 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>-ten onrechte gesteld dat het onderzoek geen experiment is<br>'
             else:
                 return True, 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>-ten onrechte gesteld dat het onderzoek een experiment is<br>'
     elif 'passief-observerend' in tokens or ('passief' in tokens and 'observerend' in tokens):
+        print(control)
+        print(bool(n_negations % 2))
         if control == bool(n_negations % 2):
-            return False, 'Mooi, deze beschrijving klopt.'
+            return False, 'Mooi, deze beschrijving klopt. '
         else:
             if control:
                 return True, 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>-ten onrechte gesteld dat het onderzoek passief-observerend is<br>'
             else:
                 return True, 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>-ten onrechte gesteld dat het onderzoek niet passief-observerend is<br>'
     else:
-        return True, 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>-de stelling of het onderzoek een experiment is of niet<br>'
+        return True, 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>-de uitspraak of het onderzoek een experiment is of niet<br>'
         
     
     #Determine the response of the chatbot
     if False in list(scorepoints.values()):
         output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
         if not scorepoints['experiment']:
-            output += ' -de stelling of het onderzoek een experiment is of niet<br>'
+            output += ' -de uitspraak of het onderzoek een experiment is of niet<br>'
         if not scorepoints['negations'] and control:
             output += ' -je hebt ten onrechte gesteld dat het onderzoek geen experiment is<br>'
         if not scorepoints['negations'] and not control:
@@ -334,7 +336,12 @@ def scan_table(textfields: Dict, solution: Dict, margin:float=0.01) -> [bool, st
         if textfields[t[0]] == '':
             textfields[t[0]] = 0.0
         else:
-            textfields[t[0]] = float(textfields[t[0]]) if textfields[t[0]].replace('.','').isdigit() else 0.0
+            if textfields[t[0]] == None:
+                textfields[t[0]] = ''
+            elif textfields[t[0]].replace('.','').isdigit():
+                textfields[t[0]] = float(textfields[t[0]])
+            else: 
+                textfields[t[0]] = 0.0
     
     #Compare input with gold standard
     dfinput :List = [textfields['df' + str(i+1)] for i in range(len(solution['df']))]
