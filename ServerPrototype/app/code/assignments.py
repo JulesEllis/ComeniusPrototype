@@ -389,12 +389,9 @@ class Assignments:
         solution['control']: str = assignment['control']#'experiment' if assignment['control'] else 'geen experiment'
         
         #Calculate numerical aggregates of datapoints
-        solution['means']: List = [np.mean(numbers[0]), np.mean(numbers[1])]
-        solution['stds']: List = [np.std(numbers[0], ddof=1), np.std(numbers[1],ddof=1)]
-        if between_subject:
-            solution['ns']: List = [len(numbers[0]), len(numbers[1])]
-        else:
-            solution['ns']: List = [len(diff)]
+        solution['means']: List = [np.mean(numbers[0]), np.mean(numbers[1])] if between_subject else [np.mean(diff)]
+        solution['stds']: List = [np.std(numbers[0], ddof=1), np.std(numbers[1],ddof=1)] if between_subject else [np.std(diff, ddof=1)]
+        solution['ns']: List = [len(numbers[0]), len(numbers[1])] if between_subject else [len(diff)]
         
         #Calculate intermediate variables for the T-test
         if between_subject:
@@ -582,7 +579,6 @@ class Assignments:
         solution['predictor_beta'] = [np.mean([random.uniform(60,120)])] + [abs(random.gauss(0,0.5)) for i in range(n_predictors)]
         solution['predictor_b'] = [x * np.sqrt(assignment['var_pred']) for x in solution['predictor_beta']]
         solution['predictor_se'] = [solution['predictor_b'][i]/solution['predictor_t'][i] for i in range(n_predictors+1)]
-        
         
         #Verbal answers
         solution['null'] = 'H0: ' + ' == '.join(['beta(' + str(i) + ')' for i in range(1,4)]) + ' == 0'

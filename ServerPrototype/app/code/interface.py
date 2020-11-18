@@ -28,9 +28,8 @@ class OuterController:
             self.assignment : Dict = None
             self.solution : Dict = None
             self.protocol : List = self.intro_protocol()
-            self.endstate : bool = False
             self.submit_field : int = Task.INTRO
-            self.analysis_type = Task.TEXT_FIELD
+            self.analysis_type = Task.CHOICE
             self.nl_nlp = spacy.load('nl')
         
         def reset(self):
@@ -42,9 +41,8 @@ class OuterController:
             self.assignment : Dict = None
             self.solution : Dict = None
             self.protocol : List = self.intro_protocol()
-            self.endstate : bool = False
             self.submit_field : int = Task.INTRO
-            self.analysis_type = Task.TEXT_FIELD
+            self.analysis_type = Task.CHOICE
         
         def update_form_ttest(self, textfields: Dict) -> List[str]:
             output = [[] for i in range(12)]
@@ -138,7 +136,10 @@ class OuterController:
         
         def update(self, textfields: Dict) -> str:
             #Retrieve values from form text fields
-            input_text :str = textfields['inputtext'] if 'inputtext' in list(textfields.keys()) else ''
+            if 'inputtext' in list(textfields.keys()):
+                input_text:str = textfields['inputtext']+textfields['inputtextlarge']
+            else:
+                input_text:str = ''
             
             #Scan the input text fields and and determine the correct response
             _, function, arguments, process = self.protocol[self.index]
@@ -152,7 +153,7 @@ class OuterController:
                 again = False
             elif process == Process.ANOTHER or process == Process.YES_NO:
                 self.analysis_type = Task.INTRO
-                again, output = function(input_text, *arguments)
+                again, output = function(input_text.lower(), *arguments)
             elif process != Process.TABLE:
                 if function in [scan_decision, scan_decision_anova, scan_decision_rmanova, scan_interpretation, scan_interpretation_anova]:
                     again, output_text = function(self.nl_nlp(input_text.lower()), *arguments)
@@ -160,8 +161,6 @@ class OuterController:
                     again, output_text = function(input_text.lower(), *arguments)
             
             #Execute the correct response
-            if self.endstate: #If end state has been reached
-                return 'Tot ziens!'
             if process == Process.INTRO: #If intro protocol:
                 self.protocol = self.choice_protocol()
                 self.submit_field = Task.CHOICE
@@ -169,15 +168,10 @@ class OuterController:
             elif process == Process.ANOTHER: #If return protocol index 0
                 if output:
                     self.index += 1
-                    self.submit_field = Task.CHOICE
                     return self.protocol[self.index][0]
                 else:
                     self.endstate = True
                     return 'Tot ziens!'
-            elif process == Process.YES_NO: #If choice protocol index 0 or return protocol index 1
-                self.formmode = output
-                self.index += 1
-                return self.protocol[self.index][0]
             elif process == Process.CHOOSE_ANALYSIS: #If choice protocol index 1 or return protocol index 2
                 control: bool = random.choice([True,False])
                 hyp_type: int = random.choice([0,1,2])
@@ -208,16 +202,13 @@ class OuterController:
                     instruction = self.assignments.print_rmanova(self.assignment)
                     self.analysis_type = Task.WITHIN_ANOVA
                 if analysis == 'Multiple-regressieanalyse':
-                    #self.assignment = self.assignments.create_mregression(control)
-                    #self.solution = self.assignments.solve_mregression(self.assignment, {})
-                    #instruction = self.assignments.print_mregression(self.assignment)
                     self.analysis_type = Task.MREGRESSION
                     if report != 'Beknopt rapport':
                         return self.protocol[self.index][0] + '<span style="color: blue;">Sorry, bij multiple regressie kan je alleen een beknopt rapport maken.</span>'
                 
                 #Select report type
                 self.index = 0
-                if report == 'Elementair rapport (oefenmodus)' or 'Elementair rapport (tentamenmodus)':
+                if report == 'Elementair rapport (oefenmodus)':
                     self.skipable = True
                     self.submit_field = Task.TEXT_FIELD
                     if analysis == 'T-toets onafhankelijke variabelen':
@@ -231,16 +222,18 @@ class OuterController:
                     if analysis == 'Repeated Measures Anova':
                         self.protocol = self.rmanova_protocol()
                 if report == 'Elementair rapport (tentamenmodus)':
+                    self.submit_field = Task.CHOICE
                     self.skipable = False
                     self.formmode = True
-                    self.protocol = self.return_protocol()
+                    self.protocol = self.choice_protocol()
                 if report == 'Beknopt rapport':
+                    self.submit_field = Task.CHOICE
                     self.skipable = False
                     self.formmode= True
                     self.assignment = self.assignments.create_report(control, self.analysis_type.value)
                     self.analysis_type = Task.REPORT
                     self.solution = self.assignment
-                    self.protocol = self.return_protocol()
+                    self.protocol = self.choice_protocol()
                     instruction = self.assignments.print_report(self.assignment)
                     return instruction
                 return instruction + '<br>' + self.protocol[self.index][0]
@@ -267,8 +260,9 @@ class OuterController:
                 else:
                     self.skipable = False
                     self.prevable = False
-                    self.protocol = self.return_protocol()
+                    self.protocol = self.choice_protocol()
                     self.index = 0
+                    self.submit_field = Task.CHOICE
                     if input_text == 'skip':
                         return self.protocol[self.index][0]
                     else:
@@ -301,19 +295,20 @@ class OuterController:
                      scan_dummy, [], Process.INTRO)]
             
         def choice_protocol(self) -> List[Tuple]:
-            return [('Voer hieronder het soort opgave in dat je wil oefenen.<br><br>',scan_yesno,[], Process.CHOOSE_ANALYSIS)]
+            return [('Voer hieronder het soort opgave in dat je wil oefenen.<br>',None,[], Process.CHOOSE_ANALYSIS)]
             
-        def return_protocol(self) -> List[Tuple]:
-            return [('Gefeliciteerd, je elementair rapport is af! Wil je nog een opgave doen?',
-                     scan_yesno,[], Process.ANOTHER),
-                    ('Voer hieronder het soort opgave in wat je wil oefenen.<br><br>',scan_yesno,[], Process.CHOOSE_ANALYSIS)]
+       # def #return_protocol(self) -> List[Tuple]:
+       #     return [('Gefeliciteerd, je elementair rapport is af! Wil je nog een opgave doen?',
+       #              scan_yesno,[], Process.ANOTHER),
+       #             ('Voer hieronder het soort opgave in wat je wil oefenen.<br><br>',None,[], Process.CHOOSE_ANALYSIS)]
         
         def ttest_protocol(self) -> List[Tuple]:
             output : List[Tuple] = [('Beschrijf de onafhankelijke variabele.', scan_indep, [self.solution], Process.QUESTION),
                ('Beschrijf de afhankelijke variabele.', scan_dep, [self.solution], Process.QUESTION),
                ('Beschrijf de mate van controle.', scan_control, [self.solution], Process.QUESTION),
-               ('Voer de gemiddelden van de data in, gescheiden door een spatie.', scan_numbers, ['means', self.solution, 0.01], Process.QUESTION),
-               ('Voer de standaarddeviaties van de data in, gescheiden door een spatie.', scan_numbers, ['stds', self.solution, 0.01], Process.QUESTION),
+               #('Voer de gemiddelden van de data in, gescheiden door een spatie.', scan_numbers, ['means', self.solution, 0.01], Process.QUESTION),
+               #('Voer de standaarddeviaties van de data in, gescheiden door een spatie.', scan_numbers, ['stds', self.solution, 0.01], Process.QUESTION),
+               ('Voer de ondestaande tabel in.',scan_table_ttest,[self.solution],Process.TABLE),
                ('Voer de nulhypothese in, geformuleerd met "H0" en "mu".',scan_hypothesis,[self.solution, 1], Process.QUESTION),
                ('Voer de het aantal vrijheidsgraden in.',scan_number,['df', self.solution, 0.01], Process.QUESTION),
                ('Voer de het ruwe effect in dat je hebt berekend.',scan_number,['raw_effect', self.solution, 0.01], Process.QUESTION),
@@ -321,10 +316,6 @@ class OuterController:
                ('Voer de T-waarde in.',scan_number,['T', self.solution, 0.02], Process.QUESTION),
                ('Voer de p-waarde in.',scan_number,['p', self.solution, 0.02], Process.QUESTION),
                ('Voer de beslissing in',scan_decision,[self.solution, False], Process.QUESTION)]
-            if self.assignment['between_subject']:
-                output.insert(5, ('Voer de waarden van N voor beide niveaus van de onafhankelijke variabele in, gescheiden door een spatie.', scan_numbers, ['ns', self.solution, 0.01], Process.QUESTION))
-            else:
-                output.insert(5, ('Voer de waarde van N in.',scan_number,['ns', self.solution, 0.01], Process.QUESTION))
             output.append(('Voer de causale interpretatie in.',scan_interpretation,[self.solution, False], Process.QUESTION))
             output[-1] = (output[-1][0], output[-1][1], output[-1][2], Process.LAST_QUESTION)
             return output

@@ -6,6 +6,7 @@ from wtforms.validators import DataRequired
 
 class BaseForm(FlaskForm):
     inputtext = StringField('', validators=[DataRequired()])
+    inputtextlarge = TextAreaField('', validators=[DataRequired()])
     a_choices = ['T-toets onafhankelijke variabelen','T-toets voor gekoppelde paren','One-way ANOVA','Two-way ANOVA','Repeated Measures Anova','Multiple-regressieanalyse']
     r_choices = ['Elementair rapport (oefenmodus)', 'Elementair rapport (tentamenmodus)', 'Beknopt rapport']
     selectanalysis = SelectField(label='Kies je analyse', choices=a_choices)
@@ -14,6 +15,12 @@ class BaseForm(FlaskForm):
     skip = SubmitField('Skip')
     prev = SubmitField('Prev')
     
+    mean1 = StringField('')
+    std1 = StringField('')
+    n1 = StringField('')
+    mean2 = StringField('')
+    std2 = StringField('')
+    n2 = StringField('')
     df1 = StringField('')
     df2 = StringField('')
     df3 = StringField('')

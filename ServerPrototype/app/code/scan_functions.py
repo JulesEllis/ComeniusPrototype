@@ -298,7 +298,12 @@ def scan_table_ttest(textfields: Dict, solution: Dict, margin:float=0.01) -> [bo
         if textfields[t[0]] == '':
             textfields[t[0]] = 0.0
         else:
-            textfields[t[0]] = float(textfields[t[0]]) if textfields[t[0]].replace('.','').isdigit() else 0.0
+            if textfields[t[0]] == None:
+                textfields[t[0]] = ''
+            elif textfields[t[0]].replace('.','').isdigit():
+                textfields[t[0]] = float(textfields[t[0]])
+            else: 
+                textfields[t[0]] = 0.0
             
     #Compare input with gold standard
     meaninput :List = [textfields['mean' + str(i+1)] for i in range(len(solution['means']))]

@@ -69,13 +69,12 @@ def bigform():
             instruction, outputfields = controller.update_form_anova(textdict)
             return render_template('bigform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames)
         elif form.nextt.data:
-            skip :bool = controller.skipable
-            prev :bool = controller.prevable
-            submit_field :int = controller.submit_field.value
-            display = controller.protocol[0][0]
+            skip:bool = controller.skipable
+            prev:bool = controller.prevable
+            display = "Gefeliciteerd, je rapport is af! " + controller.protocol[0][0]
             form = BaseForm()
-            controller.analysis_type = Task.TEXT_FIELD
-            return render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=submit_field, varnames=varnames)
+            #controller.analysis_type = Task.TEXT_FIELD
+            return render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=9, varnames=varnames)
         else:
             print('ERROR: INVALID METHOD')
     #elif flask.request.method == 'GET':
@@ -100,11 +99,10 @@ def smallform():
         elif form.nextt.data:
             skip :bool = controller.skipable
             prev :bool = controller.prevable
-            submit_field :int = controller.submit_field
-            display = controller.protocol[0][0]
+            display = "Gefeliciteerd, je rapport is af! " + controller.protocol[0][0]
             form = BaseForm()
-            controller.analysis_type = Task.TEXT_FIELD
-            return render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=submit_field, varnames=varnames)
+            #controller.analysis_type = Task.TEXT_FIELD
+            return render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=9, varnames=varnames)
         else:
             print('ERROR: INVALID METHOD')
     #elif flask.request.method == 'GET':
@@ -128,12 +126,11 @@ def reportform():
         elif form.nextt.data:
             skip :bool = controller.skipable
             prev :bool = controller.prevable
-            submit_field :int = controller.submit_field
-            display = controller.protocol[0][0]
+            display = "Gefeliciteerd, je rapport is af! " + controller.protocol[0][0]
             form = BaseForm()
             form.inputtext.data = ""
-            controller.analysis_type = Task.TEXT_FIELD
-            return render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=submit_field, varnames=varnames)
+            #controller.analysis_type = Task.TEXT_FIELD
+            return render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=9, varnames=varnames)
         else:
             print('ERROR: INVALID METHOD')
     #elif flask.request.method == 'GET':
