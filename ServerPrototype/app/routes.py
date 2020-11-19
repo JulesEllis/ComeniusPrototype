@@ -3,6 +3,7 @@ from app import app
 from app.forms import BaseForm, BigForm, SmallForm, ReportForm
 from app.code.interface import OuterController
 from app.code.enums import Task, Process
+from app.code.scan_functions_spacy import *
 import flask
 
 @app.route('/')
@@ -18,7 +19,7 @@ def index():
                                form=form, skip=False, submit_field=7, varnames=varnames)
     elif flask.request.method == 'POST':        
         #Isolate text fields
-        textfields:list = [x for x in dir(form) if str(type(form.__getattribute__(x))) in ["<class 'wtforms.fields.core.StringField'>","<class 'wtforms.fields.core.SelectField'>"]]
+        textfields:list = [x for x in dir(form) if str(type(form.__getattribute__(x))) in ["<class 'wtforms.fields.core.StringField'>","<class 'wtforms.fields.core.SelectField'>","<class 'wtforms.fields.simple.TextAreaField'>"]]
         textdict:dict = dict([(x, form.__getattribute__(x).data) for x in textfields])        
         
         if form.submit.data:
@@ -48,9 +49,12 @@ def index():
         if controller.assignment != None: #Retrieve variable names
                 varnames = controller.assignment['data']['varnames']
         form.inputtext.data = ""
+        form.inputtextlarge.data = ""
         skip :bool = controller.skipable
         prev :bool = controller.prevable
         submit_field :int = controller.submit_field.value
+        if controller.protocol[controller.index][1] in [scan_decision, scan_decision_anova, scan_decision_rmanova, scan_interpretation, scan_interpretation_anova]: #Convert textbox to large textbox if appropriate
+            submit_field = 10
         return render_template('index.html', display=output_text, form=form, skip=skip, prev=prev, submit_field=submit_field, varnames=varnames)
     else:
         print('ERROR: INVALID METHOD')
@@ -71,7 +75,7 @@ def bigform():
         elif form.nextt.data:
             skip:bool = controller.skipable
             prev:bool = controller.prevable
-            display = "Gefeliciteerd, je rapport is af! " + controller.protocol[0][0]
+            display = controller.protocol[0][0]
             form = BaseForm()
             #controller.analysis_type = Task.TEXT_FIELD
             return render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=9, varnames=varnames)
@@ -99,7 +103,7 @@ def smallform():
         elif form.nextt.data:
             skip :bool = controller.skipable
             prev :bool = controller.prevable
-            display = "Gefeliciteerd, je rapport is af! " + controller.protocol[0][0]
+            display = controller.protocol[0][0]
             form = BaseForm()
             #controller.analysis_type = Task.TEXT_FIELD
             return render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=9, varnames=varnames)
@@ -126,7 +130,7 @@ def reportform():
         elif form.nextt.data:
             skip :bool = controller.skipable
             prev :bool = controller.prevable
-            display = "Gefeliciteerd, je rapport is af! " + controller.protocol[0][0]
+            display = controller.protocol[0][0]
             form = BaseForm()
             form.inputtext.data = ""
             #controller.analysis_type = Task.TEXT_FIELD

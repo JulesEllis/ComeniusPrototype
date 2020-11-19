@@ -63,8 +63,6 @@ class OuterController:
             output[11].append(scan_interpretation(self.nl_nlp(textfields['inputtext11'].lower()), self.solution, anova=False)[1])
             
             output[3].append(scan_table_ttest(textfields, self.solution)[1])
-            #print(self.assignment)
-            #print(self.solution)
             return instruction, output
         
         def update_form_anova(self, textfields: Dict) -> List[str]:
@@ -137,7 +135,9 @@ class OuterController:
         def update(self, textfields: Dict) -> str:
             #Retrieve values from form text fields
             if 'inputtext' in list(textfields.keys()):
-                input_text:str = textfields['inputtext']+textfields['inputtextlarge']
+                input_text:str = textfields['inputtext']
+                if 'inputtextlarge' in list(textfields.keys()):
+                    input_text += textfields['inputtextlarge']
             else:
                 input_text:str = ''
             
@@ -296,12 +296,7 @@ class OuterController:
             
         def choice_protocol(self) -> List[Tuple]:
             return [('Voer hieronder het soort opgave in dat je wil oefenen.<br>',None,[], Process.CHOOSE_ANALYSIS)]
-            
-       # def #return_protocol(self) -> List[Tuple]:
-       #     return [('Gefeliciteerd, je elementair rapport is af! Wil je nog een opgave doen?',
-       #              scan_yesno,[], Process.ANOTHER),
-       #             ('Voer hieronder het soort opgave in wat je wil oefenen.<br><br>',None,[], Process.CHOOSE_ANALYSIS)]
-        
+   
         def ttest_protocol(self) -> List[Tuple]:
             output : List[Tuple] = [('Beschrijf de onafhankelijke variabele.', scan_indep, [self.solution], Process.QUESTION),
                ('Beschrijf de afhankelijke variabele.', scan_dep, [self.solution], Process.QUESTION),
@@ -323,7 +318,6 @@ class OuterController:
         def anova_protocol(self) -> List[Tuple]:
             if not self.assignment['two_way']:
                 output :str = [('Beschrijf de onafhankelijke variabele.',scan_indep_anova,[self.solution], Process.QUESTION),
-                    ('Beschrijf de onafhankelijke variabele.',scan_indep_anova,[self.solution], Process.QUESTION),
                     ('Beschrijf de afhankelijke variabele.',scan_dep,[self.solution], Process.QUESTION),
                     ('Beschrijf de mate van controle.',scan_control,[self.solution], Process.QUESTION),
                     ('Voer de nulhypothese in, geformuleerd met "H0" en "mu".',scan_hypothesis,[self.solution, 1], Process.QUESTION),
