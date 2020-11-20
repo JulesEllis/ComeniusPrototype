@@ -332,7 +332,7 @@ class OuterController:
                     ('Beschrijf de mate van controle.',scan_control,[self.solution], Process.QUESTION),
                     ('Voer de nulhypothese in voor de eerste onafhankelijke variabele, geformuleerd met "H0" en "mu".',scan_hypothesis,[self.solution, 1], Process.QUESTION),
                     ('Voer de nulhypothese in voor de tweede onafhankelijke variabele, geformuleerd met "H0" en "mu".',scan_hypothesis,[self.solution, 2], Process.QUESTION),
-                    ('Voer de interactienulhypothese in, geformuleerd met "H0" en "mu".',scan_hypothesis_anova,[self.solution], Process.QUESTION),
+                    ('Voer de interactienulhypothese in.',scan_hypothesis_anova,[self.solution], Process.QUESTION),
                     ('Vul de tabel hieronder in.',scan_table,[self.solution, 0.02], Process.TABLE),    
                     ('Voer de beslissing in voor de eerste onafhankelijke variabele', scan_decision,[self.solution, True, 1], Process.QUESTION),
                     ('Voer de beslissing in voor de tweede onafhankelijke variabele', scan_decision,[self.solution, True, 2], Process.QUESTION),

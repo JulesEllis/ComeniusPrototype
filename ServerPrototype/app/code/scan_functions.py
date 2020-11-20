@@ -138,8 +138,6 @@ def scan_control(text: str, solution: Dict) -> [bool, str]:
             else:
                 return True, 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>-ten onrechte gesteld dat het onderzoek een experiment is<br>'
     elif 'passief-observerend' in tokens or ('passief' in tokens and 'observerend' in tokens):
-        print(control)
-        print(bool(n_negations % 2))
         if control == bool(n_negations % 2):
             return False, 'Mooi, deze beschrijving klopt. '
         else:
@@ -205,11 +203,11 @@ def scan_number(text: str, stat: str, solution: Dict, margin: float=0.01) -> [bo
                   'T':'T', 'p':'p', 'relative_effect': 'het relatieve effect', 'F': 'F','r2':'de correlatie','ns':'N'}
     if right_number == []:
         output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'\
-        ' -De juiste waarde van ' + fancynames[stat] + '<br>'
+        ' -de juiste waarde van ' + fancynames[stat] + '<br>'
         return True, output
     else:
         return False, 'Mooi, dit cijfer klopt. '
-
+        
 def scan_hypothesis(text: str, solution: Dict, num: int=1) -> [bool, str]:
     #Remove potential dots to avoid confusion
     l_key: str = 'levels' if num < 2 else 'levels' + str(num)
@@ -286,9 +284,6 @@ def scan_hypothesis_rmanova(text: str, solution: Dict) -> [bool, str]:
     else:
         return False, 'Mooi, deze hypothese klopt.'
 
-def sim(gold_numbers :List, numbers :List, margin:float) -> True: #Return true if there is a similar number to num in the given list/float/integer in the solution
-    return [gold_numbers[i] - margin < numbers[i] and numbers[i] < gold_numbers[i] + margin for i in range(len(gold_numbers))]
-
 def scan_table_ttest(textfields: Dict, solution: Dict, margin:float=0.01) -> [bool, str]:
     if type(textfields) != dict:
         exit()
@@ -331,6 +326,48 @@ def scan_table_ttest(textfields: Dict, solution: Dict, margin:float=0.01) -> [bo
     else:
         return False, 'Mooi, deze tabel klopt. '
     
+def sim_p(solution: Dict, texts: List[str], margin: float=0.01) -> [bool, str]:
+    output:list[bool] = []
+    print(solution['p'])
+    for i in range(len(texts)):
+        text = texts[i]
+        tokens: List[str] = nltk.word_tokenize(text.lower())
+        numbers: List[float] = []
+        for t in tokens:
+            if t.replace('.','').replace('-','').isdigit():
+                numbers.append(float(t))
+        gold = solution['p'][i] 
+        right_number: bool = [n for n in numbers if gold - margin < n and n < gold + margin] != []
+        boundary_1: bool = '0.01' in tokens and round(gold, 2) != 0.01
+        boundary_5: bool = '0.05' in tokens and round(gold, 2) != 0.05
+        
+        if numbers != []:
+            if right_number and len(numbers) == len(tokens):#Als er alleen cijfers in het veld staan
+                output.append(True)
+            elif any([x in tokens for x in ['<','minder','kleiner']]):
+                if boundary_1 and gold < 0.01:
+                    output.append(True)
+                    print(1)
+                elif boundary_5 and gold < 0.05:
+                    output.append(True)
+                    print(2)
+                else: output.append(False)
+            elif any([x in tokens for x in ['>','meer','groter']]):
+                if boundary_1 and gold > 0.01:
+                    output.append(True)
+                    print(3)
+                elif boundary_5 and gold > 0.05:
+                    output.append(True)
+                    print(4)
+                else: output.append(False)
+            else: output.append(False)
+        else: 
+            output.append(False)
+    return output
+    
+def sim(gold_numbers :List, numbers :List, margin:float) -> True: #Return true if there is a similar number to num in the given list/float/integer in the solution
+    return [gold_numbers[i] - margin < numbers[i] and numbers[i] < gold_numbers[i] + margin for i in range(len(gold_numbers))]
+
 def scan_table(textfields: Dict, solution: Dict, margin:float=0.01) -> [bool, str]:
     #Convert fieldinput to float
     if type(textfields) != dict:
@@ -345,6 +382,8 @@ def scan_table(textfields: Dict, solution: Dict, margin:float=0.01) -> [bool, st
                 textfields[t[0]] = ''
             elif textfields[t[0]].replace('.','').isdigit():
                 textfields[t[0]] = float(textfields[t[0]])
+            elif t[0][0] == 'p':
+                pass
             else: 
                 textfields[t[0]] = 0.0
     
@@ -359,7 +398,7 @@ def scan_table(textfields: Dict, solution: Dict, margin:float=0.01) -> [bool, st
                    'ss': sim(solution['ss'], ssinput, margin),
                    'ms': sim(solution['ms'], msinput, margin),
                    'F':sim(solution['F'], finput, margin),
-                   'p': sim(solution['p'], pinput, margin),
+                   'p': sim_p(solution, pinput, margin),
                    'r2': sim(solution['r2'], r2input, margin)
                    }
     if False in [all(x) for x in list(scorepoints.values())]:

@@ -332,6 +332,8 @@ def detect_primary(sent:Doc, solution:dict, num:int=1) -> List[str]:
             scorepoints['alignment'] = True
         if indynode.dep_ == 'ROOT' and depnode.dep_ == 'obj': #Consistent verkeerde parse in spacy
             scorepoints['alignment'] = True
+        if indynode.dep_ == 'amod' and depnode.dep_ == 'obj': #Consistent verkeerde parse in spacy
+            scorepoints['relation_type'] = True
         if indynode.dep_ == 'obj' and depnode.dep_ == 'nmod': #Consistent verkeerde parse in spacy
             scorepoints['alignment'] = True
     
@@ -436,6 +438,8 @@ def detect_alternative(sent:Doc, solution:dict, num:int=1) -> List[str]:
             scorepoints['relation_type'] = True
         if indynode.dep_ == 'nmod' and depnode.dep_ == 'obj': #Consistent verkeerde parse in spacy
             scorepoints['relation_type'] = True
+        if indynode.dep_ == 'obj' and depnode.dep_ == 'amod': #Consistent verkeerde parse in spacy
+            scorepoints['relation_type'] = True
         if indynode.dep_ == 'obj' and depnode.dep_ == 'obj': #Storende variabele
             scorepoints['relation_type'] = True
     else:
@@ -457,7 +461,7 @@ def detect_alternative(sent:Doc, solution:dict, num:int=1) -> List[str]:
 def detect_alternative_interaction(sent:Doc, solution:dict) -> List[str]:
     output:list = []
     tokens = [x.text for x in sent]
-    if not ('storende' in tokens and 'variabelen' in tokens):
+    if not ('storende' in tokens and 'variabelen' in tokens) or ('storende' in tokens and 'variabele' in tokens):
         output.append(' -niet gesteld dat storende variabelen een mogelijkheid zijn voor de alternatieve verklaring')
     if not ('omgekeerde' in tokens and 'causaliteit' in tokens):
         output.append(' -niet gesteld dat ongekeerde causaliteit een mogelijkheid is voor de alternatieve verklaring')
@@ -492,7 +496,7 @@ def scan_decision(doc:Doc, solution:dict, anova:bool, num:int=1, prefix=True) ->
     output.extend(detect_strength(doc, solution, anova, num))
     correct:bool = len(output) == 1 if prefix else output == []
     if correct:
-        return False, 'Mooi, deze interpretatie klopt.' if prefix else ''
+        return False, 'Mooi, deze interpretatie klopt. ' if prefix else ''
     else:
         return True, '<br>'.join(output)
     
@@ -500,10 +504,10 @@ def scan_decision_anova(doc:Doc, solution:dict, num:int=1, prefix=True) -> [bool
     output = ['Er ontbreekt nog wat aan je antwoord, namelijk:'] if prefix else []
     output.extend(detect_h0(doc, solution, num))
     output.extend(detect_interaction(doc, solution, True))
-    output.extend(detect_strength(doc, solution, True, num))
+    #output.extend(detect_strength(doc, solution, True, num))
     correct:bool = len(output) == 1 if prefix else output == []
     if correct:
-        return False, 'Mooi, deze interpretatie klopt.' if prefix else ''
+        return False, 'Mooi, deze interpretatie klopt. ' if prefix else ''
     else:
         return True, '<br>'.join(output)
     
@@ -514,7 +518,7 @@ def scan_decision_rmanova(doc:Doc, solution:dict, num:int=1, prefix=True) -> [bo
     output.extend(detect_strength(doc, solution, True, num))
     correct:bool = len(output) == 1 if prefix else output == []
     if correct:
-        return False, 'Mooi, deze interpretatie klopt.' if prefix else ''
+        return False, 'Mooi, deze interpretatie klopt. ' if prefix else ''
     else:
         return True, '<br>'.join(output)
     
@@ -539,7 +543,7 @@ def scan_interpretation(doc:Doc, solution:dict, anova:bool, num:int=1, prefix=Tr
             output.append(' -de alternatieve verklaring wordt niet genoemd')
     correct:bool = len(output) == 1 if prefix else output == []
     if correct:
-        return False, 'Mooi, deze interpretatie klopt.' if prefix else ''
+        return False, 'Mooi, deze interpretatie klopt. ' if prefix else ''
     else:
         return True, '<br>'.join(output)
     
@@ -564,7 +568,7 @@ def scan_interpretation_anova(doc:Doc, solution:dict, num:int=3, prefix=True):
             output.append(' -de mogelijkheid van alternatieve verklaringen wordt niet genoemd')
     correct:bool = len(output) == 1 if prefix else output == []
     if correct:
-        return False, 'Mooi, deze interpretatie klopt.' if prefix else ''
+        return False, 'Mooi, deze interpretatie klopt. ' if prefix else ''
     else:
         return True, '<br>'.join(output)
 
@@ -585,7 +589,7 @@ def scan_predictors(doc:Doc, solution:dict, prefix:bool=True):
             output.extend(detect_report_stat(doc, 'de p-waarde van '+varnames[i], solution['predictor_p'][i+1]))
     correct:bool = len(output) == 1 if prefix else output == []
     if correct:
-        return False, 'Mooi, deze interpretatie klopt.' if prefix else ''
+        return False, 'Mooi, deze interpretatie klopt. ' if prefix else ''
     else:
         return True, '<br>'.join(output)
 
@@ -621,8 +625,6 @@ def split_grade_anova(text: str, solution:dict, two_way:bool) -> str:
         output += '<br>'+'<br>'.join(detect_report_stat(doc, 'p', solution['p'][0]))
         output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][0], aliases=['r2','r','r^2']))
         output += '<br>' + scan_decision(doc, solution, anova=True, prefix=False)[1]
-        #if solution['p'][0] < 0.05:
-       # output += '<br>' + scan_interpretation(doc, solution, anova=True, prefix=False)[1]
     else:
         for i in range(3):
             output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][0], num=i+1))
@@ -632,8 +634,6 @@ def split_grade_anova(text: str, solution:dict, two_way:bool) -> str:
                 output += '<br>' + scan_decision(doc, solution, anova=True, num=i+1, prefix=False)[1]
             else:
                 output += '<br>' + scan_decision_anova(doc, solution, anova=True, num=i+1, prefix=False)[1]
-            #if solution['p'][0] < 0.05:
-            #output += '<br>' + scan_interpretation(doc, solution, anova=True, num=i+1, prefix=False)[1]
     if output.replace('<br>','') == '':
         return 'Mooi, dit beknopt rapport bevat alle juiste details!'
     else:
