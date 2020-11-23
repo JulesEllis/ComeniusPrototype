@@ -140,7 +140,7 @@ def detect_comparison_mreg(sent:Doc, solution:dict) -> List[str]:
     tokens = [y.text for y in sent]
     
     #Controleer input
-    scorepoints['neg'] = bool(negation_counter(tokens) % 2) != rejected
+    scorepoints['neg'] = bool(negation_counter(tokens) % 2) == rejected
     scorepoints['sign'] = 'significant' in [x.text for x in sent]
     scorepoints['propvar'] = all([y in [x.text for x in sent] for y in ['proportie','verklaarde','variantie']])
     bigger_present = [x for x in sent if x.text == 'groter']
@@ -467,14 +467,14 @@ def detect_alternative_interaction(sent:Doc, solution:dict) -> List[str]:
         output.append(' -niet gesteld dat ongekeerde causaliteit een mogelijkheid is voor de alternatieve verklaring')
     return output
 
-def detect_report_stat(doc:Doc, stat:str, value:str, aliases:list=[], num:int=1, margin=0.01) -> List[str]:
+def detect_report_stat(doc:Doc, stat:str, value:float, aliases:list=[], num:int=1, margin=0.01) -> List[str]:
     tokens:list[str] = [x.text for x in doc]
     for i in range(len(tokens) - 2):
         t3:str = tokens[i+2]
         if t3.replace('.','').replace('-','').isdigit():
             t1:str = tokens[i]
             t2:str = tokens[i+1]
-            if t1 == stat.lower() or t1 in aliases: 
+            if t1 == stat.lower() or t1 in aliases:
                 if t2 in ['==','='] and float(t3) < value + margin and float(t3) > value - margin:
                     return []
     if num < 2:        
@@ -482,6 +482,24 @@ def detect_report_stat(doc:Doc, stat:str, value:str, aliases:list=[], num:int=1,
     else:
         return [' -de juiste waarde van '+stat+' voor factor '+str(num)+' wordt niet genoemd']
 
+def detect_p(doc:Doc, value:float, num:int=1, label:str=None, margin=0.01) -> List[str]:
+    tokens:list[str] = [x.text for x in doc]
+    for i in range(len(tokens) - 2):
+        t3:str = tokens[i+2]
+        if t3.replace('.','').replace('-','').isdigit():
+            t1:str = tokens[i]
+            t2:str = tokens[i+1]
+            if t1 == 'p': 
+                if t2 in ['==','='] and float(t3) < value + margin and float(t3) > value - margin:
+                    return []
+            #if t2 == '<' and t3 == '0.05' and TODO: < 0.05 en > 0.05 ook goedrekenen
+    if label != None:
+        return [' -de juiste p-waarde van predictor '+label+' wordt niet genoemd']
+    elif num < 2:        
+        return [' -de juiste p-waarde wordt niet genoemd']
+    else:
+        return [' -de juiste p-waarde van factor '+str(num)+' wordt niet genoemd']
+    
 def detect_name(doc:Doc, names:List[str], label:str) -> List[str]:
     tokens = [x.text for x in doc]
     if all([x.lower() in tokens for x in names]):
@@ -585,8 +603,8 @@ def scan_predictors(doc:Doc, solution:dict, prefix:bool=True):
             if not x in tokens:
                 output.append(' -predictor ' + x + ' niet genoemd.')
     for i in range(len(varnames)):
-        if solution['predictor_p'][i] < 0.05:
-            output.extend(detect_report_stat(doc, 'de p-waarde van '+varnames[i], solution['predictor_p'][i+1]))
+        if solution['predictor_p'][i+1] < 0.05:
+            output.extend(detect_p(doc, solution['predictor_p'][i+1], label=varnames[i]))
     correct:bool = len(output) == 1 if prefix else output == []
     if correct:
         return False, 'Mooi, deze interpretatie klopt. ' if prefix else ''
@@ -622,14 +640,14 @@ def split_grade_anova(text: str, solution:dict, two_way:bool) -> str:
     output += '<br>'+'<br>'.join(detect_name(doc, label2 + ['anova'], 'naam van de analyse'))
     if not two_way:
         output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][0]))
-        output += '<br>'+'<br>'.join(detect_report_stat(doc, 'p', solution['p'][0]))
+        output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][0]))
         output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][0], aliases=['r2','r','r^2']))
         output += '<br>' + scan_decision(doc, solution, anova=True, prefix=False)[1]
     else:
         for i in range(3):
-            output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][0], num=i+1))
-            output += '<br>'+'<br>'.join(detect_report_stat(doc, 'p', solution['p'][0], num=i+1))
-            output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][0], aliases=['r2'], num=i+1))
+            output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][i], num=i+1))
+            output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][0], num=i))
+            output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][i], aliases=['r2'], num=i+1))
             if i < 2:
                 output += '<br>' + scan_decision(doc, solution, anova=True, num=i+1, prefix=False)[1]
             else:
@@ -646,7 +664,7 @@ def split_grade_rmanova(text: str, solution:dict) -> str:
     output += '<br>'+'<br>'.join(detect_name(doc, ['repeated-measures', 'anova'], 'naam van de analyse'))
     output += '<br>'+'<br>'.join(detect_comparison_mreg(doc, solution))
     output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][0]))
-    output += '<br>'+'<br>'.join(detect_report_stat(doc, 'p', solution['p'][0]))
+    output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][0]))
     output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][0], aliases=['r2']))
     output += '<br>' + scan_decision(doc, solution, anova=True, num=1, prefix=False)[1]
     output += '<br>' + scan_decision_rmanova(doc, solution, anova=True, num=2, prefix=False)[1]
@@ -662,9 +680,10 @@ def split_grade_mregression(text:str, solution:dict) -> str:
     doc = nl_nlp(text.lower())
     output:str = ''
     output += '<br>'+'<br>'.join(detect_name(doc, ['regressieanalyse'], 'naam van de analyse'))
+    #output += '<br>'+'<br>'.join(detect_h0(doc, solution))
     output += '<br>'+'<br>'.join(detect_comparison_mreg(doc, solution))
     output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][0]))
-    output += '<br>'+'<br>'.join(detect_report_stat(doc, 'p', solution['p'][0]))
+    output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][0]))
     output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][0], aliases=['r2']))
     output += '<br>' + scan_predictors(doc, solution, prefix=False)[1]
     if output.replace('<br>','') == '':

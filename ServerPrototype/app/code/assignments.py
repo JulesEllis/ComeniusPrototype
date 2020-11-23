@@ -582,8 +582,7 @@ class Assignments:
         
         #Verbal answers
         solution['null'] = 'H0: ' + ' == '.join(['beta(' + str(i) + ')' for i in range(1,4)]) + ' == 0'
-        #TODO: decision
-        #TODO: interpretation
+        print(solution)
         return solution
         
     def print_struct(self, d: Dict):
