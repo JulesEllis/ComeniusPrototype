@@ -618,7 +618,7 @@ def scan_design(doc:Doc, solution:dict, prefix:bool=True) -> [bool, List[str]]:
     if not False in list(scorepoints.values()):
         return False, 'Mooi, dit design klopt.' if prefix else ''
     else:
-        return True, 'Er ontbreekt nog wat aan je antwoord, namelijk:' + re.sub(r'<br>(<br>)+', '<br>', output)
+        return True, '<br>'.join(output)
 
 def split_grade_ttest(text: str, solution:dict, between_subject:bool) -> str:
     nl_nlp = spacy.load('nl')

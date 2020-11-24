@@ -328,7 +328,6 @@ def scan_table_ttest(textfields: Dict, solution: Dict, margin:float=0.01) -> [bo
     
 def sim_p(solution: Dict, texts: List[str], margin: float=0.01) -> [bool, str]:
     output:list[bool] = []
-    print(solution['p'])
     for i in range(len(texts)):
         text = texts[i]
         tokens: List[str] = nltk.word_tokenize(text.lower())
@@ -347,18 +346,18 @@ def sim_p(solution: Dict, texts: List[str], margin: float=0.01) -> [bool, str]:
             elif any([x in tokens for x in ['<','minder','kleiner']]):
                 if boundary_1 and gold < 0.01:
                     output.append(True)
-                    print(1)
+                    #print(1)
                 elif boundary_5 and gold < 0.05:
                     output.append(True)
-                    print(2)
+                    #print(2)
                 else: output.append(False)
             elif any([x in tokens for x in ['>','meer','groter']]):
                 if boundary_1 and gold > 0.01:
                     output.append(True)
-                    print(3)
+                    #print(3)
                 elif boundary_5 and gold > 0.05:
                     output.append(True)
-                    print(4)
+                    #print(4)
                 else: output.append(False)
             else: output.append(False)
         else: 
@@ -375,7 +374,7 @@ def scan_table(textfields: Dict, solution: Dict, margin:float=0.01) -> [bool, st
         print('Wrong data sent to table scan function')
     #Set all empty fields to zero to prevent type errors
     for t in list(textfields.items()):
-        if textfields[t[0]] == '':
+        if textfields[t[0]] == '' and t[0][0] != 'p':
             textfields[t[0]] = 0.0
         else:
             if textfields[t[0]] == None:
