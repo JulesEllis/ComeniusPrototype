@@ -46,9 +46,9 @@ def detect_h0(sent:Doc, solution:dict, num:int=1) -> List[str]:
     #Controleer input
     hyp_statement = [x for x in sent if x.text in ['behoud', 'behouden','verwerp','verworpen','verwerpen']]
     if any(hyp_statement):
-        scorepoints['hyp_rejected'] = (hyp_statement[0].text in verwerp_list and rejected) or (hyp_statement[0].text in behoud_list and not rejected)
-        children = hyp_statement[0].children
-        scorepoints['hyp_present'] = any([x for x in children if x.text == 'h0' or x.text == 'nulhypothese'])
+        base = hyp_statement[num-1] if len(hyp_statement) >= num else hyp_statement[0]
+        scorepoints['hyp_rejected'] = (base.text in verwerp_list and rejected) or (base.text in behoud_list and not rejected)
+        scorepoints['hyp_present'] = any([x for x in base.children if x.text == 'h0' or x.text == 'nulhypothese'])
     
     #Add strings
     if not scorepoints['hyp_rejected'] and scorepoints['hyp_present']:
@@ -76,16 +76,16 @@ def detect_comparison(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]
     comparisons = [x for x in sent if x.text == 'groter' or 
                    x.text =='gelijk' or x.text == 'ongelijk' or x.text == 'kleiner']
     if comparisons != []:
-        comptree:List = descendants(comparisons[0])
+        comproot = comparisons[num-1] if len(comparisons) >= num else comparisons[0]
+        comptree:List = descendants(comproot)
         not_present = 'niet' in [x.text for x in comptree]
-        scorepoints['right_comparison'] = comparisons[0].text == gold_comp or (gold_comp == 'ongelijk' and comparisons[0].text == 'gelijk')
-        if gold_comp == 'ongelijk' and comparisons[0].text == 'ongelijk':
+        scorepoints['right_comparison'] = comproot.text == gold_comp or (gold_comp == 'ongelijk' and comproot.text == 'gelijk')
+        if gold_comp == 'ongelijk' and comproot.text == 'ongelijk':
             scorepoints['right_negation'] = not_present != (solution['p'][num-1] < 0.05)
-        elif gold_comp == 'ongelijk' and comparisons[0].text == 'gelijk':
+        elif gold_comp == 'ongelijk' and comproot.text == 'gelijk':
             scorepoints['right_negation'] = not_present == (solution['p'][num-1] < 0.05)
         else:
             scorepoints['right_negation'] = not_present != (solution['p'][num-1] < 0.05)
-        
         
     mean = [x for x in sent if x.text == 'gemiddelde']
     mean_2 = [x for x in sent if x.text == 'populatiegemiddelde']
@@ -253,13 +253,10 @@ def detect_strength(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]:
         gold_strength: str = 'sterk' if sterkte > 0.2 else 'matig' if sterkte > 0.1 else 'klein'
     effect = [x for x in sent if x.lemma_ == 'effect']
     if effect != []:
-        e_tree = descendants(effect[0])
+        e_tree = descendants(effect[num-1]) if len(effect) == num else descendants(effect[0])
         scorepoints['effect_present'] = True
         scorepoints['strength_present'] = any([x in [y.text for y in e_tree] for x in ['klein','matig','sterk']])
         scorepoints['right_strength'] = gold_strength in [x.text for x in e_tree]
-    if solution['p'][num - 1] > 0.05 or math.isnan(solution['p'][num - 1]):
-        for x in ['effect_present','strength_present','right_strength']:
-            scorepoints[x] = True
             
     #Add strings
     if not scorepoints['effect_present']:
@@ -511,7 +508,8 @@ def scan_decision(doc:Doc, solution:dict, anova:bool, num:int=1, prefix=True) ->
     output = ['Er ontbreekt nog wat aan je antwoord, namelijk:'] if prefix else []
     output.extend(detect_h0(doc, solution, num))
     output.extend(detect_comparison(doc, solution, anova, num))
-    output.extend(detect_strength(doc, solution, anova, num))
+    if not (solution['p'][num - 1] > 0.05 or math.isnan(solution['p'][num - 1])):
+        output.extend(detect_strength(doc, solution, anova, num))
     correct:bool = len(output) == 1 if prefix else output == []
     if correct:
         return False, 'Mooi, deze interpretatie klopt. ' if prefix else ''
@@ -533,7 +531,8 @@ def scan_decision_rmanova(doc:Doc, solution:dict, num:int=1, prefix=True) -> [bo
     output = ['Er ontbreekt nog wat aan je antwoord, namelijk:'] if prefix else []
     output.extend(detect_h0(doc, solution, 2))
     output.extend(detect_true_scores(doc, solution))
-    output.extend(detect_strength(doc, solution, True, num))
+    if not (solution['p'][num - 1] > 0.05 or math.isnan(solution['p'][num - 1])):
+        output.extend(detect_strength(doc, solution, True, num))
     correct:bool = len(output) == 1 if prefix else output == []
     if correct:
         return False, 'Mooi, deze interpretatie klopt. ' if prefix else ''
@@ -611,9 +610,15 @@ def scan_predictors(doc:Doc, solution:dict, prefix:bool=True):
     else:
         return True, '<br>'.join(output)
 
-#def scan_design(doc:Doc, solution:dict, prefix:bool=True) -> [bool, List[str]]:
-#    print(solution['assignment_type'])
-#    return False, 'Mooi, deze interpretatie klopt.' if prefix else ''
+def scan_design(doc:Doc, solution:dict, prefix:bool=True) -> [bool, List[str]]:
+    criteria = ['alt','ind','dep','cause','relation_type']
+    scorepoints = dict([(x,False) for x in criteria])
+    output:List[str] = []
+    
+    if not False in list(scorepoints.values()):
+        return False, 'Mooi, dit design klopt.' if prefix else ''
+    else:
+        return True, 'Er ontbreekt nog wat aan je antwoord, namelijk:' + re.sub(r'<br>(<br>)+', '<br>', output)
 
 def split_grade_ttest(text: str, solution:dict, between_subject:bool) -> str:
     nl_nlp = spacy.load('nl')
@@ -621,8 +626,9 @@ def split_grade_ttest(text: str, solution:dict, between_subject:bool) -> str:
     label2:str = ['between','-','subject'] if between_subject else ['within','-','subject']
     output:str = ''
     output += '<br>'+'<br>'.join(detect_name(doc, label2+['t','-','test'], 'naam van de analyse'))
-    output += '<br>'+'<br>'.join(detect_report_stat(doc, 'T', solution['T'][0]))
-    output += '<br>'+'<br>'.join(detect_report_stat(doc, 'p', solution['p'][0]))
+    if True: #solution['p'][0] < 0.05:
+        output += '<br>'+'<br>'.join(detect_report_stat(doc, 'T', solution['T'][0]))
+        output += '<br>'+'<br>'.join(detect_report_stat(doc, 'p', solution['p'][0]))
     output += '<br>' + scan_decision(doc, solution, anova=False, prefix=False)[1]
     #if solution['p'][0] < 0.05:
     #output += '<br>' + scan_interpretation(doc, solution, anova=False, prefix=False)[1]
@@ -639,19 +645,21 @@ def split_grade_anova(text: str, solution:dict, two_way:bool) -> str:
     output:str = ''
     output += '<br>'+'<br>'.join(detect_name(doc, label2 + ['anova'], 'naam van de analyse'))
     if not two_way:
-        output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][0]))
-        output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][0]))
-        output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][0], aliases=['r2','r','r^2']))
+        if solution['p'][0] < 0.05:
+            output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][0]))
+            output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][0]))
+            output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][0], aliases=['r2','r','r^2']))
         output += '<br>' + scan_decision(doc, solution, anova=True, prefix=False)[1]
     else:
         for i in range(3):
-            output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][i], num=i+1))
-            output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][0], num=i))
-            output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][i], aliases=['r2'], num=i+1))
+            if solution['p'][i] < 0.05:
+                output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][i], num=i+1))
+                output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][i], num=i+1))
+                output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][i], aliases=['r2'], num=i+1))
             if i < 2:
                 output += '<br>' + scan_decision(doc, solution, anova=True, num=i+1, prefix=False)[1]
             else:
-                output += '<br>' + scan_decision_anova(doc, solution, anova=True, num=i+1, prefix=False)[1]
+                output += '<br>' + scan_decision_anova(doc, solution, num=i+1, prefix=False)[1]
     if output.replace('<br>','') == '':
         return 'Mooi, dit beknopt rapport bevat alle juiste details!'
     else:
@@ -662,12 +670,12 @@ def split_grade_rmanova(text: str, solution:dict) -> str:
     doc = nl_nlp(text.lower())
     output:str = ''
     output += '<br>'+'<br>'.join(detect_name(doc, ['repeated-measures', 'anova'], 'naam van de analyse'))
-    output += '<br>'+'<br>'.join(detect_comparison_mreg(doc, solution))
-    output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][0]))
-    output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][0]))
-    output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][0], aliases=['r2']))
+    if solution['p'][0] < 0.05:
+        output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][0]))
+        output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][0]))
+        output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][0], aliases=['r2']))
     output += '<br>' + scan_decision(doc, solution, anova=True, num=1, prefix=False)[1]
-    output += '<br>' + scan_decision_rmanova(doc, solution, anova=True, num=2, prefix=False)[1]
+    output += '<br>' + scan_decision_rmanova(doc, solution, num=2, prefix=False)[1]
     #if solution['p'][0] < 0.05:
     #output += '<br>' + scan_interpretation(doc, solution, anova=True, prefix=False)[1]
     if output.replace('<br>','') == '':

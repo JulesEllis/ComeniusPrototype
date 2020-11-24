@@ -295,8 +295,7 @@ class Assignments:
             output += self.print_ttest(assignment)
             output += '<p><table style="width:20%">'
             output += '<tr><td>'+str(data['varnames'][0][0])+'</td><td>Gemiddelde</td><td>Standaarddeviatie</td><td>N</td></tr>'
-            output += '<tr><td>'+str(data['varnames'][0][1])+'</td><td>'+str(round(assignment['means'][0],2))+'</td><td>'+str(round(assignment['stds'][0],2))+'</td><td>'+str(round(assignment['ns'][0],2))+'</td></tr>'
-            output += '<tr><td>'+str(data['varnames'][0][2])+'</td><td>'+str(round(assignment['means'][1],2))+'</td><td>'+str(round(assignment['stds'][1],2))+'</td><td>'+str(round(assignment['ns'][0],2))+'</td></tr>'
+            output += '<tr><td>Verschilscores</td><td>'+str(round(assignment['means'][0],2))+'</td><td>'+str(round(assignment['stds'][0],2))+'</td><td>'+str(round(assignment['ns'][0],2))+'</td></tr>'
             output += '</table></p><p><table style="width:20%">'
             output += '<tr><td>Statistiek</td><td>Waarde</td></tr>'
             output += '<tr><td>Vrijheidsgraden (df)</td><td>'+str(assignment['df'][0])+'</td></tr>'
