@@ -86,9 +86,9 @@ def detect_comparison(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]
             scorepoints['right_negation'] = not_present == (solution['p'][num-1] < 0.05)
         else:
             scorepoints['right_negation'] = not_present != (solution['p'][num-1] < 0.05)
-        
-    mean = [x for x in sent if x.text == 'gemiddelde']
-    mean_2 = [x for x in sent if x.text == 'populatiegemiddelde']
+    
+    mean = [x for x in sent if x.text == 'gemiddelde' or x.text == 'gemiddelden']
+    mean_2 = [x for x in sent if x.text == 'populatiegemiddelde' or x.text == 'gemiddelden']
     scorepoints['mean_present'] = any(mean) or any(mean_2)
     #if scorepoints['mean_present']:
         #meanroot = mean[0] if any(mean) else mean_2[0] if any(mean_2) else None
@@ -198,7 +198,7 @@ def detect_interaction(sent:Doc, solution:dict, anova:bool) -> List[str]:
         output.append(' -een van de onafhankelijke variabelen ontbreekt bij de interactiebeslissing')
     return output
 
-def detect_true_scores(sent:Doc, solution:dict) -> List[str]:
+def detect_true_scores(sent:Doc, solution:dict, num=2) -> List[str]:
     #Define variables
     criteria:list = ['right_comparison', 'right_negation', 'mean_present', 'pop_present','jacked']
     scorepoints = dict([(x,False) for x in criteria])
@@ -208,17 +208,18 @@ def detect_true_scores(sent:Doc, solution:dict) -> List[str]:
     #Controleer inpur
     comparisons = [x for x in sent if x.text =='gelijk' or x.text == 'ongelijk']
     if comparisons != []:
-        comptree:List = descendants(comparisons[0])
+        comproot = comparisons[num-1] if len(comparisons) >= num else comparisons[0]
+        comptree:List = descendants(comproot)
         not_present = 'niet' in [x.text for x in comptree]
-        scorepoints['right_comparison'] = comparisons[0].text in ['gelijk','ongelijk']
-        if comparisons[0].text == 'ongelijk':
+        scorepoints['right_comparison'] = comproot.text in ['gelijk','ongelijk']
+        if comproot.text == 'ongelijk':
             scorepoints['right_negation'] = not_present != rejected
-        elif comparisons[0].text == 'gelijk':
+        elif comproot.text == 'gelijk':
             scorepoints['right_negation'] = not_present == rejected
     scorepoints['jacked'] = 'opgevoerde' in [x.text for x in sent]
         
-    mean = [x for x in sent if x.text == 'gemiddelde']
-    mean_2 = [x for x in sent if x.text == 'populatiegemiddelde']
+    mean = [x for x in sent if x.text == 'gemiddelde' or x.text == 'gemiddelden']
+    mean_2 = [x for x in sent if x.text == 'populatiegemiddelde' or x.text == 'populatiegemiddelden']
     scorepoints['mean_present'] = any(mean) or any(mean_2)
     scorepoints['pop_present'] = any(mean_2) or 'populatie' in [x.text for x in sent]
             
@@ -226,7 +227,7 @@ def detect_true_scores(sent:Doc, solution:dict) -> List[str]:
     if not scorepoints['right_comparison']:
         output.append(' -niveaus in de populatie niet of niet juist met elkaar vergeleken')
     if not scorepoints['right_negation']:
-        output.append(' -ten onrechte een negatie toegevoegd of weggelaten bij het vergelijken van de niveaus')
+        output.append(' -ten onrechte een negatie toegevoegd of weggelaten bij het vergelijken van de niveaus in de beslissing van de subjecten')
     if not scorepoints['mean_present']:
         output.append(' -niet genoemd dat de beslissing om gemiddelden gaat')
     if not scorepoints['pop_present']:
@@ -530,7 +531,7 @@ def scan_decision_anova(doc:Doc, solution:dict, num:int=1, prefix=True) -> [bool
 def scan_decision_rmanova(doc:Doc, solution:dict, num:int=1, prefix=True) -> [bool, List[str]]:
     output = ['Er ontbreekt nog wat aan je antwoord, namelijk:'] if prefix else []
     output.extend(detect_h0(doc, solution, 2))
-    output.extend(detect_true_scores(doc, solution))
+    output.extend(detect_true_scores(doc, solution, 2))
     if not (solution['p'][num - 1] > 0.05 or math.isnan(solution['p'][num - 1])):
         output.extend(detect_strength(doc, solution, True, num))
     correct:bool = len(output) == 1 if prefix else output == []
@@ -611,7 +612,7 @@ def scan_predictors(doc:Doc, solution:dict, prefix:bool=True):
         return True, '<br>'.join(output)
 
 def scan_design(doc:Doc, solution:dict, prefix:bool=True) -> [bool, List[str]]:
-    criteria = ['alt','ind','dep','cause','relation_type']
+    criteria = ['']
     scorepoints = dict([(x,False) for x in criteria])
     output:List[str] = []
     
@@ -669,7 +670,7 @@ def split_grade_rmanova(text: str, solution:dict) -> str:
     nl_nlp = spacy.load('nl')
     doc = nl_nlp(text.lower())
     output:str = ''
-    output += '<br>'+'<br>'.join(detect_name(doc, ['repeated-measures', 'anova'], 'naam van de analyse'))
+    output += '<br>'+'<br>'.join(detect_name(doc, ['repeated','-','measures', 'anova'], 'naam van de analyse'))
     if solution['p'][0] < 0.05:
         output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][0]))
         output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][0]))
