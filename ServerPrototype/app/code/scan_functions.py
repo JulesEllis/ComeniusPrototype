@@ -207,6 +207,38 @@ def scan_number(text: str, stat: str, solution: Dict, margin: float=0.01) -> [bo
         return True, output
     else:
         return False, 'Mooi, dit cijfer klopt. '
+    
+def scan_p(text:str, solution: Dict, margin: float=0.01) -> [bool, str]:
+    tokens: List[str] = nltk.word_tokenize(text.lower())
+    numbers: List[float] = []
+    for t in tokens:
+        if t.replace('.','').replace('-','').isdigit():
+            numbers.append(float(t))
+    gold = solution['p'][0] 
+    right_number: bool = [n for n in numbers if gold - margin < n and n < gold + margin] != []
+    boundary_1: bool = '0.01' in tokens and round(gold, 2) != 0.01
+    boundary_5: bool = '0.05' in tokens and round(gold, 2) != 0.05
+    
+    if numbers != []:
+        if right_number and len(numbers) == len(tokens):#Als er alleen cijfers in het veld staan
+            return False, "Mooi, deze waarde van p klopt! "
+        elif any([x in tokens for x in ['<','minder','kleiner']]):
+            if boundary_1 and gold < 0.01:
+                return False, "Mooi, deze waarde van p klopt! "
+            elif boundary_5 and gold < 0.05:
+                return False, "Mooi, deze waarde van p klopt! "
+            else: return True, 'Er ontbreekt nog iets aan je antwoord, namelijk:<br> -de juiste waarde van p'
+        elif any([x in tokens for x in ['>','meer','groter']]):
+            if boundary_1 and gold > 0.01:
+                return False, "Mooi, deze waarde van p klopt! "
+            elif boundary_5 and gold > 0.05:
+                return False, "Mooi, deze waarde van p klopt! "
+            else: 
+                return True, 'Er ontbreekt nog iets aan je antwoord, namelijk:<br> -de juiste waarde van p'
+        else: 
+            return True, 'Er ontbreekt nog iets aan je antwoord, namelijk:<br> -de juiste waarde van p'
+    else:
+        return True, 'Er ontbreekt nog iets aan je antwoord, namelijk:<br> -de juiste waarde van p'
         
 def scan_hypothesis(text: str, solution: Dict, num: int=1) -> [bool, str]:
     #Remove potential dots to avoid confusion

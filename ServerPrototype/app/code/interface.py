@@ -309,7 +309,7 @@ class OuterController:
                ('Voer de het ruwe effect in dat je hebt berekend.',scan_number,['raw_effect', self.solution, 0.01], Process.QUESTION),
                ('Voer de het relatieve effect in dat je hebt berekend.',scan_number,['relative_effect', self.solution, 0.01], Process.QUESTION),
                ('Voer de T-waarde in.',scan_number,['T', self.solution, 0.02], Process.QUESTION),
-               ('Voer de p-waarde in.',scan_number,['p', self.solution, 0.02], Process.QUESTION),
+               ('Voer de p-waarde in.',scan_p,[self.solution, 0.02], Process.QUESTION),
                ('Voer de beslissing in',scan_decision,[self.solution, False], Process.QUESTION)]
             output.append(('Voer de causale interpretatie in.',scan_interpretation,[self.solution, False], Process.QUESTION))
             output[-1] = (output[-1][0], output[-1][1], output[-1][2], Process.LAST_QUESTION)
