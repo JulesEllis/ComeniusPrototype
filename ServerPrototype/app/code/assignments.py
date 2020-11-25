@@ -73,11 +73,13 @@ class Assignments:
             instruction += "de reactiesnelheid bij het " + varnames[0][0] + " " + varnames[0][1] + " gemiddeld kleiner is dan die bij " + varnames[0][2] + ".<br><br>"
         instruction += "De persoon moet een tijdje achter een beeldscherm zo snel mogelijk op een knop" +" drukken zodra een wit vierkantje veranderd in een zwart vierkantje. De milliseconden tussen het veranderen" + " van het beeld en het indrukken van de knop worden gemeten en opgeteld. "        
         if between_subject:
-            instruction += 'De proefpersonen zijn allemaal ofwel ' + varnames[0][1] + ' ofwel '+ varnames[0][2] + '. De niveaus zijn: ' + varnames[0][1] + '/' + varnames[0][2] + '. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
+            instruction += 'De proefpersonen zijn allemaal ofwel ' + varnames[0][1] + ' ofwel '+ varnames[0][2] + '. De niveaus zijn: ' + varnames[0][1] + '/' + varnames[0][2] + '. Voer je antwoorden alsjeblieft tot op 2 decimalen in'\
+                 ' en gebruik dezelfde vergelijking van de gemiddelden in je antwoord als in de vraagstelling staat (e.g. "groter" of "kleiner"). '
             if control:
                 instruction += 'De personen van elk beroep zijn willekeurig geselecteerd. '
         else:
-            instruction += 'De proefpersonen werden tweemaal getoetst op hun reactiesnelheid, een keer overdag en een keer s\'nachts. ' + 'De niveaus zijn dag/nacht. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
+            instruction += 'De proefpersonen werden tweemaal getoetst op hun reactiesnelheid, een keer overdag en een keer s\'nachts. ' + 'De niveaus zijn dag/nacht. Voer je antwoorden alsjeblieft tot op 2 decimalen in'\
+            ' en gebruik dezelfde vergelijking van de gemiddelden in je antwoord als in de vraagstelling staat (e.g. "groter" of "kleiner"). '
             if control:
                 instruction += 'De volgorde van de toetsen was gerandomiseerd. '
         
@@ -110,9 +112,11 @@ class Assignments:
         #Decide the variable names
         report_type = 'elementair' if elementary else 'beknopt'
         if not two_way:
-            output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn '+varnames[0][0]+', met niveaus '+' en '.join(varnames[0][1:])+', en gewicht. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
+            output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn '+varnames[0][0]+', met niveaus '+' en '.join(varnames[0][1:])+', en gewicht. Voer je antwoorden alsjeblieft tot op 2 decimalen in '\
+                 'en gebruik dezelfde vergelijking van de gemiddelden in je antwoord als in de vraagstelling staat (e.g. "groter" of "kleiner"). '
         else:
-            output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn '+varnames[0][0]+', met niveaus '+' en '.join(varnames[0][1:])+', '+varnames[1][0]+' met niveaus '+' en '.join(varnames[1][1:])+', en gewicht. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
+            output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn '+varnames[0][0]+', met niveaus '+' en '.join(varnames[0][1:])+', '+varnames[1][0]+' met niveaus '+' en '.join(varnames[1][1:])+', en gewicht. Voer je antwoorden alsjeblieft tot op 2 decimalen in '\
+                 'en gebruik dezelfde vergelijking van de gemiddelden in je antwoord als in de vraagstelling staat (e.g. "groter" of "kleiner"). '
         if control:
             output['instruction'] += 'De deelnemers zijn willekeurig gekozen. '
 
@@ -145,7 +149,8 @@ class Assignments:
         varnames = [random.choice(samplevars)[:n_conditions+1]]
         
         report_type = 'elementair' if elementary else 'beknopt'
-        output['instruction']: str = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn '+varnames[0][0]+' en gewicht. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
+        output['instruction']: str = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn '+varnames[0][0]+' en gewicht. Voer je antwoorden alsjeblieft tot op 2 decimalen in '\
+                 'en gebruik dezelfde vergelijking van de gemiddelden in je antwoord als in de vraagstelling staat (e.g. "groter" of "kleiner"). '
         if control:
             output['instruction'] += 'De subjecten in het experiment zijn willekeurig geselecteerd. '
         true_means = [int(random.uniform(50,120)) for i in range(n_conditions)]
@@ -581,7 +586,6 @@ class Assignments:
         
         #Verbal answers
         solution['null'] = 'H0: ' + ' == '.join(['beta(' + str(i) + ')' for i in range(1,4)]) + ' == 0'
-        print(solution)
         return solution
         
     def print_struct(self, d: Dict):

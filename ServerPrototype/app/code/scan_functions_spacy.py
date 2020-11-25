@@ -254,10 +254,11 @@ def detect_strength(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]:
         gold_strength: str = 'sterk' if sterkte > 0.2 else 'matig' if sterkte > 0.1 else 'klein'
     effect = [x for x in sent if x.lemma_ == 'effect']
     if effect != []:
-        e_tree = descendants(effect[num-1]) if len(effect) == num else descendants(effect[0])
+        e_root = effect[num-1] if len(effect) == num else effect[0]
+        e_tree = descendants(e_root)
         scorepoints['effect_present'] = True
-        scorepoints['strength_present'] = any([x in [y.text for y in e_tree] for x in ['klein','matig','sterk']])
-        scorepoints['right_strength'] = gold_strength in [x.text for x in e_tree]
+        scorepoints['strength_present'] = any([x in [y.text for y in e_tree] for x in ['klein','matig','sterk']]) or e_root.head.text in ['klein','matig','sterk']
+        scorepoints['right_strength'] = gold_strength in [x.text for x in e_tree] or e_root.head.text == gold_strength
             
     #Add strings
     if not scorepoints['effect_present']:
@@ -498,14 +499,27 @@ def detect_p(doc:Doc, value:float, num:int=1, label:str=None, margin=0.01) -> Li
     else:
         return [' -de juiste p-waarde van factor '+str(num)+' wordt niet genoemd']
     
-def detect_name(doc:Doc, names:List[str], label:str) -> List[str]:
+def detect_name(doc:Doc, solution:Dict) -> List[str]:
     tokens = [x.text for x in doc]
-    if all([x.lower() in tokens for x in names]):
+    names:list = []
+    if solution['assignment_type'] == 1:
+        names = [('t','-','toets','voor','onafhankelijke','variabelen'),('between','-','subject','t','-','test'),('t','-','toets','voor','onafhankelijke','subjecten')]
+    if solution['assignment_type'] == 2:
+        names = [('t','-','toets','voor','gekoppelde','paren'),('within','-','subject','t','-','test')]
+    if solution['assignment_type'] == 3:
+        names = [('one','-','way','anova'), ('1','-','factor','anova')]
+    if solution['assignment_type'] == 4:
+        names = [('two','-','way','anova'), ('2','-','factor','anova')]
+    if solution['assignment_type'] == 5:
+        names = [('repeated','-','measures','anova'), ('repeated','-','measures','-','anova')]
+    if solution['assignment_type'] == 6:
+        names = [['regressieanalyse'],('multiple','-','regression'),('multipele', 'regressie')]
+    if any([all([x in tokens for x in y]) for y in names]):
         return ['']
     else:
-        return [' -'+label+' niet genoemd']
+        return [' -naam van de analyse niet juist genoemd']
 
-def scan_decision(doc:Doc, solution:dict, anova:bool, num:int=1, prefix=True) -> [bool, List[str]]:
+def scan_decision(doc:Doc, solution:dict, anova:bool, num:int=1, prefix=True, elementair=True) -> [bool, List[str]]:
     output = ['Er ontbreekt nog wat aan je antwoord, namelijk:'] if prefix else []
     output.extend(detect_h0(doc, solution, num))
     output.extend(detect_comparison(doc, solution, anova, num))
@@ -517,7 +531,7 @@ def scan_decision(doc:Doc, solution:dict, anova:bool, num:int=1, prefix=True) ->
     else:
         return True, '<br>'.join(output)
     
-def scan_decision_anova(doc:Doc, solution:dict, num:int=1, prefix=True) -> [bool, List[str]]:
+def scan_decision_anova(doc:Doc, solution:dict, num:int=1, prefix=True, elementair=True) -> [bool, List[str]]:
     output = ['Er ontbreekt nog wat aan je antwoord, namelijk:'] if prefix else []
     output.extend(detect_h0(doc, solution, num))
     output.extend(detect_interaction(doc, solution, True))
@@ -528,7 +542,7 @@ def scan_decision_anova(doc:Doc, solution:dict, num:int=1, prefix=True) -> [bool
     else:
         return True, '<br>'.join(output)
     
-def scan_decision_rmanova(doc:Doc, solution:dict, num:int=1, prefix=True) -> [bool, List[str]]:
+def scan_decision_rmanova(doc:Doc, solution:dict, num:int=1, prefix=True, elementair=True) -> [bool, List[str]]:
     output = ['Er ontbreekt nog wat aan je antwoord, namelijk:'] if prefix else []
     output.extend(detect_h0(doc, solution, 2))
     output.extend(detect_true_scores(doc, solution, 2))
@@ -612,9 +626,13 @@ def scan_predictors(doc:Doc, solution:dict, prefix:bool=True):
         return True, '<br>'.join(output)
 
 def scan_design(doc:Doc, solution:dict, prefix:bool=True) -> [bool, List[str]]:
-    criteria = ['']
+    criteria = ['ind', 'indcorrect','dep','depcorrect']
     scorepoints = dict([(x,False) for x in criteria])
     output:List[str] = []
+    indep_node = 
+    
+    
+    
     
     if not False in list(scorepoints.values()):
         return False, 'Mooi, dit design klopt.' if prefix else ''
@@ -626,7 +644,7 @@ def split_grade_ttest(text: str, solution:dict, between_subject:bool) -> str:
     doc = nl_nlp(text.lower())
     label2:str = ['between','-','subject'] if between_subject else ['within','-','subject']
     output:str = ''
-    output += '<br>'+'<br>'.join(detect_name(doc, label2+['t','-','test'], 'naam van de analyse'))
+    output += '<br>'+'<br>'.join(detect_name(doc,solution))
     if True: #solution['p'][0] < 0.05:
         output += '<br>'+'<br>'.join(detect_report_stat(doc, 'T', solution['T'][0]))
         output += '<br>'+'<br>'.join(detect_report_stat(doc, 'p', solution['p'][0]))
@@ -642,21 +660,20 @@ def split_grade_ttest(text: str, solution:dict, between_subject:bool) -> str:
 def split_grade_anova(text: str, solution:dict, two_way:bool) -> str:
     nl_nlp = spacy.load('nl')
     doc = nl_nlp(text.lower())
-    label2:str = ['two','-','way'] if two_way else ['one','-','way']
     output:str = ''
-    output += '<br>'+'<br>'.join(detect_name(doc, label2 + ['anova'], 'naam van de analyse'))
+    output += '<br>'+'<br>'.join(detect_name(doc,solution))
     if not two_way:
         if solution['p'][0] < 0.05:
             output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][0]))
             output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][0]))
-            output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][0], aliases=['r2','r','r^2']))
+            output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][0], aliases=['r2','r','kwadraat']))
         output += '<br>' + scan_decision(doc, solution, anova=True, prefix=False)[1]
     else:
         for i in range(3):
             if solution['p'][i] < 0.05:
                 output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][i], num=i+1))
                 output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][i], num=i+1))
-                output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][i], aliases=['r2'], num=i+1))
+                output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][i], aliases=['r2','r','kwadraat'], num=i+1))
             if i < 2:
                 output += '<br>' + scan_decision(doc, solution, anova=True, num=i+1, prefix=False)[1]
             else:
@@ -670,11 +687,11 @@ def split_grade_rmanova(text: str, solution:dict) -> str:
     nl_nlp = spacy.load('nl')
     doc = nl_nlp(text.lower())
     output:str = ''
-    output += '<br>'+'<br>'.join(detect_name(doc, ['repeated','-','measures', 'anova'], 'naam van de analyse'))
+    output += '<br>'+'<br>'.join(detect_name(doc,solution))
     if solution['p'][0] < 0.05:
         output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][0]))
         output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][0]))
-        output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][0], aliases=['r2']))
+        output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][0], aliases=['r2','r','kwadraat']))
     output += '<br>' + scan_decision(doc, solution, anova=True, num=1, prefix=False)[1]
     output += '<br>' + scan_decision_rmanova(doc, solution, num=2, prefix=False)[1]
     #if solution['p'][0] < 0.05:
@@ -688,12 +705,11 @@ def split_grade_mregression(text:str, solution:dict) -> str:
     nl_nlp = spacy.load('nl')
     doc = nl_nlp(text.lower())
     output:str = ''
-    output += '<br>'+'<br>'.join(detect_name(doc, ['regressieanalyse'], 'naam van de analyse'))
-    #output += '<br>'+'<br>'.join(detect_h0(doc, solution))
+    output += '<br>'+'<br>'.join(detect_name(doc,solution))
     output += '<br>'+'<br>'.join(detect_comparison_mreg(doc, solution))
     output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][0]))
     output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][0]))
-    output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][0], aliases=['r2']))
+    output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][0], aliases=['r2','r','kwadraat']))
     output += '<br>' + scan_predictors(doc, solution, prefix=False)[1]
     if output.replace('<br>','') == '':
         return 'Mooi, dit beknopt rapport bevat alle juiste details!'
