@@ -140,7 +140,7 @@ def detect_comparison_mreg(sent:Doc, solution:dict) -> List[str]:
     tokens = [y.text for y in sent]
     
     #Controleer input
-    scorepoints['neg'] = bool(negation_counter(tokens) % 2) == rejected
+    scorepoints['neg'] = bool(negation_counter(tokens) % 2) != rejected
     scorepoints['sign'] = 'significant' in [x.text for x in sent]
     scorepoints['propvar'] = all([y in [x.text for x in sent] for y in ['proportie','verklaarde','variantie']])
     bigger_present = [x for x in sent if x.text == 'groter']
@@ -626,15 +626,38 @@ def scan_predictors(doc:Doc, solution:dict, prefix:bool=True):
         return True, '<br>'.join(output)
 
 def scan_design(doc:Doc, solution:dict, prefix:bool=True) -> [bool, List[str]]:
-    criteria = ['ind', 'indcorrect','dep','depcorrect']
+    criteria = ['ind', 'indcorrect','ind2','ind2correct','dep','depcorrect']
     scorepoints = dict([(x,False) for x in criteria])
     output:List[str] = []
-    indep_node = 
+    indeps = [x for x in doc if x.text == solution['independent'].lower()]
+    if indeps != []:
+        scorepoints['ind'] = True
+        indep_span = descendants(indeps[0].head)
+        scorepoints['indcorrect'] = 'onafhankelijke' in [x.text for x in indep_span]
+    if solution['assignment_type'] == 2:    
+        indeps2 = [x for x in doc if x.text == solution['independent'].lower()]
+        if indeps2 != []:
+            scorepoints['ind'] = True
+            indep2_span = descendants(indeps2[0].head)
+            scorepoints['indcorrect'] = 'onafhankelijke' in [x.text for x in indep2_span]
+        else:
+            scorepoints['ind2'] = True;scorepoints['ind2correct'] = True
+    deps = [x for x in doc if x.text == solution['dependent'].lower()]
+    if deps != []:
+        scorepoints['dep'] = True
+        dep_span = descendants(deps[0].head)
+        scorepoints['depcorrect'] = 'afhankelijke' in [x.text for x in dep_span]
     
-    
-    
-    
-    if not False in list(scorepoints.values()):
+    #Add feedback text
+    if not scorepoints['ind']:
+        output.append(' -de onafhankelijke variabele wordt niet genoemd in het design')
+    if not scorepoints['indcorrect'] and scorepoints['ind']:
+        output.append(' -de rol van de onafhankelijke variabele wordt niet juist genoemd in het design')
+    if not scorepoints['dep']:
+        output.append(' -de afhankelijke variabele wordt niet genoemd in het design')
+    if not scorepoints['depcorrect'] and scorepoints['dep']:
+        output.append(' -de rol van de afhankelijke variabele wordt niet juist genoemd in het design')
+    if not False in list(scorepoints.values()):        
         return False, 'Mooi, dit design klopt.' if prefix else ''
     else:
         return True, '<br>'.join(output)
@@ -642,15 +665,13 @@ def scan_design(doc:Doc, solution:dict, prefix:bool=True) -> [bool, List[str]]:
 def split_grade_ttest(text: str, solution:dict, between_subject:bool) -> str:
     nl_nlp = spacy.load('nl')
     doc = nl_nlp(text.lower())
-    label2:str = ['between','-','subject'] if between_subject else ['within','-','subject']
     output:str = ''
     output += '<br>'+'<br>'.join(detect_name(doc,solution))
+    output += '<br>' + scan_design(doc, solution, prefix=False)[1]
     if True: #solution['p'][0] < 0.05:
         output += '<br>'+'<br>'.join(detect_report_stat(doc, 'T', solution['T'][0]))
         output += '<br>'+'<br>'.join(detect_report_stat(doc, 'p', solution['p'][0]))
     output += '<br>' + scan_decision(doc, solution, anova=False, prefix=False)[1]
-    #if solution['p'][0] < 0.05:
-    #output += '<br>' + scan_interpretation(doc, solution, anova=False, prefix=False)[1]
     if output.replace('<br>','') == '':
         return 'Mooi, dit beknopt rapport bevat alle juiste details!'
     else:
@@ -662,6 +683,7 @@ def split_grade_anova(text: str, solution:dict, two_way:bool) -> str:
     doc = nl_nlp(text.lower())
     output:str = ''
     output += '<br>'+'<br>'.join(detect_name(doc,solution))
+    output += '<br>' + scan_design(doc, solution, prefix=False)[1]
     if not two_way:
         if solution['p'][0] < 0.05:
             output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][0]))
@@ -688,14 +710,13 @@ def split_grade_rmanova(text: str, solution:dict) -> str:
     doc = nl_nlp(text.lower())
     output:str = ''
     output += '<br>'+'<br>'.join(detect_name(doc,solution))
+    output += '<br>' + scan_design(doc, solution, prefix=False)[1]
     if solution['p'][0] < 0.05:
         output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][0]))
         output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][0]))
         output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][0], aliases=['r2','r','kwadraat']))
     output += '<br>' + scan_decision(doc, solution, anova=True, num=1, prefix=False)[1]
     output += '<br>' + scan_decision_rmanova(doc, solution, num=2, prefix=False)[1]
-    #if solution['p'][0] < 0.05:
-    #output += '<br>' + scan_interpretation(doc, solution, anova=True, prefix=False)[1]
     if output.replace('<br>','') == '':
         return 'Mooi, dit beknopt rapport bevat alle juiste details!'
     else:
