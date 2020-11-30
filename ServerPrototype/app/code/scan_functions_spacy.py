@@ -63,6 +63,37 @@ def detect_h0(sent:Doc, solution:dict, num:int=1) -> List[str]:
             output.append(' -hypothese van factor '+str(num)+' niet genoemd')
     return output
 
+def detect_significance(sent:Doc, solution:dict, num:int=1) -> List[str]:
+    scorepoints = {'effect': False,
+                   'sign': False,
+                   'neg': False
+            }
+    output:List[str] = []
+    tokens:List[str] = [x.text for x in sent]
+    rejected:bool = solution['p'][num-1] < 0.05
+    h0_output:list = detect_h0(sent, solution, num)
+    if h0_output == []:
+        return []
+    
+    scorepoints['effect'] = 'verschil' in tokens
+    scorepoints['significant'] = 'significant' in tokens
+    scorepoints['neg'] = bool(negation_counter(tokens) % 2) != rejected
+    if num < 2:
+        if not scorepoints['effect']:
+            output.append(' -niet genoemd of het effect significant is')
+        if not scorepoints['significant'] and scorepoints['effect']:
+            output.append(' -niet genoemd of het effect significant is')
+        if not scorepoints['neg']:
+            output.append(' -ten onrechte een negatie toegevoegd of weggelaten bij de beschrijving van het effect')
+    else:
+        if not scorepoints['effect']:
+            output.append(' -niet genoemd of het effect significant is bij factor '+ str(num))
+        if not scorepoints['significant'] and scorepoints['effect']:
+            output.append(' -niet genoemd of het effect significant is bij factor '+ str(num))
+        if not scorepoints['neg']:
+            output.append(' -ten onrechte een negatie toegevoegd of weggelaten bij de beschrijving van het effect bij factor '+ str(num))
+    return output
+
 def detect_comparison(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]:
     #Define variables
     criteria = ['right_comparison', 'right_negation', 'mean_present', 'pop_present', 'level_present', 'both_present']
@@ -521,7 +552,10 @@ def detect_name(doc:Doc, solution:Dict) -> List[str]:
 
 def scan_decision(doc:Doc, solution:dict, anova:bool, num:int=1, prefix=True, elementair=True) -> [bool, List[str]]:
     output = ['Er ontbreekt nog wat aan je antwoord, namelijk:'] if prefix else []
-    output.extend(detect_h0(doc, solution, num))
+    if elementair:
+        output.extend(detect_h0(doc, solution, num))
+    else:
+        output.extend(detect_significance(doc, solution, num))
     output.extend(detect_comparison(doc, solution, anova, num))
     if not (solution['p'][num - 1] > 0.05 or math.isnan(solution['p'][num - 1])):
         output.extend(detect_strength(doc, solution, anova, num))
@@ -533,7 +567,10 @@ def scan_decision(doc:Doc, solution:dict, anova:bool, num:int=1, prefix=True, el
     
 def scan_decision_anova(doc:Doc, solution:dict, num:int=1, prefix=True, elementair=True) -> [bool, List[str]]:
     output = ['Er ontbreekt nog wat aan je antwoord, namelijk:'] if prefix else []
-    output.extend(detect_h0(doc, solution, num))
+    if elementair:
+        output.extend(detect_h0(doc, solution, num))
+    else:
+        output.extend(detect_significance(doc, solution, num))
     output.extend(detect_interaction(doc, solution, True))
     #output.extend(detect_strength(doc, solution, True, num))
     correct:bool = len(output) == 1 if prefix else output == []
@@ -544,7 +581,10 @@ def scan_decision_anova(doc:Doc, solution:dict, num:int=1, prefix=True, elementa
     
 def scan_decision_rmanova(doc:Doc, solution:dict, num:int=1, prefix=True, elementair=True) -> [bool, List[str]]:
     output = ['Er ontbreekt nog wat aan je antwoord, namelijk:'] if prefix else []
-    output.extend(detect_h0(doc, solution, 2))
+    if elementair:
+        output.extend(detect_h0(doc, solution, num))
+    else:
+        output.extend(detect_significance(doc, solution, num))
     output.extend(detect_true_scores(doc, solution, 2))
     if not (solution['p'][num - 1] > 0.05 or math.isnan(solution['p'][num - 1])):
         output.extend(detect_strength(doc, solution, True, num))
@@ -632,27 +672,37 @@ def scan_design(doc:Doc, solution:dict, prefix:bool=True) -> [bool, List[str]]:
     indeps = [x for x in doc if x.text == solution['independent'].lower()]
     if indeps != []:
         scorepoints['ind'] = True
-        indep_span = descendants(indeps[0].head)
-        scorepoints['indcorrect'] = 'onafhankelijke' in [x.text for x in indep_span]
+        if indeps[0].dep_ == 'conj':
+            indep_span = descendants(indeps[0].head.head)
+        else:
+            indep_span = descendants(indeps[0].head)
+        scorepoints['indcorrect'] = 'onafhankelijke' in [x.text for x in indep_span] and not 'afhankelijke' in [x.text for x in indep_span] 
     if solution['assignment_type'] == 2:    
         indeps2 = [x for x in doc if x.text == solution['independent'].lower()]
         if indeps2 != []:
-            scorepoints['ind'] = True
-            indep2_span = descendants(indeps2[0].head)
-            scorepoints['indcorrect'] = 'onafhankelijke' in [x.text for x in indep2_span]
-        else:
-            scorepoints['ind2'] = True;scorepoints['ind2correct'] = True
+            scorepoints['ind2'] = True
+            if indeps2[0].dep_ == 'conj':
+                indep2_span = descendants(indeps2[0].head.head)
+            else:
+                indep2_span = descendants(indeps2[0].head)
+            scorepoints['ind2correct'] = 'onafhankelijke' in [x.text for x in indep2_span] and not 'afhankelijke' in [x.text for x in indep2_span] 
+    else:
+        scorepoints['ind2'] = True;scorepoints['ind2correct'] = True
     deps = [x for x in doc if x.text == solution['dependent'].lower()]
     if deps != []:
         scorepoints['dep'] = True
         dep_span = descendants(deps[0].head)
-        scorepoints['depcorrect'] = 'afhankelijke' in [x.text for x in dep_span]
+        scorepoints['depcorrect'] = 'afhankelijke' in [x.text for x in dep_span] and not 'onafhankelijke' in [x.text for x in dep_span] 
     
     #Add feedback text
     if not scorepoints['ind']:
         output.append(' -de onafhankelijke variabele wordt niet genoemd in het design')
     if not scorepoints['indcorrect'] and scorepoints['ind']:
         output.append(' -de rol van de onafhankelijke variabele wordt niet juist genoemd in het design')
+    if not scorepoints['ind2']:
+        output.append(' -de tweede onafhankelijke variabele wordt niet genoemd in het design')
+    if not scorepoints['ind2correct'] and scorepoints['ind2']:
+        output.append(' -de rol van de tweede onafhankelijke variabele wordt niet juist genoemd in het design')
     if not scorepoints['dep']:
         output.append(' -de afhankelijke variabele wordt niet genoemd in het design')
     if not scorepoints['depcorrect'] and scorepoints['dep']:
@@ -669,9 +719,9 @@ def split_grade_ttest(text: str, solution:dict, between_subject:bool) -> str:
     output += '<br>'+'<br>'.join(detect_name(doc,solution))
     output += '<br>' + scan_design(doc, solution, prefix=False)[1]
     if True: #solution['p'][0] < 0.05:
-        output += '<br>'+'<br>'.join(detect_report_stat(doc, 'T', solution['T'][0]))
+        output += '<br>'+'<br>'.join(detect_report_stat(doc, 'T', solution['T'][0], aliases=['T(' + solution['independent'] + ')']))
         output += '<br>'+'<br>'.join(detect_report_stat(doc, 'p', solution['p'][0]))
-    output += '<br>' + scan_decision(doc, solution, anova=False, prefix=False)[1]
+    output += '<br>' + scan_decision(doc, solution, anova=False, prefix=False, elementair=False)[1]
     if output.replace('<br>','') == '':
         return 'Mooi, dit beknopt rapport bevat alle juiste details!'
     else:
@@ -686,20 +736,21 @@ def split_grade_anova(text: str, solution:dict, two_way:bool) -> str:
     output += '<br>' + scan_design(doc, solution, prefix=False)[1]
     if not two_way:
         if solution['p'][0] < 0.05:
-            output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][0]))
+            output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][0], aliases=['F(' + solution['independent'] + ')']))
             output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][0]))
             output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][0], aliases=['r2','r','kwadraat']))
-        output += '<br>' + scan_decision(doc, solution, anova=True, prefix=False)[1]
+        output += '<br>' + scan_decision(doc, solution, anova=True, prefix=False, elementair=False)[1]
     else:
         for i in range(3):
             if solution['p'][i] < 0.05:
-                output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][i], num=i+1))
+                f_aliases = ['F(' + solution['independent' + str(i+1)] + ')'] if i > 0 and i < 2 else []
+                output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][i], aliases=f_aliases, num=i+1))
                 output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][i], num=i+1))
                 output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][i], aliases=['r2','r','kwadraat'], num=i+1))
             if i < 2:
-                output += '<br>' + scan_decision(doc, solution, anova=True, num=i+1, prefix=False)[1]
+                output += '<br>' + scan_decision(doc, solution, anova=True, num=i+1, prefix=False, elementair=False)[1]
             else:
-                output += '<br>' + scan_decision_anova(doc, solution, num=i+1, prefix=False)[1]
+                output += '<br>' + scan_decision_anova(doc, solution, num=i+1, prefix=False, elementair=False)[1]
     if output.replace('<br>','') == '':
         return 'Mooi, dit beknopt rapport bevat alle juiste details!'
     else:
@@ -712,11 +763,11 @@ def split_grade_rmanova(text: str, solution:dict) -> str:
     output += '<br>'+'<br>'.join(detect_name(doc,solution))
     output += '<br>' + scan_design(doc, solution, prefix=False)[1]
     if solution['p'][0] < 0.05:
-        output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][0]))
+        output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][0], aliases=['F(' + solution['independent'] + ')']))
         output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][0]))
         output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][0], aliases=['r2','r','kwadraat']))
-    output += '<br>' + scan_decision(doc, solution, anova=True, num=1, prefix=False)[1]
-    output += '<br>' + scan_decision_rmanova(doc, solution, num=2, prefix=False)[1]
+    output += '<br>' + scan_decision(doc, solution, anova=True, num=1, prefix=False, elementair=False)[1]
+    output += '<br>' + scan_decision_rmanova(doc, solution, num=2, prefix=False, elementair=False)[1]
     if output.replace('<br>','') == '':
         return 'Mooi, dit beknopt rapport bevat alle juiste details!'
     else:
