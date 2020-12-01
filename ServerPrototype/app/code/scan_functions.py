@@ -137,7 +137,7 @@ def scan_control(text: str, solution: Dict) -> [bool, str]:
                 return True, 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>-ten onrechte gesteld dat het onderzoek geen experiment is<br>'
             else:
                 return True, 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>-ten onrechte gesteld dat het onderzoek een experiment is<br>'
-    elif 'passief-observerend' in tokens or ('passief' in tokens and 'observerend' in tokens):
+    elif 'passief-observerend' in tokens or ('passief' in tokens): #and 'observerend' in tokens):
         if control == bool(n_negations % 2):
             return False, 'Mooi, deze beschrijving klopt. '
         else:
@@ -188,19 +188,23 @@ def scan_numbers(text: str, stat: str, solution: Dict, margin: float) -> [bool, 
         return False, 'Mooi, deze cijfers kloppen. '
     
 def scan_number(text: str, stat: str, solution: Dict, margin: float=0.01) -> [bool, str]:
+    fancynames: Dict[str, str] = {'df':'het aantal vrijheidsgraden', 'raw_effect': 'het ruwe effect',
+                  'T':'T', 'p':'p', 'relative_effect': 'het relatieve effect', 'F': 'F','r2':'de correlatie','ns':'N'}
     tokens: List[str] = nltk.word_tokenize(text.lower())
     numbers: List[float] = []
     for t in tokens:
-        if t.replace('.','').replace('-','').isdigit():
+        try:
             numbers.append(float(t))
+        except ValueError:
+            output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'\
+            ' -de juiste waarde van ' + fancynames[stat] + '<br>'
+            return True, output
             
     #Compare the received numbers to the gold standard from the solution
     gold: float = solution[stat][0]
     right_number: List[bool] = [n for n in numbers if gold - margin < n and n < gold + margin]
     
     #Determine the response of the chatbot
-    fancynames: Dict[str, str] = {'df':'het aantal vrijheidsgraden', 'raw_effect': 'het ruwe effect',
-                  'T':'T', 'p':'p', 'relative_effect': 'het relatieve effect', 'F': 'F','r2':'de correlatie','ns':'N'}
     if right_number == []:
         output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'\
         ' -de juiste waarde van ' + fancynames[stat] + '<br>'
@@ -212,26 +216,35 @@ def scan_p(text:str, solution: Dict, margin: float=0.01) -> [bool, str]:
     tokens: List[str] = nltk.word_tokenize(text.lower())
     numbers: List[float] = []
     for t in tokens:
-        if t.replace('.','').replace('-','').isdigit():
+        try:
             numbers.append(float(t))
+        except ValueError:
+            pass
     gold = solution['p'][0] 
     right_number: bool = [n for n in numbers if gold - margin < n and n < gold + margin] != []
-    boundary_1: bool = '0.01' in tokens and round(gold, 2) != 0.01
-    boundary_5: bool = '0.05' in tokens and round(gold, 2) != 0.05
+    boundary_100: bool = '0.01' in tokens and round(gold, 2) != 0.01
+    boundary_050: bool = '0.05' in tokens and round(gold, 2) != 0.05
+    boundary_010: bool = '0.05' in tokens and round(gold, 2) != 0.05
+    boundary_005: bool = '0.05' in tokens and round(gold, 2) != 0.05
+    boundary_001: bool = '0.05' in tokens and round(gold, 2) != 0.05
     
     if numbers != []:
         if right_number and len(numbers) == len(tokens):#Als er alleen cijfers in het veld staan
             return False, "Mooi, deze waarde van p klopt! "
         elif any([x in tokens for x in ['<','minder','kleiner']]):
-            if boundary_1 and gold < 0.01:
+            if boundary_100 and gold < 0.10 and gold > 0.05:
                 return False, "Mooi, deze waarde van p klopt! "
-            elif boundary_5 and gold < 0.05:
+            elif boundary_050 and gold < 0.05 and gold > 0.01:
+                return False, "Mooi, deze waarde van p klopt! "
+            elif boundary_010 and gold < 0.01 and gold > 0.005:
+                return False, "Mooi, deze waarde van p klopt! "
+            elif boundary_005 and gold < 0.005 and gold > 0.001:
+                return False, "Mooi, deze waarde van p klopt! "
+            elif boundary_001 and gold < 0.001:
                 return False, "Mooi, deze waarde van p klopt! "
             else: return True, 'Er ontbreekt nog iets aan je antwoord, namelijk:<br> -de juiste waarde van p'
         elif any([x in tokens for x in ['>','meer','groter']]):
-            if boundary_1 and gold > 0.01:
-                return False, "Mooi, deze waarde van p klopt! "
-            elif boundary_5 and gold > 0.05:
+            if boundary_050 and gold > 0.05:
                 return False, "Mooi, deze waarde van p klopt! "
             else: 
                 return True, 'Er ontbreekt nog iets aan je antwoord, namelijk:<br> -de juiste waarde van p'

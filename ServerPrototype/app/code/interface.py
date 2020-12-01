@@ -30,6 +30,7 @@ class OuterController:
             self.protocol : List = self.intro_protocol()
             self.submit_field : int = Task.INTRO
             self.analysis_type = Task.CHOICE
+            self.wipetext:bool = False
             self.nl_nlp = spacy.load('nl')
         
         def reset(self):
@@ -43,6 +44,7 @@ class OuterController:
             self.protocol : List = self.intro_protocol()
             self.submit_field : int = Task.INTRO
             self.analysis_type = Task.CHOICE
+            self.wipetext:bool = False
         
         def update_form_ttest(self, textfields: Dict) -> List[str]:
             output = [[] for i in range(12)]
@@ -151,27 +153,18 @@ class OuterController:
                 report = textfields['selectreport']
             elif (input_text == 'skip' and self.skipable) or (input_text == 'prev' and self.prevable): #Hard-set again to false if the user wants to skip
                 again = False
-            elif process == Process.ANOTHER or process == Process.YES_NO:
-                self.analysis_type = Task.INTRO
-                again, output = function(input_text.lower(), *arguments)
             elif process != Process.TABLE:
                 if function in [scan_decision, scan_decision_anova, scan_decision_rmanova, scan_interpretation, scan_interpretation_anova]:
                     again, output_text = function(self.nl_nlp(input_text.lower()), *arguments)
                 else:
                     again, output_text = function(input_text.lower(), *arguments)
+                self.wipetext = not again
             
             #Execute the correct response
             if process == Process.INTRO: #If intro protocol:
                 self.protocol = self.choice_protocol()
                 self.submit_field = Task.CHOICE
                 return self.protocol[0][0]
-            elif process == Process.ANOTHER: #If return protocol index 0
-                if output:
-                    self.index += 1
-                    return self.protocol[self.index][0]
-                else:
-                    self.endstate = True
-                    return 'Tot ziens!'
             elif process == Process.CHOOSE_ANALYSIS: #If choice protocol index 1 or return protocol index 2
                 control: bool = random.choice([True,False])
                 hyp_type: int = random.choice([0,1,2])

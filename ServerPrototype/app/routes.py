@@ -48,8 +48,9 @@ def index():
             output_text : str = controller.update({'inputtext': 'prev'})
         if controller.assignment != None: #Retrieve variable names
                 varnames = controller.assignment['data']['varnames']
-        form.inputtext.data = ""
-        form.inputtextlarge.data = ""
+        if controller.wipetext:
+            form.inputtext.data = ""
+            form.inputtextlarge.data = ""
         skip :bool = controller.skipable
         prev :bool = controller.prevable
         submit_field :int = controller.submit_field.value

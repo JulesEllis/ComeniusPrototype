@@ -323,7 +323,8 @@ def detect_unk(sent:Doc, solution:dict):
     
     #Controleer input
     scorepoints['unk'] = 'onbekend' in tokens if not control else True
-    scorepoints['two'] = ('een' in tokens) or ('één' in tokens) if control else ('twee' in tokens) or ('meerdere' in tokens)
+    scorepoints['two'] = ('een' in tokens) or ('één' in tokens) or ('1' in tokens) if control else \
+                    ('twee' in tokens) or ('meerdere' in tokens) or ('2' in tokens)
     
     #Add strings
     if not scorepoints['two']:
@@ -792,15 +793,19 @@ def split_grade_mregression(text:str, solution:dict) -> str:
     else:
         return 'Er ontbreekt nog wat aan je antwoord, namelijk:' + re.sub(r'<br>(<br>)+', '<br>', output)
     
-
+"""
+FUNCTIONS FOR TESTING
+"""
 def print_dissection(text:str):
     import spacy
     nl_nlp = spacy.load('nl')
     doc = nl_nlp(text)
     print([(x.text, x.dep_) for x in doc])
     
-def load_dissection():
+def load_dissection(text:str):
     import spacy
     from spacy import displacy
     nlp = spacy.load('nl')
+    doc = nlp(text)
+    displacy.serve(doc, style='dep')
         
