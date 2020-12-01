@@ -63,32 +63,36 @@ def detect_h0(sent:Doc, solution:dict, num:int=1) -> List[str]:
             output.append(' -hypothese van factor '+str(num)+' niet genoemd')
     return output
 
-def detect_significance(sent:Doc, solution:dict, num:int=1) -> List[str]:
+def detect_significance(doc:Doc, solution:dict, num:int=1) -> List[str]:
     scorepoints = {'effect': False,
                    'sign': False,
                    'neg': False
             }
     output:List[str] = []
-    tokens:List[str] = [x.text for x in sent]
     rejected:bool = solution['p'][num-1] < 0.05
-    h0_output:list = detect_h0(sent, solution, num)
+    h0_output:list = detect_h0(doc, solution, num)
     if h0_output == []:
         return []
     
-    scorepoints['effect'] = 'verschil' in tokens
-    scorepoints['significant'] = 'significant' in tokens
-    scorepoints['neg'] = bool(negation_counter(tokens) % 2) != rejected
+    difference = [sent for sent in doc.sents if any([y in [x.text for x in sent] for y in ['verschil','effect']]) 
+            and not any([y in [x.text for x in sent] for y in ['matig','klein','sterk']])]
+    if difference != []:
+        d_root = difference[num - 1] if num <= len(difference) else difference[0]
+        scorepoints['effect'] = True
+        tokens:List[str] = [x.text for x in d_root]
+        scorepoints['sign'] = 'significant' in tokens
+        scorepoints['neg'] = bool(negation_counter(tokens) % 2) != rejected
     if num < 2:
         if not scorepoints['effect']:
             output.append(' -niet genoemd of het effect significant is')
-        if not scorepoints['significant'] and scorepoints['effect']:
+        if not scorepoints['sign'] and scorepoints['effect']:
             output.append(' -niet genoemd of het effect significant is')
         if not scorepoints['neg']:
             output.append(' -ten onrechte een negatie toegevoegd of weggelaten bij de beschrijving van het effect')
     else:
         if not scorepoints['effect']:
             output.append(' -niet genoemd of het effect significant is bij factor '+ str(num))
-        if not scorepoints['significant'] and scorepoints['effect']:
+        if not scorepoints['sign'] and scorepoints['effect']:
             output.append(' -niet genoemd of het effect significant is bij factor '+ str(num))
         if not scorepoints['neg']:
             output.append(' -ten onrechte een negatie toegevoegd of weggelaten bij de beschrijving van het effect bij factor '+ str(num))
@@ -198,18 +202,18 @@ def detect_comparison_mreg(sent:Doc, solution:dict) -> List[str]:
         output.append(' -het proportie verklaarde variantie word niet juist vergeleken met nul')    
     return output
 
-def detect_interaction(sent:Doc, solution:dict, anova:bool) -> List[str]:
+def detect_interaction(doc:Doc, solution:dict, anova:bool) -> List[str]:
     #Define variables
     criteria = ['interactie','indy1','indy2','pop_present','right_negation']
     scorepoints = dict([(x,False) for x in criteria])
-    tokens = [x.text for x in sent]
     rejected = solution['p'][-1] < 0.05
     output:List[str] = []
     
     #Controleer input
-    interactie_list = [x for x in sent if x.text == 'interactie']
-    if interactie_list != []:
-        int_descendants = descendants(interactie_list[0])
+    i_sents = [sent for sent in doc.sents if 'interactie' in [y.text for y in sent]]
+    if i_sents != []:
+        int_descendants = i_sents[0]    
+        tokens = [x.text for x in int_descendants]
         scorepoints['interactie'] = True
         scorepoints['indy1'] = solution['independent'].lower() in [x.text for x in int_descendants]
         scorepoints['indy2'] = solution['independent2'].lower() in [x.text for x in int_descendants]
@@ -283,21 +287,21 @@ def detect_strength(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]:
         else: #Two-way and within-subject ANOVA
             sterkte: float = solution['r2'][num-1]
         gold_strength: str = 'sterk' if sterkte > 0.2 else 'matig' if sterkte > 0.1 else 'klein'
-    effect = [x for x in sent if x.lemma_ == 'effect']
+    effect = [x for x in sent if x.lemma_ == 'matig' or x.lemma_ == 'klein' or x.lemma_ == 'sterk']
     if effect != []:
-        e_root = effect[num-1] if len(effect) == num else effect[0]
+        e_root = effect[num-1] if num <= len(effect) else effect[0]
         e_tree = descendants(e_root)
-        scorepoints['effect_present'] = True
-        scorepoints['strength_present'] = any([x in [y.text for y in e_tree] for x in ['klein','matig','sterk']]) or e_root.head.text in ['klein','matig','sterk']
-        scorepoints['right_strength'] = gold_strength in [x.text for x in e_tree] or e_root.head.text == gold_strength
+        scorepoints['effect_present'] = e_root.head.text == 'effect' or effect in [x.text for x in e_tree]
+        scorepoints['strength_present'] = True #any([x in [y.text for y in e_tree] for x in ['klein','matig','sterk']]) or e_root.head.text in ['klein','matig','sterk']
+        scorepoints['right_strength'] = e_root.text == gold_strength #in [x.text for x in e_tree] or e_root.head.text == gold_strength
             
     #Add strings
-    if not scorepoints['effect_present']:
+    if not scorepoints['effect_present'] and scorepoints['strength_present']:
         if num < 2:
             output.append(' -de effectgrootte wordt niet genoemd')
         else:
             output.append(' -de effectgrootte van factor '+str(num)+' wordt niet genoemd')
-    if scorepoints['effect_present'] and not scorepoints['strength_present']:
+    if not scorepoints['strength_present']:
         if num < 2:
              output.append(' -de sterkte van het effect wordt niet genoemd')
         else:
@@ -538,9 +542,9 @@ def detect_name(doc:Doc, solution:Dict) -> List[str]:
     if solution['assignment_type'] == 2:
         names = [('t','-','toets','voor','gekoppelde','paren'),('within','-','subject','t','-','test')]
     if solution['assignment_type'] == 3:
-        names = [('one','-','way','anova'), ('1','-','factor','anova')]
+        names = [('one','-','way','anova'), ('1-factor','anova')]
     if solution['assignment_type'] == 4:
-        names = [('two','-','way','anova'), ('2','-','factor','anova')]
+        names = [('two','-','way','anova'), ('2-factor','anova')]
     if solution['assignment_type'] == 5:
         names = [('repeated','-','measures','anova'), ('repeated','-','measures','-','anova')]
     if solution['assignment_type'] == 6:
@@ -788,9 +792,15 @@ def split_grade_mregression(text:str, solution:dict) -> str:
     else:
         return 'Er ontbreekt nog wat aan je antwoord, namelijk:' + re.sub(r'<br>(<br>)+', '<br>', output)
     
-import spacy
+
 def print_dissection(text:str):
+    import spacy
     nl_nlp = spacy.load('nl')
     doc = nl_nlp(text)
     print([(x.text, x.dep_) for x in doc])
+    
+def load_dissection():
+    import spacy
+    from spacy import displacy
+    nlp = spacy.load('nl')
         
