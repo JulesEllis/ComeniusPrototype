@@ -78,8 +78,8 @@ def bigform():
             prev:bool = controller.prevable
             display = controller.protocol[0][0]
             form = BaseForm()
-            #controller.analysis_type = Task.TEXT_FIELD
-            return render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=9, varnames=varnames)
+            field = controller.submit_field.value
+            return render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=field, varnames=varnames)
         else:
             print('ERROR: INVALID METHOD')
     #elif flask.request.method == 'GET':
@@ -106,8 +106,8 @@ def smallform():
             prev :bool = controller.prevable
             display = controller.protocol[0][0]
             form = BaseForm()
-            #controller.analysis_type = Task.TEXT_FIELD
-            return render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=9, varnames=varnames)
+            field = controller.submit_field.value
+            return render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=field, varnames=varnames)
         else:
             print('ERROR: INVALID METHOD')
     #elif flask.request.method == 'GET':
@@ -134,8 +134,8 @@ def reportform():
             display = controller.protocol[0][0]
             form = BaseForm()
             form.inputtext.data = ""
-            #controller.analysis_type = Task.TEXT_FIELD
-            return render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=9, varnames=varnames)
+            field = controller.submit_field.value
+            return render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=field, varnames=varnames)
         else:
             print('ERROR: INVALID METHOD')
     #elif flask.request.method == 'GET':

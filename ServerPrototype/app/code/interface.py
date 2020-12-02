@@ -164,6 +164,8 @@ class OuterController:
             if process == Process.INTRO: #If intro protocol:
                 self.protocol = self.choice_protocol()
                 self.submit_field = Task.CHOICE
+                self.formmode = False
+                self.analysis_type = Task.INTRO
                 return self.protocol[0][0]
             elif process == Process.CHOOSE_ANALYSIS: #If choice protocol index 1 or return protocol index 2
                 control: bool = random.choice([True,False])
@@ -215,18 +217,18 @@ class OuterController:
                     if analysis == 'Repeated Measures Anova':
                         self.protocol = self.rmanova_protocol()
                 if report == 'Elementair rapport (tentamenmodus)':
-                    self.submit_field = Task.CHOICE
+                    self.submit_field = Task.INTRO
                     self.skipable = False
                     self.formmode = True
-                    self.protocol = self.choice_protocol()
+                    self.protocol = self.completion_protocol()
                 if report == 'Beknopt rapport':
-                    self.submit_field = Task.CHOICE
+                    self.submit_field = Task.INTRO
                     self.skipable = False
                     self.formmode= True
                     self.assignment = self.assignments.create_report(control, self.analysis_type.value)
                     self.analysis_type = Task.REPORT
                     self.solution = self.assignment
-                    self.protocol = self.choice_protocol()
+                    self.protocol = self.completion_protocol()
                     instruction = self.assignments.print_report(self.assignment)
                     return instruction
                 return instruction + '<br>' + self.protocol[self.index][0]
@@ -253,9 +255,9 @@ class OuterController:
                 else:
                     self.skipable = False
                     self.prevable = False
-                    self.protocol = self.choice_protocol()
+                    self.protocol = self.completion_protocol()
                     self.index = 0
-                    self.submit_field = Task.CHOICE
+                    self.submit_field = Task.INTRO
                     if input_text == 'skip':
                         return self.protocol[self.index][0]
                     else:
@@ -285,6 +287,10 @@ class OuterController:
                 
         def intro_protocol(self) -> List[Tuple]:
             return [('Hoi, met dit programma kan je elementaire en beknopte rapporten oefenen. Klik op de enter-knop om verder te gaan', 
+                     scan_dummy, [], Process.INTRO)]
+    
+        def completion_protocol(self) -> List[Tuple]:
+            return [('Gefeliciteerd, je rapport is af! Klik op de knop hieronder om verder te gaan', 
                      scan_dummy, [], Process.INTRO)]
             
         def choice_protocol(self) -> List[Tuple]:

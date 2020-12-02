@@ -601,12 +601,14 @@ def scan_decision_rmanova(doc:Doc, solution:dict, num:int=1, prefix=True, elemen
     
 def scan_interpretation(doc:Doc, solution:dict, anova:bool, num:int=1, prefix=True):
     output = ['Er ontbreekt nog wat aan je antwoord, namelijk:'] if prefix else []
+    control:bool = solution['control']
+    primary_checks:list = ['primaire','eerste'] if not control else [solution['dependent']]
     unk_sents = [x for x in doc.sents if any([y in [z.text for z in x] for y in ['mogelijk','mogelijke','verklaring','verklaringen']])]
     if unk_sents != []:
         output.extend(detect_unk(unk_sents[0], solution))
     else:
         output.append(' -niet genoemd hoeveel mogelijke verklaringen er zijn')
-    primair_sents = [x for x in doc.sents if 'primaire' in [y.text for y in x]]
+    primair_sents = [x for x in doc.sents if any([z in [y.text for y in x] for z in primary_checks])]
     if primair_sents != []:
         output.extend(detect_primary(primair_sents[0], solution, num))
     else:
@@ -626,12 +628,14 @@ def scan_interpretation(doc:Doc, solution:dict, anova:bool, num:int=1, prefix=Tr
     
 def scan_interpretation_anova(doc:Doc, solution:dict, num:int=3, prefix=True):
     output = ['Er ontbreekt nog wat aan je antwoord, namelijk:'] if prefix else []
+    control:bool = solution['control']
+    primary_checks:list = ['primaire','eerste'] if not control else [solution['dependent']]
     unk_sents = [x for x in doc.sents if 'mogelijk' in [y.text for y in x] or 'mogelijke' in [y.text for y in x]]
     if unk_sents != []:
         output.extend(detect_unk(unk_sents[0], solution))
     else:
         output.append(' -niet genoemd hoeveel mogelijke interpretaties er zijn')
-    primair_sents = [x for x in doc.sents if 'primaire' in [y.text for y in x]]
+    primair_sents = [x for x in doc.sents if any([z in [y.text for y in x] for z in primary_checks])]
     if primair_sents != []:
         output.extend(detect_primary_interaction(primair_sents[0], solution))
     else:
