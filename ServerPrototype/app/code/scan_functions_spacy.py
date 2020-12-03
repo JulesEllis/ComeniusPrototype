@@ -291,10 +291,10 @@ def detect_strength(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]:
     if effect != []:
         e_root = effect[num-1] if num <= len(effect) else effect[0]
         e_tree = descendants(e_root)
-        scorepoints['effect_present'] = e_root.head.text == 'effect' or effect in [x.text for x in e_tree]
+        scorepoints['effect_present'] = e_root.head.text == 'effect' or 'effect' in [x.text for x in e_tree]
         scorepoints['strength_present'] = True #any([x in [y.text for y in e_tree] for x in ['klein','matig','sterk']]) or e_root.head.text in ['klein','matig','sterk']
         scorepoints['right_strength'] = e_root.text == gold_strength #in [x.text for x in e_tree] or e_root.head.text == gold_strength
-            
+    
     #Add strings
     if not scorepoints['effect_present'] and scorepoints['strength_present']:
         if num < 2:

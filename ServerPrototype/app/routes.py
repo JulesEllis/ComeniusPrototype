@@ -25,7 +25,8 @@ def index():
         if form.submit.data:
             output_text : str = controller.update(textdict)
             if controller.assignment != None: #Retrieve variable names
-                varnames:list = controller.assignment['data']['varnames']
+                a = controller.assignment
+                varnames:list = [[a['independent']] + a['levels']] if a['assignment_type'] != 4 else [[a['independent']] + a['levels'],[a['independent2']] + a['levels2']]
             form_shape = controller.analysis_type.value
             if controller.formmode and form_shape > 0 and form_shape < 3:
                 form = SmallForm()
@@ -47,7 +48,8 @@ def index():
         if form.prev.data:
             output_text : str = controller.update({'inputtext': 'prev'})
         if controller.assignment != None: #Retrieve variable names
-                varnames = controller.assignment['data']['varnames']
+            a = controller.assignment
+            varnames:list = [[a['independent']] + a['levels']] if a['assignment_type'] != 4 else [[a['independent']] + a['levels'],[a['independent2']] + a['levels2']]
         if controller.wipetext:
             form.inputtext.data = ""
             form.inputtextlarge.data = ""
@@ -64,7 +66,8 @@ def index():
 def bigform():
     form = BigForm()
     controller : OuterController = OuterController()
-    varnames = controller.assignment['data']['varnames']
+    a = controller.assignment
+    varnames:list = [[a['independent']] + a['levels']] if a['assignment_type'] != 4 else [[a['independent']] + a['levels'],[a['independent2']] + a['levels2']]
         
     if flask.request.method == 'POST':
         if form.submit.data:
@@ -92,7 +95,8 @@ def bigform():
 def smallform():
     form = SmallForm()
     controller : OuterController = OuterController()
-    varnames = controller.assignment['data']['varnames']
+    a = controller.assignment
+    varnames:list = [[a['independent']] + a['levels']] if a['assignment_type'] != 4 else [[a['independent']] + a['levels'],[a['independent2']] + a['levels2']]
         
     if flask.request.method == 'POST':
         if form.submit.data:
@@ -120,8 +124,9 @@ def smallform():
 def reportform():
     form = ReportForm()
     controller : OuterController = OuterController()
-    varnames = controller.assignment['data']['varnames']
-        
+    a = controller.assignment
+    varnames:list = [[a['independent']] + a['levels']] if a['assignment_type'] != 4 else [[a['independent']] + a['levels'],[a['independent2']] + a['levels2']]
+    
     if flask.request.method == 'POST':
         if form.submit.data:
             textfields = [x for x in dir(form) if str(type(form.__getattribute__(x))) == "<class 'wtforms.fields.simple.TextAreaField'>"]
