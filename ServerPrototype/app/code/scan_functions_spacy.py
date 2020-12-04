@@ -105,6 +105,7 @@ def detect_comparison(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]
     output:List[str] = []
     tokens = [y.text for y in sent]
     levels=[x.lower() for x in solution['levels' + str(num) if num > 1 else 'levels']]
+    level_syns = solution['level_syns'] if num == 1 else solution['level' + str(num) + '_syns']
     
     #Controleer input
     gold_comp = 'ongelijk' if anova else ['ongelijk','groter','kleiner'][solution['hypothesis']]
@@ -129,7 +130,7 @@ def detect_comparison(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]
         #meanroot = mean[0] if any(mean) else mean_2[0] if any(mean_2) else None
         #meantree:list = descendants(meanroot)
     scorepoints['pop_present'] = any(mean_2) or 'populatie' in tokens
-    level_bools:list[bool] = [x in tokens for x in levels]
+    level_bools:list[bool] = [levels[i] in tokens or any([y in tokens for y in level_syns[i]]) for i in range(len(levels))]
     scorepoints['level_present'] = any(level_bools) #or scorepoints['level_present']
     scorepoints['both_present'] = all(level_bools)# or scorepoints['both_present']
     
@@ -338,6 +339,7 @@ def detect_primary(sent:Doc, solution:dict, num:int=1) -> List[str]:
     criteria:list = ['cause', 'ind', 'dep', 'prim', 'neg', 'alignment']
     scorepoints = dict([(x,False) for x in criteria])
     i_key: str = 'independent' + str(num) if num > 1 else 'independent'
+    syn_key: str = 'ind_syns' if num == 1 else 'ind' + str(num) + '_syns'
     independent = solution[i_key].lower()
     dependent = solution['dependent'].lower()
     control: bool = solution['control']
@@ -349,11 +351,10 @@ def detect_primary(sent:Doc, solution:dict, num:int=1) -> List[str]:
     scorepoints['prim'] = 'primaire' in tokens if not control else True
     scorepoints['neg'] = bool(negation_counter(tokens) % 2) != rejected
     causeverbs = [x for x in sent if x.text in ['veroorzaakt', 'heeft', 'beinvloedt', 'beinvloed','verantwoordelijk', 'oorzaak']] 
-    if any(causeverbs):
-        #effect_children = descendants(causeverbs[0])
+    if any(causeverbs): #effect_children = descendants(causeverbs[0])
         scorepoints['cause'] = True
-    scorepoints['dep'] = dependent in [x.text for x in sent]
-    scorepoints['ind'] = independent in [x.text for x in sent]
+    scorepoints['dep'] = dependent in tokens or any([x in tokens for x in solution[syn_key]])
+    scorepoints['ind'] = independent in tokens or any([x in tokens for x in solution['dep_syns']])
     if scorepoints['ind'] and scorepoints['dep']:
         indynode = sent[tokens.index(independent.lower())]
         depnode = sent[tokens.index(dependent.lower())]
@@ -392,14 +393,14 @@ def detect_primary_interaction(sent:Doc, solution:dict) -> List[str]:
     scorepoints = dict([(x,False) for x in criteria])
     tokens = [x.text for x in sent]
     output:list = []
-    var1levels:list[bool] = [x in tokens for x in [x.lower() for x in solution['levels']]]
-    var2levels:list[bool] = [x in tokens for x in [x.lower() for x in solution['levels2']]]
+    var1levels:list[bool] = [solution['levels'][i] in tokens or any([y in tokens for y in solution['level_syns'][i]]) for i in range(len(solution['levels']))]
+    var2levels:list[bool] = [solution['levels2'][i] in tokens or any([y in tokens for y in solution['level2_syns'][i]]) for i in range(len(solution['levels2']))]
     rejected = solution['p'][2] < 0.05
     
     # Fill scorepoints
-    scorepoints['dep'] = solution['dependent'].lower() in tokens
-    scorepoints['indy1'] = solution['independent'].lower() in tokens
-    scorepoints['indy2'] = solution['independent2'].lower() in tokens
+    scorepoints['dep'] = solution['dependent'].lower() in tokens or any([x in tokens for x in solution['dep_syns']])
+    scorepoints['indy1'] = solution['independent'].lower() in tokens or any([x in tokens for x in solution['ind_syns']])
+    scorepoints['indy2'] = solution['independent2'].lower() in tokens or any([x in tokens for x in solution['ind2_syns']])
     scorepoints['same'] = 'dezelfde' in tokens or 'gelijk' in tokens or 'gelijke' in tokens
     scorepoints['negation'] = bool(negation_counter(tokens) % 2) == rejected
     if scorepoints['dep']:
@@ -441,6 +442,7 @@ def detect_alternative(sent:Doc, solution:dict, num:int=1) -> List[str]:
     criteria = ['alt','ind','dep','cause','relation_type']
     scorepoints = dict([(x,False) for x in criteria])
     i_key: str = 'independent' + str(num) if num > 1 else 'independent'
+    syn_key: str = 'ind_syns' if num == 1 else 'ind' + str(num) + '_syns'
     independent = solution[i_key].lower()
     dependent = solution['dependent'].lower()
     control: bool = solution['control']
@@ -455,9 +457,8 @@ def detect_alternative(sent:Doc, solution:dict, num:int=1) -> List[str]:
         effect_children = descendants(causeverbs[0])
         tokens2 = [x.text for x in effect_children]
         scorepoints['cause'] = True
-        scorepoints['ind'] = independent in tokens2
-        scorepoints['dep'] = dependent in tokens2
-    scorepoints['dep'] = scorepoints['dep'] or dependent in [x.text for x in sent]
+        scorepoints['ind'] = independent in tokens or any([x in tokens2 for x in solution[syn_key]])
+    scorepoints['dep'] = dependent in tokens or any([x in tokens for x in solution['dep_syns']])
     if scorepoints['ind'] and scorepoints['dep']:
         indynode = sent[tokens.index(independent.lower())]
         depnode = sent[tokens.index(dependent.lower())]

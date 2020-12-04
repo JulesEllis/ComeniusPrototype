@@ -57,6 +57,7 @@ def scan_indep(text :str, solution :Dict) -> [bool, str]:
         if pair[1] == 'measure':
             if pair[0][:-1] + 've' in text:
                 scorepoints[pair[1]] = True
+    scorepoints['var'] = scorepoints['var'] or any([x in text for x in solution['ind_syns']])
     
     #Determine the response of the chatbot
     if False in list(scorepoints.values()):
@@ -77,10 +78,11 @@ def scan_indep_anova(text: str, solution: Dict, num: int=1, between_subject=True
     #Determine which of the necessary elements are present in the answer
     text: List[str] = nltk.word_tokenize(text.lower())
     n_key: str = 'independent' if num == 1 else 'independent' + str(num)
+    syn_key: str = 'ind_syns' if num == 1 else 'ind' + str(num) + '_syns'
     l_key: str = 'levels' if num == 1 else 'levels' + str(num)
     scorepoints: Dict = {'factor': 'factor' in text, 
                    'domain': 'between-subject' in text if between_subject else 'within-subject' in text, 
-                   'name': solution[n_key].lower() in text, 
+                   'name': solution[n_key].lower() in text or any([x in text for x in solution[syn_key]]), 
                    'levels': [level.lower() in text for level in solution[l_key]]}
     
     #Determine the response of the chatbot
@@ -111,6 +113,7 @@ def scan_dep(text: str, solution: Dict) -> [bool, str]:
         if pair[1] == 'measure':
             if pair[0][:-1] + 've' in text:
                 scorepoints[pair[1]] = True
+    scorepoints['var'] = scorepoints['var'] or any([x in text for x in solution['dep_syns']])
     
     #Determine the response of the chatbot
     if False in list(scorepoints.values()):

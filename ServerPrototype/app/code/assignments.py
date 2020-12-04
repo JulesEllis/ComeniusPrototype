@@ -398,15 +398,14 @@ class Assignments:
             diff: List[float] = [numbers[0][i] - numbers[1][i] for i in range(len(numbers[0]))]
         
         #Determine variable names and types
-        if between_subject:
-            solution['independent']: str = 'Beroep'
-        else:
-            solution['independent']: str = 'Tijdstip'
-            
-        solution['dependent']: str = assignment['dependent']
+        solution['independent'] = assignment['independent']
+        solution['ind_syns'] = assignment['ind_syns']
+        solution['levels'] = assignment['levels']
+        solution['level_syns'] = assignment['level_syns']
+        solution['dependent'] = assignment['dependent']
         solution['dependent_measure']: str = 'kwantitatief'
         solution['independent_measure']: str = 'kwalitatief'
-        solution['levels']: List[str] = assignment['levels']
+        solution['dep_syns'] = assignment['dep_syns']
         
         #Determine null hypothesis and control measure
         sign: List[str] = ['==','<=','>='][assignment['hypothesis']]
@@ -470,15 +469,21 @@ class Assignments:
         two_way: bool = assignment['two_way']
         solution['assignment_type'] = assignment['assignment_type']
         
-        solution['independent']: str = assignment['independent']
-        solution['dependent']: str = assignment['dependent']
+        solution['independent'] = assignment['independent']
+        solution['ind_syns'] = assignment['ind_syns']
+        solution['levels'] = assignment['levels']
+        solution['level_syns'] = assignment['level_syns']
+        solution['dependent'] = assignment['dependent']
+        solution['dep_syns'] = assignment['dep_syns']
         solution['dependent_measure']: str = 'kwantitatief'
         solution['dependent_n_measure']: int = 1 #Aantal metingen per persoon
-        solution['levels']: List[str] = assignment['levels']
+        solution['independent_measure']: str = 'kwalitatief'
         solution['control']: bool = assignment['control']
         if two_way:
-            solution['independent2'] = assignment['independent2']
-            solution['levels2'] = assignment['levels2']
+            solution['independent2'] = assignment['independent']
+            solution['ind2_syns'] = assignment['ind_syns']
+            solution['levels2'] = assignment['levels']
+            solution['level2_syns'] = assignment['level_syns']
         
         #One-way statistics
         mean: float = np.mean(data['means'])
@@ -548,11 +553,15 @@ class Assignments:
     def solve_rmanova(self, assignment: Dict, solution: Dict) -> Dict: 
         data: Dict = assignment['data']
         n_conditions = len(data['means'])
-        solution['independent']: str = assignment['independent']
+        solution['independent'] = assignment['independent']
+        solution['ind_syns'] = assignment['ind_syns']
         solution['levels'] = assignment['levels']
-        solution['dependent']: str = assignment['dependent']
+        solution['level_syns'] = assignment['level_syns']
+        solution['dependent'] = assignment['dependent']
+        solution['dep_syns'] = assignment['dep_syns']
         solution['dependent_measure']: str = 'kwantitatief'
         solution['dependent_n_measure']: int = n_conditions #Aantal metingen per persoon
+        solution['independent_measure']: str = 'kwalitatief'
         solution['control']: bool = assignment['control']
         solution['assignment_type'] = assignment['assignment_type']
         
