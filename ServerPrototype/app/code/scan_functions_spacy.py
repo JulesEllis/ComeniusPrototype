@@ -657,7 +657,7 @@ def scan_interpretation_anova(doc:Doc, solution:dict, num:int=3, prefix=True):
 def scan_predictors(doc:Doc, solution:dict, prefix:bool=True):
     tokens = [x.text for x in doc]
     output = ['Er ontbreekt nog wat aan je antwoord, namelijk:'] if prefix else []
-    varnames = [x.lower() for x in solution['data']['varnames'][1:]]
+    varnames = [x.lower() for x in solution['data']['predictoren'][1:]]
     for x in varnames:
         if ' ' in x:
             names = x.split()
