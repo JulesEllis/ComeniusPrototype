@@ -266,7 +266,7 @@ def scan_hypothesis(text: str, solution: Dict, num: int=1) -> [bool, str]:
     scorepoints: Dict[str, bool] = {'H0': 'h0:' in tokens,
                    'sign': sign in tokens, 
                    'order': True}
-    if solution['hypothesis'] == 0 and '=' in tokens:
+    if sign == '==' and '=' in tokens:
         scorepoints['sign'] = True
     
     if False in list(scorepoints.values()) + mus:
