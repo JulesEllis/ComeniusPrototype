@@ -286,11 +286,11 @@ class OuterController:
                 print('ERROR SWITCHING PROTOCOLS')
                 
         def intro_protocol(self) -> List[Tuple]:
-            return [('Hoi, met dit programma kan je elementaire en beknopte rapporten oefenen. Klik op de enter-knop om verder te gaan', 
+            return [('Hoi, met dit programma kan je elementaire en beknopte rapporten oefenen. Klik op de enter-knop om verder te gaan.', 
                      scan_dummy, [], Process.INTRO)]
     
         def completion_protocol(self) -> List[Tuple]:
-            return [('Gefeliciteerd, je rapport is af! Klik op de knop hieronder om verder te gaan', 
+            return [('Gefeliciteerd, je rapport is af! Klik op de knop hieronder om verder te gaan.', 
                      scan_dummy, [], Process.INTRO)]
             
         def choice_protocol(self) -> List[Tuple]:

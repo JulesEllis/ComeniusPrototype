@@ -266,12 +266,8 @@ def scan_hypothesis(text: str, solution: Dict, num: int=1) -> [bool, str]:
     scorepoints: Dict[str, bool] = {'H0': 'h0:' in tokens,
                    'sign': sign in tokens, 
                    'order': True}
-    
-    #if '==' not in sol_tokens:
-    #    if scorepoints['H0'] and scorepoints['sign'] and False not in mus:
-    #        for i in range(4):
-    #            if not tokens[i] == sol_tokens[i]:
-    #                scorepoints['order'] = False
+    if solution['hypothesis'] == 0 and '=' in tokens:
+        scorepoints['sign'] = True
     
     if False in list(scorepoints.values()) + mus:
         output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
