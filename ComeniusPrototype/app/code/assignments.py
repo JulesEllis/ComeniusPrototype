@@ -67,16 +67,17 @@ class Assignments:
             levels = ['dag','nacht']
             ind_syns = ['tijdstippen']
             level_syns = [['dagen'], ['nachten']]
-            
+        dependent = 'reactietijd'
+        
         #Create the assignment description
         report_type = 'elementair' if elementary else 'beknopt'
         instruction: str = 'Maak een '+report_type+' rapport van onderstaande data voor de hypothese dat '
         if hyp_type == 0:
-            instruction += 'de reactiesnelheid bij het ' + independent + ' ' + levels[0] + ' gemiddeld ongelijk is aan die bij ' + levels[1] + '.<br><br>'
+            instruction += 'de '+dependent+' bij het ' + independent + ' ' + levels[0] + ' gemiddeld ongelijk is aan die bij ' + levels[1] + '.<br><br>'
         if hyp_type == 1:
-            instruction += 'de reactiesnelheid bij het ' + independent + ' ' + levels[0] + ' gemiddeld groter is dan die bij ' + levels[1] + '.<br><br>'
+            instruction += 'de '+dependent+' bij het ' + independent + ' ' + levels[0] + ' gemiddeld groter is dan die bij ' + levels[1] + '.<br><br>'
         if hyp_type == 2:
-            instruction += "de reactiesnelheid bij het " + independent + " " + levels[0] + " gemiddeld kleiner is dan die bij " + levels[1] + ".<br><br>"
+            instruction += "de "+dependent+" bij het " + independent + " " + levels[0] + " gemiddeld kleiner is dan die bij " + levels[1] + ".<br><br>"
         instruction += "De persoon moet een tijdje achter een beeldscherm zo snel mogelijk op een knop" +" drukken zodra een wit vierkantje veranderd in een zwart vierkantje. De milliseconden tussen het veranderen" + " van het beeld en het indrukken van de knop worden gemeten en opgeteld. "        
         if between_subject:
             instruction += 'De proefpersonen krijgen allemaal ofwel een ' + levels[0] + ' ofwel een '+ levels[1] + ' als stimulus te zien. De niveaus zijn: ' + levels[0] + '/' + levels[1] + '. Voer je antwoorden alsjeblieft tot op 2 decimalen in'\
@@ -84,7 +85,7 @@ class Assignments:
             if control:
                 instruction += 'De personen van elk beroep zijn willekeurig geselecteerd. '
         else:
-            instruction += 'De proefpersonen werden tweemaal getoetst op hun reactiesnelheid, een keer overdag en een keer s\'nachts. ' + 'De niveaus zijn dag/nacht. Voer je antwoorden alsjeblieft tot op 2 decimalen in'\
+            instruction += 'De proefpersonen werden tweemaal getoetst op hun '+dependent+', een keer overdag en een keer s\'nachts. ' + 'De niveaus zijn dag/nacht. Voer je antwoorden alsjeblieft tot op 2 decimalen in'\
             ' en gebruik dezelfde vergelijking van de gemiddelden in je antwoord als in de vraagstelling staat (e.g. "groter" of "kleiner"). '
             if control:
                 instruction += 'De volgorde van de toetsen was gerandomiseerd. '
@@ -94,8 +95,8 @@ class Assignments:
                'hypothesis': hyp_type,
                'between_subject': between_subject,
                'control': control,
-               'dependent': 'reactiesnelheid',
-               'dep_syns': ['reactiesnelheden'],
+               'dependent': dependent,
+               'dep_syns': ['reactietijden'],
                'assignment_type':1 if between_subject else 2,
                'independent':independent,
                'levels':levels,
@@ -480,10 +481,10 @@ class Assignments:
         solution['independent_measure']: str = 'kwalitatief'
         solution['control']: bool = assignment['control']
         if two_way:
-            solution['independent2'] = assignment['independent']
-            solution['ind2_syns'] = assignment['ind_syns']
-            solution['levels2'] = assignment['levels']
-            solution['level2_syns'] = assignment['level_syns']
+            solution['independent2'] = assignment['independent2']
+            solution['ind2_syns'] = assignment['ind2_syns']
+            solution['levels2'] = assignment['levels2']
+            solution['level2_syns'] = assignment['level2_syns']
         
         #One-way statistics
         mean: float = np.mean(data['means'])

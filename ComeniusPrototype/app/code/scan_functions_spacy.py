@@ -126,9 +126,6 @@ def detect_comparison(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]
     mean = [x for x in sent if x.text == 'gemiddelde' or x.text == 'gemiddelden']
     mean_2 = [x for x in sent if x.text == 'populatiegemiddelde' or x.text == 'gemiddelden']
     scorepoints['mean_present'] = any(mean) or any(mean_2)
-    #if scorepoints['mean_present']:
-        #meanroot = mean[0] if any(mean) else mean_2[0] if any(mean_2) else None
-        #meantree:list = descendants(meanroot)
     scorepoints['pop_present'] = any(mean_2) or 'populatie' in tokens
     level_bools:list[bool] = [levels[i] in tokens or any([y in tokens for y in level_syns[i]]) for i in range(len(levels))]
     scorepoints['level_present'] = any(level_bools) #or scorepoints['level_present']
@@ -392,6 +389,7 @@ def detect_primary_interaction(sent:Doc, solution:dict) -> List[str]:
     criteria:list = ['interaction', 'negation', 'indy1', 'indy2', 'dep', 'level_present', 'both_levels', 'same']
     scorepoints = dict([(x,False) for x in criteria])
     tokens = [x.text for x in sent]
+    print([(x.text, x.dep_) for x in sent])
     output:list = []
     var1levels:list[bool] = [solution['levels'][i] in tokens or any([y in tokens for y in solution['level_syns'][i]]) for i in range(len(solution['levels']))]
     var2levels:list[bool] = [solution['levels2'][i] in tokens or any([y in tokens for y in solution['level2_syns'][i]]) for i in range(len(solution['levels2']))]
@@ -401,10 +399,10 @@ def detect_primary_interaction(sent:Doc, solution:dict) -> List[str]:
     scorepoints['dep'] = solution['dependent'].lower() in tokens or any([x in tokens for x in solution['dep_syns']])
     scorepoints['indy1'] = solution['independent'].lower() in tokens or any([x in tokens for x in solution['ind_syns']])
     scorepoints['indy2'] = solution['independent2'].lower() in tokens or any([x in tokens for x in solution['ind2_syns']])
-    scorepoints['same'] = 'dezelfde' in tokens or 'gelijk' in tokens or 'gelijke' in tokens
+    scorepoints['same'] = 'dezelfde' in tokens or 'gelijk' in tokens or 'gelijke' in tokens or 'hetzelfde' in tokens
     scorepoints['negation'] = bool(negation_counter(tokens) % 2) == rejected
     if scorepoints['dep']:
-        dep_node = sent[tokens.index(solution['dependent'].lower())]    
+        dep_node = sent[tokens.index(solution['dependent'].lower())]
         if scorepoints['indy1']:
             indy1node = sent[tokens.index(solution['independent'].lower())]
             if (indy1node.dep_ == 'nsubj' and dep_node.dep_ == 'obj') or (indy1node.dep_ == 'obj' and dep_node.dep_ == 'ROOT') or (indy1node.dep_ == 'nsubj' and dep_node.dep_ == 'nmod'):
@@ -631,6 +629,7 @@ def scan_interpretation_anova(doc:Doc, solution:dict, num:int=3, prefix=True):
     output = ['Er ontbreekt nog wat aan je antwoord, namelijk:'] if prefix else []
     control:bool = solution['control']
     primary_checks:list = ['primaire','eerste'] if not control else [solution['dependent']]
+    print(primary_checks)
     unk_sents = [x for x in doc.sents if 'mogelijk' in [y.text for y in x] or 'mogelijke' in [y.text for y in x]]
     if unk_sents != []:
         output.extend(detect_unk(unk_sents[0], solution))
