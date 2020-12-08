@@ -67,7 +67,7 @@ def detect_significance(doc:Doc, solution:dict, num:int=1) -> List[str]:
     scorepoints = {'effect': False,
                    'sign': False,
                    'neg': False
-            }
+                   }
     output:List[str] = []
     rejected:bool = solution['p'][num-1] < 0.05
     h0_output:list = detect_h0(doc, solution, num)
@@ -313,22 +313,22 @@ def detect_strength(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]:
 
 def detect_unk(sent:Doc, solution:dict):
     #Define variables
-    criteria:list=['unk','two']
+    criteria:list=['two']#['unk','two']
     scorepoints = dict([(x,False) for x in criteria])
     control = solution['control']
     tokens = [x.text for x in sent]
     output:List[str] = []
     
     #Controleer input
-    scorepoints['unk'] = 'onbekend' in tokens if not control else True
+    #scorepoints['unk'] = 'onbekend' in tokens if not control else True
     scorepoints['two'] = ('een' in tokens) or ('één' in tokens) or ('1' in tokens) if control else \
                     ('twee' in tokens) or ('meerdere' in tokens) or ('2' in tokens)
     
     #Add strings
     if not scorepoints['two']:
         output.append(' -niet juist genoemd hoeveel mogelijke interpretaties er zijn')
-    if not scorepoints['unk']:
-        output.append(' -niet gesteld dat de oorzaak van het effect onbekend is')
+    #if not scorepoints['unk']:
+    #    output.append(' -niet gesteld dat de oorzaak van het effect onbekend is')
     return output
     
 def detect_primary(sent:Doc, solution:dict, num:int=1) -> List[str]:
@@ -339,7 +339,7 @@ def detect_primary(sent:Doc, solution:dict, num:int=1) -> List[str]:
     syn_key: str = 'ind_syns' if num == 1 else 'ind' + str(num) + '_syns'
     independent = solution[i_key].lower()
     dependent = solution['dependent'].lower()
-    control: bool = solution['control']
+    control: bool = solution['control'] if num < 2 else solution['control'+str(num)]
     rejected = solution['p'][num-1] < 0.05
     tokens = [x.text for x in sent] 
     output:List[str] = []
@@ -389,7 +389,6 @@ def detect_primary_interaction(sent:Doc, solution:dict) -> List[str]:
     criteria:list = ['interaction', 'negation', 'indy1', 'indy2', 'dep', 'level_present', 'both_levels', 'same']
     scorepoints = dict([(x,False) for x in criteria])
     tokens = [x.text for x in sent]
-    print([(x.text, x.dep_) for x in sent])
     output:list = []
     var1levels:list[bool] = [solution['levels'][i] in tokens or any([y in tokens for y in solution['level_syns'][i]]) for i in range(len(solution['levels']))]
     var2levels:list[bool] = [solution['levels2'][i] in tokens or any([y in tokens for y in solution['level2_syns'][i]]) for i in range(len(solution['levels2']))]
@@ -443,7 +442,7 @@ def detect_alternative(sent:Doc, solution:dict, num:int=1) -> List[str]:
     syn_key: str = 'ind_syns' if num == 1 else 'ind' + str(num) + '_syns'
     independent = solution[i_key].lower()
     dependent = solution['dependent'].lower()
-    control: bool = solution['control']
+    control: bool = solution['control'] if num < 2 else solution['control'+str(num)]
     #rejected: bool = solution['p'][num-1] < 0.05
     tokens = [x.text for x in sent]
     output:List[str] = []
@@ -576,7 +575,7 @@ def scan_decision_anova(doc:Doc, solution:dict, num:int=1, prefix=True, elementa
     else:
         output.extend(detect_significance(doc, solution, num))
     output.extend(detect_interaction(doc, solution, True))
-    #output.extend(detect_strength(doc, solution, True, num))
+    output.extend(detect_strength(doc, solution, True, num))
     correct:bool = len(output) == 1 if prefix else output == []
     if correct:
         return False, 'Mooi, deze interpretatie klopt. ' if prefix else ''
@@ -600,7 +599,7 @@ def scan_decision_rmanova(doc:Doc, solution:dict, num:int=1, prefix=True, elemen
     
 def scan_interpretation(doc:Doc, solution:dict, anova:bool, num:int=1, prefix=True):
     output = ['Er ontbreekt nog wat aan je antwoord, namelijk:'] if prefix else []
-    control:bool = solution['control']
+    control: bool = solution['control'] if num < 2 else solution['control'+str(num)]
     primary_checks:list = ['primaire','eerste'] if not control else [solution['dependent']]
     unk_sents = [x for x in doc.sents if any([y in [z.text for z in x] for y in ['mogelijk','mogelijke','verklaring','verklaringen']])]
     if unk_sents != []:
@@ -627,7 +626,7 @@ def scan_interpretation(doc:Doc, solution:dict, anova:bool, num:int=1, prefix=Tr
     
 def scan_interpretation_anova(doc:Doc, solution:dict, num:int=3, prefix=True):
     output = ['Er ontbreekt nog wat aan je antwoord, namelijk:'] if prefix else []
-    control:bool = solution['control']
+    control:bool = solution['control'] and solution['control2']
     primary_checks:list = ['primaire','eerste'] if not control else [solution['dependent']]
     print(primary_checks)
     unk_sents = [x for x in doc.sents if 'mogelijk' in [y.text for y in x] or 'mogelijke' in [y.text for y in x]]
@@ -641,7 +640,7 @@ def scan_interpretation_anova(doc:Doc, solution:dict, num:int=3, prefix=True):
     else:
         output.append(' -de primaire verklaring wordt niet genoemd')
     # EXPLICIETE ALTERNATIEVE VERKLARINGEN HOEVEN NIET BIJ INTERACTIE, STATISMogelijke alternatieve verklaringen zijn storende variabelen en omgekeerde causaliteitTIEK VOOR DE PSYCHOLOGIE 3 PAGINA 80
-    if not solution['control']:
+    if not control:
         alt_sents = [x for x in doc.sents if 'alternatieve' in [y.text for y in x]]
         if alt_sents != []:
             output.extend(detect_alternative_interaction(alt_sents[0], solution))

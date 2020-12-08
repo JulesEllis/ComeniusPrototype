@@ -93,6 +93,7 @@ class OuterController:
                 output[0].append(scan_indep_anova(textfields['inputtext12'], self.solution, num=2, between_subject=True)[1])
                 output[1].append(scan_dep(textfields['inputtext2'], self.solution)[1])
                 output[2].append(scan_control(textfields['inputtext3'], self.solution)[1])
+                output[2].append(scan_control(textfields['inputtext32'], self.solution, num=2)[1])
                 output[3].append(scan_hypothesis(textfields['inputtext4'], self.solution, num=1)[1])
                 output[3].append(scan_hypothesis(textfields['inputtext42'], self.solution, num=2)[1])
                 output[3].append(scan_hypothesis_anova(textfields['inputtext43'], self.solution)[1])
@@ -170,6 +171,7 @@ class OuterController:
             elif process == Process.CHOOSE_ANALYSIS: #If choice protocol index 1 or return protocol index 2
                 control: bool = random.choice([True,False])
                 hyp_type: int = random.choice([0,1,2])
+                instruction: str = ''
                 #Select analysis
                 if analysis == 'T-toets onafhankelijke variabelen':
                     self.assignment = self.assignments.create_ttest(True, hyp_type, control)
@@ -328,7 +330,8 @@ class OuterController:
                 output :str = [('Beschrijf de eerste onafhankelijke variabele.',scan_indep_anova,[self.solution], Process.QUESTION),
                     ('Beschrijf de tweede onafhankelijke variabele.',scan_indep_anova,[self.solution,2], Process.QUESTION),
                     ('Beschrijf de afhankelijke variabele.',scan_dep,[self.solution], Process.QUESTION),
-                    ('Beschrijf de mate van controle.',scan_control,[self.solution], Process.QUESTION),
+                    ('Beschrijf de mate van controle voor factor 1.',scan_control,[self.solution], Process.QUESTION),
+                    ('Beschrijf de mate van controle voor factor 2.',scan_control,[self.solution, 2], Process.QUESTION),
                     ('Voer de nulhypothese in voor de eerste onafhankelijke variabele, geformuleerd met "H0" en "mu".',scan_hypothesis,[self.solution, 1], Process.QUESTION),
                     ('Voer de nulhypothese in voor de tweede onafhankelijke variabele, geformuleerd met "H0" en "mu".',scan_hypothesis,[self.solution, 2], Process.QUESTION),
                     ('Voer de interactienulhypothese in.',scan_hypothesis_anova,[self.solution], Process.QUESTION),

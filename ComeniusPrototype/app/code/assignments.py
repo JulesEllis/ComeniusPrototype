@@ -123,6 +123,7 @@ class Assignments:
             output['ind2_syns'] = ['stimulusvormen']
             output['levels2'] = ['vierkant','rond']
             output['level2_syns'] = [['vierkante'],['ronde']]
+            output['control2'] = random.choice([True,False])
         
         #Decide the variable names
         report_type = 'elementair' if elementary else 'beknopt'
@@ -532,6 +533,7 @@ class Assignments:
             rejected: Tuple[str] = ('verworpen','ongelijk') if solution['p'][0] < 0.05 else ('behouden', 'gelijk')
             rejected2: Tuple[str] = ('verworpen','ongelijk') if solution['p'][1] < 0.05 else ('behouden', 'gelijk')
             rejected3: Tuple[str] = ('verworpen','wel') if solution['p'][2] < 0.05 else ('behouden', 'geen')
+            solution['control2'] = assignment['control2']
             solution['null']: str = 'h0: mu(' + solution['levels'][0] + ') == mu(' + solution['levels'][1] + ')'
             solution['null2']: str =  'h0: mu(' + solution['levels2'][0] + ') == mu(' + solution['levels2'][1] + ')'
             solution['null3']: str = 'h0: Er is geen interactie tussen ' +solution['independent']  + ' en ' + solution['independent2']

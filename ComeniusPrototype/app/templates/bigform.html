@@ -34,11 +34,17 @@
         </p>
         <span style="color: blue;">{{ displays[1][0] | safe}}</span>
         
-        <p>Voer de mate van controle in
+        <p>Voer de mate van controle in voor factor 1
             {{ form.inputtext3.label }}<br>
             {{ form.inputtext3(size=48) }}
         </p>
         <span style="color: blue;">{{ displays[2][0] | safe}}</span>
+        
+        <p>Voer de mate van controle in voor factor 2
+            {{ form.inputtext32.label }}<br>
+            {{ form.inputtext32(size=48) }}
+        </p>
+        <span style="color: blue;">{{ displays[2][1] | safe}}</span>
         
         <p>Voer de nulhypothese in
             {{ form.inputtext4.label }}<br>

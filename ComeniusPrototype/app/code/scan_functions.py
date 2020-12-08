@@ -126,9 +126,9 @@ def scan_dep(text: str, solution: Dict) -> [bool, str]:
     else:
         return False, 'Mooi, deze beschrijving klopt. '
     
-def scan_control(text: str, solution: Dict) -> [bool, str]:
+def scan_control(text: str, solution: Dict, num:int=1) -> [bool, str]:
     tokens: List[str] = nltk.word_tokenize(text.lower())
-    control: float = solution['control']
+    control: float = solution['control'] if num < 2 else solution['control'+str(num)]
     n_negations: int = negation_counter(tokens)
     scorepoints: Dict[str, bool] = {'experiment': 'experiment' in tokens, 
                      'negations': control != bool(n_negations % 2) if 'experiment' in tokens else True}
@@ -140,7 +140,7 @@ def scan_control(text: str, solution: Dict) -> [bool, str]:
                 return True, 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>-ten onrechte gesteld dat het onderzoek geen experiment is<br>'
             else:
                 return True, 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>-ten onrechte gesteld dat het onderzoek een experiment is<br>'
-    elif 'passief-observerend' in tokens or ('passief' in tokens): #and 'observerend' in tokens):
+    elif 'passief-observerend' in tokens or ('passief' in tokens) or ('passief-geobserveerd' in tokens) : #and 'observerend' in tokens):
         if control == bool(n_negations % 2):
             return False, 'Mooi, deze beschrijving klopt. '
         else:
@@ -381,8 +381,36 @@ def sim_p(solution: Dict, texts: List[str], margin: float=0.01) -> [bool, str]:
                 numbers.append(float(t))
         gold = solution['p'][i] 
         right_number: bool = [n for n in numbers if gold - margin < n and n < gold + margin] != []
-        boundary_1: bool = '0.01' in tokens and round(gold, 2) != 0.01
-        boundary_5: bool = '0.05' in tokens and round(gold, 2) != 0.05
+        boundary_100: bool = '0.01' in tokens and round(gold, 2) != 0.01
+    boundary_050: bool = '0.05' in tokens and round(gold, 2) != 0.05
+    boundary_010: bool = '0.05' in tokens and round(gold, 2) != 0.05
+    boundary_005: bool = '0.05' in tokens and round(gold, 2) != 0.05
+    boundary_001: bool = '0.05' in tokens and round(gold, 2) != 0.05
+    
+    if numbers != []:
+        if right_number and len(numbers) == len(tokens):#Als er alleen cijfers in het veld staan
+            return False, "Mooi, deze waarde van p klopt! "
+        elif any([x in tokens for x in ['<','minder','kleiner']]):
+            if boundary_100 and gold < 0.10 and gold > 0.05:
+                return False, "Mooi, deze waarde van p klopt! "
+            elif boundary_050 and gold < 0.05 and gold > 0.01:
+                return False, "Mooi, deze waarde van p klopt! "
+            elif boundary_010 and gold < 0.01 and gold > 0.005:
+                return False, "Mooi, deze waarde van p klopt! "
+            elif boundary_005 and gold < 0.005 and gold > 0.001:
+                return False, "Mooi, deze waarde van p klopt! "
+            elif boundary_001 and gold < 0.001:
+                return False, "Mooi, deze waarde van p klopt! "
+            else: return True, 'Er ontbreekt nog iets aan je antwoord, namelijk:<br> -de juiste waarde van p'
+        elif any([x in tokens for x in ['>','meer','groter']]):
+            if boundary_050 and gold > 0.05:
+                return False, "Mooi, deze waarde van p klopt! "
+            else: 
+                return True, 'Er ontbreekt nog iets aan je antwoord, namelijk:<br> -de juiste waarde van p'
+        else: 
+            return True, 'Er ontbreekt nog iets aan je antwoord, namelijk:<br> -de juiste waarde van p'
+    else:
+        return True, 'Er ontbreekt nog iets aan je antwoord, namelijk:<br> -de juiste waarde van p'
         
         if numbers != []:
             if right_number and len(numbers) == len(tokens):#Als er alleen cijfers in het veld staan

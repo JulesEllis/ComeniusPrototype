@@ -80,6 +80,7 @@ class BigForm(FlaskForm):
     
     #Fields for 2-way ANOVA only
     inputtext12 = StringField('', validators=[DataRequired()])
+    inputtext32= StringField('', validators=[DataRequired()])
     inputtext42 = StringField('', validators=[DataRequired()])
     inputtext43 = StringField('', validators=[DataRequired()])
     inputtext52 = TextAreaField('', validators=[DataRequired()]) #StringField('', validators=[DataRequired()])
