@@ -23,6 +23,8 @@ class OuterController:
             self.assignments: Assignments = Assignments()
             self.skipable: bool = False
             self.prevable: bool = False
+            self.answerable: bool = False
+            self.answer_triggered: bool = False
             self.formmode: bool = False
             self.index: int = 0
             self.assignment : Dict = None
@@ -37,6 +39,8 @@ class OuterController:
             self.assignments: Assignments = Assignments()
             self.skipable: bool = False
             self.prevable: bool = False
+            self.answerable: bool = False
+            self.answer_triggered: bool = False
             self.formmode: bool = False
             self.index: int = 0
             self.assignment : Dict = None
@@ -207,6 +211,7 @@ class OuterController:
                 self.index = 0
                 if report == 'Elementair rapport (oefenmodus)':
                     self.skipable = True
+                    self.answerable = True
                     self.submit_field = Task.TEXT_FIELD
                     if analysis == 'T-toets onafhankelijke variabelen':
                         self.protocol = self.ttest_protocol()
@@ -257,6 +262,7 @@ class OuterController:
                 else:
                     self.skipable = False
                     self.prevable = False
+                    self.answerable = False
                     self.protocol = self.completion_protocol()
                     self.index = 0
                     self.submit_field = Task.INTRO
@@ -299,65 +305,57 @@ class OuterController:
             return [('Voer hieronder het soort opgave in dat je wil oefenen.<br>',None,[], Process.CHOOSE_ANALYSIS)]
    
         def ttest_protocol(self) -> List[Tuple]:
-            output : List[Tuple] = [('Beschrijf de onafhankelijke variabele.', scan_indep, [self.solution], Process.QUESTION),
-               ('Beschrijf de afhankelijke variabele.', scan_dep, [self.solution], Process.QUESTION),
-               ('Beschrijf de mate van controle.', scan_control, [self.solution], Process.QUESTION),
-               #('Voer de gemiddelden van de data in, gescheiden door een spatie.', scan_numbers, ['means', self.solution, 0.01], Process.QUESTION),
-               #('Voer de standaarddeviaties van de data in, gescheiden door een spatie.', scan_numbers, ['stds', self.solution, 0.01], Process.QUESTION),
-               ('Voer de ondestaande tabel in.',scan_table_ttest,[self.solution],Process.TABLE),
-               ('Voer de nulhypothese in, geformuleerd met "H0" en "mu".',scan_hypothesis,[self.solution, 1], Process.QUESTION),
-               ('Voer de het aantal vrijheidsgraden in.',scan_number,['df', self.solution, 0.01], Process.QUESTION),
-               ('Voer de het ruwe effect in dat je hebt berekend.',scan_number,['raw_effect', self.solution, 0.01], Process.QUESTION),
-               ('Voer de het relatieve effect in dat je hebt berekend.',scan_number,['relative_effect', self.solution, 0.01], Process.QUESTION),
-               ('Voer de T-waarde in.',scan_number,['T', self.solution, 0.02], Process.QUESTION),
-               ('Voer de p-waarde in.',scan_p,[self.solution, 0.02], Process.QUESTION),
-               ('Voer de beslissing in',scan_decision,[self.solution, False], Process.QUESTION)]
-            output.append(('Voer de causale interpretatie in.',scan_interpretation,[self.solution, False], Process.QUESTION))
-            output[-1] = (output[-1][0], output[-1][1], output[-1][2], Process.LAST_QUESTION)
+            output : List[Tuple] = [('Beschrijf de onafhankelijke variabele.', scan_indep, [self.solution], Process.QUESTION,self.assignments.print_independent(self.assignment)),
+               ('Beschrijf de afhankelijke variabele.', scan_dep, [self.solution], Process.QUESTION,self.assignments.print_dependent(self.assignment)),
+               ('Beschrijf de mate van controle.', scan_control, [self.solution], Process.QUESTION,['Passief-observerend','Experiment'][int(self.solution['control'])]),
+               ('Voer de ondestaande tabel in.',scan_table_ttest,[self.solution],Process.TABLE,self.assignments.print_report(self,assignment, answer=True)),
+               ('Voer de nulhypothese in, geformuleerd met "H0" en "mu".',scan_hypothesis,[self.solution, 1], Process.QUESTION,self.solution['null']),
+               ('Voer de het aantal vrijheidsgraden in.',scan_number,['df', self.solution, 0.01], Process.QUESTION,str(self.solution['df'])),
+               ('Voer de het ruwe effect in dat je hebt berekend.',scan_number,['raw_effect', self.solution, 0.01], Process.QUESTION,str(self.solution['raw_effect'])),
+               ('Voer de het relatieve effect in dat je hebt berekend.',scan_number,['relative_effect', self.solution, 0.01], Process.QUESTION,str(self.solution['relative_effect'])),
+               ('Voer de T-waarde in.',scan_number,['T', self.solution, 0.02], Process.QUESTION,str(self.solution['T'][0])),
+               ('Voer de p-waarde in.',scan_p,[self.solution, 0.02], Process.QUESTION,str(self.solution['p'][0])),
+               ('Voer de beslissing in',scan_decision,[self.solution, False], Process.QUESTION,self.solution['decision']),
+               ('Voer de causale interpretatie in.',scan_interpretation,[self.solution, False], Process.LAST_QUESTION,self.solution['interpretation'])]
             return output
         
         def anova_protocol(self) -> List[Tuple]:
             if not self.assignment['two_way']:
-                output :str = [('Beschrijf de onafhankelijke variabele.',scan_indep_anova,[self.solution], Process.QUESTION),
-                    ('Beschrijf de afhankelijke variabele.',scan_dep,[self.solution], Process.QUESTION),
-                    ('Beschrijf de mate van controle.',scan_control,[self.solution], Process.QUESTION),
+                output :str = [('Beschrijf de onafhankelijke variabele.',scan_indep_anova,[self.solution], Process.QUESTION, self.assignments.print_independent(self.assignment)),
+                    ('Beschrijf de afhankelijke variabele.',scan_dep,[self.solution], Process.QUESTION, self.assignments.print_dependent(self.assignment)),
+                    ('Beschrijf de mate van controle.',scan_control,[self.solution], Process.QUESTION,['Passief-observerend','Experiment'][int(self.solution['control'])]),
                     ('Voer de nulhypothese in, geformuleerd met "H0" en "mu".',scan_hypothesis,[self.solution, 1], Process.QUESTION),
-                    ('Vul de tabel hieronder in.',scan_table,[self.solution, 0.02], Process.TABLE),     
-                    ('Voer de beslissing in', scan_decision,[self.solution, True, 1], Process.QUESTION)]
-                if self.solution['p'][0] < 0.05:
-                    output.append(('Voer de causale interpretatie in.',scan_interpretation,[self.solution, True], Process.QUESTION))
+                    ('Vul de tabel hieronder in.',scan_table,[self.solution, 0.02], Process.TABLE, self.assignments.print_report(self,assignment, answer=True)),     
+                    ('Voer de beslissing in', scan_decision,[self.solution, True, 1], Process.QUESTION),
+                    ('Voer de causale interpretatie in.',scan_interpretation,[self.solution, True], Process.LAST_QUESTION)]
             else:
-                output :str = [('Beschrijf de eerste onafhankelijke variabele.',scan_indep_anova,[self.solution], Process.QUESTION),
-                    ('Beschrijf de tweede onafhankelijke variabele.',scan_indep_anova,[self.solution,2], Process.QUESTION),
-                    ('Beschrijf de afhankelijke variabele.',scan_dep,[self.solution], Process.QUESTION),
-                    ('Beschrijf de mate van controle voor factor 1.',scan_control,[self.solution], Process.QUESTION),
-                    ('Beschrijf de mate van controle voor factor 2.',scan_control,[self.solution, 2], Process.QUESTION),
-                    ('Voer de nulhypothese in voor de eerste onafhankelijke variabele, geformuleerd met "H0" en "mu".',scan_hypothesis,[self.solution, 1], Process.QUESTION),
-                    ('Voer de nulhypothese in voor de tweede onafhankelijke variabele, geformuleerd met "H0" en "mu".',scan_hypothesis,[self.solution, 2], Process.QUESTION),
-                    ('Voer de interactienulhypothese in.',scan_hypothesis_anova,[self.solution], Process.QUESTION),
-                    ('Vul de tabel hieronder in.',scan_table,[self.solution, 0.02], Process.TABLE),    
-                    ('Voer de beslissing in voor de eerste onafhankelijke variabele', scan_decision,[self.solution, True, 1], Process.QUESTION),
-                    ('Voer de beslissing in voor de tweede onafhankelijke variabele', scan_decision,[self.solution, True, 2], Process.QUESTION),
-                    ('Voer de beslissing in voor de interactie', scan_decision_anova,[self.solution], Process.QUESTION)]
-                #if self.solution['p'][0] < 0.05:
-                output.append(('Voer de causale interpretatie voor de eerste factor in.',scan_interpretation,[self.solution, True, 1], Process.QUESTION))
-                #if self.solution['p'][1] < 0.05:
-                output.append(('Voer de causale interpretatie voor de tweede factor in.',scan_interpretation,[self.solution, True, 2], Process.QUESTION))
-                #if self.solution['p'][2] < 0.05:
-                output.append(('Voer de causale interpretatie voor de interactie in.',scan_interpretation_anova,[self.solution], Process.QUESTION))
-            output[-1] = (output[-1][0], output[-1][1], output[-1][2], Process.LAST_QUESTION)
+                output :str = [('Beschrijf de eerste onafhankelijke variabele.',scan_indep_anova,[self.solution], Process.QUESTION, self.assignments.print_independent(self.assignment)),
+                    ('Beschrijf de tweede onafhankelijke variabele.',scan_indep_anova,[self.solution,2], Process.QUESTION, self.assignments.print_independent(self.assignment, num=2)),
+                    ('Beschrijf de afhankelijke variabele.',scan_dep,[self.solution], Process.QUESTION, self.assignments.print_dependent(self.assignment)),
+                    ('Beschrijf de mate van controle voor factor 1.',scan_control,[self.solution], Process.QUESTION,['Passief-observerend','Experiment'][int(self.solution['control'])]),
+                    ('Beschrijf de mate van controle voor factor 2.',scan_control,[self.solution, 2], Process.QUESTION,['Passief-observerend','Experiment'][int(self.solution['control2'])]),
+                    ('Voer de nulhypothese in voor de eerste onafhankelijke variabele, geformuleerd met "H0" en "mu".',scan_hypothesis,[self.solution, 1], Process.QUESTION,self.solution['null']),
+                    ('Voer de nulhypothese in voor de tweede onafhankelijke variabele, geformuleerd met "H0" en "mu".',scan_hypothesis,[self.solution, 2], Process.QUESTION,self.solution['null2']),
+                    ('Voer de interactienulhypothese in.',scan_hypothesis_anova,[self.solution], Process.QUESTION,self.solution['null3']),
+                    ('Vul de tabel hieronder in.',scan_table,[self.solution, 0.02], Process.TABLE, self.assignments.print_report(self,assignment, answer=True)),    
+                    ('Voer de beslissing in voor de eerste onafhankelijke variabele', scan_decision,[self.solution, True, 1], Process.QUESTION,self.solution['decision']),
+                    ('Voer de beslissing in voor de tweede onafhankelijke variabele', scan_decision,[self.solution, True, 2], Process.QUESTION,self.solution['decision2']),
+                    ('Voer de beslissing in voor de interactie', scan_decision_anova,[self.solution], Process.QUESTION,self.solution['decision3']),
+                    ('Voer de causale interpretatie voor de eerste factor in.',scan_interpretation,[self.solution, True, 1], Process.QUESTION,self.solution['interpretation']),
+                    ('Voer de causale interpretatie voor de tweede factor in.',scan_interpretation,[self.solution, True, 2], Process.QUESTION,self.solution['interpretation2']),
+                    ('Voer de causale interpretatie voor de interactie in.',scan_interpretation_anova,[self.solution], Process.LAST_QUESTION,self.solution['interpretation3'])]
             return output
         
         def rmanova_protocol(self) -> List[Tuple]:
-            output :str = [('Beschrijf de onafhankelijke variabele.',scan_indep_anova,[self.solution,1,False], Process.QUESTION),
-                ('Beschrijf de afhankelijke variabele (het aantal metingen per persoon hoef je niet te geven).',scan_dep,[self.solution], Process.QUESTION),
-                ('Beschrijf de mate van controle.',scan_control,[self.solution], Process.QUESTION),
-                ('Beschrijf de nulhypothese van de condities',scan_hypothesis,[self.solution,1], Process.QUESTION),
-                ('Beschrijf de nulhypothese van de subjecten',scan_hypothesis_rmanova,[self.solution], Process.QUESTION),
-                ('Vul de tabel hieronder in.',scan_table,[self.solution, 0.02], Process.TABLE),
-                ('Voer de beslissing in van de condities',scan_decision,[self.solution,True,1], Process.QUESTION),
-                ('Voer de beslissing in van de subjecten',scan_decision_rmanova,[self.solution], Process.QUESTION),
-                ('Voer de causale interpretatie voor de condities in.',scan_interpretation,[self.solution, True, 1], Process.LAST_QUESTION)]
+            output :str = [('Beschrijf de onafhankelijke variabele.',scan_indep_anova,[self.solution,1,False], Process.QUESTION,self.assignments.print_independent(self.assignment)),
+                ('Beschrijf de afhankelijke variabele (het aantal metingen per persoon hoef je niet te geven).',scan_dep,[self.solution], Process.QUESTION,self.assignments.print_dependent(self.assignment)),
+                ('Beschrijf de mate van controle.',scan_control,[self.solution], Process.QUESTION,['Passief-observerend','Experiment'][int(self.solution['control'])]),
+                ('Beschrijf de nulhypothese van de condities',scan_hypothesis,[self.solution,1], Process.QUESTION,self.solution['null']),
+                ('Beschrijf de nulhypothese van de subjecten',scan_hypothesis_rmanova,[self.solution], Process.QUESTION,self.solution['null2']),
+                ('Vul de tabel hieronder in.',scan_table,[self.solution, 0.02], Process.TABLE, self.assignments.print_report(self,assignment, answer=True)),
+                ('Voer de beslissing in van de condities',scan_decision,[self.solution,True,1], Process.QUESTION,self.solution['decision']),
+                ('Voer de beslissing in van de subjecten',scan_decision_rmanova,[self.solution], Process.QUESTION,self.solution['decision2']),
+                ('Voer de causale interpretatie voor de condities in.',scan_interpretation,[self.solution, True, 1], Process.LAST_QUESTION,self.solution['interpretation'])]
             return output
         
         def print_assignment(self):

@@ -47,6 +47,8 @@ def index():
             output_text : str = controller.update({'inputtext': 'skip'})
         if form.prev.data:
             output_text : str = controller.update({'inputtext': 'prev'})
+        if form.answer.data:
+            controller.answer_triggered = not controller.answer_triggered
         if controller.assignment != None: #Retrieve variable names
             a = controller.assignment
             varnames:list = [[a['independent']] + a['levels']] if a['assignment_type'] != 4 else [[a['independent']] + a['levels'],[a['independent2']] + a['levels2']]
@@ -55,10 +57,12 @@ def index():
             form.inputtextlarge.data = ""
         skip :bool = controller.skipable
         prev :bool = controller.prevable
+        answer :bool = controller.answerable
+        answer_text :str = controller.protocol[controller.index][4] if controller.answer_triggered else ""
         submit_field :int = controller.submit_field.value
         if controller.protocol[controller.index][1] in [scan_decision, scan_decision_anova, scan_decision_rmanova, scan_interpretation, scan_interpretation_anova]: #Convert textbox to large textbox if appropriate
             submit_field = 10
-        return render_template('index.html', display=output_text, form=form, skip=skip, prev=prev, submit_field=submit_field, varnames=varnames)
+        return render_template('index.html', display=output_text, answer_text=answer_text, form=form, skip=skip, prev=prev, answer=answer, submit_field=submit_field, varnames=varnames)
     else:
         print('ERROR: INVALID METHOD')
 

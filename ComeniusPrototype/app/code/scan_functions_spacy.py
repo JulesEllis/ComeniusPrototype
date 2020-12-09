@@ -449,13 +449,11 @@ def detect_alternative(sent:Doc, solution:dict, num:int=1) -> List[str]:
     
     #Controleer input
     scorepoints['alt'] = 'alternatieve' in [x.text for x in sent] if not control else True
-    causeverbs = [x for x in sent if x.text in ['veroorzaakt', 'heeft', 'beinvloedt', 'beinvloed','verantwoordelijk', 'oorzaak']] 
+    causeverbs = [x for x in sent if x.text in ['veroorzaakt', 'heeft', 'beinvloedt', 'beinvloed','verantwoordelijk', 'oorzaak', 'invloed']] 
     if any(causeverbs):
-        effect_children = descendants(causeverbs[0])
-        tokens2 = [x.text for x in effect_children]
         scorepoints['cause'] = True
-        scorepoints['ind'] = independent in tokens or any([x in tokens2 for x in solution[syn_key]])
     scorepoints['dep'] = dependent in tokens or any([x in tokens for x in solution['dep_syns']])
+    scorepoints['ind'] = independent in tokens or any([x in tokens for x in solution[syn_key]])
     if scorepoints['ind'] and scorepoints['dep']:
         indynode = sent[tokens.index(independent.lower())]
         depnode = sent[tokens.index(dependent.lower())]
@@ -477,6 +475,7 @@ def detect_alternative(sent:Doc, solution:dict, num:int=1) -> List[str]:
             scorepoints['relation_type'] = True
     else:
         scorepoints['relation_type'] = True
+    print(scorepoints)
     
     #Add strings
     if not scorepoints['cause']:

@@ -98,7 +98,14 @@
         {% if skip %}
         {{ form.skip() }}
         {% endif %}
+        {% if answer %}
+        {{ form.answer() }}
+        {% endif %}
         </p>
+        
+        {% if answer_text | str != "" %}
+        <p>Antwoord:<br>{{answer_text}}<\p>
+        {% endif %}        
     </form>
     </body>
 </html>

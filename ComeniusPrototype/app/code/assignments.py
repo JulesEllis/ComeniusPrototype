@@ -300,40 +300,45 @@ class Assignments:
         #output_text += '<tr><td>Waarde</td><td>'+str(assignment['ns'][0])+'</td><td>'+str(round(assignment['var_obs'],2))+'</td><td>'+str(round(assignment['var_pred'],2))+'</td></tr>'
         return output_text #+ '</table>'
     
-    def print_report(self, assignment: Dict) -> str:
-        output:str = ''
+    def print_report(self, assignment: Dict, answer=False) -> str: 
+        output:str = '' #"Answer" is a parameter which triggers when only the mean/ANOVA tables have to be printed
         if assignment['assignment_type'] not in [1,2]:
             data:dict = assignment['data']
         names = ['df','ss','ms','F','p','r2']
         if assignment['assignment_type'] == 1:
-            output += self.print_ttest(assignment)
+            if not answer:
+                output += self.print_ttest(assignment)
             output += '<p><table style="width:20%">'
             output += '<tr><td>'+str(assignment['independent'])+'</td><td>Gemiddelde</td><td>Standaarddeviatie</td><td>N</td></tr>'
             output += '<tr><td>'+str(assignment['levels'][0])+'</td><td>'+str(round(assignment['means'][0],2))+'</td><td>'+str(round(assignment['stds'][0],2))+'</td><td>'+str(assignment['ns'][0])+'</td></tr>'
             output += '<tr><td>'+str(assignment['levels'][1])+'</td><td>'+str(round(assignment['means'][1],2))+'</td><td>'+str(round(assignment['stds'][1],2))+'</td><td>'+str(assignment['ns'][1])+'</td></tr>'
-            output += '</table></p><p><table style="width:20%">'
-            output += '<tr><td>Statistiek</td><td>Waarde</td></tr>'
-            output += '<tr><td>Vrijheidsgraden (df)</td><td>'+str(assignment['df'][0])+'</td></tr>'
-            output += '<tr><td>Ruw effect</td><td>'+str(round(assignment['raw_effect'][0],2))+'</td></tr>'
-            output += '<tr><td>Relatief effect</td><td>'+str(round(assignment['relative_effect'][0],2))+'</td></tr>'
-            output += '<tr><td>T</td><td>'+str(round(assignment['T'][0],2))+'</td></tr>'
-            output += '<tr><td>p</td><td>'+str(round(assignment['p'][0],2))+'</td></tr>'
-            output += '</table></p>'
+            if not answer:
+                output += '</table></p><p><table style="width:20%">'
+                output += '<tr><td>Statistiek</td><td>Waarde</td></tr>'
+                output += '<tr><td>Vrijheidsgraden (df)</td><td>'+str(assignment['df'][0])+'</td></tr>'
+                output += '<tr><td>Ruw effect</td><td>'+str(round(assignment['raw_effect'][0],2))+'</td></tr>'
+                output += '<tr><td>Relatief effect</td><td>'+str(round(assignment['relative_effect'][0],2))+'</td></tr>'
+                output += '<tr><td>T</td><td>'+str(round(assignment['T'][0],2))+'</td></tr>'
+                output += '<tr><td>p</td><td>'+str(round(assignment['p'][0],2))+'</td></tr>'
+                output += '</table></p>'
         if assignment['assignment_type'] == 2:
-            output += self.print_ttest(assignment)
+            if not answer:
+                output += self.print_ttest(assignment)
             output += '<p><table style="width:20%">'
             output += '<tr><td>'+str(assignment['independent'])+'</td><td>Gemiddelde</td><td>Standaarddeviatie</td><td>N</td></tr>'
             output += '<tr><td>Verschilscores</td><td>'+str(round(assignment['means'][0],2))+'</td><td>'+str(round(assignment['stds'][0],2))+'</td><td>'+str(round(assignment['ns'][0],2))+'</td></tr>'
-            output += '</table></p><p><table style="width:20%">'
-            output += '<tr><td>Statistiek</td><td>Waarde</td></tr>'
-            output += '<tr><td>Vrijheidsgraden (df)</td><td>'+str(assignment['df'][0])+'</td></tr>'
-            output += '<tr><td>Ruw effect</td><td>'+str(round(assignment['raw_effect'][0],2))+'</td></tr>'
-            output += '<tr><td>Relatief effect</td><td>'+str(round(assignment['relative_effect'][0],2))+'</td></tr>'
-            output += '<tr><td>T</td><td>'+str(round(assignment['T'][0],2))+'</td></tr>'
-            output += '<tr><td>p</td><td>'+str(round(assignment['p'][0],2))+'</td></tr>'
-            output += '</table></p>'
+            if not answer:
+                output += '</table></p><p><table style="width:20%">'
+                output += '<tr><td>Statistiek</td><td>Waarde</td></tr>'
+                output += '<tr><td>Vrijheidsgraden (df)</td><td>'+str(assignment['df'][0])+'</td></tr>'
+                output += '<tr><td>Ruw effect</td><td>'+str(round(assignment['raw_effect'][0],2))+'</td></tr>'
+                output += '<tr><td>Relatief effect</td><td>'+str(round(assignment['relative_effect'][0],2))+'</td></tr>'
+                output += '<tr><td>T</td><td>'+str(round(assignment['T'][0],2))+'</td></tr>'
+                output += '<tr><td>p</td><td>'+str(round(assignment['p'][0],2))+'</td></tr>'
+                output += '</table></p>'
         if assignment['assignment_type'] == 3:
-            output += self.print_anova(assignment)
+            if not answer:
+                output += self.print_anova(assignment)
             output += '<p><table style="width:20%">'
             output += '<tr><td>Bron</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td></tr>'
             output += '<tr><td>Between</td>'+''.join(['<td>'+str(round(assignment[x][0],2))+'</td>' for x in names if len(assignment[x]) > 0])+'</tr>'
@@ -341,7 +346,8 @@ class Assignments:
             output += '<tr><td>Totaal</td>'+''.join(['<td>'+str(round(assignment[x][2],2))+'</td>' for x in names if len(assignment[x]) > 2])+'</tr>'
             output += '</table></p>'
         if assignment['assignment_type'] == 4:
-            output += self.print_anova(assignment)
+            if not answer:
+                output += self.print_anova(assignment)
             output += '<p><table style="width:20%">'
             output += '<tr><td>Bron</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td></tr>'
             output += '<tr><td>Between</td>'+''.join(['<td>'+str(round(assignment[x][0],2))+'</td>' for x in names[:3]])+'</tr>'
@@ -352,7 +358,8 @@ class Assignments:
             output += '<tr><td>Totaal</td>'+''.join(['<td>'+str(round(assignment[x][5],2))+'</td>' for x in names[:2]])+'</tr>'
             output += '</table></p>'
         if assignment['assignment_type'] == 5:
-            output += self.print_rmanova(assignment)
+            if not answer:
+                output += self.print_rmanova(assignment)
             output += '<p><table style="width:20%">'
             output += '<tr><td>Bron</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td></tr>'
             output += '<tr><td>'+assignment['independent']+'</td>'+''.join(['<td>'+str(round(assignment[x][0],2))+'</td>' for x in names if len(assignment[x]) > 0])+'</tr>'
@@ -589,6 +596,8 @@ class Assignments:
         solution['null2']: str = 'h0: De personen hebben gelijke ware scores op de opgevoerde meting.'
         rejected: Tuple[str] = ('verworpen','ongelijk') if solution['p'][0] < 0.05 else ('behouden', 'gelijk')
         solution['decision']: str = 'h0 ' + rejected[0] + ', de populatiegemiddelden van kwartalen ' + ' en '.join(assignment['levels']) + ' zijn gemiddeld ' + rejected[1] + '.'
+        rejected2: Tuple[str] = ('verworpen','ongelijk') if solution['p'][1] < 0.05 else ('behouden', 'gelijk')
+        solution['decision2']: str = 'h0 ' + rejected2[0] + ', de opgevoerde scores van de personen in de populatie zijn ' + rejected2[1] + '.'
         if assignment['control']:
             solution['interpretation']: str = 'Het verschil in '+solution['dependent']+' wordt veroorzaakt door de onafhankelijke variabele '+solution['independent']
         else:
@@ -620,7 +629,17 @@ class Assignments:
         #Verbal answers
         solution['null'] = 'H0: ' + ' == '.join(['beta(' + str(i) + ')' for i in range(1,4)]) + ' == 0'
         return solution
-        
+    
+    def print_independent(assignment:dict, num:int=1) -> str:
+        levels = assignment['levels'] if num < 2 else assignment['levels' + str(num)]
+        if assignment['assignment_type'] < 3:
+            return assignment['independent'] + ', ' + assignment['independent_measure'] + ', met niveaus ' + levels[0] + ' en ' + levels[1] + '.'
+        else:
+            return assignment['independent'] + ', een between-subject factor met niveaus ' + levels[0] + ' en ' + levels[1] + '.'
+    
+    def print_dependent(assignment:dict) -> str:
+        return assignment['dependent'] + ', ' + assignment['dependent_measure']
+    
     def print_struct(self, d: Dict):
         for key, value in list(d.items()):
             print(key + ': ' + str(value))

@@ -12,8 +12,9 @@ class BaseForm(FlaskForm):
     selectanalysis = SelectField(label='Kies je analyse', choices=a_choices)
     selectreport = SelectField(label='Kies wat voor rapport je wil oefenen', choices=r_choices)
     submit = SubmitField('Enter')
-    skip = SubmitField('Skip')
-    prev = SubmitField('Prev')
+    skip = SubmitField('Volgende')
+    prev = SubmitField('Vorige')
+    answer = SubmitField('Antwoord')
     
     mean1 = StringField('')
     std1 = StringField('')
