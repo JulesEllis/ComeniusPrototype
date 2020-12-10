@@ -103,8 +103,8 @@
         {% endif %}
         </p>
         
-        {% if answer_text | str != "" %}
-        <p>Antwoord:<br>{{answer_text}}<\p>
+        {% if answer_text | string != "" %}
+        Antwoord:<br>{{answer_text | safe}}
         {% endif %}        
     </form>
     </body>

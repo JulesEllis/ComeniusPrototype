@@ -49,6 +49,7 @@ def index():
             output_text : str = controller.update({'inputtext': 'prev'})
         if form.answer.data:
             controller.answer_triggered = not controller.answer_triggered
+            output_text : str = controller.assignments.print_assignment(controller.assignment) + '<br>' + controller.protocol[controller.index][0]
         if controller.assignment != None: #Retrieve variable names
             a = controller.assignment
             varnames:list = [[a['independent']] + a['levels']] if a['assignment_type'] != 4 else [[a['independent']] + a['levels'],[a['independent2']] + a['levels2']]

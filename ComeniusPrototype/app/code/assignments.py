@@ -630,15 +630,15 @@ class Assignments:
         solution['null'] = 'H0: ' + ' == '.join(['beta(' + str(i) + ')' for i in range(1,4)]) + ' == 0'
         return solution
     
-    def print_independent(assignment:dict, num:int=1) -> str:
+    def print_independent(self, assignment:dict, num:int=1) -> str:
         levels = assignment['levels'] if num < 2 else assignment['levels' + str(num)]
         if assignment['assignment_type'] < 3:
-            return assignment['independent'] + ', ' + assignment['independent_measure'] + ', met niveaus ' + levels[0] + ' en ' + levels[1] + '.'
+            return assignment['independent'] + ', kwalitatief, met niveaus ' + levels[0] + ' en ' + levels[1] + '.'
         else:
             return assignment['independent'] + ', een between-subject factor met niveaus ' + levels[0] + ' en ' + levels[1] + '.'
     
-    def print_dependent(assignment:dict) -> str:
-        return assignment['dependent'] + ', ' + assignment['dependent_measure']
+    def print_dependent(self, assignment:dict) -> str:
+        return assignment['dependent'] + ', kwantitatief'
     
     def print_struct(self, d: Dict):
         for key, value in list(d.items()):

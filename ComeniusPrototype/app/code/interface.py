@@ -149,7 +149,7 @@ class OuterController:
                 input_text:str = ''
             
             #Scan the input text fields and and determine the correct response
-            _, function, arguments, process = self.protocol[self.index]
+            _, function, arguments, process, answer = self.protocol[self.index]
             output_text = ''
             if process == Process.TABLE and input_text != 'skip' and input_text != 'prev':                
                 again, output_text = function(textfields, *arguments)
@@ -247,11 +247,13 @@ class OuterController:
                 elif input_text == 'skip' and self.skipable:
                     self.index += 1
                     self.submit_field = Task.TEXT_FIELD
+                    self.answer_triggered = False
                     return self.assignments.print_assignment(self.assignment) + '<br>' + self.protocol[self.index][0]
                 elif again:
                     return self.assignments.print_assignment(self.assignment) + '<br>' + output_text
                 else:
                     self.submit_field = Task.TEXT_FIELD
+                    self.answer_triggered = False
                     return output_text + self.protocol[0][0]
             elif process == Process.LAST_QUESTION: #Main report protocols during last question
                 if input_text == 'prev' and self.prevable:
@@ -263,6 +265,7 @@ class OuterController:
                     self.skipable = False
                     self.prevable = False
                     self.answerable = False
+                    self.answer_triggered = False
                     self.protocol = self.completion_protocol()
                     self.index = 0
                     self.submit_field = Task.INTRO
@@ -284,6 +287,7 @@ class OuterController:
                     if self.index == 0:
                         self.prevable = True
                     self.index += 1
+                    self.answer_triggered = False
                     if self.protocol[self.index][3] == Process.TABLE:
                         self.submit_field = self.analysis_type #Signal to the routes class that the next text field has to be a table
                     if input_text == 'skip' and self.skipable:
@@ -295,24 +299,24 @@ class OuterController:
                 
         def intro_protocol(self) -> List[Tuple]:
             return [('Hoi, met dit programma kan je elementaire en beknopte rapporten oefenen. Klik op de enter-knop om verder te gaan.', 
-                     scan_dummy, [], Process.INTRO)]
+                     scan_dummy, [], Process.INTRO, None)]
     
         def completion_protocol(self) -> List[Tuple]:
             return [('Gefeliciteerd, je rapport is af! Klik op de knop hieronder om verder te gaan.', 
-                     scan_dummy, [], Process.INTRO)]
+                     scan_dummy, [], Process.INTRO, None)]
             
         def choice_protocol(self) -> List[Tuple]:
-            return [('Voer hieronder het soort opgave in dat je wil oefenen.<br>',None,[], Process.CHOOSE_ANALYSIS)]
+            return [('Voer hieronder het soort opgave in dat je wil oefenen.<br>',None,[], Process.CHOOSE_ANALYSIS, None)]
    
         def ttest_protocol(self) -> List[Tuple]:
             output : List[Tuple] = [('Beschrijf de onafhankelijke variabele.', scan_indep, [self.solution], Process.QUESTION,self.assignments.print_independent(self.assignment)),
                ('Beschrijf de afhankelijke variabele.', scan_dep, [self.solution], Process.QUESTION,self.assignments.print_dependent(self.assignment)),
                ('Beschrijf de mate van controle.', scan_control, [self.solution], Process.QUESTION,['Passief-observerend','Experiment'][int(self.solution['control'])]),
-               ('Voer de ondestaande tabel in.',scan_table_ttest,[self.solution],Process.TABLE,self.assignments.print_report(self,assignment, answer=True)),
+               ('Voer de ondestaande tabel in.',scan_table_ttest,[self.solution],Process.TABLE,self.assignments.print_report({**self.assignment, **self.solution}, answer=True)),
                ('Voer de nulhypothese in, geformuleerd met "H0" en "mu".',scan_hypothesis,[self.solution, 1], Process.QUESTION,self.solution['null']),
-               ('Voer de het aantal vrijheidsgraden in.',scan_number,['df', self.solution, 0.01], Process.QUESTION,str(self.solution['df'])),
-               ('Voer de het ruwe effect in dat je hebt berekend.',scan_number,['raw_effect', self.solution, 0.01], Process.QUESTION,str(self.solution['raw_effect'])),
-               ('Voer de het relatieve effect in dat je hebt berekend.',scan_number,['relative_effect', self.solution, 0.01], Process.QUESTION,str(self.solution['relative_effect'])),
+               ('Voer de het aantal vrijheidsgraden in.',scan_number,['df', self.solution, 0.01], Process.QUESTION,str(self.solution['df'][0])),
+               ('Voer de het ruwe effect in dat je hebt berekend.',scan_number,['raw_effect', self.solution, 0.01], Process.QUESTION,str(self.solution['raw_effect'][0])),
+               ('Voer de het relatieve effect in dat je hebt berekend.',scan_number,['relative_effect', self.solution, 0.01], Process.QUESTION,str(self.solution['relative_effect'][0])),
                ('Voer de T-waarde in.',scan_number,['T', self.solution, 0.02], Process.QUESTION,str(self.solution['T'][0])),
                ('Voer de p-waarde in.',scan_p,[self.solution, 0.02], Process.QUESTION,str(self.solution['p'][0])),
                ('Voer de beslissing in',scan_decision,[self.solution, False], Process.QUESTION,self.solution['decision']),
@@ -325,9 +329,9 @@ class OuterController:
                     ('Beschrijf de afhankelijke variabele.',scan_dep,[self.solution], Process.QUESTION, self.assignments.print_dependent(self.assignment)),
                     ('Beschrijf de mate van controle.',scan_control,[self.solution], Process.QUESTION,['Passief-observerend','Experiment'][int(self.solution['control'])]),
                     ('Voer de nulhypothese in, geformuleerd met "H0" en "mu".',scan_hypothesis,[self.solution, 1], Process.QUESTION),
-                    ('Vul de tabel hieronder in.',scan_table,[self.solution, 0.02], Process.TABLE, self.assignments.print_report(self,assignment, answer=True)),     
-                    ('Voer de beslissing in', scan_decision,[self.solution, True, 1], Process.QUESTION),
-                    ('Voer de causale interpretatie in.',scan_interpretation,[self.solution, True], Process.LAST_QUESTION)]
+                    ('Vul de tabel hieronder in.',scan_table,[self.solution, 0.02], Process.TABLE, self.assignments.print_report({**self.assignment, **self.solution}, answer=True)),     
+                    ('Voer de beslissing in', scan_decision,[self.solution, True, 1], Process.QUESTION, self.solution['decision']),
+                    ('Voer de causale interpretatie in.',scan_interpretation,[self.solution, True], Process.LAST_QUESTION, self.solution['interpretation'])]
             else:
                 output :str = [('Beschrijf de eerste onafhankelijke variabele.',scan_indep_anova,[self.solution], Process.QUESTION, self.assignments.print_independent(self.assignment)),
                     ('Beschrijf de tweede onafhankelijke variabele.',scan_indep_anova,[self.solution,2], Process.QUESTION, self.assignments.print_independent(self.assignment, num=2)),
@@ -337,7 +341,7 @@ class OuterController:
                     ('Voer de nulhypothese in voor de eerste onafhankelijke variabele, geformuleerd met "H0" en "mu".',scan_hypothesis,[self.solution, 1], Process.QUESTION,self.solution['null']),
                     ('Voer de nulhypothese in voor de tweede onafhankelijke variabele, geformuleerd met "H0" en "mu".',scan_hypothesis,[self.solution, 2], Process.QUESTION,self.solution['null2']),
                     ('Voer de interactienulhypothese in.',scan_hypothesis_anova,[self.solution], Process.QUESTION,self.solution['null3']),
-                    ('Vul de tabel hieronder in.',scan_table,[self.solution, 0.02], Process.TABLE, self.assignments.print_report(self,assignment, answer=True)),    
+                    ('Vul de tabel hieronder in.',scan_table,[self.solution, 0.02], Process.TABLE, self.assignments.print_report({**self.assignment, **self.solution}, answer=True)),    
                     ('Voer de beslissing in voor de eerste onafhankelijke variabele', scan_decision,[self.solution, True, 1], Process.QUESTION,self.solution['decision']),
                     ('Voer de beslissing in voor de tweede onafhankelijke variabele', scan_decision,[self.solution, True, 2], Process.QUESTION,self.solution['decision2']),
                     ('Voer de beslissing in voor de interactie', scan_decision_anova,[self.solution], Process.QUESTION,self.solution['decision3']),
@@ -352,7 +356,7 @@ class OuterController:
                 ('Beschrijf de mate van controle.',scan_control,[self.solution], Process.QUESTION,['Passief-observerend','Experiment'][int(self.solution['control'])]),
                 ('Beschrijf de nulhypothese van de condities',scan_hypothesis,[self.solution,1], Process.QUESTION,self.solution['null']),
                 ('Beschrijf de nulhypothese van de subjecten',scan_hypothesis_rmanova,[self.solution], Process.QUESTION,self.solution['null2']),
-                ('Vul de tabel hieronder in.',scan_table,[self.solution, 0.02], Process.TABLE, self.assignments.print_report(self,assignment, answer=True)),
+                ('Vul de tabel hieronder in.',scan_table,[self.solution, 0.02], Process.TABLE, self.assignments.print_report({**self.assignment, **self.solution}, answer=True)),
                 ('Voer de beslissing in van de condities',scan_decision,[self.solution,True,1], Process.QUESTION,self.solution['decision']),
                 ('Voer de beslissing in van de subjecten',scan_decision_rmanova,[self.solution], Process.QUESTION,self.solution['decision2']),
                 ('Voer de causale interpretatie voor de condities in.',scan_interpretation,[self.solution, True, 1], Process.LAST_QUESTION,self.solution['interpretation'])]
