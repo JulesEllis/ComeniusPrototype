@@ -340,7 +340,7 @@ class OuterController:
                     ('Beschrijf de mate van controle voor factor 2.',scan_control,[self.solution, 2], Process.QUESTION,['Passief-observerend','Experiment'][int(self.solution['control2'])]),
                     ('Voer de nulhypothese in voor de eerste onafhankelijke variabele, geformuleerd met "H0" en "mu".',scan_hypothesis,[self.solution, 1], Process.QUESTION,self.solution['null']),
                     ('Voer de nulhypothese in voor de tweede onafhankelijke variabele, geformuleerd met "H0" en "mu".',scan_hypothesis,[self.solution, 2], Process.QUESTION,self.solution['null2']),
-                    ('Voer de interactienulhypothese in.',scan_hypothesis_anova,[self.solution], Process.QUESTION,self.solution['null3']),
+                    ('Voer de interactienulhypothese in. Je mag deze inkorten door alleen de eerste en laatste vergelijking van de hypothese te geven.',scan_hypothesis_anova,[self.solution], Process.QUESTION,self.solution['null3']),
                     ('Vul de tabel hieronder in.',scan_table,[self.solution, 0.02], Process.TABLE, self.assignments.print_report({**self.assignment, **self.solution}, answer=True)),    
                     ('Voer de beslissing in voor de eerste onafhankelijke variabele', scan_decision,[self.solution, True, 1], Process.QUESTION,self.solution['decision']),
                     ('Voer de beslissing in voor de tweede onafhankelijke variabele', scan_decision,[self.solution, True, 2], Process.QUESTION,self.solution['decision2']),

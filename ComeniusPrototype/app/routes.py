@@ -50,6 +50,8 @@ def index():
         if form.answer.data:
             controller.answer_triggered = not controller.answer_triggered
             output_text : str = controller.assignments.print_assignment(controller.assignment) + '<br>' + controller.protocol[controller.index][0]
+            if output_text != '': #Capitalize the first letter of each answer
+                output_text = output_text[0].upper() + output_text[1:]
         if controller.assignment != None: #Retrieve variable names
             a = controller.assignment
             varnames:list = [[a['independent']] + a['levels']] if a['assignment_type'] != 4 else [[a['independent']] + a['levels'],[a['independent2']] + a['levels2']]
