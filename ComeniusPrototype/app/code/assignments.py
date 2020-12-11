@@ -455,34 +455,33 @@ class Assignments:
             
         #Determine textual conclusions
         #Decision
-        sterkte: str = 'sterk' if solution['relative_effect'][0] > 0.8 else 'matig' if solution['relative_effect'][0] > 0.5 else 'klein'
+        sterkte:str='sterk' if solution['relative_effect'][0] > 0.8 else 'matig' if solution['relative_effect'][0] > 0.5 else 'klein'
         if solution['p'][0] < 0.05:
             decision: Tuple[str] = ('verworpen','', 'Het effect is ' + sterkte + '. ')
         else:
             decision: Tuple[str] = ('behouden','niet ', '')
         comparison: str = ['ongelijk','groter','kleiner'][assignment['hypothesis']]
-        sterkte:str='sterk' if solution['relative_effect'] > 0.8 else 'matig' if solution['relative_effect'] > 0.5 else 'klein'
-        solution['decision']: str = 'H0 ' + decision[0] + ', het populatiegemiddelde van ' + names[0] + ' is ' + decision[1] + comparison + ' dan dat van ' + names[1] + '. ' + decision[2] + '. Het effect is ' + sterkte + '.'
+        solution['decision']: str = 'H0 ' + decision[0] + ', het populatiegemiddelde van ' + names[0] + ' is ' + decision[1] + comparison + ' dan dat van ' + names[1] + '. ' + decision[2]
         
         #Causal interpretation
         if solution['p'][0] < 0.05:
             if assignment['control']:
-                solution['interpretation']: str = 'Experiment, dus er is slechts een verklaring mogelijk. Dit is namelijk dat ' + solution['independent'] + ' geen invloed heeft op ' + solution['dependent'] + '.'
+                solution['interpretation']: str = 'Experiment, dus er is slechts een verklaring mogelijk. Dit is namelijk dat ' + solution['independent'] + ' invloed heeft op ' + solution['dependent'] + '.'
             else:
-                solution['interpretation']: str = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat' + solution['independent'] + ' geen invloed heeft op ' + solution['dependent'] + '. '+\
-                'De alternatieve verklaring is dat ' + solution['independent'] + ' wel invloed heeft op ' + solution['dependent'] + ', maar dat dit niet merkbaar is door een storende variabele.'
+                solution['interpretation']: str = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat ' + solution['independent'] + ' invloed heeft op ' + solution['dependent'] + '. '+\
+                'De alternatieve verklaring is dat ' + solution['dependent'] + ' ' + solution['independent'] + ' beinvloedt. '
         else:
             if assignment['control']: 
-                solution['interpretation']: str = 'De oorzaak van het effect is het verschil tussen de niveaus van de variabele ' + solution['independent'] + '.'
+                solution['interpretation']: str = 'Experiment, dus er is slechts een verklaring mogelijk. Dit is namelijk dat ' + solution['independent'] + ' geen invloed heeft op ' + solution['dependent'] + '.'
             else:
-                solution['interpretation']: str = 'De oorzaak van het effect is onbekend. '
+                solution['interpretation']: str = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat ' + solution['independent'] + ' geen invloed heeft op ' + solution['dependent'] + '. '+\
+                'De alternatieve verklaring is dat ' + solution['independent'] + ' ' + solution['dependent'] + ' wel beinvloedt, maar dat dit niet merkbaar is door een storende variabele.'
         return solution
     
     def solve_anova(self, assignment: Dict, solution: Dict) -> Dict:
         data: Dict = assignment['data']
         two_way: bool = assignment['two_way']
         solution['assignment_type'] = assignment['assignment_type']
-        
         solution['independent'] = assignment['independent']
         solution['ind_syns'] = assignment['ind_syns']
         solution['levels'] = assignment['levels']
@@ -516,12 +515,13 @@ class Assignments:
             #Verbal parts of the report
             rejected: Tuple[str] = ('verworpen','ongelijk') if solution['p'][0] < 0.05 else ('behouden', 'gelijk')
             solution['null']: str = 'h0: ' + ' == '.join(['mu(' + l + ')' for l in solution['levels']])
-            solution['decision']: str = 'h0 ' + rejected[0] + ', de populatiegemiddelden van ' + solution['levels'][0] +' en '+solution['levels'][0]+' zijn gemiddeld ' + rejected[1] + '.'
+            sterkte:str = 'sterk' if solution['r2'][0] > 0.2 else 'matig' if solution['r2'][0] > 0.1 else 'klein'
+            solution['decision']: str = 'h0 ' + rejected[0] + ', de populatiegemiddelden van ' + solution['levels'][0] +' en '+solution['levels'][1]+' zijn gemiddeld ' + rejected[1] + '. Het effect is '+sterkte+'.'
             if assignment['control']:
-                solution['interpretation']: str = 'Het verschil in '+solution['dependent']+' wordt veroorzaakt door de onafhankelijke variabele '+solution['independent']
+                solution['interpretation']: str = 'Experiment, dus er is een verklaring mogelijk. Dit is dat '+solution['dependent']+' '+solution['independent'] + ' veroorzaakt.'
             else:
-                solution['interpretation']: str = 'De echte verklaring is onbekend, de primaire verklaring is dat het verschil in '+solution['dependent']+' wordt veroorzaakt door de onafhankelijke variabele '+solution['independent'] + \
-                ', de alternatieve is dat ' + solution['independent'] + ' wordt veroorzaakt door ' + solution['dependent'] + '.'
+                solution['interpretation']: str = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat het verschil in '+solution['dependent']+' '+solution['independent'] + \
+                ' veroorzaakt. De alternatieve verklaring is dat ' + solution['independent'] + ' ' + solution['dependent'] + ' veroorzaakt.'
                 
         else: #Two-way statistics
             #Intermediary statistics order: Between, A, B, AB, Within, Total
@@ -553,21 +553,24 @@ class Assignments:
             solution['control2'] = assignment['control2']
             solution['null']: str = 'h0: mu(' + solution['levels'][0] + ') == mu(' + solution['levels'][1] + ')'
             solution['null2']: str =  'h0: mu(' + solution['levels2'][0] + ') == mu(' + solution['levels2'][1] + ')'
-            solution['null3']: str = 'h0: Er is geen interactie tussen ' +solution['independent']  + ' en ' + solution['independent2']
-            solution['decision']: str = 'h0 ' + rejected[0] + ', de populatiegemiddelden van ' + solution['levels'][0] +' en '+solution['levels'][0]+' zijn gemiddeld ' + rejected[1] + '. Het effect is ' + sterkte + '.'
-            solution['decision2']: str = 'h0 ' + rejected2[0] + ', de populatiegemiddelden van ' + solution['levels2'][0] +' en '+solution['levels'][0]+' zijn gemiddeld ' + rejected2[1] + '. Het effect is ' + sterkte2 + '.'
-            solution['decision3']: str = 'h0 ' + rejected3[0] + ', er is ' + rejected3[1] + ' interactie tussen ' + solution['independent'] +' en '+solution['independent2'] + '. Het effect is ' + sterkte3 + '.'
+            solution['null3']: str = 'h0: Er is geen interactie tussen ' +solution['independent']  + ' en ' + solution['independent2'] + ' in de populatie'
+            solution['decision']: str = 'h0 ' + rejected[0] + ', de populatiegemiddelden van ' + solution['levels'][0] +' en '+solution['levels'][1]+' zijn gemiddeld ' + rejected[1] + '. '
+            solution['decision2']: str = 'h0 ' + rejected2[0] + ', de populatiegemiddelden van ' + solution['levels2'][0] +' en '+solution['levels2'][1]+' zijn gemiddeld ' + rejected2[1] + '. '
+            solution['decision3']: str = 'h0 ' + rejected3[0] + ', er is ' + rejected3[1] + ' interactie tussen ' + solution['independent'] +' en '+solution['independent2'] + ' in de populatie. '
+            if solution['p'][0] < 0.05: solution['decision'] += 'Het effect is ' + sterkte + '.'
+            if solution['p'][1] < 0.05: solution['decision2'] += 'Het effect is ' + sterkte2 + '.'
+            if solution['p'][2] < 0.05: solution['decision3'] += 'Het effect is ' + sterkte3 + '.'
             if assignment['control']:
                 n1 = 'niet ' if solution['p'][0] < 0.05 else ''
-                solution['interpretation']: str = 'Experiment, dus er is een verklaring mogelijk. Het verschil in '+solution['dependent']+' '+n1+'wordt veroorzaakt door de onafhankelijke variabele '+solution['independent']
+                solution['interpretation']: str = 'Experiment, dus er is een verklaring mogelijk. Het verschil in '+solution['dependent']+' '+n1+'wordt veroorzaakt door '+solution['independent']
             else:
-                solution['interpretation']: str = 'De echte verklaring is onbekend, de primaire verklaring is dat het verschil in '+solution['dependent']+' wordt veroorzaakt door de onafhankelijke variabele '+solution['independent'] + '. '\
+                solution['interpretation']: str = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat '+solution['dependent']+' wordt veroorzaakt door '+solution['independent'] + '. '\
                 'De alternatieve is dat ' + solution['independent'] + ' wordt veroorzaakt door ' + solution['dependent']
             if assignment['control2']:
                 n2 = 'niet ' if solution['p'][1] < 0.05 else ''
                 solution['interpretation2']: str = 'Experiment, dus er is een verklaring mogelijk. Het verschil in '+solution['dependent']+' '+n2+'wordt veroorzaakt door de onafhankelijke variabele '+solution['independent2']
             else:
-                'De echte verklaring is onbekend, de primaire verklaring is dat het verschil in '+solution['dependent']+' wordt veroorzaakt door de onafhankelijke variabele '+solution['independent2'] + '. '\
+                solution['interpretation2']: str = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat het verschil in '+solution['dependent']+' wordt veroorzaakt door de onafhankelijke variabele '+solution['independent2'] + '. '\
                 'De alternatieve is dat ' + solution['independent2'] + ' wordt veroorzaakt door ' + solution['dependent']
             if assignment['control'] and assignment['control2']:
                 n3 = 'niet ' if solution['p'][2] < 0.05 else ''
@@ -618,9 +621,11 @@ class Assignments:
         rejected2: Tuple[str] = ('verworpen','ongelijk') if solution['p'][1] < 0.05 else ('behouden', 'gelijk')
         solution['decision2']: str = 'h0 ' + rejected2[0] + ', de opgevoerde scores van de personen in de populatie zijn ' + rejected2[1] + '.'
         if assignment['control']:
-            solution['interpretation']: str = 'Het verschil in '+solution['dependent']+' wordt veroorzaakt door de onafhankelijke variabele '+solution['independent']
+            n1 = 'niet ' if solution['p'][0] < 0.05 else ''
+            solution['interpretation']: str = 'Experiment, dus er is een verklaring mogelijk. Het verschil in '+solution['dependent']+' '+n1+'wordt veroorzaakt door '+solution['independent']
         else:
-            solution['interpretation']: str = 'De echte verklaring is onbekend, de primaire verklaring is dat, de alternatieve is dat het verschil in '+solution['dependent']+' wordt veroorzaakt door de onafhankelijke variabele '+solution['independent']
+            solution['interpretation']: str = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat '+solution['dependent']+' wordt veroorzaakt door '+solution['independent'] + '. '\
+            'De alternatieve is dat ' + solution['independent'] + ' wordt veroorzaakt door ' + solution['dependent']
         return solution
     
     def solve_mregression(self, assignment: Dict, solution:Dict) -> Dict:
@@ -653,8 +658,9 @@ class Assignments:
         levels = assignment['levels'] if num < 2 else assignment['levels' + str(num)]
         if assignment['assignment_type'] < 3:
             return assignment['independent'] + ', kwalitatief, met niveaus ' + levels[0] + ' en ' + levels[1] + '.'
-        else:
-            return assignment['independent'] + ', een between-subject factor met niveaus ' + levels[0] + ' en ' + levels[1] + '.'
+        else:    
+            i_key:str = 'independent' if num < 2 else 'independent' + str(num)
+            return assignment[i_key] + ', een between-subject factor met niveaus ' + levels[0] + ' en ' + levels[1] + '.'
     
     def print_dependent(self, assignment:dict) -> str:
         return assignment['dependent'] + ', kwantitatief'

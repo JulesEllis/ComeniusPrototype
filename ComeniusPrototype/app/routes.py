@@ -50,8 +50,6 @@ def index():
         if form.answer.data:
             controller.answer_triggered = not controller.answer_triggered
             output_text : str = controller.assignments.print_assignment(controller.assignment) + '<br>' + controller.protocol[controller.index][0]
-            if output_text != '': #Capitalize the first letter of each answer
-                output_text = output_text[0].upper() + output_text[1:]
         if controller.assignment != None: #Retrieve variable names
             a = controller.assignment
             varnames:list = [[a['independent']] + a['levels']] if a['assignment_type'] != 4 else [[a['independent']] + a['levels'],[a['independent2']] + a['levels2']]
@@ -62,6 +60,8 @@ def index():
         prev :bool = controller.prevable
         answer :bool = controller.answerable
         answer_text :str = controller.protocol[controller.index][4] if controller.answer_triggered else ""
+        if answer_text != '': #Capitalize the first letter of each answer
+            answer_text = answer_text[0].upper() + answer_text[1:]
         submit_field :int = controller.submit_field.value
         if controller.protocol[controller.index][1] in [scan_decision, scan_decision_anova, scan_decision_rmanova, scan_interpretation, scan_interpretation_anova]: #Convert textbox to large textbox if appropriate
             submit_field = 10

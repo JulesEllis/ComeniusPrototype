@@ -252,9 +252,10 @@ class OuterController:
                 elif again:
                     return self.assignments.print_assignment(self.assignment) + '<br>' + output_text
                 else:
+                    self.index += 1
                     self.submit_field = Task.TEXT_FIELD
                     self.answer_triggered = False
-                    return output_text + self.protocol[0][0]
+                    return self.assignments.print_assignment(self.assignment) + '<br>' + output_text + self.protocol[self.index][0]
             elif process == Process.LAST_QUESTION: #Main report protocols during last question
                 if input_text == 'prev' and self.prevable:
                     self.index -= 1
@@ -328,7 +329,7 @@ class OuterController:
                 output :str = [('Beschrijf de onafhankelijke variabele.',scan_indep_anova,[self.solution], Process.QUESTION, self.assignments.print_independent(self.assignment)),
                     ('Beschrijf de afhankelijke variabele.',scan_dep,[self.solution], Process.QUESTION, self.assignments.print_dependent(self.assignment)),
                     ('Beschrijf de mate van controle.',scan_control,[self.solution], Process.QUESTION,['Passief-observerend','Experiment'][int(self.solution['control'])]),
-                    ('Voer de nulhypothese in, geformuleerd met "H0" en "mu".',scan_hypothesis,[self.solution, 1], Process.QUESTION),
+                    ('Voer de nulhypothese in, geformuleerd met "H0" en "mu".',scan_hypothesis,[self.solution, 1], Process.QUESTION, self.solution['null']),
                     ('Vul de tabel hieronder in.',scan_table,[self.solution, 0.02], Process.TABLE, self.assignments.print_report({**self.assignment, **self.solution}, answer=True)),     
                     ('Voer de beslissing in', scan_decision,[self.solution, True, 1], Process.QUESTION, self.solution['decision']),
                     ('Voer de causale interpretatie in.',scan_interpretation,[self.solution, True], Process.LAST_QUESTION, self.solution['interpretation'])]
@@ -344,7 +345,7 @@ class OuterController:
                     ('Vul de tabel hieronder in.',scan_table,[self.solution, 0.02], Process.TABLE, self.assignments.print_report({**self.assignment, **self.solution}, answer=True)),    
                     ('Voer de beslissing in voor de eerste onafhankelijke variabele', scan_decision,[self.solution, True, 1], Process.QUESTION,self.solution['decision']),
                     ('Voer de beslissing in voor de tweede onafhankelijke variabele', scan_decision,[self.solution, True, 2], Process.QUESTION,self.solution['decision2']),
-                    ('Voer de beslissing in voor de interactie', scan_decision_anova,[self.solution], Process.QUESTION,self.solution['decision3']),
+                    ('Voer de beslissing in voor de interactie', scan_decision_anova,[self.solution], Process.QUESTION, self.solution['decision3']),
                     ('Voer de causale interpretatie voor de eerste factor in.',scan_interpretation,[self.solution, True, 1], Process.QUESTION,self.solution['interpretation']),
                     ('Voer de causale interpretatie voor de tweede factor in.',scan_interpretation,[self.solution, True, 2], Process.QUESTION,self.solution['interpretation2']),
                     ('Voer de causale interpretatie voor de interactie in.',scan_interpretation_anova,[self.solution], Process.LAST_QUESTION,self.solution['interpretation3'])]

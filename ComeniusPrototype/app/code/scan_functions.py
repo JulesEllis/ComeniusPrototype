@@ -374,7 +374,7 @@ def sim_p(solution: Dict, texts: List[str], margin: float=0.01) -> [bool, str]:
     output:list[bool] = []
     for i in range(len(texts)):
         text = texts[i]
-        tokens: List[str] = nltk.word_tokenize(text.lower())
+        tokens: List[str] = nltk.word_tokenize(str(text).lower())
         numbers: List[float] = []
         for t in tokens:
             if t.replace('.','').replace('-','').isdigit():
@@ -382,57 +382,34 @@ def sim_p(solution: Dict, texts: List[str], margin: float=0.01) -> [bool, str]:
         gold = solution['p'][i] 
         right_number: bool = [n for n in numbers if gold - margin < n and n < gold + margin] != []
         boundary_100: bool = '0.01' in tokens and round(gold, 2) != 0.01
-    boundary_050: bool = '0.05' in tokens and round(gold, 2) != 0.05
-    boundary_010: bool = '0.05' in tokens and round(gold, 2) != 0.05
-    boundary_005: bool = '0.05' in tokens and round(gold, 2) != 0.05
-    boundary_001: bool = '0.05' in tokens and round(gold, 2) != 0.05
-    
-    if numbers != []:
-        if right_number and len(numbers) == len(tokens):#Als er alleen cijfers in het veld staan
-            return False, "Mooi, deze waarde van p klopt! "
-        elif any([x in tokens for x in ['<','minder','kleiner']]):
-            if boundary_100 and gold < 0.10 and gold > 0.05:
-                return False, "Mooi, deze waarde van p klopt! "
-            elif boundary_050 and gold < 0.05 and gold > 0.01:
-                return False, "Mooi, deze waarde van p klopt! "
-            elif boundary_010 and gold < 0.01 and gold > 0.005:
-                return False, "Mooi, deze waarde van p klopt! "
-            elif boundary_005 and gold < 0.005 and gold > 0.001:
-                return False, "Mooi, deze waarde van p klopt! "
-            elif boundary_001 and gold < 0.001:
-                return False, "Mooi, deze waarde van p klopt! "
-            else: return True, 'Er ontbreekt nog iets aan je antwoord, namelijk:<br> -de juiste waarde van p'
-        elif any([x in tokens for x in ['>','meer','groter']]):
-            if boundary_050 and gold > 0.05:
-                return False, "Mooi, deze waarde van p klopt! "
-            else: 
-                return True, 'Er ontbreekt nog iets aan je antwoord, namelijk:<br> -de juiste waarde van p'
-        else: 
-            return True, 'Er ontbreekt nog iets aan je antwoord, namelijk:<br> -de juiste waarde van p'
-    else:
-        return True, 'Er ontbreekt nog iets aan je antwoord, namelijk:<br> -de juiste waarde van p'
+        boundary_050: bool = '0.05' in tokens and round(gold, 2) != 0.05
+        boundary_010: bool = '0.05' in tokens and round(gold, 2) != 0.05
+        boundary_005: bool = '0.05' in tokens and round(gold, 2) != 0.05
+        boundary_001: bool = '0.05' in tokens and round(gold, 2) != 0.05
         
         if numbers != []:
             if right_number and len(numbers) == len(tokens):#Als er alleen cijfers in het veld staan
                 output.append(True)
             elif any([x in tokens for x in ['<','minder','kleiner']]):
-                if boundary_1 and gold < 0.01:
+                if boundary_100 and gold < 0.10 and gold > 0.05:
                     output.append(True)
-                    #print(1)
-                elif boundary_5 and gold < 0.05:
+                elif boundary_050 and gold < 0.05 and gold > 0.01:
                     output.append(True)
-                    #print(2)
+                elif boundary_010 and gold < 0.01 and gold > 0.005:
+                    output.append(True)
+                elif boundary_005 and gold < 0.005 and gold > 0.001:
+                    output.append(True)
+                elif boundary_001 and gold < 0.001:
+                    output.append(True)
                 else: output.append(False)
             elif any([x in tokens for x in ['>','meer','groter']]):
-                if boundary_1 and gold > 0.01:
+                if boundary_050 and gold > 0.05:
                     output.append(True)
-                    #print(3)
-                elif boundary_5 and gold > 0.05:
-                    output.append(True)
-                    #print(4)
-                else: output.append(False)
-            else: output.append(False)
-        else: 
+                else: 
+                    output.append(False)
+            else: 
+                output.append(False)
+        else:
             output.append(False)
     return output
     

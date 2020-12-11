@@ -124,7 +124,7 @@ def detect_comparison(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]
             scorepoints['right_negation'] = not_present != (solution['p'][num-1] < 0.05)
     
     mean = [x for x in sent if x.text == 'gemiddelde' or x.text == 'gemiddelden']
-    mean_2 = [x for x in sent if x.text == 'populatiegemiddelde' or x.text == 'gemiddelden']
+    mean_2 = [x for x in sent if x.text == 'populatiegemiddelde' or x.text == 'populatiegemiddelden']
     scorepoints['mean_present'] = any(mean) or any(mean_2)
     scorepoints['pop_present'] = any(mean_2) or 'populatie' in tokens
     level_bools:list[bool] = [levels[i] in tokens or any([y in tokens for y in level_syns[i]]) for i in range(len(levels))]
@@ -475,7 +475,6 @@ def detect_alternative(sent:Doc, solution:dict, num:int=1) -> List[str]:
             scorepoints['relation_type'] = True
     else:
         scorepoints['relation_type'] = True
-    print(scorepoints)
     
     #Add strings
     if not scorepoints['cause']:
@@ -567,7 +566,7 @@ def scan_decision(doc:Doc, solution:dict, anova:bool, num:int=1, prefix=True, el
     else:
         return True, '<br>'.join(output)
     
-def scan_decision_anova(doc:Doc, solution:dict, num:int=1, prefix=True, elementair=True) -> [bool, List[str]]:
+def scan_decision_anova(doc:Doc, solution:dict, num:int=3, prefix=True, elementair=True) -> [bool, List[str]]:
     output = ['Er ontbreekt nog wat aan je antwoord, namelijk:'] if prefix else []
     if elementair:
         output.extend(detect_h0(doc, solution, num))
@@ -627,7 +626,6 @@ def scan_interpretation_anova(doc:Doc, solution:dict, num:int=3, prefix=True):
     output = ['Er ontbreekt nog wat aan je antwoord, namelijk:'] if prefix else []
     control:bool = solution['control'] and solution['control2']
     primary_checks:list = ['primaire','eerste'] if not control else [solution['dependent']]
-    print(primary_checks)
     unk_sents = [x for x in doc.sents if 'mogelijk' in [y.text for y in x] or 'mogelijke' in [y.text for y in x]]
     if unk_sents != []:
         output.extend(detect_unk(unk_sents[0], solution))
