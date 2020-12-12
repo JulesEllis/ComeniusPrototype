@@ -560,26 +560,24 @@ class Assignments:
             if solution['p'][0] < 0.05: solution['decision'] += 'Het effect is ' + sterkte + '.'
             if solution['p'][1] < 0.05: solution['decision2'] += 'Het effect is ' + sterkte2 + '.'
             if solution['p'][2] < 0.05: solution['decision3'] += 'Het effect is ' + sterkte3 + '.'
+            n1 = '' if solution['p'][0] < 0.05 else 'niet '
             if assignment['control']:
-                n1 = 'niet ' if solution['p'][0] < 0.05 else ''
-                solution['interpretation']: str = 'Experiment, dus er is een verklaring mogelijk. Het verschil in '+solution['dependent']+' '+n1+'wordt veroorzaakt door '+solution['independent']
+                solution['interpretation']: str = 'Experiment, dus er is een verklaring mogelijk. Het verschil in '+solution['dependent']+' wordt '+n1+'veroorzaakt door '+solution['independent']
             else:
-                solution['interpretation']: str = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat '+solution['dependent']+' wordt veroorzaakt door '+solution['independent'] + '. '\
+                solution['interpretation']: str = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat '+solution['dependent']+' '+n1+'wordt veroorzaakt door '+solution['independent'] + '. '\
                 'De alternatieve is dat ' + solution['independent'] + ' wordt veroorzaakt door ' + solution['dependent']
+            n2 = '' if solution['p'][1] < 0.05 else 'niet '
             if assignment['control2']:
-                n2 = 'niet ' if solution['p'][1] < 0.05 else ''
-                solution['interpretation2']: str = 'Experiment, dus er is een verklaring mogelijk. Het verschil in '+solution['dependent']+' '+n2+'wordt veroorzaakt door de onafhankelijke variabele '+solution['independent2']
+                solution['interpretation2']: str = 'Experiment, dus er is een verklaring mogelijk. Het verschil in '+solution['dependent']+' wordt '+n2+'veroorzaakt door de onafhankelijke variabele '+solution['independent2']
             else:
-                solution['interpretation2']: str = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat het verschil in '+solution['dependent']+' wordt veroorzaakt door de onafhankelijke variabele '+solution['independent2'] + '. '\
+                solution['interpretation2']: str = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat het verschil in '+solution['dependent']+'  '+n2+'wordt veroorzaakt door de onafhankelijke variabele '+solution['independent2'] + '. '\
                 'De alternatieve is dat ' + solution['independent2'] + ' wordt veroorzaakt door ' + solution['dependent']
+            n3 = 'niet ' if solution['p'][2] < 0.05 else ''
             if assignment['control'] and assignment['control2']:
-                n3 = 'niet ' if solution['p'][2] < 0.05 else ''
                 solution['interpretation3']: str = 'Experiment, dus er is een verklaring mogelijk. Dit is dat '+solution['independent'] + ' '+n3+'dezelfde invloed heeft op '+solution['dependent']+' zowel bij de niveaus ' + ' en '.join(solution['levels2']) + ' van de factor ' + solution['independent2'] + '.'
             else:
-                if solution['p'][2] < 0.05:
-                    solution['interpretation3']: str = 'De invloed die een verandering in '+solution['independent']+' heeft op de afhankelijke variabele is bij het ene niveau van '+solution['independent2']+' groter of in een andere richting dan bij het andere niveau van '+solution['independent2']+'.'
-                else:
-                    solution['interpretation3']: str = 'De invloed die een verandering in '+solution['independent']+' heeft op de afhankelijke variabele is bij elk niveau van '+solution['independent2']+' even groot en in dezelfde richting, '
+                solution['interpretation3']: str = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire is dat '+solution['independent'] + ' '+n3+'dezelfde invloed heeft op '+solution['dependent']+' zowel bij de niveaus ' + ' en '.join(solution['levels2']) + ' van de factor ' + solution['independent2'] + '. '\
+                    'Eventuele alternatieve verklaringen zijn storende variabelen of omgekeerde causaliteit. '
         return solution
     
     def solve_rmanova(self, assignment: Dict, solution: Dict) -> Dict: 
@@ -619,9 +617,9 @@ class Assignments:
         rejected: Tuple[str] = ('verworpen','ongelijk') if solution['p'][0] < 0.05 else ('behouden', 'gelijk')
         solution['decision']: str = 'h0 ' + rejected[0] + ', de populatiegemiddelden van kwartalen ' + ' en '.join(assignment['levels']) + ' zijn gemiddeld ' + rejected[1] + '.'
         rejected2: Tuple[str] = ('verworpen','ongelijk') if solution['p'][1] < 0.05 else ('behouden', 'gelijk')
-        solution['decision2']: str = 'h0 ' + rejected2[0] + ', de opgevoerde scores van de personen in de populatie zijn ' + rejected2[1] + '.'
+        solution['decision2']: str = 'h0 ' + rejected2[0] + ', de opgevoerde gemiddelden van de personen in de populatie zijn ' + rejected2[1] + '.'
         if assignment['control']:
-            n1 = 'niet ' if solution['p'][0] < 0.05 else ''
+            n1 = '' if solution['p'][0] < 0.05 else 'niet '
             solution['interpretation']: str = 'Experiment, dus er is een verklaring mogelijk. Het verschil in '+solution['dependent']+' '+n1+'wordt veroorzaakt door '+solution['independent']
         else:
             solution['interpretation']: str = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat '+solution['dependent']+' wordt veroorzaakt door '+solution['independent'] + '. '\

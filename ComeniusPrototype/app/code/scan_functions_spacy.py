@@ -311,11 +311,11 @@ def detect_strength(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]:
             output.append(' -de sterkte van het effect van factor '+str(num)+' wordt niet juist genoemd')
     return output
 
-def detect_unk(sent:Doc, solution:dict):
+def detect_unk(sent:Doc, solution:dict, num:int=1):
     #Define variables
     criteria:list=['two']#['unk','two']
     scorepoints = dict([(x,False) for x in criteria])
-    control = solution['control']
+    control = solution['control'] if num < 2 else solution['control' + str(num)]
     tokens = [x.text for x in sent]
     output:List[str] = []
     
@@ -410,7 +410,7 @@ def detect_primary_interaction(sent:Doc, solution:dict) -> List[str]:
                 scorepoints['both_levels'] = all(var2levels)
         if scorepoints['indy2']:
             indy2node = sent[tokens.index(solution['independent2'].lower())]
-            if (indy2node.dep_ == 'nsubj' and dep_node.dep_ == 'obj') or (indy2node.dep_ == 'obj' and dep_node.dep_ == 'ROOT') or (indy1node.dep_ == 'nsubj' and dep_node.dep_ == 'nmod'):
+            if (indy2node.dep_ == 'nsubj' and dep_node.dep_ == 'obj') or (indy2node.dep_ == 'obj' and dep_node.dep_ == 'ROOT') or (indy2node.dep_ == 'nsubj' and dep_node.dep_ == 'nmod'):
                 scorepoints['interaction'] = True
                 scorepoints['level_present'] = any(var1levels)
                 scorepoints['both_levels'] = all(var1levels)
@@ -601,7 +601,7 @@ def scan_interpretation(doc:Doc, solution:dict, anova:bool, num:int=1, prefix=Tr
     primary_checks:list = ['primaire','eerste'] if not control else [solution['dependent']]
     unk_sents = [x for x in doc.sents if any([y in [z.text for z in x] for y in ['mogelijk','mogelijke','verklaring','verklaringen']])]
     if unk_sents != []:
-        output.extend(detect_unk(unk_sents[0], solution))
+        output.extend(detect_unk(unk_sents[0], solution, num))
     else:
         output.append(' -niet genoemd hoeveel mogelijke verklaringen er zijn')
     primair_sents = [x for x in doc.sents if any([z in [y.text for y in x] for z in primary_checks])]
@@ -609,7 +609,7 @@ def scan_interpretation(doc:Doc, solution:dict, anova:bool, num:int=1, prefix=Tr
         output.extend(detect_primary(primair_sents[0], solution, num))
     else:
         output.append(' -de primaire verklaring wordt niet genoemd')
-    if not solution['control']:
+    if not control:
         alt_sents = [x for x in doc.sents if 'alternatieve' in [y.text for y in x]]
         #displacy.serve(alt_sents[0])
         if alt_sents != []:
