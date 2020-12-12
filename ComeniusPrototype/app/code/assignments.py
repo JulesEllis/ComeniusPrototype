@@ -618,11 +618,11 @@ class Assignments:
         solution['decision']: str = 'h0 ' + rejected[0] + ', de populatiegemiddelden van kwartalen ' + ' en '.join(assignment['levels']) + ' zijn gemiddeld ' + rejected[1] + '.'
         rejected2: Tuple[str] = ('verworpen','ongelijk') if solution['p'][1] < 0.05 else ('behouden', 'gelijk')
         solution['decision2']: str = 'h0 ' + rejected2[0] + ', de opgevoerde gemiddelden van de personen in de populatie zijn ' + rejected2[1] + '.'
+        n1 = '' if solution['p'][0] < 0.05 else 'niet '
         if assignment['control']:
-            n1 = '' if solution['p'][0] < 0.05 else 'niet '
-            solution['interpretation']: str = 'Experiment, dus er is een verklaring mogelijk. Het verschil in '+solution['dependent']+' '+n1+'wordt veroorzaakt door '+solution['independent']
+            solution['interpretation']: str = 'Experiment, dus er is een verklaring mogelijk. Het verschil in '+solution['dependent']+' wordt '+n1+'veroorzaakt door '+solution['independent']
         else:
-            solution['interpretation']: str = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat '+solution['dependent']+' wordt veroorzaakt door '+solution['independent'] + '. '\
+            solution['interpretation']: str = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat '+solution['dependent']+' wordt '+n1+'veroorzaakt door '+solution['independent'] + '. '\
             'De alternatieve is dat ' + solution['independent'] + ' wordt veroorzaakt door ' + solution['dependent']
         return solution
     
