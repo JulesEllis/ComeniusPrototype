@@ -9,6 +9,7 @@ import math
 import random
 import numpy as np
 import nltk
+import re
 from nltk import CFG, Tree
 from scipy import stats
 from typing import Dict, List, Tuple
@@ -287,23 +288,42 @@ def scan_hypothesis(text: str, solution: Dict, num: int=1) -> [bool, str]:
 
 #Interaction hypothesis for two-way ANOVA
 def scan_hypothesis_anova(text: str, solution: Dict) -> [bool, str]:
-    #TODO: ADD INTERACTION HYPOTHESIS\
-    tokens: List[str] = nltk.word_tokenize(text.lower())
-    scorepoints: Dict[str, bool] = {'negation': negation_counter(tokens) == 1,
-                   'interaction': 'interactie' in tokens, 
-                   'pop': 'populatie' in tokens}
+    #Remove potential dots to avoid confusion
+    levels = solution['levels']; levels2 = solution['levels2']
+    text:str = text.replace(' x ','x').replace(' & ', '&').replace(' * ','*') #Remove all potential spaces inside brackets
+    tokens: List[str] = re.split(r"\s(?![^{]*})",text)
+    print(tokens)
+    criteria:list = ['h0', 'mu1some','mu1all','mu2some','mu2all']
+    scorepoints = dict([(x,False) for x in criteria])
+    h0templates = ['h0(' + solution['independent'] + 'x' + solution['independent2'] + '):', 'h0(' + solution['independent'] + '*' + solution['independent2'] + '):']
+    print(h0templates)
+    scorepoints['h0'] = any([x in tokens for x in h0templates])
+    mu1present = [x in tokens for x in ['mu('+levels[0] + '&' + levels2[0]+')', 'mu('+levels[0]+')','mu('+levels2[0]+')','mu(totaal)']]
+    mu2present = [x in tokens for x in ['mu('+levels[-1] + '&' + levels2[-1]+')', 'mu('+levels[-1]+')','mu('+levels2[-1]+')','mu(totaal)']]
+    scorepoints['mu1some'] = any(mu1present); scorepoints['mu1all'] = all(mu1present)
+    scorepoints['mu2some'] = any(mu2present); scorepoints['mu2all'] = all(mu2present)
+    scorepoints['mu1order'] = 'mu('+levels[0] + '&' + levels2[0]+') = mu('+levels[0]+') + mu('+levels2[0]+') - mu(totaal)' in text
+    scorepoints['mu2order'] = 'mu('+levels[-1] + '&' + levels2[-1]+') = mu('+levels[-1]+') + mu('+levels2[-1]+') - mu(totaal)' in text
     
     if False in list(scorepoints.values()):
         output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
-        if not scorepoints['negation']:
-            output += ' -niet gesteld dat er geen interactie is<br>'
-        if not scorepoints['interaction']:
-            output += ' -er wordt niet aangegeven dat het om interactie gaat<br>'
-        if not scorepoints['pop']:
-            output += ' -er wordt niet aangegeven dat het om de populatie gaat<br>'
+        if not scorepoints['h0']:
+            output += ' -het "H0():" teken<br>'
+        if not scorepoints['mu1some'] and not scorepoints['mu1all']:
+            output += ' -enkele tekens voor populatiegemiddelden bij de eerste vergelijking'
+        elif not scorepoints['mu1all']:
+            output += ' -alle tekens voor populatiegemiddelden bij de eerste vergelijking'
+        if not scorepoints['mu2some'] and not scorepoints['mu2all']:
+            output += ' -enkele tekens voor populatiegemiddelden bij de laatste vergelijking'
+        elif not scorepoints['mu2all']:
+            output += ' -alle tekens voor populatiegemiddelden bij de laatste vergelijking'
+        if not scorepoints['mu1order']:
+            output += ' -de populatiegemiddelden worden niet juist met elkaar vergeleken bij de eerste vergelijking'
+        if not scorepoints['mu2order']:
+            output += ' -de populatiegemiddelden worden niet juist met elkaar vergeleken bij de laatste vergelijking'
         return True, output
     else:
-        return False, 'Mooi, deze hypothese klopt.'
+        return False, 'Mooi, deze hypothese klopt. '
 
 #Between-person hypothesis for within-subject ANOVA
 def scan_hypothesis_rmanova(text: str, solution: Dict) -> [bool, str]:

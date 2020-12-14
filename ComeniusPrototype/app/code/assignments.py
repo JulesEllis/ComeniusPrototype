@@ -553,7 +553,8 @@ class Assignments:
             solution['control2'] = assignment['control2']
             solution['null']: str = 'h0: mu(' + solution['levels'][0] + ') == mu(' + solution['levels'][1] + ')'
             solution['null2']: str =  'h0: mu(' + solution['levels2'][0] + ') == mu(' + solution['levels2'][1] + ')'
-            solution['null3']: str = 'h0: Er is geen interactie tussen ' +solution['independent']  + ' en ' + solution['independent2'] + ' in de populatie'
+            levels = solution['levels']; levels2 = solution['levels2']
+            solution['null3']: str = 'h0(' + solution['independent'] + ' x ' + solution['independent2'] + '): mu('+levels[0] + ' & ' + levels2[0]+') = mu('+levels[0]+') + mu('+levels2[0]+') - mu(totaal) en mu('+levels[-1] + ' & ' + levels2[-1]+') = mu('+levels[-1]+') + mu('+levels2[-1]+') - mu(totaal)'
             solution['decision']: str = 'h0 ' + rejected[0] + ', de populatiegemiddelden van ' + solution['levels'][0] +' en '+solution['levels'][1]+' zijn gemiddeld ' + rejected[1] + '. '
             solution['decision2']: str = 'h0 ' + rejected2[0] + ', de populatiegemiddelden van ' + solution['levels2'][0] +' en '+solution['levels2'][1]+' zijn gemiddeld ' + rejected2[1] + '. '
             solution['decision3']: str = 'h0 ' + rejected3[0] + ', er is ' + rejected3[1] + ' interactie tussen ' + solution['independent'] +' en '+solution['independent2'] + ' in de populatie. '

@@ -243,6 +243,7 @@ class OuterController:
                 if input_text == 'prev' and self.prevable:
                     self.index -= 1
                     self.submit_field = Task.TEXT_FIELD
+                    self.answer_triggered = False
                     return self.assignments.print_assignment(self.assignment) + '<br>' + self.protocol[self.index][0]
                 elif input_text == 'skip' and self.skipable:
                     self.index += 1
@@ -259,6 +260,7 @@ class OuterController:
             elif process == Process.LAST_QUESTION: #Main report protocols during last question
                 if input_text == 'prev' and self.prevable:
                     self.index -= 1
+                    self.answer_triggered = False
                     return self.assignments.print_assignment(self.assignment) + '<br>' + self.protocol[self.index][0]
                 elif again:
                     return self.assignments.print_assignment(self.assignment) + '<br>' + output_text
@@ -279,6 +281,7 @@ class OuterController:
                     if self.index == 1:
                         self.prevable = False
                     self.index -= 1
+                    self.answer_triggered = False
                     if self.protocol[self.index][3] == Process.TABLE:
                         self.submit_field = self.analysis_type
                     return self.assignments.print_assignment(self.assignment) + '<br>' + self.protocol[self.index][0]

@@ -4,6 +4,7 @@ from app.forms import BaseForm, BigForm, SmallForm, ReportForm
 from app.code.interface import OuterController
 from app.code.enums import Task, Process
 from app.code.scan_functions_spacy import *
+from app.code.scan_functions import scan_hypothesis_anova
 import flask
 
 @app.route('/')
@@ -63,7 +64,7 @@ def index():
         if answer_text != '': #Capitalize the first letter of each answer
             answer_text = answer_text[0].upper() + answer_text[1:]
         submit_field :int = controller.submit_field.value
-        if controller.protocol[controller.index][1] in [scan_decision, scan_decision_anova, scan_decision_rmanova, scan_interpretation, scan_interpretation_anova]: #Convert textbox to large textbox if appropriate
+        if controller.protocol[controller.index][1] in [scan_decision, scan_decision_anova, scan_decision_rmanova, scan_interpretation, scan_interpretation_anova, scan_hypothesis_anova]: #Convert textbox to large textbox if appropriate
             submit_field = 10
         return render_template('index.html', display=output_text, answer_text=answer_text, form=form, skip=skip, prev=prev, answer=answer, submit_field=submit_field, varnames=varnames)
     else:
