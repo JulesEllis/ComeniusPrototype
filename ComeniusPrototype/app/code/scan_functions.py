@@ -292,11 +292,9 @@ def scan_hypothesis_anova(text: str, solution: Dict) -> [bool, str]:
     levels = solution['levels']; levels2 = solution['levels2']
     text:str = text.replace(' x ','x').replace(' & ', '&').replace(' * ','*') #Remove all potential spaces inside brackets
     tokens: List[str] = re.split(r"\s(?![^{]*})",text)
-    print(tokens)
     criteria:list = ['h0', 'mu1some','mu1all','mu2some','mu2all']
     scorepoints = dict([(x,False) for x in criteria])
     h0templates = ['h0(' + solution['independent'] + 'x' + solution['independent2'] + '):', 'h0(' + solution['independent'] + '*' + solution['independent2'] + '):']
-    print(h0templates)
     scorepoints['h0'] = any([x in tokens for x in h0templates])
     mu1present = [x in tokens for x in ['mu('+levels[0] + '&' + levels2[0]+')', 'mu('+levels[0]+')','mu('+levels2[0]+')','mu(totaal)']]
     mu2present = [x in tokens for x in ['mu('+levels[-1] + '&' + levels2[-1]+')', 'mu('+levels[-1]+')','mu('+levels2[-1]+')','mu(totaal)']]

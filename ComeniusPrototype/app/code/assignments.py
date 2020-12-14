@@ -106,7 +106,7 @@ class Assignments:
                'B': [round(random.gauss(mean2,std2), 2) for i in range(n2)]
                }
         
-    def create_anova(self, two_way: bool, control: bool, elementary:bool=True) -> Dict:
+    def create_anova(self, two_way: bool, control: bool, control2:bool=False, elementary:bool=True) -> Dict:
         output = {'two_way':two_way, 'control':control}
         output['dependent'] = 'gewicht'
         output['instruction']: str = None
@@ -123,7 +123,7 @@ class Assignments:
             output['ind2_syns'] = ['stimulusvormen']
             output['levels2'] = ['vierkant','rond']
             output['level2_syns'] = [['vierkante'],['ronde']]
-            output['control2'] = random.choice([True,False])
+            output['control2'] = control2
         
         #Decide the variable names
         report_type = 'elementair' if elementary else 'beknopt'
@@ -133,8 +133,12 @@ class Assignments:
         else:
             output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn '+output['independent']+', met niveaus '+' en '.join(output['levels'])+', '+output['independent2']+' met niveaus '+' en '.join(output['levels2'])+', en gewicht. Voer je antwoorden alsjeblieft tot op 2 decimalen in '\
                  'en gebruik dezelfde vergelijking van de gemiddelden in je antwoord als in de vraagstelling staat (e.g. "groter" of "kleiner"). '
-        if control:
-            output['instruction'] += 'De deelnemers zijn willekeurig gekozen. '
+        if control and output['control2']:
+            output['instruction'] += 'De deelnemers zijn willekeurig gekozen voor beide factoren. '
+        elif control:
+            output['instruction'] += 'De deelnemers zijn willekeurig verdeeld bij de factor '+output['independent']+'. '
+        elif output['control2']:
+            output['instruction'] += 'De deelnemers zijn willekeurig verdeeld bij de factor '+output['independent2']+'. '
 
         #Generate summary statistics
         n: int = random.randint(9,16)
@@ -520,7 +524,7 @@ class Assignments:
             if assignment['control']:
                 solution['interpretation']: str = 'Experiment, dus er is een verklaring mogelijk. Dit is dat '+solution['dependent']+' '+solution['independent'] + ' veroorzaakt.'
             else:
-                solution['interpretation']: str = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat het verschil in '+solution['dependent']+' '+solution['independent'] + \
+                solution['interpretation']: str = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat '+solution['dependent']+' '+solution['independent'] + \
                 ' veroorzaakt. De alternatieve verklaring is dat ' + solution['independent'] + ' ' + solution['dependent'] + ' veroorzaakt.'
                 
         else: #Two-way statistics
@@ -563,15 +567,15 @@ class Assignments:
             if solution['p'][2] < 0.05: solution['decision3'] += 'Het effect is ' + sterkte3 + '.'
             n1 = '' if solution['p'][0] < 0.05 else 'niet '
             if assignment['control']:
-                solution['interpretation']: str = 'Experiment, dus er is een verklaring mogelijk. Het verschil in '+solution['dependent']+' wordt '+n1+'veroorzaakt door '+solution['independent']
+                solution['interpretation']: str = 'Experiment, dus er is een verklaring mogelijk. Dit is dat '+solution['dependent']+' wordt '+n1+'veroorzaakt door '+solution['independent']
             else:
                 solution['interpretation']: str = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat '+solution['dependent']+' '+n1+'wordt veroorzaakt door '+solution['independent'] + '. '\
                 'De alternatieve is dat ' + solution['independent'] + ' wordt veroorzaakt door ' + solution['dependent']
             n2 = '' if solution['p'][1] < 0.05 else 'niet '
             if assignment['control2']:
-                solution['interpretation2']: str = 'Experiment, dus er is een verklaring mogelijk. Het verschil in '+solution['dependent']+' wordt '+n2+'veroorzaakt door de onafhankelijke variabele '+solution['independent2']
+                solution['interpretation2']: str = 'Experiment, dus er is een verklaring mogelijk. Dit is dat '+solution['dependent']+' wordt '+n2+'veroorzaakt door '+solution['independent2']
             else:
-                solution['interpretation2']: str = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat het verschil in '+solution['dependent']+'  '+n2+'wordt veroorzaakt door de onafhankelijke variabele '+solution['independent2'] + '. '\
+                solution['interpretation2']: str = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat '+solution['dependent']+'  '+n2+'wordt veroorzaakt door '+solution['independent2'] + '. '\
                 'De alternatieve is dat ' + solution['independent2'] + ' wordt veroorzaakt door ' + solution['dependent']
             n3 = 'niet ' if solution['p'][2] < 0.05 else ''
             if assignment['control'] and assignment['control2']:
@@ -621,7 +625,7 @@ class Assignments:
         solution['decision2']: str = 'h0 ' + rejected2[0] + ', de opgevoerde gemiddelden van de personen in de populatie zijn ' + rejected2[1] + '.'
         n1 = '' if solution['p'][0] < 0.05 else 'niet '
         if assignment['control']:
-            solution['interpretation']: str = 'Experiment, dus er is een verklaring mogelijk. Het verschil in '+solution['dependent']+' wordt '+n1+'veroorzaakt door '+solution['independent']
+            solution['interpretation']: str = 'Experiment, dus er is een verklaring mogelijk. De primaire verklaring is dat '+solution['dependent']+' wordt '+n1+'veroorzaakt door '+solution['independent']
         else:
             solution['interpretation']: str = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat '+solution['dependent']+' wordt '+n1+'veroorzaakt door '+solution['independent'] + '. '\
             'De alternatieve is dat ' + solution['independent'] + ' wordt veroorzaakt door ' + solution['dependent']

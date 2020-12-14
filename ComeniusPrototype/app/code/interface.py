@@ -193,7 +193,8 @@ class OuterController:
                     instruction = self.assignments.print_anova(self.assignment)
                     self.analysis_type = Task.ONEWAY_ANOVA
                 if analysis == 'Two-way ANOVA':
-                    self.assignment = self.assignments.create_anova(True, control)
+                    control2 = random.choice([True,False])
+                    self.assignment = self.assignments.create_anova(True, control, control2=control2, elementary=True)
                     self.solution = self.assignments.solve_anova(self.assignment, {})
                     instruction = self.assignments.print_anova(self.assignment)
                     self.analysis_type = Task.TWOWAY_ANOVA

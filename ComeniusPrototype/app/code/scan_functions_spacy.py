@@ -33,6 +33,19 @@ def descendants(node) -> List[Token]:
         output += descendants(child)
     return output
 
+def check_causality(independent:Doc, dependent:Doc, alternative:bool=False) -> bool:
+    print(independent.dep_ + '-' + dependent.dep_)
+    if not alternative:
+        tuples = [('nsubj', 'obj'),('obj', 'ROOT'),('nsubj', 'nmod'),('obl', 'obj'),('ROOT', 'obj'),
+              ('obj', 'nmod'), ('amod', 'obj'), ('obl','obl'),('nsubj','obl'),('obj','obj'),('nsubj','amod')]
+    else: #Add reverse causality and disturbing variable options
+        tuples = [('obj','obj'),('obj','nsubj'), ('ROOT','obj'),('nmod','nsubj'),('obj','obl'),('obj','ROOT'),('amod','nsubj'),
+                       ('nmod','obj'),('obj','amod'),('obl','nsubj')]
+    for t in tuples:
+        if independent.dep_ == t[0] and dependent.dep_ == t[1]:
+            return True
+    return False
+    
 def detect_h0(sent:Doc, solution:dict, num:int=1) -> List[str]:
     #Define variables
     scorepoints = {'hyp_rejected': False,
@@ -337,8 +350,6 @@ def detect_primary(sent:Doc, solution:dict, num:int=1) -> List[str]:
     scorepoints = dict([(x,False) for x in criteria])
     i_key: str = 'independent' + str(num) if num > 1 else 'independent'
     syn_key: str = 'ind_syns' if num == 1 else 'ind' + str(num) + '_syns'
-    independent = solution[i_key].lower()
-    dependent = solution['dependent'].lower()
     control: bool = solution['control'] if num < 2 else solution['control'+str(num)]
     rejected = solution['p'][num-1] < 0.05
     tokens = [x.text for x in sent] 
@@ -350,25 +361,12 @@ def detect_primary(sent:Doc, solution:dict, num:int=1) -> List[str]:
     causeverbs = [x for x in sent if x.text in ['veroorzaakt', 'heeft', 'beinvloedt', 'beinvloed','verantwoordelijk', 'oorzaak']] 
     if any(causeverbs): #effect_children = descendants(causeverbs[0])
         scorepoints['cause'] = True
-    scorepoints['dep'] = dependent in tokens or any([x in tokens for x in solution[syn_key]])
-    scorepoints['ind'] = independent in tokens or any([x in tokens for x in solution['dep_syns']])
+    depnode = [x for x in sent if x.text in solution['dep_syns'] + [solution['dependent']]]
+    indynode = [x for x in sent if x.text in solution[syn_key] + [solution[i_key]]]
+    scorepoints['ind'] = indynode != []
+    scorepoints['dep'] = depnode != []
     if scorepoints['ind'] and scorepoints['dep']:
-        indynode = sent[tokens.index(independent.lower())]
-        depnode = sent[tokens.index(dependent.lower())]
-        if indynode.dep_ == 'nsubj' and depnode.dep_ == 'obj': #Normale causaliteit
-            scorepoints['alignment'] = True
-        if indynode.dep_ == 'obj' and depnode.dep_ == 'ROOT': #Consistent verkeerde parse in spacy
-            scorepoints['alignment'] = True
-        if indynode.dep_ == 'nsubj' and depnode.dep_ == 'nmod': #Consistent verkeerde parse in spacy
-            scorepoints['alignment'] = True
-        if indynode.dep_ == 'obl' and depnode.dep_ == 'obj': #Consistent verkeerde parse in spacy
-            scorepoints['alignment'] = True
-        if indynode.dep_ == 'ROOT' and depnode.dep_ == 'obj': #Consistent verkeerde parse in spacy
-            scorepoints['alignment'] = True
-        if indynode.dep_ == 'amod' and depnode.dep_ == 'obj': #Consistent verkeerde parse in spacy
-            scorepoints['relation_type'] = True
-        if indynode.dep_ == 'obj' and depnode.dep_ == 'nmod': #Consistent verkeerde parse in spacy
-            scorepoints['alignment'] = True
+        scorepoints['alignment'] = check_causality(indynode[0],depnode[0])
     
     #Add strings
     if not scorepoints['cause']:
@@ -395,22 +393,22 @@ def detect_primary_interaction(sent:Doc, solution:dict) -> List[str]:
     rejected = solution['p'][2] < 0.05
     
     # Fill scorepoints
-    scorepoints['dep'] = solution['dependent'].lower() in tokens or any([x in tokens for x in solution['dep_syns']])
-    scorepoints['indy1'] = solution['independent'].lower() in tokens or any([x in tokens for x in solution['ind_syns']])
-    scorepoints['indy2'] = solution['independent2'].lower() in tokens or any([x in tokens for x in solution['ind2_syns']])
+    dep_node = [x for x in sent if x.text in solution['dep_syns'] + [solution['dependent']]]
+    indy1node = [x for x in sent if x.text in solution['ind_syns'] + [solution['independent']]]
+    indy2node = [x for x in sent if x.text in solution['ind2_syns'] + [solution['independent2']]]
+    scorepoints['indy1'] = indy1node != []
+    scorepoints['indy2'] = indy2node != []
+    scorepoints['dep'] = dep_node != []
     scorepoints['same'] = 'dezelfde' in tokens or 'gelijk' in tokens or 'gelijke' in tokens or 'hetzelfde' in tokens
     scorepoints['negation'] = bool(negation_counter(tokens) % 2) == rejected
     if scorepoints['dep']:
-        dep_node = sent[tokens.index(solution['dependent'].lower())]
         if scorepoints['indy1']:
-            indy1node = sent[tokens.index(solution['independent'].lower())]
-            if (indy1node.dep_ == 'nsubj' and dep_node.dep_ == 'obj') or (indy1node.dep_ == 'obj' and dep_node.dep_ == 'ROOT') or (indy1node.dep_ == 'nsubj' and dep_node.dep_ == 'nmod'):
+            if check_causality(indy1node[0], dep_node[0]):
                 scorepoints['interaction'] = True
                 scorepoints['level_present'] = any(var2levels)
                 scorepoints['both_levels'] = all(var2levels)
         if scorepoints['indy2']:
-            indy2node = sent[tokens.index(solution['independent2'].lower())]
-            if (indy2node.dep_ == 'nsubj' and dep_node.dep_ == 'obj') or (indy2node.dep_ == 'obj' and dep_node.dep_ == 'ROOT') or (indy2node.dep_ == 'nsubj' and dep_node.dep_ == 'nmod'):
+            if check_causality(indy2node[0], dep_node[0]):
                 scorepoints['interaction'] = True
                 scorepoints['level_present'] = any(var1levels)
                 scorepoints['both_levels'] = all(var1levels)
@@ -440,11 +438,8 @@ def detect_alternative(sent:Doc, solution:dict, num:int=1) -> List[str]:
     scorepoints = dict([(x,False) for x in criteria])
     i_key: str = 'independent' + str(num) if num > 1 else 'independent'
     syn_key: str = 'ind_syns' if num == 1 else 'ind' + str(num) + '_syns'
-    independent = solution[i_key].lower()
-    dependent = solution['dependent'].lower()
     control: bool = solution['control'] if num < 2 else solution['control'+str(num)]
     #rejected: bool = solution['p'][num-1] < 0.05
-    tokens = [x.text for x in sent]
     output:List[str] = []
     
     #Controleer input
@@ -452,27 +447,12 @@ def detect_alternative(sent:Doc, solution:dict, num:int=1) -> List[str]:
     causeverbs = [x for x in sent if x.text in ['veroorzaakt', 'heeft', 'beinvloedt', 'beinvloed','verantwoordelijk', 'oorzaak', 'invloed']] 
     if any(causeverbs):
         scorepoints['cause'] = True
-    scorepoints['dep'] = dependent in tokens or any([x in tokens for x in solution['dep_syns']])
-    scorepoints['ind'] = independent in tokens or any([x in tokens for x in solution[syn_key]])
-    if scorepoints['ind'] and scorepoints['dep']:
-        indynode = sent[tokens.index(independent.lower())]
-        depnode = sent[tokens.index(dependent.lower())]
-        if indynode.dep_ == 'obj' and depnode.dep_ == 'nsubj': #Omgekeerde causaliteit
-            scorepoints['relation_type'] = True
-        if indynode.dep_ == 'ROOT' and depnode.dep_ == 'obj': #Consistent verkeerde parse in spacy
-            scorepoints['relation_type'] = True
-        if indynode.dep_ == 'nmod' and depnode.dep_ == 'nsubj': #Consistent verkeerde parse in spacy
-            scorepoints['relation_type'] = True
-        if indynode.dep_ == 'obj' and depnode.dep_ == 'obl': #Consistent verkeerde parse in spacy
-            scorepoints['relation_type'] = True
-        if indynode.dep_ == 'obj' and depnode.dep_ == 'ROOT': #Consistent verkeerde parse in spacy
-            scorepoints['relation_type'] = True
-        if indynode.dep_ == 'nmod' and depnode.dep_ == 'obj': #Consistent verkeerde parse in spacy
-            scorepoints['relation_type'] = True
-        if indynode.dep_ == 'obj' and depnode.dep_ == 'amod': #Consistent verkeerde parse in spacy
-            scorepoints['relation_type'] = True
-        if indynode.dep_ == 'obj' and depnode.dep_ == 'obj': #Storende variabele
-            scorepoints['relation_type'] = True
+    depnode = [x for x in sent if x.text in solution['dep_syns'] + [solution['dependent']]]
+    indynode = [x for x in sent if x.text in solution[syn_key] + [solution[i_key]]]
+    scorepoints['ind'] = indynode != []
+    scorepoints['dep'] = depnode != []
+    if scorepoints['ind'] and scorepoints['dep']:        
+        scorepoints['relation_type'] = check_causality(indynode[0], depnode[0], alternative=True)
     else:
         scorepoints['relation_type'] = True
     
