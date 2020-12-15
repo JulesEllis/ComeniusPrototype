@@ -132,8 +132,8 @@ def smallform():
 def reportform():
     form = ReportForm()
     controller : OuterController = OuterController()
-    a = controller.assignment
-    varnames:list = [[a['independent']] + a['levels']] if a['assignment_type'] != 4 else [[a['independent']] + a['levels'],[a['independent2']] + a['levels2']]
+    #a = controller.assignment
+    varnames:list = []#[[a['independent']] + a['levels']] if a['assignment_type'] != 4 else [[a['independent']] + a['levels'],[a['independent2']] + a['levels2']]
     
     if flask.request.method == 'POST':
         if form.submit.data:

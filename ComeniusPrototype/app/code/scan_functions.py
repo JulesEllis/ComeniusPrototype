@@ -226,11 +226,11 @@ def scan_p(text:str, solution: Dict, margin: float=0.01) -> [bool, str]:
             pass
     gold = solution['p'][0] 
     right_number: bool = [n for n in numbers if gold - margin < n and n < gold + margin] != []
-    boundary_100: bool = '0.01' in tokens and round(gold, 2) != 0.01
+    boundary_100: bool = '0.10' in tokens and round(gold, 2) != 0.01
     boundary_050: bool = '0.05' in tokens and round(gold, 2) != 0.05
-    boundary_010: bool = '0.05' in tokens and round(gold, 2) != 0.05
-    boundary_005: bool = '0.05' in tokens and round(gold, 2) != 0.05
-    boundary_001: bool = '0.05' in tokens and round(gold, 2) != 0.05
+    boundary_010: bool = '0.01' in tokens and round(gold, 2) != 0.05
+    boundary_005: bool = '0.005' in tokens and round(gold, 2) != 0.05
+    boundary_001: bool = '0.001' in tokens and round(gold, 2) != 0.05
     
     if numbers != []:
         if right_number and len(numbers) == len(tokens):#Als er alleen cijfers in het veld staan
@@ -399,11 +399,11 @@ def sim_p(solution: Dict, texts: List[str], margin: float=0.01) -> [bool, str]:
                 numbers.append(float(t))
         gold = solution['p'][i] 
         right_number: bool = [n for n in numbers if gold - margin < n and n < gold + margin] != []
-        boundary_100: bool = '0.01' in tokens and round(gold, 2) != 0.01
+        boundary_100: bool = '0.10' in tokens and round(gold, 2) != 0.01
         boundary_050: bool = '0.05' in tokens and round(gold, 2) != 0.05
-        boundary_010: bool = '0.05' in tokens and round(gold, 2) != 0.05
-        boundary_005: bool = '0.05' in tokens and round(gold, 2) != 0.05
-        boundary_001: bool = '0.05' in tokens and round(gold, 2) != 0.05
+        boundary_010: bool = '0.01' in tokens and round(gold, 2) != 0.05
+        boundary_005: bool = '0.005' in tokens and round(gold, 2) != 0.05
+        boundary_001: bool = '0.001' in tokens and round(gold, 2) != 0.05
         
         if numbers != []:
             if right_number and len(numbers) == len(tokens):#Als er alleen cijfers in het veld staan
@@ -467,32 +467,33 @@ def scan_table(textfields: Dict, solution: Dict, margin:float=0.01) -> [bool, st
                    'p': sim_p(solution, pinput, margin),
                    'r2': sim(solution['r2'], r2input, margin)
                    }
+    nametags:list = ['eerste','tweede','derde','vierde','vijfde','zesde']
     if False in [all(x) for x in list(scorepoints.values())]:
         output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
         if not any(scorepoints['df']):
             output += ' -alle juiste waarden van df<br>'
-        elif not all(scorepoints['df']):    
-            output += ' -ten minste één juiste waarde van df<br>'
+        elif not all(scorepoints['df']):
+            output += ' -meerdere juist waarden van df, namelijke de '+' en '.join([nametags[i] for i in range(6) if scorepoints['df'][i]])+'<br>'
         if not any(scorepoints['ss']):
             output += ' -alle juiste waarden van ss<br>'
-        elif not all(scorepoints['ss']):    
-            output += ' -ten minste één juiste waarde van ss<br>'
+        elif not all(scorepoints['ss']):
+            output += ' -meerdere juist waarden van ss, namelijke de '+' en '.join([nametags[i] for i in range(6) if scorepoints['ss'][i]])+'<br>'
         if not any(scorepoints['ms']):
             output += ' -alle juiste waarden van ms<br>'
-        elif not all(scorepoints['ms']):    
-            output += ' -ten minste één juiste waarde van ms<br>'
+        elif not all(scorepoints['ms']):
+            output += ' -meerdere juist waarden van ms, namelijke de '+' en '.join([nametags[i] for i in range(6) if scorepoints['ms'][i]])+'<br>'
         if not any(scorepoints['F']):
             output += ' -alle juiste waarden van F<br>'
-        elif not all(scorepoints['F']):    
-            output += ' -ten minste één juiste waarde van F<br>'
+        elif not all(scorepoints['F']):
+            output += ' -meerdere juist waarden van F, namelijke de '+' en '.join([nametags[i] for i in range(6) if scorepoints['F'][i]])+'<br>'
         if not any(scorepoints['p']):
             output += ' -alle juiste waarden van p<br>'
-        elif not all(scorepoints['p']):    
-            output += ' -ten minste één juiste waarde van p<br>'
+        elif not all(scorepoints['p']):
+            output += ' -meerdere juist waarden van p, namelijke de '+' en '.join([nametags[i] for i in range(6) if scorepoints['p'][i]])+'<br>'
         if not any(scorepoints['r2']):
             output += ' -alle juiste waarden van R<sup>2</sup><br>'
-        elif not all(scorepoints['r2']):    
-            output += ' -ten minste één juiste waarde van R<sup>2</sup><br>'
+        elif not all(scorepoints['r2']):
+            output += ' -meerdere juist waarden van R<sup>2</sup>, namelijke de '+' en '.join([nametags[i] for i in range(6) if scorepoints['r2'][i]])+'<br>'
         return True, output
     else:
         return False, 'Mooi, deze tabel klopt. '

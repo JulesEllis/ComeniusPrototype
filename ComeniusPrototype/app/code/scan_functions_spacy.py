@@ -113,7 +113,7 @@ def detect_significance(doc:Doc, solution:dict, num:int=1) -> List[str]:
 
 def detect_comparison(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]:
     #Define variables
-    criteria = ['right_comparison', 'right_negation', 'mean_present', 'pop_present', 'level_present', 'both_present']
+    criteria = ['right_comparison', 'right_negation', 'mean_present', 'pop_present', 'level_present', 'both_present','contrasign']
     scorepoints = dict([(x,False) for x in criteria])
     output:List[str] = []
     tokens = [y.text for y in sent]
@@ -136,15 +136,21 @@ def detect_comparison(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]
         else:
             scorepoints['right_negation'] = not_present != (solution['p'][num-1] < 0.05)
     
-    mean = [x for x in sent if x.text == 'gemiddelde' or x.text == 'gemiddelden']
+    mean = [x for x in sent if x.text == 'gemiddelde' or x.text == 'gemiddelden' or x.text == 'gemiddeld']
     mean_2 = [x for x in sent if x.text == 'populatiegemiddelde' or x.text == 'populatiegemiddelden']
     scorepoints['mean_present'] = any(mean) or any(mean_2)
-    scorepoints['pop_present'] = any(mean_2) or 'populatie' in tokens
+    scorepoints['pop_present'] = any(mean_2) or 'populatie' in tokens or any([x in tokens for x in ['significant','significante']])
     level_bools:list[bool] = [levels[i] in tokens or any([y in tokens for y in level_syns[i]]) for i in range(len(levels))]
     scorepoints['level_present'] = any(level_bools) #or scorepoints['level_present']
     scorepoints['both_present'] = all(level_bools)# or scorepoints['both_present']
+    scorepoints['contrasign'] = not (any(mean_2) or 'populatie' in tokens) and any([x in tokens for x in ['significant','significante']])
     
     #Add strings:
+    if not scorepoints['contrasign']:
+        if num < 2:
+            output.append(' -zowel "populatie" en "significant" genoemd, haal een van de twee weg')
+        else:
+            output.append(' -bij factor '+str(num)+' zowel "populatie" en "significant" genoemd, haal een van de twee weg')
     if not scorepoints['right_comparison']:
         if num < 2:
             output.append(' -niveaus in de populatie niet of niet juist met elkaar vergeleken')
@@ -215,7 +221,7 @@ def detect_comparison_mreg(sent:Doc, solution:dict) -> List[str]:
 
 def detect_interaction(doc:Doc, solution:dict, anova:bool) -> List[str]:
     #Define variables
-    criteria = ['interactie','indy1','indy2','pop_present','right_negation']
+    criteria = ['interactie','indy1','indy2','pop_present','right_negation', 'contrasign']
     scorepoints = dict([(x,False) for x in criteria])
     rejected = solution['p'][-1] < 0.05
     output:List[str] = []
@@ -228,8 +234,9 @@ def detect_interaction(doc:Doc, solution:dict, anova:bool) -> List[str]:
         scorepoints['interactie'] = True
         scorepoints['indy1'] = solution['independent'].lower() in [x.text for x in int_descendants]
         scorepoints['indy2'] = solution['independent2'].lower() in [x.text for x in int_descendants]
-        scorepoints['pop_present'] = 'populatie' in [x.text for x in int_descendants]
-        scorepoints['right_negation'] = bool(negation_counter(tokens) % 2) != rejected
+        scorepoints['pop_present'] = 'populatie' in [x.text for x in int_descendants] or any([x in tokens for x in ['significant','significante']])
+        scorepoints['right_negation'] = bool(negation_counter(tokens) % 2) != rejected    
+        scorepoints['contrasign'] = not ('populatie' in tokens) and any([x in tokens for x in ['significant','significante']])
         
     #Add strings
     if not scorepoints['interactie']:
@@ -242,13 +249,16 @@ def detect_interaction(doc:Doc, solution:dict, anova:bool) -> List[str]:
         output.append(' -de onafhankelijke variabelen ontbreken bij de interactiebeslissing')
     elif not scorepoints['indy2'] or not scorepoints['indy2']:
         output.append(' -een van de onafhankelijke variabelen ontbreekt bij de interactiebeslissing')
+    if not scorepoints['contrasign']:
+        output.append(' -zowel "populatie" en "significant" genoemd, haal een van de twee weg')
     return output
 
 def detect_true_scores(sent:Doc, solution:dict, num=2) -> List[str]:
     #Define variables
-    criteria:list = ['right_comparison', 'right_negation', 'mean_present', 'pop_present','jacked']
+    criteria:list = ['right_comparison', 'right_negation', 'mean_present', 'pop_present','jacked','contrasign']
     scorepoints = dict([(x,False) for x in criteria])
     rejected = solution['p'][-1] < 0.05
+    tokens = [x.text for x in sent]
     output:List[str] = []
     
     #Controleer inpur
@@ -264,11 +274,12 @@ def detect_true_scores(sent:Doc, solution:dict, num=2) -> List[str]:
             scorepoints['right_negation'] = not_present == rejected
     scorepoints['jacked'] = 'opgevoerde' in [x.text for x in sent]
         
-    mean = [x for x in sent if x.text == 'gemiddelde' or x.text == 'gemiddelden']
+    mean = [x for x in sent if x.text == 'gemiddelde' or x.text == 'gemiddelden' or x.text == 'gemiddeld']
     mean_2 = [x for x in sent if x.text == 'populatiegemiddelde' or x.text == 'populatiegemiddelden']
     scorepoints['mean_present'] = any(mean) or any(mean_2)
-    scorepoints['pop_present'] = any(mean_2) or 'populatie' in [x.text for x in sent]
-            
+    scorepoints['pop_present'] = any(mean_2) or 'populatie' in [x.text for x in sent] or any([x in tokens for x in ['significant','significante']])
+    scorepoints['contrasign'] = not (any(mean_2) or 'populatie' in tokens) and any([x in tokens for x in ['significant','significante']])
+    
     #Add strings
     if not scorepoints['right_comparison']:
         output.append(' -niveaus in de populatie niet of niet juist met elkaar vergeleken')
@@ -280,6 +291,8 @@ def detect_true_scores(sent:Doc, solution:dict, num=2) -> List[str]:
         output.append(' -niet gesteld dat de beslissing over de populatie gaat')
     if not scorepoints['jacked']:
         output.append(' -niet gesteld dat het over de opgevoerde gemiddelden gaat')
+    if not scorepoints['contrasign']:
+        output.append(' -zowel "populatie" en "significant" genoemd, haal een van de twee weg')
     return output
     
 def detect_strength(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]:

@@ -385,7 +385,7 @@ class Assignments:
             output += '<p><table style="width:20%">'
             output += '<tr><td>Predictor</td><td>b</td><td>Beta</td><td>Standaarderror</td><td>T</td><td>p</td></tr>'
             for i in range(len(data['predictoren'])):
-                output += '<tr><td>'+data['predictoren'][i]+'</td><td>'+str(round(assignment['predictor_b'][i],2))+'</td><td>'+str(round(assignment['predictor_beta'][i],2))+'</td><td>'+str(round(assignment['predictor_se'][i],2))+'</td><td>'+str(round(assignment['predictor_t'][i],2))+'</td><td>'+str(round(assignment['predictor_p'][i],2))+'</td></tr>'
+                output += '<tr><td>'+data['predictoren'][i]+'</td><td>'+str(round(assignment['predictor_b'][i],2))+'</td><td>'+str(round(assignment['predictor_beta'][i],2))+'</td><td>'+str(round(assignment['predictor_se'][i],2))+'</td><td>'+str(round(assignment['predictor_t'][i],2))+'</td><td>'+str(round(assignment['predictor_p'][i],3))+'</td></tr>'
             output += '</table></p>'
             
             #output += '<p><table style="width:20%">'
@@ -452,8 +452,6 @@ class Assignments:
         solution['p']: List = None
         if assignment['hypothesis'] == 1 and solution['raw_effect'][0] < 0 or assignment['hypothesis'] == 2 and solution['raw_effect'][0] > 0:
             solution['p'] = [1.0]
-        #elif assignment['hypothesis'] == 1 and solution['T'][0] < 0 or assignment['hypothesis'] == 2 and solution['T'][0] > 0:
-        #    solution['p'] = [1 - stats.t.sf(np.abs(solution['T'][0]), solution['df'][0])]
         else:
             solution['p']= [stats.t.sf(np.abs(solution['T'][0]), solution['df'][0])]
         if assignment['hypothesis'] == 0:
@@ -482,6 +480,7 @@ class Assignments:
             else:
                 solution['interpretation']: str = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat ' + solution['independent'] + ' geen invloed heeft op ' + solution['dependent'] + '. '+\
                 'De alternatieve verklaring is dat ' + solution['independent'] + ' ' + solution['dependent'] + ' wel beinvloedt, maar dat dit niet merkbaar is door een storende variabele.'
+        print(solution)
         return solution
     
     def solve_anova(self, assignment: Dict, solution: Dict) -> Dict:
@@ -543,7 +542,7 @@ class Assignments:
             ssbetween: float = (N-1) * np.std([val for sublist in [[data['means'][j] for i in range(data['ns'][j])] for j in range(lt)] for val in sublist], ddof=1) ** 2
             ssa: float = (N-1) * np.std([np.mean([data['means'][0],data['means'][1]]) for i in range(data['ns'][0] + data['ns'][1])]+[np.mean([data['means'][2],data['means'][3]]) for i in range(data['ns'][2] + data['ns'][3])], ddof=1) ** 2
             ssb: float = (N-1) * np.std([np.mean([data['means'][0],data['means'][2]]) for i in range(data['ns'][0] + data['ns'][2])]+[np.mean([data['means'][1],data['means'][3]]) for i in range(data['ns'][1] + data['ns'][3])], ddof=1) ** 2
-            sswithin: float = sum([data['stds'][i] * (data['ns'][i] - 1) for i in range(lt)])
+            sswithin: float = sum([data['stds'][i] ** 2 * (data['ns'][i] - 1) for i in range(lt)])
             solution['ss']: List[float] = [ssbetween, ssa, ssb, ssbetween - ssa - ssb, sswithin, ssbetween + sswithin]
             solution['ms']: List[float] = [solution['ss'][i] / solution['df'][i] for i in range(5)]
             solution['F']: List[float] = [solution['ms'][1] / solution['ms'][4], solution['ms'][2] / solution['ms'][4], solution['ms'][3] / solution['ms'][4]]
@@ -651,6 +650,9 @@ class Assignments:
         #Compute p-values
         n_predictors = assignment['n_predictors']
         solution['predictor_p'] = [random.random() * 0.05 if random.choice([True, False]) else random.random() * 0.95 + 0.05 for x in range(n_predictors+1)]
+        for i in range(len(solution['predictor_p'])):
+            if round(solution['predictor_p'][i], 2) == 0.05:
+                solution['predictor_p'][i] += 0.01
         solution['predictor_t'] = [stats.t.isf(solution['predictor_p'][i],1,N - 3 - 1) for i in range(n_predictors+1)]
         solution['predictor_beta'] = [np.mean([random.uniform(60,120)])] + [abs(random.gauss(0,0.5)) for i in range(n_predictors)]
         solution['predictor_b'] = [x * np.sqrt(assignment['var_pred']) for x in solution['predictor_beta']]
