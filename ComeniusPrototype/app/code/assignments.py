@@ -130,16 +130,18 @@ class Assignments:
         if not two_way:
             output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn '+output['independent']+', met niveaus '+' en '.join(output['levels'])+', en gewicht. Voer je antwoorden alsjeblieft tot op 2 decimalen in '\
                  'en gebruik dezelfde vergelijking van de gemiddelden in je antwoord als in de vraagstelling staat (e.g. "groter" of "kleiner"). '
+            if control:
+                output['instruction'] += 'De deelnemers zijn willekeurig verdeeld over de niveaus.'
         else:
             output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn '+output['independent']+', met niveaus '+' en '.join(output['levels'])+', '+output['independent2']+' met niveaus '+' en '.join(output['levels2'])+', en gewicht. Voer je antwoorden alsjeblieft tot op 2 decimalen in '\
                  'en gebruik dezelfde vergelijking van de gemiddelden in je antwoord als in de vraagstelling staat (e.g. "groter" of "kleiner"). '
-        if control and output['control2']:
-            output['instruction'] += 'De deelnemers zijn willekeurig gekozen voor beide factoren. '
-        elif control:
-            output['instruction'] += 'De deelnemers zijn willekeurig verdeeld bij de factor '+output['independent']+'. '
-        elif output['control2']:
-            output['instruction'] += 'De deelnemers zijn willekeurig verdeeld bij de factor '+output['independent2']+'. '
-
+            if control and output['control2']:
+                output['instruction'] += 'De deelnemers zijn willekeurig gekozen voor beide factoren. '
+            elif control:
+                output['instruction'] += 'De deelnemers zijn willekeurig verdeeld bij de factor '+output['independent']+'. '
+            elif output['control2']:
+                output['instruction'] += 'De deelnemers zijn willekeurig verdeeld bij de factor '+output['independent2']+'. '
+        
         #Generate summary statistics
         n: int = random.randint(9,16)
         if not two_way:
@@ -504,10 +506,11 @@ class Assignments:
             solution['level2_syns'] = assignment['level2_syns']
         
         #One-way statistics
-        mean: float = np.mean(data['means'])
+        #mean: float = np.mean(data['means'])
         if not two_way:
             #Intermediary statistics order: Between-group, within-group, total
-            ssm: float = sum([(data['means'][i] - mean) ** 2 for i in range(len(data['ns']))]) * (sum(data['ns']) - 1)
+            #ssm: float = sum([(data['means'][i] - mean) ** 2 for i in range(len(data['ns']))]) * (sum(data['ns']) - 1)
+            ssm: float = np.std([data['means'][0] for i in range(data['ns'][0])]+[data['means'][1] for i in range(data['ns'][1])], ddof=1) ** 2 * (sum(data['ns']) - 1)
             sse: float = sum([(data['ns'][i] - 1) * (data['stds'][i]) ** 2 for i in range(len(data['ns']))])
             solution['ss']: List[float] = [ssm, sse, ssm + sse]
             solution['df']: List[float] = [len(data['ns']) - 1, abs(len(data['ns']) - sum(data['ns'])), sum(data['ns']) - 1]
@@ -537,9 +540,9 @@ class Assignments:
             solution['df']: List[int] = [lt - 1, l1 - 1, l2 - 1, (l1-1) * (l2-1), sum(data['ns']) - lt, sum(data['ns']) - 1]
             
             #Numerical parts of the report
-            ssbetween: float = (N-1) * np.std([val for sublist in [[data['means'][j] for i in range(data['ns'][j])] for j in range(lt)] for val in sublist]) ** 2
-            ssa: float = (N-1) * np.std([np.mean([data['means'][0],data['means'][1]]) for i in range(data['ns'][0] + data['ns'][1])]+[np.mean([data['means'][2],data['means'][3]]) for i in range(data['ns'][2] + data['ns'][3])]) ** 2
-            ssb: float = (N-1) * np.std([np.mean([data['means'][0],data['means'][2]]) for i in range(data['ns'][0] + data['ns'][2])]+[np.mean([data['means'][1],data['means'][3]]) for i in range(data['ns'][1] + data['ns'][3])]) ** 2
+            ssbetween: float = (N-1) * np.std([val for sublist in [[data['means'][j] for i in range(data['ns'][j])] for j in range(lt)] for val in sublist], ddof=1) ** 2
+            ssa: float = (N-1) * np.std([np.mean([data['means'][0],data['means'][1]]) for i in range(data['ns'][0] + data['ns'][1])]+[np.mean([data['means'][2],data['means'][3]]) for i in range(data['ns'][2] + data['ns'][3])], ddof=1) ** 2
+            ssb: float = (N-1) * np.std([np.mean([data['means'][0],data['means'][2]]) for i in range(data['ns'][0] + data['ns'][2])]+[np.mean([data['means'][1],data['means'][3]]) for i in range(data['ns'][1] + data['ns'][3])], ddof=1) ** 2
             sswithin: float = sum([data['stds'][i] * (data['ns'][i] - 1) for i in range(lt)])
             solution['ss']: List[float] = [ssbetween, ssa, ssb, ssbetween - ssa - ssb, sswithin, ssbetween + sswithin]
             solution['ms']: List[float] = [solution['ss'][i] / solution['df'][i] for i in range(5)]
@@ -606,9 +609,9 @@ class Assignments:
         ns: int = data['n_subjects']
         N: int = nc * ns
         solution['df']: List[int] =  [nc - 1, ns - 1, (nc-1) * (ns-1), N - 1]
-        ssk: float = (N-1) * np.std(data['means']) ** 2
-        ssp: float = (N-1) * np.std(data['jackedmeans']) ** 2
-        sstotal: float = (N-1) * np.std([x for y in [data['scores']] for x in y]) ** 2
+        ssk: float = (N-1) * np.std(data['means'] * ns, ddof=1) ** 2
+        ssp: float = (N-1) * np.std(data['jackedmeans'] * nc, ddof=1) ** 2
+        sstotal: float = (N-1) * np.std([x for y in [data['scores']] for x in y], ddof=1) ** 2
         ssi = sstotal - ssk - ssp
         solution['ss'] = [ssk, ssp, ssi, sstotal]
         solution['ms']: List[float] = [solution['ss'][i] / solution['df'][i] for i in range(4)]
