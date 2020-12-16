@@ -143,7 +143,7 @@ def detect_comparison(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]
     level_bools:list[bool] = [levels[i] in tokens or any([y in tokens for y in level_syns[i]]) for i in range(len(levels))]
     scorepoints['level_present'] = any(level_bools) #or scorepoints['level_present']
     scorepoints['both_present'] = all(level_bools)# or scorepoints['both_present']
-    scorepoints['contrasign'] = not (any(mean_2) or 'populatie' in tokens) and any([x in tokens for x in ['significant','significante']])
+    scorepoints['contrasign'] = not ((any(mean_2) or 'populatie' in tokens) and any([x in tokens for x in ['significant','significante']]))
     
     #Add strings:
     if not scorepoints['contrasign']:

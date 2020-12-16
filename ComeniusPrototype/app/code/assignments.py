@@ -272,16 +272,16 @@ class Assignments:
         else:
             output_text += '<tr><td>Gemiddelden:</td></tr>'
             output_text += '<tr><td>Niveau</td><td>' + data['varnames'][1][1] + '</td><td>' + data['varnames'][1][2] + '</td></tr>'
-            output_text += '<tr><td>' + data['varnames'][0][1] + '</td><td>' + str(data['means'][0]) + '</td><td>' + str(data['means'][2]) + '</td></tr>'
-            output_text += '<tr><td>' + data['varnames'][0][2] + '</td><td>' + str(data['means'][1]) + '</td><td>' + str(data['means'][3]) + '</td></tr>'
+            output_text += '<tr><td>' + data['varnames'][0][1] + '</td><td>' + str(data['means'][0]) + '</td><td>' + str(data['means'][1]) + '</td></tr>'
+            output_text += '<tr><td>' + data['varnames'][0][2] + '</td><td>' + str(data['means'][2]) + '</td><td>' + str(data['means'][3]) + '</td></tr>'
             output_text += '<tr><td>Standaarddeviaties:</td></tr>'
             output_text += '<tr><td>Niveau</td><td>' + data['varnames'][1][1] + '</td><td>' + data['varnames'][1][2] + '</td></tr>'
-            output_text += '<tr><td>' + data['varnames'][0][1] + '</td><td>' + str(data['stds'][0]) + '</td><td>' + str(data['stds'][2]) + '</td></tr>'
-            output_text += '<tr><td>' + data['varnames'][0][2] + '</td><td>' + str(data['stds'][1]) + '</td><td>' + str(data['stds'][3]) + '</td></tr>'
+            output_text += '<tr><td>' + data['varnames'][0][1] + '</td><td>' + str(data['stds'][0]) + '</td><td>' + str(data['stds'][1]) + '</td></tr>'
+            output_text += '<tr><td>' + data['varnames'][0][2] + '</td><td>' + str(data['stds'][2]) + '</td><td>' + str(data['stds'][3]) + '</td></tr>'
             output_text += '<tr><td>N:</td></tr>'
             output_text += '<tr><td>Niveau</td><td>' + data['varnames'][1][1] + '</td><td>' + data['varnames'][1][2] + '</td></tr>'
-            output_text += '<tr><td>' + data['varnames'][0][1] + '</td><td>' + str(data['ns'][0]) + '</td><td>' + str(data['ns'][2]) + '</td></tr>'
-            output_text += '<tr><td>' + data['varnames'][0][2] + '</td><td>' + str(data['ns'][1]) + '</td><td>' + str(data['ns'][3]) + '</td></tr>'
+            output_text += '<tr><td>' + data['varnames'][0][1] + '</td><td>' + str(data['ns'][0]) + '</td><td>' + str(data['ns'][1]) + '</td></tr>'
+            output_text += '<tr><td>' + data['varnames'][0][2] + '</td><td>' + str(data['ns'][2]) + '</td><td>' + str(data['ns'][3]) + '</td></tr>'
         return output_text + '</table>'
     
     def print_rmanova(self, assignment: Dict) -> str:
@@ -560,7 +560,7 @@ class Assignments:
             solution['null']: str = 'h0: mu(' + solution['levels'][0] + ') == mu(' + solution['levels'][1] + ')'
             solution['null2']: str =  'h0: mu(' + solution['levels2'][0] + ') == mu(' + solution['levels2'][1] + ')'
             levels = solution['levels']; levels2 = solution['levels2']
-            solution['null3']: str = 'h0(' + solution['independent'] + ' x ' + solution['independent2'] + '): mu('+levels[0] + ' & ' + levels2[0]+') = mu('+levels[0]+') + mu('+levels2[0]+') - mu(totaal) en mu('+levels[-1] + ' & ' + levels2[-1]+') = mu('+levels[-1]+') + mu('+levels2[-1]+') - mu(totaal)'
+            solution['null3']: str = 'h0(' + solution['independent'] + ' x ' + solution['independent2'] + '): mu('+levels[0] + ' & ' + levels2[0]+') = mu('+levels[0]+') + mu('+levels2[0]+') - mu(totaal) [...] en mu('+levels[-1] + ' & ' + levels2[-1]+') = mu('+levels[-1]+') + mu('+levels2[-1]+') - mu(totaal)'
             solution['decision']: str = 'h0 ' + rejected[0] + ', de populatiegemiddelden van ' + solution['levels'][0] +' en '+solution['levels'][1]+' zijn gemiddeld ' + rejected[1] + '. '
             solution['decision2']: str = 'h0 ' + rejected2[0] + ', de populatiegemiddelden van ' + solution['levels2'][0] +' en '+solution['levels2'][1]+' zijn gemiddeld ' + rejected2[1] + '. '
             solution['decision3']: str = 'h0 ' + rejected3[0] + ', er is ' + rejected3[1] + ' interactie tussen ' + solution['independent'] +' en '+solution['independent2'] + ' in de populatie. '

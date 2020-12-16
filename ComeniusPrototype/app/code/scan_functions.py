@@ -370,20 +370,21 @@ def scan_table_ttest(textfields: Dict, solution: Dict, margin:float=0.01) -> [bo
                    'std': sim(solution['stds'], stdinput, margin),
                    'n': sim(solution['ns'], ninput, margin),
                    }
+    tags = ['eerste', 'tweede']
     if False in [all(x) for x in list(scorepoints.values())]:
         output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
         if not any(scorepoints['mean']):
             output += ' -alle juiste gemiddelden<br>'
         elif not all(scorepoints['mean']):    
-            output += ' -ten minste één juiste gemiddelde<br>'
+            output += ' -één juiste gemiddelde, namelijk de '+[tags[i] for i in range(2) if not scorepoints['mean'][i]][0]+'<br>'
         if not any(scorepoints['std']):
             output += ' -alle juiste standaardeviaties<br>'
         elif not all(scorepoints['std']):    
-            output += ' -ten minste één juiste standaardeviatie<br>'
+            output += ' -één juiste standaardeviatie, namelijk de '+[tags[i] for i in range(2) if not scorepoints['std'][i]][0]+'<br>'
         if not any(scorepoints['n']):
             output += ' -alle juiste waarden van N<br>'
         elif not all(scorepoints['n']):    
-            output += ' -ten minste één juiste waarde van N<br>'
+            output += ' -één juiste waarde van N, namelijk de '+[tags[i] for i in range(2) if not scorepoints['n'][i]][0]+'<br>'
         return True, output
     else:
         return False, 'Mooi, deze tabel klopt. '
@@ -473,27 +474,27 @@ def scan_table(textfields: Dict, solution: Dict, margin:float=0.01) -> [bool, st
         if not any(scorepoints['df']):
             output += ' -alle juiste waarden van df<br>'
         elif not all(scorepoints['df']):
-            output += ' -meerdere juist waarden van df, namelijke de '+' en '.join([nametags[i] for i in range(6) if scorepoints['df'][i]])+'<br>'
+            output += ' -ten minste één waarde van df, waaronder de '+' en '.join([nametags[i] for i in range(len(scorepoints['df'])) if not scorepoints['df'][i]])+'<br>'
         if not any(scorepoints['ss']):
             output += ' -alle juiste waarden van ss<br>'
         elif not all(scorepoints['ss']):
-            output += ' -meerdere juist waarden van ss, namelijke de '+' en '.join([nametags[i] for i in range(6) if scorepoints['ss'][i]])+'<br>'
+            output += ' -ten minste één waarde van ss, waaronder de '+' en '.join([nametags[i] for i in range(len(scorepoints['ss'])) if not scorepoints['ss'][i]])+'<br>'
         if not any(scorepoints['ms']):
             output += ' -alle juiste waarden van ms<br>'
         elif not all(scorepoints['ms']):
-            output += ' -meerdere juist waarden van ms, namelijke de '+' en '.join([nametags[i] for i in range(6) if scorepoints['ms'][i]])+'<br>'
+            output += ' -ten minste één waarde van ms, waaronder de '+' en '.join([nametags[i] for i in range(len(scorepoints['ms'])) if not scorepoints['ms'][i]])+'<br>'
         if not any(scorepoints['F']):
             output += ' -alle juiste waarden van F<br>'
         elif not all(scorepoints['F']):
-            output += ' -meerdere juist waarden van F, namelijke de '+' en '.join([nametags[i] for i in range(6) if scorepoints['F'][i]])+'<br>'
+            output += ' -ten minste één waarde van F, waaronder de '+' en '.join([nametags[i] for i in range(len(scorepoints['F'])) if not scorepoints['F'][i]])+'<br>'
         if not any(scorepoints['p']):
             output += ' -alle juiste waarden van p<br>'
         elif not all(scorepoints['p']):
-            output += ' -meerdere juist waarden van p, namelijke de '+' en '.join([nametags[i] for i in range(6) if scorepoints['p'][i]])+'<br>'
+            output += ' -ten minste één waarde van p, waaronder de '+' en '.join([nametags[i] for i in range(len(scorepoints['p'])) if not scorepoints['p'][i]])+'<br>'
         if not any(scorepoints['r2']):
             output += ' -alle juiste waarden van R<sup>2</sup><br>'
         elif not all(scorepoints['r2']):
-            output += ' -meerdere juist waarden van R<sup>2</sup>, namelijke de '+' en '.join([nametags[i] for i in range(6) if scorepoints['r2'][i]])+'<br>'
+            output += ' --ten minste één waarde van R<sup>2</sup><br>, waaronder de '+' en '.join([nametags[i] for i in range(len(scorepoints['r2'])) if not scorepoints['r2'][i]])+'<br>'
         return True, output
     else:
         return False, 'Mooi, deze tabel klopt. '
