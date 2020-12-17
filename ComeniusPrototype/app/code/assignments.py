@@ -57,17 +57,21 @@ class Assignments:
         
         #Generate the datapoints as a dictionary of where the list of float entries is 
         #described by the variable name key
+        var_i:int = random.choice([0,1,2])
+        var_j:int = random.choice([0,1,2])
+        dependent = ['reactietijd','bloeddruk','concentratieniveau'][var_j]
         if between_subject:
-            independent = 'stimulus'
-            levels = ['vierkant','cirkel']
-            ind_syns = ['stimuli']
-            level_syns = [['vierkanten'], ['cirkels']]
+            independent = ['stimulus','nationaliteit','religie'][var_i]
+            levels = [['vierkant','cirkel'],['nederlands','duits'],['christelijk','moslim']][var_i]
+            ind_syns = [['stimuli'],['nationaliteiten'],['religies']][var_i]
+            level_syns = [[['vierkanten'], ['cirkels']],[['nederlandse'],['duitse']],[['christelijke'],['moslims','islamitische']]][var_i]
         else:
-            independent = 'tijdstip'
-            levels = ['dag','nacht']
-            ind_syns = ['tijdstippen']
-            level_syns = [['dagen'], ['nachten']]
-        dependent = 'reactietijd'
+            independent = ['tijdstip','examentaal','stimulussmaak'][var_i]
+            levels = [['dag','nacht'],['nederlands','frans'],['zoet','zout']][var_i]
+            ind_syns = [['tijdstippen'],['examentalen'],['stimulussmaken']][var_i]
+            level_syns = [[['dagen'], ['nachten']],[['nederlandse'],['franse']],[['zoete'],['zoute']]][var_i]
+        if independent in ['nationaliteit','religie']:
+            control = False
         
         #Create the assignment description
         report_type = 'elementair' if elementary else 'beknopt'
@@ -96,7 +100,7 @@ class Assignments:
                'between_subject': between_subject,
                'control': control,
                'dependent': dependent,
-               'dep_syns': ['reactietijden'],
+               'dep_syns': [['reactietijden'],['bloeddrukken'],['concentratieniveaus','concentratie']][var_j],
                'assignment_type':1 if between_subject else 2,
                'independent':independent,
                'levels':levels,
@@ -112,28 +116,34 @@ class Assignments:
         output['instruction']: str = None
         output['assignment_type']: int = 4 if two_way else 3
         
-        output['independent'] = 'stimuluskleur'
-        output['levels'] = ['rood','blauw']
-        output['ind_syns'] = ['stimuluskleuren']
-        output['level_syns'] = [['rode'],['blauwe']]
-        output['dependent'] = 'gewicht'
-        output['dep_syns'] = ['gewichten']
+        var_i = random.choice([0,1,2])
+        var_j = random.choice([0,1,2])
+        var_k = random.choice([0,1,2])
+        output['independent'] = ['stimuluskleur','weerssituatie','muziek'][var_i]
+        output['levels'] = [['rood','blauw'],['zon','regen'],['klassiek','pop']][var_i]
+        output['ind_syns'] = [['stimuluskleuren'],['weerssituaties'],[]][var_i]
+        output['level_syns'] = [[['rode'],['blauwe']],[['zonnig'],['regenachtig']],[['klassieke'],[]]][var_i]
+        output['dependent'] = ['gewicht','bloeddruk','geheugenscore'][var_j]
+        output['dep_syns'] = [['gewichten'],[],['geheugenscores']][var_j]
         if two_way:
-            output['independent2'] = 'stimulusvorm'
-            output['ind2_syns'] = ['stimulusvormen']
-            output['levels2'] = ['vierkant','rond']
-            output['level2_syns'] = [['vierkante'],['ronde']]
+            output['independent2'] = ['stimulusvorm','filmgenre','bloedtype'][var_k]
+            output['ind2_syns'] = [['stimulusvormen'],['filmgenres'],['bloedtypen','bloedtypes']][var_k]
+            output['levels2'] = [['vierkant','rond'],['drama','horror'],['A','B']][var_k]
+            output['level2_syns'] = [[['vierkante'],['ronde']],[[],[]],[[],[]]][var_k]
             output['control2'] = control2
+            if output['independent2'] in ['bloedtype']:
+                output['control2'] = False
+                control2 = False
         
         #Decide the variable names
         report_type = 'elementair' if elementary else 'beknopt'
         if not two_way:
-            output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn '+output['independent']+', met niveaus '+' en '.join(output['levels'])+', en gewicht. Voer je antwoorden alsjeblieft tot op 2 decimalen in '\
+            output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn '+output['independent']+', met niveaus '+' en '.join(output['levels'])+', en '+output['dependent']+'. Voer je antwoorden alsjeblieft tot op 2 decimalen in '\
                  'en gebruik dezelfde vergelijking van de gemiddelden in je antwoord als in de vraagstelling staat (e.g. "groter" of "kleiner"). '
             if control:
                 output['instruction'] += 'De deelnemers zijn willekeurig verdeeld over de niveaus.'
         else:
-            output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn '+output['independent']+', met niveaus '+' en '.join(output['levels'])+', '+output['independent2']+' met niveaus '+' en '.join(output['levels2'])+', en gewicht. Voer je antwoorden alsjeblieft tot op 2 decimalen in '\
+            output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn '+output['independent']+', met niveaus '+' en '.join(output['levels'])+', '+output['independent2']+' met niveaus '+' en '.join(output['levels2'])+', en '+output['dependent']+'. Voer je antwoorden alsjeblieft tot op 2 decimalen in '\
                  'en gebruik dezelfde vergelijking van de gemiddelden in je antwoord als in de vraagstelling staat (e.g. "groter" of "kleiner"). '
             if control and output['control2']:
                 output['instruction'] += 'De deelnemers zijn willekeurig gekozen voor beide factoren. '
@@ -159,18 +169,20 @@ class Assignments:
     def create_rmanova(self, control: bool, elementary:bool=True) -> Dict:
         #Determine variable shape and names
         output = {'control': control, 'two_way':False, 'assignment_type':5}
-        output['dependent'] = 'gewicht'
         n_conditions = random.randint(2,4)
         n_subjects = int(random.uniform(8,15))
-        output['independent'] = 'seizoen'
-        output['ind_syns'] = ['seizoenen']
-        output['levels'] = ['winter', 'lente', 'zomer', 'herfst'][:n_conditions]
+        
+        var_i = random.choice([0,1,2])
+        var_j = random.choice([0,1,2])
+        output['independent'] = ['seizoen','leeftijd',''][var_i]
+        output['ind_syns'] = [['seizoenen'],['leeftijden'],['tijdperk']][var_i]
+        output['levels'] = [['winter', 'lente', 'zomer', 'herfst'],['kind', 'jong', 'volwassen', 'oud'],['precambrium', 'siluur', 'paleolithicum', 'quartair']][:n_conditions][var_i]
         output['level_syns'] = [[],[],[],[]][:n_conditions]
-        output['dependent'] = 'gewicht'
-        output['dep_syns'] = ['gewichten']
+        output['dependent'] = ['gewicht','bloeddruk','geheugenscore'][var_j]
+        output['dep_syns'] = [['gewichten'],[],['geheugenscores']][var_j]
         
         report_type = 'elementair' if elementary else 'beknopt'
-        output['instruction']: str = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn '+output['independent']+' en gewicht. Voer je antwoorden alsjeblieft tot op 2 decimalen in '\
+        output['instruction']: str = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn '+output['independent']+' en '+output['dependent']+'. Voer je antwoorden alsjeblieft tot op 2 decimalen in '\
                  'en gebruik dezelfde vergelijking van de gemiddelden in je antwoord als in de vraagstelling staat (e.g. "groter" of "kleiner"). '
         if control:
             output['instruction'] += 'De subjecten in het experiment zijn willekeurig geselecteerd. '
@@ -180,7 +192,7 @@ class Assignments:
                   'scores':[[round(random.gauss(true_means[i], true_stds[i]),2) for j in range(n_subjects)] for i in range(n_conditions)]
                   }
         output['data']['means']: List = [round(np.mean(output['data']['scores'][i]),2) for i in range(n_conditions)]
-        output['data']['stds']: List = [round(np.std(output['data']['scores'][i]),2) for i in range(n_conditions)]
+        output['data']['stds']: List = [round(np.std(output['data']['scores'][i], ddof=1),2) for i in range(n_conditions)]
         output['data']['jackedmeans']: List = [round(np.mean([output['data']['scores'][i][j] for i in range(n_conditions)]),2) for j in range(n_subjects)]
         output['data']['n_subjects'] = n_subjects
         output['data']['n_conditions'] = n_conditions
@@ -289,8 +301,8 @@ class Assignments:
         n_conditions = len(data['means'])
         output_text = assignment['instruction'] + '<br><table style="width:45%">'
         output_text += '<tr><td>'+assignment['independent']+'</td>' + ''.join(['<td>'+x+'</td>' for x in assignment['levels'][:n_conditions]]) + '<td>Opgevoerde meting</td></tr>'
-        output_text += '<tr><td>Gemiddelde</td>' + ''.join(['<td>'+str(x)+'</td>' for x in data['means'][:n_conditions]]) + '<td>' + str(round(np.mean(data['jackedmeans']),2)) + '</td></tr>'
-        output_text += '<tr><td>Standaardeviatie</td>' + ''.join(['<td>'+str(x)+'</td>' for x in data['stds'][:n_conditions]]) + '<td>' + str(round(np.std(data['jackedmeans']),2)) + '</td></tr>'
+        output_text += '<tr><td>Gemiddelde</td>' + ''.join(['<td>'+str(x)+'</td>' for x in data['means'][:n_conditions]]) + '<td>' + str(round(np.mean(data['jackedmeans'], ddof=1),2)) + '</td></tr>'
+        output_text += '<tr><td>Standaardeviatie</td>' + ''.join(['<td>'+str(x)+'</td>' for x in data['stds'][:n_conditions]]) + '<td>' + str(round(np.std(data['jackedmeans'], ddof=1),2)) + '</td></tr>'
         output_text += '<tr><td>N</td><td>' + str(data['n_subjects']) + '</td></tr></table>'
         output_text += '<br>Originele scores:'
         output_text += '<br><table style="width:45%">'
@@ -445,7 +457,7 @@ class Assignments:
         else:
             solution['df']: List = [len(diff) - 1]
             solution['raw_effect']: List = [np.mean(diff)]
-            solution['relative_effect']: List = [solution['raw_effect'][0] / np.std(diff)]
+            solution['relative_effect']: List = [solution['raw_effect'][0] / np.std(diff, ddof=1)]
             solution['T']: List = [solution['relative_effect'][0] / math.sqrt(len(diff))]
             
         #Calculate p

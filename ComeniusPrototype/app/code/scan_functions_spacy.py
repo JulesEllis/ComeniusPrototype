@@ -34,7 +34,7 @@ def descendants(node) -> List[Token]:
     return output
 
 def check_causality(independent:Doc, dependent:Doc, alternative:bool=False) -> bool:
-    print(independent.dep_ + '-' + dependent.dep_)
+    #print(independent.dep_ + '-' + dependent.dep_)
     if not alternative:
         tuples = [('nsubj', 'obj'),('obj', 'ROOT'),('nsubj', 'nmod'),('obl', 'obj'),('ROOT', 'obj'),
               ('obj', 'nmod'), ('amod', 'obj'), ('obl','obl'),('nsubj','obl'),('obj','obj'),('nsubj','amod')]
