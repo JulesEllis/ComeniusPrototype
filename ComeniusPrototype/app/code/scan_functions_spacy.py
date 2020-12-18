@@ -90,7 +90,7 @@ def detect_significance(doc:Doc, solution:dict, num:int=1) -> List[str]:
     difference = [sent for sent in doc.sents if any([y in [x.text for x in sent] for y in ['verschil','effect']]) 
             and not any([y in [x.text for x in sent] for y in ['matig','klein','sterk']])]
     if difference != []:
-        d_root = difference[num - 1] if num <= len(difference) else difference[0]
+        d_root = difference[num - 1] if num <= len(difference) else difference[num-1 - (3 - len(difference))]
         scorepoints['effect'] = True
         tokens:List[str] = [x.text for x in d_root]
         scorepoints['sign'] = 'significant' in tokens
@@ -236,7 +236,7 @@ def detect_interaction(doc:Doc, solution:dict, anova:bool) -> List[str]:
         scorepoints['indy2'] = solution['independent2'].lower() in [x.text for x in int_descendants]
         scorepoints['pop_present'] = 'populatie' in [x.text for x in int_descendants] or any([x in tokens for x in ['significant','significante']])
         scorepoints['right_negation'] = bool(negation_counter(tokens) % 2) != rejected    
-        scorepoints['contrasign'] = not ('populatie' in tokens) and any([x in tokens for x in ['significant','significante']])
+        scorepoints['contrasign'] = not (('populatie' in tokens) and any([x in tokens for x in ['significant','significante']]))
         
     #Add strings
     if not scorepoints['interactie']:
@@ -278,7 +278,7 @@ def detect_true_scores(sent:Doc, solution:dict, num=2) -> List[str]:
     mean_2 = [x for x in sent if x.text == 'populatiegemiddelde' or x.text == 'populatiegemiddelden']
     scorepoints['mean_present'] = any(mean) or any(mean_2)
     scorepoints['pop_present'] = any(mean_2) or 'populatie' in [x.text for x in sent] or any([x in tokens for x in ['significant','significante']])
-    scorepoints['contrasign'] = not (any(mean_2) or 'populatie' in tokens) and any([x in tokens for x in ['significant','significante']])
+    scorepoints['contrasign'] = not ((any(mean_2) or 'populatie' in tokens) and any([x in tokens for x in ['significant','significante']]))
     
     #Add strings
     if not scorepoints['right_comparison']:
@@ -313,7 +313,8 @@ def detect_strength(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]:
         gold_strength: str = 'sterk' if sterkte > 0.2 else 'matig' if sterkte > 0.1 else 'klein'
     effect = [x for x in sent if x.lemma_ == 'matig' or x.lemma_ == 'klein' or x.lemma_ == 'sterk']
     if effect != []:
-        e_root = effect[num-1] if num <= len(effect) else effect[0]
+        n_effects:int = len(effect)
+        e_root = effect[num-1] if num <= n_effects else effect[num-1 - (3 - n_effects)]
         e_tree = descendants(e_root)
         scorepoints['effect_present'] = e_root.head.text == 'effect' or 'effect' in [x.text for x in e_tree]
         scorepoints['strength_present'] = True #any([x in [y.text for y in e_tree] for x in ['klein','matig','sterk']]) or e_root.head.text in ['klein','matig','sterk']
