@@ -248,10 +248,17 @@ def scan_p(text:str, solution: Dict, margin: float=0.01) -> [bool, str]:
                 return False, "Mooi, deze waarde van p klopt! "
             else: return True, 'Er ontbreekt nog iets aan je antwoord, namelijk:<br> -de juiste waarde van p'
         elif any([x in tokens for x in ['>','meer','groter']]):
-            if boundary_050 and gold > 0.05:
+            if boundary_100 and gold > 0.10:
                 return False, "Mooi, deze waarde van p klopt! "
-            else: 
-                return True, 'Er ontbreekt nog iets aan je antwoord, namelijk:<br> -de juiste waarde van p'
+            elif boundary_050 and gold > 0.05 and gold < 0.10:
+                return False, "Mooi, deze waarde van p klopt! "
+            elif boundary_010 and gold > 0.01 and gold < 0.05:
+                return False, "Mooi, deze waarde van p klopt! "
+            elif boundary_005 and gold > 0.005 and gold < 0.01:
+                return False, "Mooi, deze waarde van p klopt! "
+            elif boundary_001 and gold > 0.001 and gold < 0.005:
+                return False, "Mooi, deze waarde van p klopt! "
+            else: return True, 'Er ontbreekt nog iets aan je antwoord, namelijk:<br> -de juiste waarde van p'
         else: 
             return True, 'Er ontbreekt nog iets aan je antwoord, namelijk:<br> -de juiste waarde van p'
     else:
@@ -422,10 +429,17 @@ def sim_p(solution: Dict, texts: List[str], margin: float=0.01) -> [bool, str]:
                     output.append(True)
                 else: output.append(False)
             elif any([x in tokens for x in ['>','meer','groter']]):
-                if boundary_050 and gold > 0.05:
+                if boundary_100 and gold > 0.10:
                     output.append(True)
-                else: 
-                    output.append(False)
+                elif boundary_050 and gold > 0.05 and gold < 0.10:
+                    output.append(True)
+                elif boundary_010 and gold > 0.01 and gold < 0.05:
+                    output.append(True)
+                elif boundary_005 and gold > 0.005 and gold < 0.01:
+                    output.append(True)
+                elif boundary_001 and gold > 0.001 and gold < 0.05:
+                    output.append(True)
+                else: output.append(False)
             else: 
                 output.append(False)
         else:

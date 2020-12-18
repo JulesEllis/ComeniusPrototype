@@ -83,7 +83,7 @@ class BigForm(FlaskForm):
     inputtext12 = StringField('', validators=[DataRequired()])
     inputtext32= StringField('', validators=[DataRequired()])
     inputtext42 = StringField('', validators=[DataRequired()])
-    inputtext43 = StringField('', validators=[DataRequired()])
+    inputtext43 = TextAreaField('', validators=[DataRequired()])
     inputtext52 = TextAreaField('', validators=[DataRequired()]) #StringField('', validators=[DataRequired()])
     inputtext53 = TextAreaField('', validators=[DataRequired()]) #StringField('', validators=[DataRequired()])
     inputtext62 = TextAreaField('', validators=[DataRequired()]) #StringField('', validators=[DataRequired()])
