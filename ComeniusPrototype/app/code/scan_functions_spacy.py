@@ -122,14 +122,13 @@ def detect_comparison(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]
     
     #Controleer input
     gold_comp = 'ongelijk' if anova else ['ongelijk','groter','kleiner'][solution['hypothesis']]
-    comparisons = [x for x in sent if x.text == 'groter' or 
-                   x.text =='gelijk' or x.text == 'ongelijk' or x.text == 'kleiner']
+    comparisons = [x for x in sent if x.text in ['groter','ongelijk','gelijk','kleiner','anders','verschillend']]
     if comparisons != []:
         comproot = comparisons[num-1] if len(comparisons) >= num else comparisons[0]
         comptree:List = descendants(comproot)
         not_present = 'niet' in [x.text for x in comptree]
-        scorepoints['right_comparison'] = comproot.text == gold_comp or (gold_comp == 'ongelijk' and comproot.text == 'gelijk')
-        if gold_comp == 'ongelijk' and comproot.text == 'ongelijk':
+        scorepoints['right_comparison'] = comproot.text == gold_comp or (gold_comp == 'ongelijk' and comproot.text in ['gelijk','verschillend','anders'])
+        if gold_comp == 'ongelijk' and comproot.text in ['ongelijk','anders','verschillend']:
             scorepoints['right_negation'] = not_present != (solution['p'][num-1] < 0.05)
         elif gold_comp == 'ongelijk' and comproot.text == 'gelijk':
             scorepoints['right_negation'] = not_present == (solution['p'][num-1] < 0.05)
@@ -262,13 +261,13 @@ def detect_true_scores(sent:Doc, solution:dict, num=2) -> List[str]:
     output:List[str] = []
     
     #Controleer inpur
-    comparisons = [x for x in sent if x.text =='gelijk' or x.text == 'ongelijk']
+    comparisons = [x for x in sent if x.text ['gelijk','ongelijk','anders','verschillend']]
     if comparisons != []:
         comproot = comparisons[num-1] if len(comparisons) >= num else comparisons[0]
         comptree:List = descendants(comproot)
         not_present = 'niet' in [x.text for x in comptree]
-        scorepoints['right_comparison'] = comproot.text in ['gelijk','ongelijk']
-        if comproot.text == 'ongelijk':
+        scorepoints['right_comparison'] = comproot.text in ['gelijk','ongelijk','anders','verschillend']
+        if comproot.text in ['ongelijk','anders','verschillend']:
             scorepoints['right_negation'] = not_present != rejected
         elif comproot.text == 'gelijk':
             scorepoints['right_negation'] = not_present == rejected
@@ -304,21 +303,21 @@ def detect_strength(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]:
     #Controleer input
     if solution['assignment_type'] in [1,2]: #T-test
         sterkte = solution['relative_effect'][0]
-        gold_strength: str = 'sterk' if sterkte > 0.8 else 'matig' if sterkte > 0.5 else 'klein'
+        gold_strength: int = 2 if sterkte > 0.8 else 1 if sterkte > 0.5 else 0
     else:#One-way ANOVA
         if solution['assignment_type'] == 3: #One-way ANOVA
             sterkte: float = solution['r2'][0]
         else: #Two-way and within-subject ANOVA
             sterkte: float = solution['r2'][num-1]
-        gold_strength: str = 'sterk' if sterkte > 0.2 else 'matig' if sterkte > 0.1 else 'klein'
-    effect = [x for x in sent if x.lemma_ == 'matig' or x.lemma_ == 'klein' or x.lemma_ == 'sterk']
+        gold_strength: int = 2 if sterkte > 0.2 else 1 if sterkte > 0.1 else 0
+    effect = [x for x in sent if x.lemma_ in ['klein','zwak','matig','groot','sterk']]
     if effect != []:
         n_effects:int = len(effect)
         e_root = effect[num-1] if num <= n_effects else effect[num-1 - (3 - n_effects)]
         e_tree = descendants(e_root)
         scorepoints['effect_present'] = e_root.head.text == 'effect' or 'effect' in [x.text for x in e_tree]
         scorepoints['strength_present'] = True #any([x in [y.text for y in e_tree] for x in ['klein','matig','sterk']]) or e_root.head.text in ['klein','matig','sterk']
-        scorepoints['right_strength'] = e_root.text == gold_strength #in [x.text for x in e_tree] or e_root.head.text == gold_strength
+        scorepoints['right_strength'] = e_root.text in ['sterk','groot'] if gold_strength == 2 else e_root.text in ['matig'] if gold_strength == 1 else e_root.text in ['klein','zwak']
     
     #Add strings
     if not scorepoints['effect_present'] and scorepoints['strength_present']:
@@ -417,11 +416,13 @@ def detect_primary_interaction(sent:Doc, solution:dict) -> List[str]:
     scorepoints['negation'] = bool(negation_counter(tokens) % 2) == rejected
     if scorepoints['dep']:
         if scorepoints['indy1']:
+            scorepoints['indy2'] = True
             if check_causality(indy1node[0], dep_node[0]):
                 scorepoints['interaction'] = True
                 scorepoints['level_present'] = any(var2levels)
                 scorepoints['both_levels'] = all(var2levels)
         if scorepoints['indy2']:
+            scorepoints['indy1'] = True
             if check_causality(indy2node[0], dep_node[0]):
                 scorepoints['interaction'] = True
                 scorepoints['level_present'] = any(var1levels)
