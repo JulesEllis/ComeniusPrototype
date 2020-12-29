@@ -91,6 +91,10 @@ def bigform():
             form = BaseForm()
             field = controller.submit_field.value
             return render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=field, varnames=varnames)
+        elif form.answer.data:
+            form_shape = controller.analysis_type.value
+            instruction, outputfields = controller.form_answers_anova()
+            return render_template('bigform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames)
         else:
             print('ERROR: INVALID METHOD')
     #elif flask.request.method == 'GET':
@@ -120,6 +124,10 @@ def smallform():
             form = BaseForm()
             field = controller.submit_field.value
             return render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=field, varnames=varnames)
+        elif form.answer.data:
+            form_shape = controller.analysis_type.value
+            instruction, outputfields = controller.form_answers()
+            return render_template('smallform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames)
         else:
             print('ERROR: INVALID METHOD')
     #elif flask.request.method == 'GET':

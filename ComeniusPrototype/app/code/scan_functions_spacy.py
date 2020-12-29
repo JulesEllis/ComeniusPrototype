@@ -67,6 +67,8 @@ def detect_h0(sent:Doc, solution:dict, num:int=1) -> List[str]:
     if not scorepoints['hyp_rejected'] and scorepoints['hyp_present']:
         if num < 2:
             output.append(' -ten onrechte gesteld dat de hypothese wordt verworpen als deze wordt behouden of andersom')
+        if num > 2:
+            output.append(' -ten onrechte gesteld dat de interactiehypothese wordt verworpen als deze wordt behouden of andersom')
         else:
             output.append(' -ten onrechte gesteld dat de hypothese van factor '+str(num)+' wordt verworpen als deze wordt behouden of andersom')
     if not scorepoints['hyp_present']:
@@ -103,12 +105,13 @@ def detect_significance(doc:Doc, solution:dict, num:int=1) -> List[str]:
         if not scorepoints['neg']:
             output.append(' -ten onrechte een negatie toegevoegd of weggelaten bij de beschrijving van het effect')
     else:
+        appendix:str = ' bij factor ' + str(num) if num < 3 else ' bij de interactie '
         if not scorepoints['effect']:
-            output.append(' -niet genoemd of het effect significant is bij factor '+ str(num))
+            output.append(' -niet genoemd of het effect significant is'+appendix)
         if not scorepoints['sign'] and scorepoints['effect']:
-            output.append(' -niet genoemd of het effect significant is bij factor '+ str(num))
+            output.append(' -niet genoemd of het effect significant is'+appendix)
         if not scorepoints['neg']:
-            output.append(' -ten onrechte een negatie toegevoegd of weggelaten bij de beschrijving van het effect bij factor '+ str(num))
+            output.append(' -ten onrechte een negatie toegevoegd of weggelaten bij de beschrijving van het effect'+appendix)
     return output
 
 def detect_comparison(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]:
@@ -145,41 +148,21 @@ def detect_comparison(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]
     scorepoints['contrasign'] = not ((any(mean_2) or 'populatie' in tokens) and any([x in tokens for x in ['significant','significante']]))
     
     #Add strings:
+    appendix:str = '' if num < 2 else 'bij factor ' + str(num) if num < 3 else ' bij de interactie '
     if not scorepoints['contrasign']:
-        if num < 2:
-            output.append(' -zowel "populatie" en "significant" genoemd, haal een van de twee weg')
-        else:
-            output.append(' -bij factor '+str(num)+' zowel "populatie" en "significant" genoemd, haal een van de twee weg')
+        output.append(' -'+appendix+'zowel "populatie" en "significant" genoemd, haal een van de twee weg')
     if not scorepoints['right_comparison']:
-        if num < 2:
-            output.append(' -niveaus in de populatie niet of niet juist met elkaar vergeleken')
-        else:
-            output.append(' -niveaus van factor '+str(num)+' in de populatie niet of niet juist met elkaar vergeleken')
+        output.append(' -niveaus '+appendix+'in de populatie niet of niet juist met elkaar vergeleken')
     if not scorepoints['right_negation']:
-        if num < 2:
-            output.append(' -ten onrechte een negatie toegevoegd of weggelaten bij het vergelijken van de niveaus')
-        else:
-            output.append(' -ten onrechte een negatie toegevoegd of weggelaten bij het vergelijken van de niveaus van factor '+str(num))
+        output.append(' -ten onrechte een negatie toegevoegd of weggelaten bij het vergelijken van de niveaus '+appendix) 
     if not scorepoints['mean_present']:
-        if num < 2:
-            output.append(' -niet genoemd dat de beslissing om populatiegemiddelden gaat')
-        else:
-            output.append(' -niet genoemd dat de beslissing van factor '+str(num)+'  om populatiegemiddelden gaat')
+        output.append(' -niet genoemd dat de beslissing '+appendix+'om populatiegemiddelden gaat')
     if not scorepoints['pop_present']:
-        if num < 2:
-            output.append(' -niet gesteld dat de beslissing over de populatie gaat')
-        else:
-            output.append(' -niet gesteld dat de beslissing van factor '+str(num)+' over de populatie gaat')
+        output.append(' -niet gesteld dat de beslissing '+appendix+'over de populatie gaat')
     if not scorepoints['level_present']:
-        if num < 2:
-            output.append(' -de niveaus van de onafhankelijke variabele worden niet genoemd')
-        else:
-            output.append(' -de niveaus van de onafhankelijke variabele van factor '+str(num)+'  worden niet genoemd')
+        output.append(' -de niveaus van de onafhankelijke variabele '+appendix+'worden niet genoemd')
     if not scorepoints['both_present'] and scorepoints['level_present']:
-        if num < 2:
-            output.append(' -enkele niveaus van de onafhankelijke variabele weggelaten')
-        else:
-            output.append(' -enkele niveaus van de onafhankelijke variabele van factor '+str(num)+' weggelaten')
+        output.append(' -enkele niveaus van de onafhankelijke variabele '+appendix+'weggelaten')
     return output
 
 def detect_comparison_mreg(sent:Doc, solution:dict) -> List[str]:
@@ -223,10 +206,11 @@ def detect_interaction(doc:Doc, solution:dict, anova:bool) -> List[str]:
     criteria = ['interactie','indy1','indy2','pop_present','right_negation', 'contrasign']
     scorepoints = dict([(x,False) for x in criteria])
     rejected = solution['p'][-1] < 0.05
+    tokens = [y.text for y in sent]
     output:List[str] = []
     
     #Controleer input
-    i_sents = [sent for sent in doc.sents if 'interactie' in [y.text for y in sent]]
+    i_sents = [sent for sent in doc.sents if any([x in tokens for x in ['interactie','populatie','populatiegemiddelde','populatiegemiddelden']])]
     if i_sents != []:
         int_descendants = i_sents[0]    
         tokens = [x.text for x in int_descendants]
@@ -320,21 +304,13 @@ def detect_strength(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]:
         scorepoints['right_strength'] = e_root.text in ['sterk','groot'] if gold_strength == 2 else e_root.text in ['matig'] if gold_strength == 1 else e_root.text in ['klein','zwak']
     
     #Add strings
+    appendix:str = '' if num < 2 else 'bij factor ' + str(num) if num < 3 else ' bij de interactie '
     if not scorepoints['effect_present'] and scorepoints['strength_present']:
-        if num < 2:
-            output.append(' -de effectgrootte wordt niet genoemd')
-        else:
-            output.append(' -de effectgrootte van factor '+str(num)+' wordt niet genoemd')
+        output.append(' -de effectgrootte '+appendix+'wordt niet genoemd')
     if not scorepoints['strength_present']:
-        if num < 2:
-             output.append(' -de sterkte van het effect wordt niet genoemd')
-        else:
-             output.append(' -de sterkte van het effect van factor '+str(num)+' wordt niet genoemd')
+        output.append(' -de sterkte van het effect '+appendix+'wordt niet genoemd')
     elif scorepoints['effect_present'] and not scorepoints['right_strength']:
-        if num < 2:
-            output.append(' -de sterkte van het effect wordt niet juist genoemd')
-        else:
-            output.append(' -de sterkte van het effect van factor '+str(num)+' wordt niet juist genoemd')
+        output.append(' -de sterkte van het effect '+appendix+'wordt niet juist genoemd')
     return output
 
 def detect_unk(sent:Doc, solution:dict, num:int=1):
@@ -503,10 +479,8 @@ def detect_report_stat(doc:Doc, stat:str, value:float, aliases:list=[], num:int=
             if t1 == stat.lower() or t1 in aliases:
                 if t2 in ['==','='] and float(t3) < value + margin and float(t3) > value - margin:
                     return []
-    if num < 2:        
-        return [' -de juiste waarde van '+stat+' wordt niet genoemd']
-    else:
-        return [' -de juiste waarde van '+stat+' voor factor '+str(num)+' wordt niet genoemd']
+    appendix:str = '' if num < 2 else 'bij factor ' + str(num) if num < 3 else ' bij de interactie '
+    return [' -de juiste waarde van '+stat+' '+appendix+'wordt niet genoemd']
 
 def detect_p(doc:Doc, value:float, num:int=1, label:str=None, margin=0.01) -> List[str]:
     tokens:list[str] = [x.text for x in doc]
@@ -521,10 +495,9 @@ def detect_p(doc:Doc, value:float, num:int=1, label:str=None, margin=0.01) -> Li
             #if t2 == '<' and t3 == '0.05' and TODO: < 0.05 en > 0.05 ook goedrekenen
     if label != None:
         return [' -de juiste p-waarde van predictor '+label+' wordt niet genoemd']
-    elif num < 2:        
-        return [' -de juiste p-waarde wordt niet genoemd']
     else:
-        return [' -de juiste p-waarde van factor '+str(num)+' wordt niet genoemd']
+        appendix:str = '' if num < 2 else 'bij factor ' + str(num) if num < 3 else ' bij de interactie '
+        return [' -de juiste p-waarde '+appendix+'wordt niet genoemd']
     
 def detect_name(doc:Doc, solution:Dict) -> List[str]:
     tokens = [x.text for x in doc]
@@ -619,7 +592,7 @@ def scan_interpretation(doc:Doc, solution:dict, anova:bool, num:int=1, prefix=Tr
     
 def scan_interpretation_anova(doc:Doc, solution:dict, num:int=3, prefix=True):
     output = ['Er ontbreekt nog wat aan je antwoord, namelijk:'] if prefix else []
-    control:bool = solution['control'] and solution['control2']
+    control:bool = solution['control'] or solution['control2']
     primary_checks:list = ['primaire','eerste'] if not control else [solution['dependent']]
     unk_sents = [x for x in doc.sents if 'mogelijk' in [y.text for y in x] or 'mogelijke' in [y.text for y in x]]
     if unk_sents != []:

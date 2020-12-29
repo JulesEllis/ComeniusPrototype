@@ -69,6 +69,7 @@ class SmallForm(FlaskForm):
     inputtext11 = TextAreaField('', validators=[DataRequired()]) #StringField('', validators=[DataRequired()])
     
     submit = SubmitField('Enter')
+    answer = SubmitField('Antwoord')
     nextt = SubmitField('Next')
 
 class BigForm(FlaskForm):
@@ -90,6 +91,7 @@ class BigForm(FlaskForm):
     inputtext63 = TextAreaField('', validators=[DataRequired()]) #StringField('', validators=[DataRequired()])
     
     submit = SubmitField('Enter')
+    answer = SubmitField('Antwoord')
     nextt = SubmitField('Next')
     
     df1 = StringField('')

@@ -305,25 +305,25 @@ def scan_hypothesis_anova(text: str, solution: Dict) -> [bool, str]:
     mu2present = [bool(re.search(x, text)) for x in [r'mu\('+re.escape(levels[-1]) + r'( )*(&|,|(en))( )*' + re.escape(levels2[-1])+'\)','mu\('+re.escape(levels2[-1])+'\)','mu\(totaal\)']]
     scorepoints['mu1some'] = any(mu1present); scorepoints['mu1all'] = all(mu1present)
     scorepoints['mu2some'] = any(mu2present); scorepoints['mu2all'] = all(mu2present)
-    scorepoints['mu1order'] = bool(re.seach(r'mu\('+re.escape(levels[0]) + r'( )*(&|,|(en))( )*' + re.escape(levels2[0])+r'\)( )*=( )*mu\('+re.escape(levels[0])+r'\)( )*+( )*mu\('+re.escape(levels2[0])+r'\)( )*-( )*mu\(totaal\)',text))
-    scorepoints['mu2order'] = bool(re.seach(r'mu\('+re.escape(levels[-1]) + r'( )*(&|,|(en))( )*' + re.escape(levels2[-1])+r'\)( )*=( )*mu\('+re.escape(levels[-1])+r'\)( )*+( )*mu\('+re.escape(levels2[-1])+r'\)( )*-( )*mu\(totaal\)',text))    
-
+    scorepoints['mu1order'] = bool(re.search(r'mu\('+re.escape(levels[0])+r'( )*(&|,)( )*' +re.escape(levels2[0])+r'\)( )*\=( )*mu\('+re.escape(levels[0])+r'\)( )*\+( )*mu\('+re.escape(levels2[0])+r'\)( )*\-( )*mu\(totaal\)',text))
+    scorepoints['mu2order'] = bool(re.search(r'mu\('+re.escape(levels[-1])+r'( )*(&|,)( )*'+re.escape(levels2[-1])+r'\)( )*\=( )*mu\('+re.escape(levels[-1])+r'\)( )*\+( )*mu\('+re.escape(levels2[-1])+r'\)( )*\-( )*mu\(totaal\)',text))  
+    
     if False in list(scorepoints.values()):
         output: str = 'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
         if not scorepoints['h0']:
             output += ' -het "H0():" teken<br>'
         if not scorepoints['mu1some'] and not scorepoints['mu1all']:
-            output += ' -enkele tekens voor populatiegemiddelden bij de eerste vergelijking'
+            output += ' -enkele tekens voor populatiegemiddelden bij de eerste vergelijking<br>'
         elif not scorepoints['mu1all']:
-            output += ' -alle tekens voor populatiegemiddelden bij de eerste vergelijking'
+            output += ' -alle tekens voor populatiegemiddelden bij de eerste vergelijking<br>'
         if not scorepoints['mu2some'] and not scorepoints['mu2all']:
-            output += ' -enkele tekens voor populatiegemiddelden bij de laatste vergelijking'
+            output += ' -enkele tekens voor populatiegemiddelden bij de laatste vergelijking<br>'
         elif not scorepoints['mu2all']:
-            output += ' -alle tekens voor populatiegemiddelden bij de laatste vergelijking'
+            output += ' -alle tekens voor populatiegemiddelden bij de laatste vergelijking<br>'
         if not scorepoints['mu1order']:
-            output += ' -de populatiegemiddelden worden niet juist met elkaar vergeleken bij de eerste vergelijking'
+            output += ' -de populatiegemiddelden worden niet juist met elkaar vergeleken bij de eerste vergelijking<br>'
         if not scorepoints['mu2order']:
-            output += ' -de populatiegemiddelden worden niet juist met elkaar vergeleken bij de laatste vergelijking'
+            output += ' -de populatiegemiddelden worden niet juist met elkaar vergeleken bij de laatste vergelijking<br>'
         return True, output
     else:
         return False, 'Mooi, deze hypothese klopt. '

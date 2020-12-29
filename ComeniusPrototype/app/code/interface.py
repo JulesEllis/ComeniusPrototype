@@ -50,7 +50,7 @@ class OuterController:
             self.analysis_type = Task.CHOICE
             self.wipetext:bool = False
         
-        def update_form_ttest(self, textfields: Dict) -> List[str]:
+        def update_form_ttest(self, textfields: Dict) -> [str, List[str]]:
             output = [[] for i in range(12)]
             instruction = self.assignments.print_ttest(self.assignment)
             
@@ -71,7 +71,24 @@ class OuterController:
             output[3].append(scan_table_ttest(textfields, self.solution)[1])
             return instruction, output
         
-        def update_form_anova(self, textfields: Dict) -> List[str]:
+        def form_answers(self) -> [str, List[str]]:
+            output = [[] for i in range(12)]
+            instruction = self.assignments.print_ttest(self.assignment)
+            output[0].append('Antwoord: '+self.assignments.print_independent(self.assignment))
+            output[1].append('Antwoord: '+self.assignments.print_dependent(self.assignment))
+            output[2].append('Antwoord: '+['Passief-observerend','Experiment'][int(self.solution['control'])])
+            output[3].append('Antwoord: '+self.assignments.print_report({**self.assignment, **self.solution}, answer=True))
+            output[4].append('Antwoord: '+self.solution['null'])
+            output[5].append('Antwoord: '+str(self.solution['df'][0]))
+            output[6].append('Antwoord: '+str(self.solution['raw_effect'][0]))
+            output[7].append('Antwoord: '+str(self.solution['relative_effect'][0]))
+            output[8].append('Antwoord: '+str(self.solution['T'][0]))
+            output[9].append('Antwoord: '+str(self.solution['p'][0]))
+            output[10].append('Antwoord: '+self.solution['decision'])
+            output[11].append('Antwoord: '+self.solution['interpretation'])
+            return instruction, output
+        
+        def update_form_anova(self, textfields: Dict) -> [str, list]:
             output = [[] for i in range(7)]
             if self.analysis_type == Task.ONEWAY_ANOVA:
                 instruction = self.assignments.print_anova(self.assignment)
@@ -120,6 +137,54 @@ class OuterController:
                 output[6].append(scan_interpretation(self.nl_nlp(textfields['inputtext6'].lower()), self.solution, anova=True, num=1)[1])
                 output[4].append(scan_table(textfields, self.solution)[1])
             return instruction, output
+        
+        def form_answers_anova(self) -> [str, list]:
+            output = [[] for i in range(7)]
+            if self.analysis_type == Task.ONEWAY_ANOVA:
+                instruction = self.assignments.print_anova(self.assignment)
+            elif self.analysis_type == Task.TWOWAY_ANOVA:
+                instruction = self.assignments.print_anova(self.assignment)
+            elif self.analysis_type == Task.WITHIN_ANOVA:
+                instruction = self.assignments.print_rmanova(self.assignment)
+            else:    
+                print('ERROR: INVALID TABLE SHAPE')
+            if not self.assignment['two_way'] and not 'jackedmeans' in list(self.assignment['data'].keys()):
+                #One-way ANOVA
+                output[0].append('Antwoord: '+self.assignments.print_independent(self.assignment))
+                output[1].append('Antwoord: '+self.assignments.print_dependent(self.assignment))
+                output[2].append('Antwoord: '+['Passief-observerend','Experiment'][int(self.solution['control'])])
+                output[3].append('Antwoord: '+self.solution['null'])
+                output[4].append('Antwoord: '+self.assignments.print_report({**self.assignment, **self.solution}, answer=True))
+                output[5].append('Antwoord: '+self.solution['decision'])
+                output[6].append('Antwoord: '+self.solution['interpretation'])
+            elif self.assignment['two_way']:
+                output[0].append('Antwoord: '+self.assignments.print_independent(self.assignment))
+                output[0].append('Antwoord: '+self.assignments.print_independent(self.assignment, num=2))
+                output[1].append('Antwoord: '+self.assignments.print_dependent(self.assignment))
+                output[2].append('Antwoord: '+['Passief-observerend','Experiment'][int(self.solution['control'])])
+                output[2].append('Antwoord: '+['Passief-observerend','Experiment'][int(self.solution['control2'])])
+                output[3].append('Antwoord: '+self.solution['null'])
+                output[3].append('Antwoord: '+self.solution['null2'])
+                output[3].append('Antwoord: '+self.solution['null3'])
+                output[4].append('Antwoord: '+self.assignments.print_report({**self.assignment, **self.solution}, answer=True))
+                output[5].append('Antwoord: '+self.solution['decision'])
+                output[5].append('Antwoord: '+self.solution['decision2'])
+                output[5].append('Antwoord: '+self.solution['decision3'])
+                output[6].append('Antwoord: '+self.solution['interpretation'])
+                output[6].append('Antwoord: '+self.solution['interpretation2'])
+                output[6].append('Antwoord: '+self.solution['interpretation3'])
+            elif 'jackedmeans' in list(self.assignment['data'].keys()):
+                output[0].append('Antwoord: '+self.assignments.print_independent(self.assignment))
+                output[1].append('Antwoord: '+self.assignments.print_dependent(self.assignment))
+                output[2].append('Antwoord: '+['Passief-observerend','Experiment'][int(self.solution['control'])])
+                output[3].append('Antwoord: '+self.solution['null'])
+                output[3].append('Antwoord: '+self.solution['null2'])
+                output[4].append('Antwoord: '+self.assignments.print_report({**self.assignment, **self.solution}, answer=True))
+                output[5].append('Antwoord: '+self.solution['decision'])
+                output[5].append('Antwoord: '+self.solution['decision2'])
+                output[6].append('Antwoord: '+self.solution['interpretation'])
+            return instruction, output
+            
         
         def update_form_report(self, textfields: Dict) -> List[str]:
             instruction = self.assignments.print_report(self.assignment)
