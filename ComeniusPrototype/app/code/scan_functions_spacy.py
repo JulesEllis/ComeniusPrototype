@@ -37,10 +37,12 @@ def check_causality(independent:Doc, dependent:Doc, alternative:bool=False) -> b
     #print(independent.dep_ + '-' + dependent.dep_)
     if not alternative:
         tuples = [('nsubj', 'obj'),('obj', 'ROOT'),('nsubj', 'nmod'),('obl', 'obj'),('ROOT', 'obj'),
-              ('obj', 'nmod'), ('amod', 'obj'), ('obl','obl'),('nsubj','obl'),('obj','obj'),('nsubj','amod')]
+              ('obj', 'nmod'), ('amod', 'obj'), ('obl','obl'),('nsubj','obl'),('obj','obj'),('nsubj','amod'),
+              ('obj','obl'),('nmod','obj'),('obl','ROOT'),('obl','nsubj'),('obl','csubj')]
     else: #Add reverse causality and disturbing variable options
         tuples = [('obj','obj'),('obj','nsubj'), ('ROOT','obj'),('nmod','nsubj'),('obj','obl'),('obj','ROOT'),('amod','nsubj'),
-                       ('nmod','obj'),('obj','amod'),('obl','nsubj')]
+                       ('nmod','obj'),('obj','amod'),('obl','nsubj'),('obl','obj'),('obj','nmod'),('ROOT','obl'),('nsubj','obl'),
+                       ('obl','obl'), ('csubj','obl')]
     for t in tuples:
         if independent.dep_ == t[0] and dependent.dep_ == t[1]:
             return True
@@ -142,7 +144,7 @@ def detect_comparison(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]
     mean_2 = [x for x in sent if x.text == 'populatiegemiddelde' or x.text == 'populatiegemiddelden']
     scorepoints['mean_present'] = any(mean) or any(mean_2)
     scorepoints['pop_present'] = any(mean_2) or 'populatie' in tokens or any([x in tokens for x in ['significant','significante']])
-    level_bools:list[bool] = [levels[i] in tokens or any([y in tokens for y in level_syns[i]]) for i in range(len(levels))]
+    level_bools:list[bool] = [levels[i] in tokens or any([y in tokens for y in level_syns[i]]) for i in range(2)]#len(levels))]
     scorepoints['level_present'] = any(level_bools) #or scorepoints['level_present']
     scorepoints['both_present'] = all(level_bools)# or scorepoints['both_present']
     scorepoints['contrasign'] = not ((any(mean_2) or 'populatie' in tokens) and any([x in tokens for x in ['significant','significante']]))
@@ -206,7 +208,7 @@ def detect_interaction(doc:Doc, solution:dict, anova:bool) -> List[str]:
     criteria = ['interactie','indy1','indy2','pop_present','right_negation', 'contrasign']
     scorepoints = dict([(x,False) for x in criteria])
     rejected = solution['p'][-1] < 0.05
-    tokens = [y.text for y in sent]
+    tokens = [y.text for y in doc]
     output:List[str] = []
     
     #Controleer input
@@ -244,8 +246,8 @@ def detect_true_scores(sent:Doc, solution:dict, num=2) -> List[str]:
     tokens = [x.text for x in sent]
     output:List[str] = []
     
-    #Controleer inpur
-    comparisons = [x for x in sent if x.text ['gelijk','ongelijk','anders','verschillend']]
+    #Controleer input
+    comparisons = [x for x in sent if x.text in ['gelijk','ongelijk','anders','verschillend']]
     if comparisons != []:
         comproot = comparisons[num-1] if len(comparisons) >= num else comparisons[0]
         comptree:List = descendants(comproot)
@@ -317,8 +319,9 @@ def detect_unk(sent:Doc, solution:dict, num:int=1):
     #Define variables
     criteria:list=['two']#['unk','two']
     scorepoints = dict([(x,False) for x in criteria])
-    control = solution['control'] if num < 2 else solution['control' + str(num)]
+    control = solution['control'] if num < 2 else solution['control' + str(num)] if num < 3 else solution['control2'] or solution['control2']
     tokens = [x.text for x in sent]
+    print(tokens)
     output:List[str] = []
     
     #Controleer input
@@ -376,9 +379,12 @@ def detect_primary_interaction(sent:Doc, solution:dict) -> List[str]:
     criteria:list = ['interaction', 'negation', 'indy1', 'indy2', 'dep', 'level_present', 'both_levels', 'same']
     scorepoints = dict([(x,False) for x in criteria])
     tokens = [x.text for x in sent]
+    print(tokens)
     output:list = []
     var1levels:list[bool] = [solution['levels'][i] in tokens or any([y in tokens for y in solution['level_syns'][i]]) for i in range(len(solution['levels']))]
     var2levels:list[bool] = [solution['levels2'][i] in tokens or any([y in tokens for y in solution['level2_syns'][i]]) for i in range(len(solution['levels2']))]
+    print(var1levels)
+    print(var2levels)
     rejected = solution['p'][2] < 0.05
     
     # Fill scorepoints
@@ -401,8 +407,8 @@ def detect_primary_interaction(sent:Doc, solution:dict) -> List[str]:
             scorepoints['indy1'] = True
             if check_causality(indy2node[0], dep_node[0]):
                 scorepoints['interaction'] = True
-                scorepoints['level_present'] = any(var1levels)
-                scorepoints['both_levels'] = all(var1levels)
+                scorepoints['level_present'] = any(var1levels) or scorepoints['level_present']
+                scorepoints['both_levels'] = all(var1levels) or scorepoints['both_levels']
         
     #Add strings
     if not scorepoints['negation']:
@@ -417,10 +423,10 @@ def detect_primary_interaction(sent:Doc, solution:dict) -> List[str]:
         output.append(' -niet gesteld of de invloed van een van de factoren op de afhanklijke variabele hetzelfde is bij beide niveaus van de andere factor')
     if scorepoints['dep'] and not scorepoints['interaction']:
         output.append(' -het causale verband tussen de afhankelijke en onafhankelijke variabele is niet juist aangegeven bij de primaire verklaring')
-    if scorepoints['interaction'] and not scorepoints['level_present']:
-        output.append(' -de niveaus van een van de onafhankelijke variabelen worden nog niet genoemd')
     if scorepoints['interaction'] and not scorepoints['both_levels']:
         output.append(' -beide niveaus van een van de onafhankelijke variabelen worden nog niet genoemd')
+    elif scorepoints['interaction'] and not scorepoints['level_present']:
+        output.append(' -de niveaus van een van de onafhankelijke variabelen worden nog niet genoemd')
     return output
 
 def detect_alternative(sent:Doc, solution:dict, num:int=1) -> List[str]:
@@ -595,6 +601,7 @@ def scan_interpretation_anova(doc:Doc, solution:dict, num:int=3, prefix=True):
     control:bool = solution['control'] or solution['control2']
     primary_checks:list = ['primaire','eerste'] if not control else [solution['dependent']]
     unk_sents = [x for x in doc.sents if 'mogelijk' in [y.text for y in x] or 'mogelijke' in [y.text for y in x]]
+    print(unk_sents)
     if unk_sents != []:
         output.extend(detect_unk(unk_sents[0], solution))
     else:

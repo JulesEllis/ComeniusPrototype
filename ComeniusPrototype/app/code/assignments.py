@@ -221,6 +221,9 @@ class Assignments:
         #output['correlations'] = [random.random() for i in range(int(((n_predictors + 1) ** 2 - n_predictors - 1) * 0.5))]
         output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn '+' en '.join(output['data']['predictoren'][1:])+' als predictoren en '+output['dependent']+' als criterium. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
         return output
+    
+    #def create_ancova(self, control: bool, elementary:bool=False):
+    #    
 	
     def create_report(self, control: bool, choice: int=0):
         if choice == 0:
@@ -301,7 +304,7 @@ class Assignments:
         n_conditions = len(data['means'])
         output_text = assignment['instruction'] + '<br><table style="width:45%">'
         output_text += '<tr><td>'+assignment['independent']+'</td>' + ''.join(['<td>'+x+'</td>' for x in assignment['levels'][:n_conditions]]) + '<td>Opgevoerde meting</td></tr>'
-        output_text += '<tr><td>Gemiddelde</td>' + ''.join(['<td>'+str(x)+'</td>' for x in data['means'][:n_conditions]]) + '<td>' + str(round(np.mean(data['jackedmeans'], ddof=1),2)) + '</td></tr>'
+        output_text += '<tr><td>Gemiddelde</td>' + ''.join(['<td>'+str(x)+'</td>' for x in data['means'][:n_conditions]]) + '<td>' + str(round(np.mean(data['jackedmeans']),2)) + '</td></tr>'
         output_text += '<tr><td>Standaardeviatie</td>' + ''.join(['<td>'+str(x)+'</td>' for x in data['stds'][:n_conditions]]) + '<td>' + str(round(np.std(data['jackedmeans'], ddof=1),2)) + '</td></tr>'
         output_text += '<tr><td>N</td><td>' + str(data['n_subjects']) + '</td></tr></table>'
         output_text += '<br>Originele scores:'
@@ -531,15 +534,15 @@ class Assignments:
             solution['r2']: List[float] = [solution['ss'][0]/solution['ss'][2]]
             
             #Verbal parts of the report
-            rejected: Tuple[str] = ('verworpen','ongelijk') if solution['p'][0] < 0.05 else ('behouden', 'gelijk')
+            rejected: Tuple[str] = ('verworpen','ongelijk',' ') if solution['p'][0] < 0.05 else ('behouden', 'gelijk', ' niet ')
             solution['null']: str = 'h0: ' + ' == '.join(['mu(' + l + ')' for l in solution['levels']])
             sterkte:str = 'sterk' if solution['r2'][0] > 0.2 else 'matig' if solution['r2'][0] > 0.1 else 'klein'
             solution['decision']: str = 'h0 ' + rejected[0] + ', de populatiegemiddelden van ' + solution['levels'][0] +' en '+solution['levels'][1]+' zijn gemiddeld ' + rejected[1] + '. Het effect is '+sterkte+'.'
             if assignment['control']:
-                solution['interpretation']: str = 'Experiment, dus er is een verklaring mogelijk. Dit is dat '+solution['dependent']+' '+solution['independent'] + ' veroorzaakt.'
+                solution['interpretation']: str = 'Experiment, dus er is een verklaring mogelijk. Dit is dat '+solution['independent']+' '+solution['dependent'] +rejected[2] +' veroorzaakt.'
             else:
-                solution['interpretation']: str = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat '+solution['dependent']+' '+solution['independent'] + \
-                ' veroorzaakt. De alternatieve verklaring is dat ' + solution['independent'] + ' ' + solution['dependent'] + ' veroorzaakt.'
+                solution['interpretation']: str = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat '+solution['independent']+' '+solution['dependent'] + \
+                ' veroorzaakt. De alternatieve verklaring is dat ' + solution['dependent'] + ' ' + solution['independent'] + ' veroorzaakt.'
                 
         else: #Two-way statistics
             #Intermediary statistics order: Between, A, B, AB, Within, Total
@@ -639,7 +642,7 @@ class Assignments:
         solution['decision2']: str = 'h0 ' + rejected2[0] + ', de opgevoerde gemiddelden van de personen in de populatie zijn ' + rejected2[1] + '.'
         n1 = '' if solution['p'][0] < 0.05 else 'niet '
         if assignment['control']:
-            solution['interpretation']: str = 'Experiment, dus er is een verklaring mogelijk. De primaire verklaring is dat '+solution['dependent']+' wordt '+n1+'veroorzaakt door '+solution['independent']
+            solution['interpretation']: str = 'Experiment, dus er is een verklaring mogelijk. De primaire verklaring is dat '+solution['dependent']+' '+n1+' wordt veroorzaakt door '+solution['independent']
         else:
             solution['interpretation']: str = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat '+solution['dependent']+' wordt '+n1+'veroorzaakt door '+solution['independent'] + '. '\
             'De alternatieve is dat ' + solution['independent'] + ' wordt veroorzaakt door ' + solution['dependent']
