@@ -272,6 +272,14 @@ class OuterController:
                     self.analysis_type = Task.MREGRESSION
                     if report != 'Beknopt rapport':
                         return self.protocol[self.index][0] + '<span style="color: blue;">Sorry, bij multiple regressie kan je alleen een beknopt rapport maken.</span>'
+                if analysis == 'MANOVA':
+                    self.analysis_type = Task.MANOVA
+                    if report != 'Beknopt rapport':
+                        return self.protocol[self.index][0] + '<span style="color: blue;">Sorry, bij MANOVA kan je alleen een beknopt rapport maken.</span>'
+                if analysis == 'ANCOVA':
+                    self.analysis_type = Task.ANCOVA
+                    if report != 'Beknopt rapport':
+                        return self.protocol[self.index][0] + '<span style="color: blue;">Sorry, bij ANCOVA kan je alleen een beknopt rapport maken.</span>'
                 
                 #Select report type
                 self.index = 0
@@ -389,7 +397,7 @@ class OuterController:
                ('Voer de het relatieve effect in dat je hebt berekend.',scan_number,['relative_effect', self.solution, 0.01], Process.QUESTION,str(self.solution['relative_effect'][0])),
                ('Voer de T-waarde in.',scan_number,['T', self.solution, 0.02], Process.QUESTION,str(self.solution['T'][0])),
                ('Voer de p-waarde in.',scan_p,[self.solution, 0.02], Process.QUESTION,str(self.solution['p'][0])),
-               ('Voer de beslissing in',scan_decision,[self.solution, False], Process.QUESTION,self.solution['decision']),
+               ('Voer de beslissing in.',scan_decision,[self.solution, False], Process.QUESTION,self.solution['decision']),
                ('Voer de causale interpretatie in.',scan_interpretation,[self.solution, False], Process.LAST_QUESTION,self.solution['interpretation'])]
             return output
         
@@ -412,9 +420,9 @@ class OuterController:
                     ('Voer de nulhypothese in voor de tweede onafhankelijke variabele, geformuleerd met "H0" en "mu".',scan_hypothesis,[self.solution, 2], Process.QUESTION,self.solution['null2']),
                     ('Voer de interactienulhypothese in. Je mag deze inkorten door alleen de eerste en laatste vergelijking van de hypothese te geven.',scan_hypothesis_anova,[self.solution], Process.QUESTION,self.solution['null3']),
                     ('Vul de tabel hieronder in.',scan_table,[self.solution, 0.02], Process.TABLE, self.assignments.print_report({**self.assignment, **self.solution}, answer=True)),    
-                    ('Voer de beslissing in voor de eerste onafhankelijke variabele', scan_decision,[self.solution, True, 1], Process.QUESTION,self.solution['decision']),
-                    ('Voer de beslissing in voor de tweede onafhankelijke variabele', scan_decision,[self.solution, True, 2], Process.QUESTION,self.solution['decision2']),
-                    ('Voer de beslissing in voor de interactie', scan_decision_anova,[self.solution], Process.QUESTION, self.solution['decision3']),
+                    ('Voer de beslissing in voor de eerste onafhankelijke variabele.', scan_decision,[self.solution, True, 1], Process.QUESTION,self.solution['decision']),
+                    ('Voer de beslissing in voor de tweede onafhankelijke variabele.', scan_decision,[self.solution, True, 2], Process.QUESTION,self.solution['decision2']),
+                    ('Voer de beslissing in voor de interactie.', scan_decision_anova,[self.solution], Process.QUESTION, self.solution['decision3']),
                     ('Voer de causale interpretatie voor de eerste factor in.',scan_interpretation,[self.solution, True, 1], Process.QUESTION,self.solution['interpretation']),
                     ('Voer de causale interpretatie voor de tweede factor in.',scan_interpretation,[self.solution, True, 2], Process.QUESTION,self.solution['interpretation2']),
                     ('Voer de causale interpretatie voor de interactie in.',scan_interpretation_anova,[self.solution], Process.LAST_QUESTION,self.solution['interpretation3'])]
@@ -424,11 +432,11 @@ class OuterController:
             output :str = [('Beschrijf de onafhankelijke variabele.',scan_indep_anova,[self.solution,1,False], Process.QUESTION,self.assignments.print_independent(self.assignment)),
                 ('Beschrijf de afhankelijke variabele (het aantal metingen per persoon hoef je niet te geven).',scan_dep,[self.solution], Process.QUESTION,self.assignments.print_dependent(self.assignment)),
                 ('Beschrijf de mate van controle.',scan_control,[self.solution], Process.QUESTION,['Passief-observerend','Experiment'][int(self.solution['control'])]),
-                ('Beschrijf de nulhypothese van de condities',scan_hypothesis,[self.solution,1], Process.QUESTION,self.solution['null']),
-                ('Beschrijf de nulhypothese van de subjecten',scan_hypothesis_rmanova,[self.solution], Process.QUESTION,self.solution['null2']),
+                ('Beschrijf de nulhypothese van de condities.',scan_hypothesis,[self.solution,1], Process.QUESTION,self.solution['null']),
+                ('Beschrijf de nulhypothese van de subjecten.',scan_hypothesis_rmanova,[self.solution], Process.QUESTION,self.solution['null2']),
                 ('Vul de tabel hieronder in.',scan_table,[self.solution, 0.02], Process.TABLE, self.assignments.print_report({**self.assignment, **self.solution}, answer=True)),
-                ('Voer de beslissing in van de condities',scan_decision,[self.solution,True,1], Process.QUESTION,self.solution['decision']),
-                ('Voer de beslissing in van de subjecten',scan_decision_rmanova,[self.solution], Process.QUESTION,self.solution['decision2']),
+                ('Voer de beslissing in van de condities.',scan_decision,[self.solution,True,1], Process.QUESTION,self.solution['decision']),
+                ('Voer de beslissing in van de subjecten.',scan_decision_rmanova,[self.solution], Process.QUESTION,self.solution['decision2']),
                 ('Voer de causale interpretatie voor de condities in.',scan_interpretation,[self.solution, True, 1], Process.LAST_QUESTION,self.solution['interpretation'])]
             return output
         

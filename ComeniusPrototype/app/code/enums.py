@@ -16,6 +16,8 @@ class Task(Enum):
     INTRO = 8
     CHOICE = 9
     TEXT_FIELD_LARGE = 10
+    MANOVA = 11
+    ANCOVA = 12
     
 #Variable indicating whether and how the given function from the protocol index should be called
 #e.g. as bool, bool, or bool, str, or not at all

@@ -8,6 +8,7 @@ Created on Tue Jun 30 16:03:09 2020
 import math
 import random
 import numpy as np
+from random import random
 from scipy import stats
 from scipy.stats.distributions import chi2
 from typing import Dict, List, Tuple
@@ -222,6 +223,65 @@ class Assignments:
         output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn '+' en '.join(output['data']['predictoren'][1:])+' als predictoren en '+output['dependent']+' als criterium. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
         return output
     
+    def create_ancova(self, control: bool, elementary:bool=False):
+        report_type = 'elementair' if elementary else 'beknopt'
+        output = {'assignment_type':6}
+        indy_int = random.choice([0,1,2,3])
+        output['independent'] = ['stimuluskleur','weerssituatie','muziek'][indy_int]
+        output['levels'] = [['rood','blauw'],['zon','regen'],['klassiek','pop']][indy_int]
+        output['ind_syns'] = [['stimuluskleuren'],['weerssituaties'],[]][indy_int]
+        output['level_syns'] = [[['rode'],['blauwe']],[['zonnig'],['regenachtig']],[['klassieke'],[]]][indy_int]
+        N = int(200 * random.random())
+        output['ns'] = [N]
+        output['n_predictors'] = 2
+        
+        p = random.random()
+        s = 3 * random.random()
+        output['var_obs'] = (1 + chi2.ppf(p, df=10)) * 10 ** s
+        r2 = random.random() ** 2
+        output['var_pred'] = output['var_obs'] * r2
+        output['data']: dict={'predictoren':['Sociale vaardigheden', 'Depressieve gedachten', 'Eetlust',
+              'Intelligentie','Assertiviteit','Ervaren geluk'][:2]}
+        output['predictor_names'] = output['data']['predictoren']
+        output['predictor_syns'] = [[] for x in output['levels']]
+        output['dependent'] = 'gewicht'
+        output['dep_syns'] = ['gewichten']
+        #output['correlations'] = [random.random() for i in range(int(((n_predictors + 1) ** 2 - n_predictors - 1) * 0.5))]
+        output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn '+' en '.join(output['data']['predictoren'][1:])+' als predictoren en '+output['dependent']+' als criterium. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
+        return output
+    
+    def solve_ancova(self, assignment: Dict, solution:Dict) -> Dict:
+        N = assignment['ns'][0]
+        solution['assignment_type'] = assignment['assignment_type']
+    
+        #compute ANOVA table
+        n_predictors = len(assignment['predictor_names'])
+        ssreg = (N-1) * assignment['var_pred']
+        pred_ss = [random() * 0.25 * ssreg, random() * 0.25 * ssreg]
+        sstotal = (N-1) * assignment['var_obs']
+        solution['df']: list[int] = [1,1,2,4,N-5,N-1]
+        solution['ss']: list[float] = [pred_ss[0], pred_ss[1], ssreg - sum(pred_ss), ssreg, sstotal - ssreg, sstotal]
+        solution['ms']: List[float] = [solution['ss'][i] / solution['df'][i] for i in range(4)]
+        solution['F']: List[float] = [solution['ms'][i] / solution['ms'][5] for i in range(4)]
+        solution['p']: List[float] = [1-stats.f.cdf(solution['F'][i],solution['df'][i], solution['df'][5]) for i in range(4)]
+        solution['r2']: List[float] = [solution['ss'][i] / solution['ss'][5] for i in range(4)]
+        solution['eta']: List[float] = [solution['ss'][i] / (solution['ss'][i]+solution['ss'][4]) for i in range(4)]
+        
+        #Compute p-values
+        n_predictors = assignment['n_predictors']
+        solution['predictor_p'] = [random.random() * 0.05 if random.choice([True, False]) else random.random() * 0.95 + 0.05 for x in range(n_predictors+1)]
+        for i in range(len(solution['predictor_p'])):
+            if round(solution['predictor_p'][i], 2) == 0.05:
+                solution['predictor_p'][i] += 0.01
+        solution['predictor_t'] = [stats.t.isf(solution['predictor_p'][i],1,N - 3 - 1) for i in range(n_predictors+1)]
+        solution['predictor_beta'] = [np.mean([random.uniform(60,120)])] + [abs(random.gauss(0,0.5)) for i in range(n_predictors)]
+        solution['predictor_b'] = [x * np.sqrt(assignment['var_pred']) for x in solution['predictor_beta']]
+        solution['predictor_se'] = [solution['predictor_b'][i]/solution['predictor_t'][i] for i in range(n_predictors+1)]
+        
+        #Verbal answers
+        solution['null'] = 'H0: ' + ' == '.join(['beta(' + str(i) + ')' for i in range(1,4)]) + ' == 0'
+        return solution
+    
     #def create_ancova(self, control: bool, elementary:bool=False):
     #    
 	
@@ -247,6 +307,12 @@ class Assignments:
         if choice == 6:    
             assignment = self.create_mregression(control, False)
             output = {**assignment, **self.solve_mregression(assignment, {})}
+        if choice == 11:    
+            assignment = self.create_ancova(control, False)
+            output = {**assignment, **self.solve_ancova(assignment, {})}
+        if choice == 12:    
+            assignment = self.create_manova(control, False)
+            output = {**assignment, **self.solve_manova(assignment, {})}
         output['assignment_type'] = choice
         return output
             
@@ -321,11 +387,19 @@ class Assignments:
         #output_text += '<tr><td>Waarde</td><td>'+str(assignment['ns'][0])+'</td><td>'+str(round(assignment['var_obs'],2))+'</td><td>'+str(round(assignment['var_pred'],2))+'</td></tr>'
         return output_text #+ '</table>'
     
+    def print_manova(self, assignment: Dict):
+        output_text = assignment['instruction'] + '<br>'
+        return output_text
+    
+    def print_ancova(self, assignment: Dict):
+        output_text = assignment['instruction'] + '<br>'
+        return output_text
+    
     def print_report(self, assignment: Dict, answer=False) -> str: 
         output:str = '' #"Answer" is a parameter which triggers when only the mean/ANOVA tables have to be printed
         if assignment['assignment_type'] not in [1,2]:
             data:dict = assignment['data']
-        names = ['df','ss','ms','F','p','r2']
+        names = ['df','ss','ms','F','p','r2'];names2 = ['df','ss','ms','F','p','r2']
         if assignment['assignment_type'] == 1:
             if not answer:
                 output += self.print_ttest(assignment)
@@ -402,17 +476,23 @@ class Assignments:
             for i in range(len(data['predictoren'])):
                 output += '<tr><td>'+data['predictoren'][i]+'</td><td>'+str(round(assignment['predictor_b'][i],2))+'</td><td>'+str(round(assignment['predictor_beta'][i],2))+'</td><td>'+str(round(assignment['predictor_se'][i],2))+'</td><td>'+str(round(assignment['predictor_t'][i],2))+'</td><td>'+str(round(assignment['predictor_p'][i],3))+'</td></tr>'
             output += '</table></p>'
+        if assignment['assignment_type'] == 12:
+            output += self.print_mregression(assignment)
+            output += '<p><table style="width:20%">'
+            output += '<tr><td>Bron</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td><td>eta<sup>2</sup></td></tr>'
+            output += '<tr><td>'+assignment['predictor_names'][0]+'</td>'+''.join(['<td>'+str(round(assignment[x][0],2))+'</td>' for x in names2])+'</tr>'
+            output += '<tr><td>'+assignment['predictor_names'][1]+'</td>'+''.join(['<td>'+str(round(assignment[x][0],2))+'</td>' for x in names2])+'</tr>'
+            output += '<tr><td>'+assignment['independent']+'</td>'+''.join(['<td>'+str(round(assignment[x][0],2))+'</td>' for x in names2])+'</tr>'
+            output += '<tr><td>Model</td>'+''.join(['<td>'+str(round(assignment[x][0],2))+'</td>' for x in names2])+'</tr>'
+            output += '<tr><td>Residu</td>'+''.join(['<td>'+str(round(assignment[x][1],2))+'</td>' for x in names[:3]])+'</tr>'
+            output += '<tr><td>Totaal</td>'+''.join(['<td>'+str(round(assignment[x][2],2))+'</td>' for x in names[:3]])+'</tr>'
+            output += '</table></p>'
             
-            #output += '<p><table style="width:20%">'
-            #cornames:list = [assignment['dependent']] + data['varnames'][1:]
-            #output += '<tr><td>Correlatie</td>' + ''.join(['<td>'+x+'</td>' for x in cornames]) + '</tr>'
-            #cors:list = assignment['correlations']
-            #n_factors:int = len(data['varnames'])
-            #ind:int = 0
-            #for i in range(n_factors):
-            #    output += '<tr><td>'+cornames[i]+'</td>'+''.join('<td>'+str(round(x,2))+'</td>' for x in cors[ind:ind+i])+''.join(['<td></td>' for x in range(n_factors-i)])+'</tr>'
-            #    ind += i
-            #output += '</table></p>'
+            output += '<p><table style="width:20%">'
+            output += '<tr><td>Predictor</td><td>b</td><td>Beta</td><td>Standaarderror</td><td>T</td><td>p</td></tr>'
+            for i in range(len(data['predictoren'])):
+                output += '<tr><td>'+data['predictoren'][i]+'</td><td>'+str(round(assignment['predictor_b'][i],2))+'</td><td>'+str(round(assignment['predictor_beta'][i],2))+'</td><td>'+str(round(assignment['predictor_se'][i],2))+'</td><td>'+str(round(assignment['predictor_t'][i],2))+'</td><td>'+str(round(assignment['predictor_p'][i],3))+'</td></tr>'
+            output += '</table></p>'
         return output
             
     #Calculate internally all of the numbers and string values the student has to present
@@ -664,7 +744,7 @@ class Assignments:
         
         #Compute p-values
         n_predictors = assignment['n_predictors']
-        solution['predictor_p'] = [random.random() * 0.05 if random.choice([True, False]) else random.random() * 0.95 + 0.05 for x in range(n_predictors+1)]
+        solution['predictor_p'] = [random() * 0.05 if random.choice([True, False]) else random.random() * 0.95 + 0.05 for x in range(n_predictors+1)]
         for i in range(len(solution['predictor_p'])):
             if round(solution['predictor_p'][i], 2) == 0.05:
                 solution['predictor_p'][i] += 0.01

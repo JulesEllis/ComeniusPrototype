@@ -76,8 +76,10 @@ def detect_h0(sent:Doc, solution:dict, num:int=1) -> List[str]:
     if not scorepoints['hyp_present']:
         if num < 2:
             output.append(' -hypothese niet genoemd')
-        else:
+        elif num < 3:
             output.append(' -hypothese van factor '+str(num)+' niet genoemd')
+        else:
+            output.append(' -de interactiehypothese wordt niet genoemd')
     return output
 
 def detect_significance(doc:Doc, solution:dict, num:int=1) -> List[str]:
@@ -238,12 +240,37 @@ def detect_interaction(doc:Doc, solution:dict, anova:bool) -> List[str]:
         output.append(' -zowel "populatie" en "significant" genoemd, haal een van de twee weg')
     return output
 
+def detect_decision_ancova(sent:Doc, solution:dict) -> List[str]:
+    rejected:bool = solution['p'][-1] < 0.05
+    tokens:list = [x.text for x in sent]
+    scorepoints:dict = {'sign_val': 'significant voorspellende waarde' in sent.text,
+        'indep': solution['independent'] in tokens or any([x in tokens for x in solution['ind_syns']]),
+        'cov1': solution['predictor_names'][0] in tokens or any([x in tokens for x in solution['predictor_syns'][0]]),
+        'cov2': solution['predictor_names'][1] in tokens or any([x in tokens for x in solution['predictor_syns'][1]]),
+        'dep': solution['dependent'] in tokens or any([x in tokens for x in solution['dep_syns']]),
+        'neg': bool(negation_counter(tokens) % 2) != rejected }
+    
+    output:List[str] = []
+    if not scorepoints['sign_val']:
+        output.append(' -significant voorspellende waarde niet genoemd')
+    if not scorepoints['indep']:
+        output.append(' -onafhankelijke factor niet genoemd')
+    if not scorepoints['cov1'] and not scorepoints['cov2']:
+        output.append(' -beide covariaten niet genoemd')
+    elif not scorepoints['cov2'] or not scorepoints['indy2']:
+        output.append(' -een van de covariaten niet genoemd')
+    if not scorepoints['dep']:
+        output.append(' -afhankelijke variabele niet genoemd')
+    if not scorepoints['neg']:
+        output.append(' -ten onrechte een negatie toegevoegd of weggelaten bij de hoofdbeslissing')
+    return output
+    
 def detect_true_scores(sent:Doc, solution:dict, num=2) -> List[str]:
     #Define variables
     criteria:list = ['right_comparison', 'right_negation', 'mean_present', 'pop_present','jacked','contrasign']
-    scorepoints = dict([(x,False) for x in criteria])
-    rejected = solution['p'][-1] < 0.05
-    tokens = [x.text for x in sent]
+    scorepoints:dict = dict([(x,False) for x in criteria])
+    rejected:bool = solution['p'][-1] < 0.05
+    tokens:list = [x.text for x in sent]
     output:List[str] = []
     
     #Controleer input
@@ -519,7 +546,11 @@ def detect_name(doc:Doc, solution:Dict) -> List[str]:
     if solution['assignment_type'] == 5:
         names = [('repeated','-','measures','anova'), ('repeated','-','measures','-','anova')]
     if solution['assignment_type'] == 6:
-        names = [['regressieanalyse'],('multiple','-','regression'),('multipele', 'regressie')]
+        names = [('regressieanalyse'),('multiple','-','regression'),('multipele', 'regressie')]
+    if solution['assignment_type'] == 11:
+        names = [('manova')]
+    if solution['assignment_type'] == 12:
+        names = [('ancova')]
     if any([all([x in tokens for x in y]) for y in names]):
         return ['']
     else:
@@ -767,7 +798,26 @@ def split_grade_mregression(text:str, solution:dict) -> str:
         return 'Mooi, dit beknopt rapport bevat alle juiste details!'
     else:
         return 'Er ontbreekt nog wat aan je antwoord, namelijk:' + re.sub(r'<br>(<br>)+', '<br>', output)
-    
+
+def split_grade_ancova(text:str, solution:dict) -> str:
+    nl_nlp = spacy.load('nl')
+    doc = nl_nlp(text.lower())
+    output:str = ''
+    output += '<br>'+'<br>'.join(detect_name(doc,solution))
+    output += '<br>'+'<br>'.join(detect_decision_ancova(doc, solution))
+    output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][-1]))
+    output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][-1]))
+    output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][-1], aliases=['r2','r','kwadraat']))
+    if(solution['p'][-2] < 0.05):
+        #output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][-1]))
+        output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][-2]))
+        #output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][-1], aliases=['r2','r','kwadraat']))
+    output += '<br>' + scan_predictors(doc, solution, prefix=False)[1]
+    if output.replace('<br>','') == '':
+        return 'Mooi, dit beknopt rapport bevat alle juiste details!'
+    else:
+        return 'Er ontbreekt nog wat aan je antwoord, namelijk:' + re.sub(r'<br>(<br>)+', '<br>', output)
+ 
 """
 FUNCTIONS FOR TESTING
 """
