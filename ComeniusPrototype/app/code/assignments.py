@@ -16,12 +16,7 @@ from typing import Dict, List, Tuple
 
 class Assignments:
     def __init__(self):
-        self.t_test_vars: List[str] = ['independent','dependent','dependent_measure','independent_measure',
-                            'levels','null','control','means','stds','ns','df','raw_effect',
-                            'relative_effect','T','p','decision','interpretation'] #Variables in t-test solution  
-        self.anova_vars: List[str] = ['independent','independent2','dependent','dependent_measure','independent_measure', 'independent2_measure'
-                            'levels','levels2','null','null2','null3','control','ss','df','ms','F','p','r2',
-                            'decision','decision2','decision3','interpretation','interpretation2','interpretation3']
+        pass
         
     #Checks the nature of the given assignment and returns the output of the right print function
     def print_assignment(self, assignment: Dict) -> str:
