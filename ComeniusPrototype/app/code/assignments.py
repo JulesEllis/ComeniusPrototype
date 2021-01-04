@@ -8,7 +8,6 @@ Created on Tue Jun 30 16:03:09 2020
 import math
 import random
 import numpy as np
-from random import random
 from scipy import stats
 from scipy.stats.distributions import chi2
 from typing import Dict, List, Tuple
@@ -226,7 +225,7 @@ class Assignments:
     def create_ancova(self, control: bool, elementary:bool=False):
         report_type = 'elementair' if elementary else 'beknopt'
         output = {'assignment_type':6}
-        indy_int = random.choice([0,1,2,3])
+        indy_int = random.choice([0,1,2])
         output['independent'] = ['stimuluskleur','weerssituatie','muziek'][indy_int]
         output['levels'] = [['rood','blauw'],['zon','regen'],['klassiek','pop']][indy_int]
         output['ind_syns'] = [['stimuluskleuren'],['weerssituaties'],[]][indy_int]
@@ -247,7 +246,7 @@ class Assignments:
         output['dependent'] = 'gewicht'
         output['dep_syns'] = ['gewichten']
         #output['correlations'] = [random.random() for i in range(int(((n_predictors + 1) ** 2 - n_predictors - 1) * 0.5))]
-        output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn '+' en '.join(output['data']['predictoren'][1:])+' als predictoren en '+output['dependent']+' als criterium. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
+        output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De onafhankelijke variabelen zijn '+output['independent']+' als factor '+', met '.join(output['data']['predictoren'][1:])+' als predictoren en '+output['dependent']+' als afhankelijke variabele. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
         return output
     
     def solve_ancova(self, assignment: Dict, solution:Dict) -> Dict:
@@ -257,11 +256,11 @@ class Assignments:
         #compute ANOVA table
         n_predictors = len(assignment['predictor_names'])
         ssreg = (N-1) * assignment['var_pred']
-        pred_ss = [random() * 0.25 * ssreg, random() * 0.25 * ssreg]
+        pred_ss = [random.random() * 0.25 * ssreg, random.random() * 0.25 * ssreg]
         sstotal = (N-1) * assignment['var_obs']
         solution['df']: list[int] = [1,1,2,4,N-5,N-1]
         solution['ss']: list[float] = [pred_ss[0], pred_ss[1], ssreg - sum(pred_ss), ssreg, sstotal - ssreg, sstotal]
-        solution['ms']: List[float] = [solution['ss'][i] / solution['df'][i] for i in range(4)]
+        solution['ms']: List[float] = [solution['ss'][i] / solution['df'][i] for i in range(6)]
         solution['F']: List[float] = [solution['ms'][i] / solution['ms'][5] for i in range(4)]
         solution['p']: List[float] = [1-stats.f.cdf(solution['F'][i],solution['df'][i], solution['df'][5]) for i in range(4)]
         solution['r2']: List[float] = [solution['ss'][i] / solution['ss'][5] for i in range(4)]
@@ -308,11 +307,10 @@ class Assignments:
             assignment = self.create_mregression(control, False)
             output = {**assignment, **self.solve_mregression(assignment, {})}
         if choice == 11:    
+            pass
+        if choice == 12:    
             assignment = self.create_ancova(control, False)
             output = {**assignment, **self.solve_ancova(assignment, {})}
-        if choice == 12:    
-            assignment = self.create_manova(control, False)
-            output = {**assignment, **self.solve_manova(assignment, {})}
         output['assignment_type'] = choice
         return output
             
@@ -399,7 +397,7 @@ class Assignments:
         output:str = '' #"Answer" is a parameter which triggers when only the mean/ANOVA tables have to be printed
         if assignment['assignment_type'] not in [1,2]:
             data:dict = assignment['data']
-        names = ['df','ss','ms','F','p','r2'];names2 = ['df','ss','ms','F','p','r2']
+        names = ['df','ss','ms','F','p','r2'];names2 = ['df','ss','ms','F','p','r2','eta']
         if assignment['assignment_type'] == 1:
             if not answer:
                 output += self.print_ttest(assignment)
@@ -481,17 +479,11 @@ class Assignments:
             output += '<p><table style="width:20%">'
             output += '<tr><td>Bron</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td><td>eta<sup>2</sup></td></tr>'
             output += '<tr><td>'+assignment['predictor_names'][0]+'</td>'+''.join(['<td>'+str(round(assignment[x][0],2))+'</td>' for x in names2])+'</tr>'
-            output += '<tr><td>'+assignment['predictor_names'][1]+'</td>'+''.join(['<td>'+str(round(assignment[x][0],2))+'</td>' for x in names2])+'</tr>'
-            output += '<tr><td>'+assignment['independent']+'</td>'+''.join(['<td>'+str(round(assignment[x][0],2))+'</td>' for x in names2])+'</tr>'
-            output += '<tr><td>Model</td>'+''.join(['<td>'+str(round(assignment[x][0],2))+'</td>' for x in names2])+'</tr>'
-            output += '<tr><td>Residu</td>'+''.join(['<td>'+str(round(assignment[x][1],2))+'</td>' for x in names[:3]])+'</tr>'
-            output += '<tr><td>Totaal</td>'+''.join(['<td>'+str(round(assignment[x][2],2))+'</td>' for x in names[:3]])+'</tr>'
-            output += '</table></p>'
-            
-            output += '<p><table style="width:20%">'
-            output += '<tr><td>Predictor</td><td>b</td><td>Beta</td><td>Standaarderror</td><td>T</td><td>p</td></tr>'
-            for i in range(len(data['predictoren'])):
-                output += '<tr><td>'+data['predictoren'][i]+'</td><td>'+str(round(assignment['predictor_b'][i],2))+'</td><td>'+str(round(assignment['predictor_beta'][i],2))+'</td><td>'+str(round(assignment['predictor_se'][i],2))+'</td><td>'+str(round(assignment['predictor_t'][i],2))+'</td><td>'+str(round(assignment['predictor_p'][i],3))+'</td></tr>'
+            output += '<tr><td>'+assignment['predictor_names'][1]+'</td>'+''.join(['<td>'+str(round(assignment[x][1],2))+'</td>' for x in names2])+'</tr>'
+            output += '<tr><td>'+assignment['independent']+'</td>'+''.join(['<td>'+str(round(assignment[x][2],2))+'</td>' for x in names2])+'</tr>'
+            output += '<tr><td>Model</td>'+''.join(['<td>'+str(round(assignment[x][3],2))+'</td>' for x in names2])+'</tr>'
+            output += '<tr><td>Residu</td>'+''.join(['<td>'+str(round(assignment[x][4],2))+'</td>' for x in names[:3]])+'</tr>'
+            output += '<tr><td>Totaal</td>'+''.join(['<td>'+str(round(assignment[x][5],2))+'</td>' for x in names[:3]])+'</tr>'
             output += '</table></p>'
         return output
             
@@ -575,7 +567,6 @@ class Assignments:
             else:
                 solution['interpretation']: str = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat ' + solution['independent'] + ' geen invloed heeft op ' + solution['dependent'] + '. '+\
                 'De alternatieve verklaring is dat ' + solution['independent'] + ' ' + solution['dependent'] + ' wel beinvloedt, maar dat dit niet merkbaar is door een storende variabele.'
-        print(solution)
         return solution
     
     def solve_anova(self, assignment: Dict, solution: Dict) -> Dict:
@@ -744,7 +735,7 @@ class Assignments:
         
         #Compute p-values
         n_predictors = assignment['n_predictors']
-        solution['predictor_p'] = [random() * 0.05 if random.choice([True, False]) else random.random() * 0.95 + 0.05 for x in range(n_predictors+1)]
+        solution['predictor_p'] = [random.random() * 0.05 if random.choice([True, False]) else random.random() * 0.95 + 0.05 for x in range(n_predictors+1)]
         for i in range(len(solution['predictor_p'])):
             if round(solution['predictor_p'][i], 2) == 0.05:
                 solution['predictor_p'][i] += 0.01

@@ -184,7 +184,6 @@ class OuterController:
                 output[5].append('Antwoord: '+self.solution['decision2'])
                 output[6].append('Antwoord: '+self.solution['interpretation'])
             return instruction, output
-            
         
         def update_form_report(self, textfields: Dict) -> List[str]:
             instruction = self.assignments.print_report(self.assignment)
@@ -202,6 +201,8 @@ class OuterController:
                 feedback = split_grade_rmanova(text, self.solution)
             if self.assignment['assignment_type'] == 6:
                 feedback = split_grade_mregression(text, self.solution)
+            if self.assignment['assignment_type'] == 12:
+                feedback = split_grade_ancova(text, self.solution)
             return instruction, feedback
         
         def update(self, textfields: Dict) -> str:

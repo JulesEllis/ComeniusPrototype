@@ -348,7 +348,6 @@ def detect_unk(sent:Doc, solution:dict, num:int=1):
     scorepoints = dict([(x,False) for x in criteria])
     control = solution['control'] if num < 2 else solution['control' + str(num)] if num < 3 else solution['control2'] or solution['control2']
     tokens = [x.text for x in sent]
-    print(tokens)
     output:List[str] = []
     
     #Controleer input
@@ -406,12 +405,9 @@ def detect_primary_interaction(sent:Doc, solution:dict) -> List[str]:
     criteria:list = ['interaction', 'negation', 'indy1', 'indy2', 'dep', 'level_present', 'both_levels', 'same']
     scorepoints = dict([(x,False) for x in criteria])
     tokens = [x.text for x in sent]
-    print(tokens)
     output:list = []
     var1levels:list[bool] = [solution['levels'][i] in tokens or any([y in tokens for y in solution['level_syns'][i]]) for i in range(len(solution['levels']))]
     var2levels:list[bool] = [solution['levels2'][i] in tokens or any([y in tokens for y in solution['level2_syns'][i]]) for i in range(len(solution['levels2']))]
-    print(var1levels)
-    print(var2levels)
     rejected = solution['p'][2] < 0.05
     
     # Fill scorepoints
@@ -632,7 +628,6 @@ def scan_interpretation_anova(doc:Doc, solution:dict, num:int=3, prefix=True):
     control:bool = solution['control'] or solution['control2']
     primary_checks:list = ['primaire','eerste'] if not control else [solution['dependent']]
     unk_sents = [x for x in doc.sents if 'mogelijk' in [y.text for y in x] or 'mogelijke' in [y.text for y in x]]
-    print(unk_sents)
     if unk_sents != []:
         output.extend(detect_unk(unk_sents[0], solution))
     else:
@@ -810,7 +805,7 @@ def split_grade_ancova(text:str, solution:dict) -> str:
     output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][-1], aliases=['r2','r','kwadraat']))
     if(solution['p'][-2] < 0.05):
         #output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][-1]))
-        output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][-2]))
+        output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][-2], label=solution['independent']))
         #output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][-1], aliases=['r2','r','kwadraat']))
     output += '<br>' + scan_predictors(doc, solution, prefix=False)[1]
     if output.replace('<br>','') == '':
