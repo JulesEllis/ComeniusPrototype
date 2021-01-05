@@ -171,7 +171,7 @@ class Assignments:
         var_j = random.choice([0,1,2])
         output['independent'] = ['seizoen','leeftijd',''][var_i]
         output['ind_syns'] = [['seizoenen'],['leeftijden'],['tijdperk']][var_i]
-        output['levels'] = [['winter', 'lente', 'zomer', 'herfst'],['kind', 'jong', 'volwassen', 'oud'],['precambrium', 'siluur', 'paleolithicum', 'quartair']][:n_conditions][var_i]
+        output['levels'] = [['winter', 'lente', 'zomer', 'herfst'],['kind', 'jong', 'volwassen', 'oud'],['precambrium', 'siluur', 'paleolithicum', 'quartair']][var_i][:n_conditions]
         output['level_syns'] = [[],[],[],[]][:n_conditions]
         output['dependent'] = ['gewicht','bloeddruk','geheugenscore'][var_j]
         output['dep_syns'] = [['gewichten'],[],['geheugenscores']][var_j]
@@ -275,9 +275,6 @@ class Assignments:
         #Verbal answers
         solution['null'] = 'H0: ' + ' == '.join(['beta(' + str(i) + ')' for i in range(1,4)]) + ' == 0'
         return solution
-    
-    #def create_ancova(self, control: bool, elementary:bool=False):
-    #    
 	
     def create_report(self, control: bool, choice: int=0):
         if choice == 0:
@@ -400,8 +397,9 @@ class Assignments:
             output += '<tr><td>'+str(assignment['independent'])+'</td><td>Gemiddelde</td><td>Standaarddeviatie</td><td>N</td></tr>'
             output += '<tr><td>'+str(assignment['levels'][0])+'</td><td>'+str(round(assignment['means'][0],2))+'</td><td>'+str(round(assignment['stds'][0],2))+'</td><td>'+str(assignment['ns'][0])+'</td></tr>'
             output += '<tr><td>'+str(assignment['levels'][1])+'</td><td>'+str(round(assignment['means'][1],2))+'</td><td>'+str(round(assignment['stds'][1],2))+'</td><td>'+str(assignment['ns'][1])+'</td></tr>'
+            output += '</table></p>'
             if not answer:
-                output += '</table></p><p><table style="width:20%">'
+                output += '<p><table style="width:20%">'
                 output += '<tr><td>Statistiek</td><td>Waarde</td></tr>'
                 output += '<tr><td>Vrijheidsgraden (df)</td><td>'+str(assignment['df'][0])+'</td></tr>'
                 output += '<tr><td>Ruw effect</td><td>'+str(round(assignment['raw_effect'][0],2))+'</td></tr>'
@@ -415,8 +413,9 @@ class Assignments:
             output += '<p><table style="width:20%">'
             output += '<tr><td>'+str(assignment['independent'])+'</td><td>Gemiddelde</td><td>Standaarddeviatie</td><td>N</td></tr>'
             output += '<tr><td>Verschilscores</td><td>'+str(round(assignment['means'][0],2))+'</td><td>'+str(round(assignment['stds'][0],2))+'</td><td>'+str(round(assignment['ns'][0],2))+'</td></tr>'
+            output += '</table></p>'
             if not answer:
-                output += '</table></p><p><table style="width:20%">'
+                output += '<p><table style="width:20%">'
                 output += '<tr><td>Statistiek</td><td>Waarde</td></tr>'
                 output += '<tr><td>Vrijheidsgraden (df)</td><td>'+str(assignment['df'][0])+'</td></tr>'
                 output += '<tr><td>Ruw effect</td><td>'+str(round(assignment['raw_effect'][0],2))+'</td></tr>'
@@ -700,8 +699,8 @@ class Assignments:
         solution['r2']: List[float] = [solution['ss'][0] / solution['ss'][3], solution['ss'][1] / solution['ss'][3]]
         
         #Textual parts of the report
-        solution['null']: str = 'h0:' + ' == '.join(['mu(' + x + ')' for x in assignment['levels']])
-        solution['null2']: str = 'h0: De personen hebben gelijke ware scores op de opgevoerde meting.'
+        solution['null']: str = 'h0: ' + ' == '.join(['mu(' + x + ')' for x in assignment['levels']])
+        solution['null2']: str = 'h0: De personen hebben gelijke ware scores op de opgevoerde meting in de populatie.'
         rejected: Tuple[str] = ('verworpen','ongelijk') if solution['p'][0] < 0.05 else ('behouden', 'gelijk')
         solution['decision']: str = 'h0 ' + rejected[0] + ', de populatiegemiddelden van kwartalen ' + ' en '.join(assignment['levels']) + ' zijn gemiddeld ' + rejected[1] + '.'
         rejected2: Tuple[str] = ('verworpen','ongelijk') if solution['p'][1] < 0.05 else ('behouden', 'gelijk')

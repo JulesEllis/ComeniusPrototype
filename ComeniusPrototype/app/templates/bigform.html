@@ -24,7 +24,6 @@
             {{ form.inputtext12.label }}<br>
             {{ form.inputtext12(size=48) }}
         </p>
-        
         <span style="color: blue;">{{ displays[0][1] | safe}}</span>
         {% endif %}
         
@@ -40,11 +39,13 @@
         </p>
         <span style="color: blue;">{{ displays[2][0] | safe}}</span>
         
+        {% if shape | int == 4 %}
         <p>Voer de mate van controle in voor factor 2
             {{ form.inputtext32.label }}<br>
             {{ form.inputtext32(size=48) }}
         </p>
         <span style="color: blue;">{{ displays[2][1] | safe}}</span>
+        {% endif %}
         
         <p>Voer de nulhypothese in
             {{ form.inputtext4.label }}<br>

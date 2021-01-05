@@ -130,6 +130,7 @@ class OuterController:
                 output[0].append(scan_indep_anova(textfields['inputtext1'], self.solution, num=1, between_subject=True)[1])
                 output[1].append(scan_dep(textfields['inputtext2'], self.solution)[1])
                 output[2].append(scan_control(textfields['inputtext3'], self.solution)[1])
+                #output[2].append(scan_control(textfields['inputtext32'], self.solution, num=2)[1])
                 output[3].append(scan_hypothesis(textfields['inputtext4'], self.solution, num=1)[1])
                 output[3].append(scan_hypothesis_rmanova(textfields['inputtext42'], self.solution)[1])
                 output[5].append(scan_decision(self.nl_nlp(textfields['inputtext5'].lower()), self.solution, anova=True)[1])
