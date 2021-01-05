@@ -2,7 +2,7 @@
 import sys
 import logging
 logging.basicConfig(stream=sys.stderr)
-sys.path.insert(0,"/var/www/ComeniusPrototype/ComeniusPrototype/")
+sys.path.insert(0,"/var/www/ComeniusPrototype/ComeniusProtot")
 
 from ComeniusPrototype import app as application
 application.secret_key = 'nobodyseeme'
