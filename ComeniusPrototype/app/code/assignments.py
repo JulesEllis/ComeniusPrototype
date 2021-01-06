@@ -241,7 +241,7 @@ class Assignments:
         output['dependent'] = 'gewicht'
         output['dep_syns'] = ['gewichten']
         #output['correlations'] = [random.random() for i in range(int(((n_predictors + 1) ** 2 - n_predictors - 1) * 0.5))]
-        output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De onafhankelijke variabelen zijn '+output['independent']+' als factor '+', met '.join(output['data']['predictoren'][1:])+' als predictoren en '+output['dependent']+' als afhankelijke variabele. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
+        output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De onafhankelijke variabelen zijn '+output['independent']+' als factor, met '+' en '.join(output['data']['predictoren'])+' als predictoren en '+output['dependent']+' als afhankelijke variabele. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
         return output
     
     def solve_ancova(self, assignment: Dict, solution:Dict) -> Dict:
@@ -602,7 +602,9 @@ class Assignments:
             rejected: Tuple[str] = ('verworpen','ongelijk',' ') if solution['p'][0] < 0.05 else ('behouden', 'gelijk', ' niet ')
             solution['null']: str = 'h0: ' + ' == '.join(['mu(' + l + ')' for l in solution['levels']])
             sterkte:str = 'sterk' if solution['r2'][0] > 0.2 else 'matig' if solution['r2'][0] > 0.1 else 'klein'
-            solution['decision']: str = 'h0 ' + rejected[0] + ', de populatiegemiddelden van ' + solution['levels'][0] +' en '+solution['levels'][1]+' zijn gemiddeld ' + rejected[1] + '. Het effect is '+sterkte+'.'
+            solution['decision']: str = 'h0 ' + rejected[0] + ', de populatiegemiddelden van ' + solution['levels'][0] +' en '+solution['levels'][1]+' zijn gemiddeld ' + rejected[1] + '. '
+            if solution['p'][0]:
+                solution['decision'] += 'Het effect is '+sterkte+'.'
             if assignment['control']:
                 solution['interpretation']: str = 'Experiment, dus er is een verklaring mogelijk. Dit is dat '+solution['independent']+' '+solution['dependent'] +rejected[2] +' veroorzaakt.'
             else:
@@ -703,6 +705,9 @@ class Assignments:
         solution['null2']: str = 'h0: De personen hebben gelijke ware scores op de opgevoerde meting in de populatie.'
         rejected: Tuple[str] = ('verworpen','ongelijk') if solution['p'][0] < 0.05 else ('behouden', 'gelijk')
         solution['decision']: str = 'h0 ' + rejected[0] + ', de populatiegemiddelden van kwartalen ' + ' en '.join(assignment['levels']) + ' zijn gemiddeld ' + rejected[1] + '.'
+        if solution['p'][0]:
+            sterkte:str = 'sterk' if solution['r2'][0] > 0.2 else 'matig' if solution['r2'][0] > 0.1 else 'klein'
+            solution['decision'] += 'Het effect is '+sterkte+'.'
         rejected2: Tuple[str] = ('verworpen','ongelijk') if solution['p'][1] < 0.05 else ('behouden', 'gelijk')
         solution['decision2']: str = 'h0 ' + rejected2[0] + ', de opgevoerde gemiddelden van de personen in de populatie zijn ' + rejected2[1] + '.'
         n1 = '' if solution['p'][0] < 0.05 else 'niet '

@@ -10,6 +10,7 @@ import random
 import numpy as np
 import os
 import spacy
+import logging
 from scipy import stats
 from app.code.enums import Process, Task
 from app.code.assignments import Assignments
