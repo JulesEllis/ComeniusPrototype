@@ -58,7 +58,7 @@ class OuterController:
             print('self.answer_triggered = ' + str(self.answer_triggered))
             print('formmode = ' + str(self.formmode))
             print('INDEX = ' + str(self.index))
-            print('ASSIGNMENT = ' + self.assignments.print_assignment(self.assignment))
+            print('ASSIGNMENT = ' + self.assignments.print_assignment(self.assignment) if self.assignment != None else 'None')
             print('PROTOCOL = ' + str(self.protocol))
             print('submit_field = ' + str(self.submit_field))
             print('analysis_type = ' + self.analysis_type.name)
