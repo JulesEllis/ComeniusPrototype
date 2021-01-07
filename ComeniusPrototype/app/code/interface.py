@@ -263,6 +263,7 @@ class OuterController:
                     self.solution = self.assignments.solve_ttest(self.assignment, {})
                     instruction = self.assignments.print_ttest(self.assignment)
                     self.analysis_type = Task.TTEST_BETWEEN
+                    print('analysis_type = ' + self.analysis_type.name)
                 if analysis == 'T-toets voor gekoppelde paren':
                     self.assignment = self.assignments.create_ttest(False, hyp_type, control)
                     self.solution = self.assignments.solve_ttest(self.assignment, {})
