@@ -50,6 +50,19 @@ class OuterController:
             self.submit_field : int = Task.INTRO
             self.analysis_type = Task.CHOICE
             self.wipetext:bool = False
+            
+        def print_internal_state(self):
+            print('skipable = ' + str(self.skipable))
+            print('prevable = ' + str(self.prevable))
+            print('answerable = ' + str(self.answerable))
+            print('self.answer_triggered = ' + str(self.answer_triggered))
+            print('formmode = ' + str(self.formmode))
+            print('INDEX = ' + str(self.index))
+            print('ASSIGNMENT = ' + self.assignments.print_assignment(self.assignment))
+            print('PROTOCOL = ' + str(self.protocol))
+            print('submit_field = ' + str(self.submit_field))
+            print('analysis_type = ' + self.analysis_type.name)
+            print('wipetext = ' + str(self.wipetext))
         
         def update_form_ttest(self, textfields: Dict) -> [str, List[str]]:
             output = [[] for i in range(12)]

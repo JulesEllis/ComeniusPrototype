@@ -12,6 +12,7 @@ import flask
 def index():
     form = BaseForm()
     controller :OuterController = OuterController()
+    controller.print_internal_state()
     varnames = [['dummy1'],['dummy2']]
     if flask.request.method == 'GET':
         controller.reset()
