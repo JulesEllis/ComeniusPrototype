@@ -12,7 +12,7 @@ import pickle
 @app.route('/index', methods=['GET','POST'])
 def index():
     #Get controller
-    with open('app/controller.pickle', 'rb') as f:
+    with open('/var/www/ComeniusPrototype/ComeniusPrototype/app/controller.pickle', 'rb') as f:
         mc:dict = pickle.load(f)
         ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
         if not ip in list(mc.keys()):
@@ -25,7 +25,7 @@ def index():
     if flask.request.method == 'GET':
         controller.reset()
         #Save controller
-        with open('app/controller.pickle', 'wb') as f:
+        with open('/var/www/ComeniusPrototype/ComeniusPrototype/app/controller.pickle', 'wb') as f:
             pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL)
         instruction = controller.protocol[0][0]
         return render_template('index.html', display=instruction, 
@@ -47,7 +47,7 @@ def index():
                 controller.formmode = False
                 instruction = controller.print_assignment()
                 #Store controller
-                with open('app/controller.pickle', 'wb') as f:
+                with open('/var/www/ComeniusPrototype/ComeniusPrototype/app/controller.pickle', 'wb') as f:
                     pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL)    
                 return render_template('smallform.html', form=form, instruction=instruction, displays=[[''] for i in range(12)], shape=form_shape, varnames=varnames)
             elif controller.formmode and form_shape > 2 and form_shape < 6:
@@ -55,7 +55,7 @@ def index():
                 controller.formmode = False
                 instruction = controller.print_assignment()
                 #Store controller
-                with open('app/controller.pickle', 'wb') as f:
+                with open('/var/www/ComeniusPrototype/ComeniusPrototype/app/controller.pickle', 'wb') as f:
                     pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL)    
                 return render_template('bigform.html', form=form, instruction=instruction, displays=[[''] for i in range(7)], shape=form_shape, varnames=varnames)
             elif form_shape == 7:
@@ -63,7 +63,7 @@ def index():
                 controller.formmode = False
                 instruction = output_text
                 #Store controller
-                with open('app/controller.pickle', 'wb') as f:
+                with open('/var/www/ComeniusPrototype/ComeniusPrototype/app/controller.pickle', 'wb') as f:
                     pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL)    
                 return render_template('reportform.html', form=form, instruction=instruction, display='')
         if form.skip.data:
@@ -90,7 +90,7 @@ def index():
             submit_field = 10
         
         #Store controller
-        with open('app/controller.pickle', 'wb') as f:
+        with open('/var/www/ComeniusPrototype/ComeniusPrototype/app/controller.pickle', 'wb') as f:
             pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL)    
         
         #Render page
@@ -101,7 +101,7 @@ def index():
 @app.route('/bigform', methods=['POST'])
 def bigform():
     #Get controller
-    with open('app/controller.pickle', 'rb') as f:
+    with open('/var/www/ComeniusPrototype/ComeniusPrototype/app/controller.pickle', 'rb') as f:
         mc:dict = pickle.load(f)
         ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
         controller = mc[ip]
@@ -115,7 +115,7 @@ def bigform():
             textfields = [x for x in dir(form) if str(type(form.__getattribute__(x))) in ["<class 'wtforms.fields.core.StringField'>","<class 'wtforms.fields.simple.TextAreaField'>"]]
             textdict = dict([(x, form.__getattribute__(x).data) for x in textfields])
             instruction, outputfields = controller.update_form_anova(textdict)
-            with open('app/controller.pickle', 'wb') as f:
+            with open('/var/www/ComeniusPrototype/ComeniusPrototype/app/controller.pickle', 'wb') as f:
                 pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL) 
             return render_template('bigform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames)
         elif form.nextt.data:
@@ -139,7 +139,7 @@ def bigform():
         
 @app.route('/smallform', methods=['POST'])
 def smallform():
-    with open('app/controller.pickle', 'rb') as f:
+    with open('/var/www/ComeniusPrototype/ComeniusPrototype/app/controller.pickle', 'rb') as f:
         mc:dict = pickle.load(f)
         ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
         controller = mc[ip]
@@ -152,7 +152,7 @@ def smallform():
             textfields = [x for x in dir(form) if str(type(form.__getattribute__(x))) in ["<class 'wtforms.fields.core.StringField'>","<class 'wtforms.fields.simple.TextAreaField'>"]]
             textdict = dict([(x, form.__getattribute__(x).data) for x in textfields])
             instruction, outputfields = controller.update_form_ttest(textdict)
-            with open('app/controller.pickle', 'wb') as f:
+            with open('/var/www/ComeniusPrototype/ComeniusPrototype/app/controller.pickle', 'wb') as f:
                 pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL) 
             return render_template('smallform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames)
         elif form.nextt.data:
@@ -176,7 +176,7 @@ def smallform():
         
 @app.route('/reportform', methods=['POST'])
 def reportform():
-    with open('app/controller.pickle', 'rb') as f:
+    with open('/var/www/ComeniusPrototype/ComeniusPrototype/app/controller.pickle', 'rb') as f:
         mc:dict = pickle.load(f)
         ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
         controller = mc[ip]
@@ -187,7 +187,7 @@ def reportform():
             textfields = [x for x in dir(form) if str(type(form.__getattribute__(x))) == "<class 'wtforms.fields.simple.TextAreaField'>"]
             textdict = dict([(x, form.__getattribute__(x).data) for x in textfields])
             instruction, output = controller.update_form_report(textdict)
-            with open('app/controller.pickle', 'wb') as f:
+            with open('/var/www/ComeniusPrototype/ComeniusPrototype/app/controller.pickle', 'wb') as f:
                 pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL) 
             return render_template('reportform.html', form=form, instruction=instruction, display=output)
         elif form.nextt.data:
