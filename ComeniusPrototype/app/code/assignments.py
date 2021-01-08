@@ -752,7 +752,7 @@ class Assignments:
     
     def print_independent(self, assignment:dict, num:int=1) -> str:
         levels = assignment['levels'] if num < 2 else assignment['levels' + str(num)]
-        if assignment['assignment_type'] < 3:
+        if assignment['assignment_type'] < 5:
             return assignment['independent'] + ', kwalitatief, met niveaus ' + levels[0] + ' en ' + levels[1] + '.'
         else:    
             i_key:str = 'independent' if num < 2 else 'independent' + str(num)

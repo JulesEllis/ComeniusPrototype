@@ -222,6 +222,7 @@ class OuterController:
         
         def update(self, textfields: Dict) -> str:
             #Retrieve values from form text fields
+            print(self.analysis_type)
             if 'inputtext' in list(textfields.keys()):
                 input_text:str = textfields['inputtext']
                 if 'inputtextlarge' in list(textfields.keys()):
