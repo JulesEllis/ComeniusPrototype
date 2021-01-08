@@ -11,7 +11,6 @@ import flask
 @app.route('/index', methods=['GET','POST'])
 def index():
     form = BaseForm()
-    print('1 - ' + str(controller.analysis_type))
     controller :OuterController = OuterController()
     print('2 - ' + str(controller.analysis_type))
     #controller.print_internal_state()
@@ -70,6 +69,7 @@ def index():
         submit_field :int = controller.submit_field.value
         if controller.protocol[controller.index][1] in [scan_decision, scan_decision_anova, scan_decision_rmanova, scan_interpretation, scan_interpretation_anova, scan_hypothesis_anova]: #Convert textbox to large textbox if appropriate
             submit_field = 10
+        print('1 - ' + str(controller.analysis_type))
         return render_template('index.html', display=output_text, answer_text=answer_text, form=form, skip=skip, prev=prev, answer=answer, submit_field=submit_field, varnames=varnames)
     else:
         print('ERROR: INVALID METHOD')
