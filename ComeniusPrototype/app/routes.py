@@ -11,8 +11,9 @@ import flask
 @app.route('/index', methods=['GET','POST'])
 def index():
     form = BaseForm()
+    print('1 - ' + str(controller.analysis_type))
     controller :OuterController = OuterController()
-    print('4 - ' + str(controller.analysis_type))
+    print('2 - ' + str(controller.analysis_type))
     #controller.print_internal_state()
     varnames = [['dummy1'],['dummy2']]
     if flask.request.method == 'GET':
@@ -30,7 +31,6 @@ def index():
             output_text : str = controller.update(textdict)
             if controller.assignment != None: #Retrieve variable names
                 a = controller.assignment
-                print('5 - ' + str(controller.analysis_type))
                 varnames:list = [[a['independent']] + a['levels']] if a['assignment_type'] != 4 else [[a['independent']] + a['levels'],[a['independent2']] + a['levels2']]
             form_shape = controller.analysis_type.value
             if controller.formmode and form_shape > 0 and form_shape < 3:
@@ -68,7 +68,6 @@ def index():
         if answer_text != '': #Capitalize the first letter of each answer
             answer_text = answer_text[0].upper() + answer_text[1:]
         submit_field :int = controller.submit_field.value
-        print('6 - ' + str(controller.analysis_type))
         if controller.protocol[controller.index][1] in [scan_decision, scan_decision_anova, scan_decision_rmanova, scan_interpretation, scan_interpretation_anova, scan_hypothesis_anova]: #Convert textbox to large textbox if appropriate
             submit_field = 10
         return render_template('index.html', display=output_text, answer_text=answer_text, form=form, skip=skip, prev=prev, answer=answer, submit_field=submit_field, varnames=varnames)

@@ -222,8 +222,6 @@ class OuterController:
         
         def update(self, textfields: Dict) -> str:
             #Retrieve values from form text fields
-            print('1 - ' + str(self.analysis_type))
-            #print(str(self.assignment['assignment_type']) if self.assignment != None else "No assignment")
             if 'inputtext' in list(textfields.keys()):
                 input_text:str = textfields['inputtext']
                 if 'inputtextlarge' in list(textfields.keys()):
@@ -248,7 +246,6 @@ class OuterController:
                     again, output_text = function(input_text.lower(), *arguments)
                 self.wipetext = not again
             
-            print('2 - ' + str(self.analysis_type))
             #Execute the correct response
             if process == Process.INTRO: #If intro protocol:
                 self.protocol = self.choice_protocol()
@@ -299,7 +296,6 @@ class OuterController:
                     self.analysis_type = Task.ANCOVA
                     if report != 'Beknopt rapport':
                         return self.protocol[self.index][0] + '<span style="color: blue;">Sorry, bij ANCOVA kan je alleen een beknopt rapport maken.</span>'
-                print('3 - ' + str(self.analysis_type))
                 
                 #Select report type
                 self.index = 0
