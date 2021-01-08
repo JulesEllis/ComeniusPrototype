@@ -103,17 +103,6 @@ class OuterController:
             return instruction, output
         
         def update_form_anova(self, textfields: Dict) -> [str, list]:
-            #RESTORATION OF SERVER SHENANIGANS
-            """
-            if self.assignment != None and self.analysis_type == Task.INTRO:
-                resdict = {1:Task.TTEST_BETWEEN,
-                           2:Task.TTEST_WITHIN,
-                           3:Task.ONEWAY_ANOVA,
-                           4:Task.TWOWAY_ANOVA,
-                           5:Task.RMANOVA}
-                
-                self.analysis_type = resdict[self.assignment['assignment_type']]
-            """
             output = [[] for i in range(7)]
             if self.analysis_type == Task.ONEWAY_ANOVA:
                 instruction = self.assignments.print_anova(self.assignment)
@@ -233,8 +222,8 @@ class OuterController:
         
         def update(self, textfields: Dict) -> str:
             #Retrieve values from form text fields
-            print(self.analysis_type)
-            print(str(self.assignment['assignment_type']) if self.assignment != None else "No assignment")
+            print('1 - ' + str(self.analysis_type))
+            #print(str(self.assignment['assignment_type']) if self.assignment != None else "No assignment")
             if 'inputtext' in list(textfields.keys()):
                 input_text:str = textfields['inputtext']
                 if 'inputtextlarge' in list(textfields.keys()):
@@ -259,6 +248,7 @@ class OuterController:
                     again, output_text = function(input_text.lower(), *arguments)
                 self.wipetext = not again
             
+            print('2 - ' + str(self.analysis_type))
             #Execute the correct response
             if process == Process.INTRO: #If intro protocol:
                 self.protocol = self.choice_protocol()
@@ -309,6 +299,7 @@ class OuterController:
                     self.analysis_type = Task.ANCOVA
                     if report != 'Beknopt rapport':
                         return self.protocol[self.index][0] + '<span style="color: blue;">Sorry, bij ANCOVA kan je alleen een beknopt rapport maken.</span>'
+                print('3 - ' + str(self.analysis_type))
                 
                 #Select report type
                 self.index = 0
