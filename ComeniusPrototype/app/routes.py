@@ -1,24 +1,33 @@
-from flask import render_template, flash, redirect, url_for
+from flask import render_template, flash, redirect, url_for, request
 from app import app
 from app.forms import BaseForm, BigForm, SmallForm, ReportForm
-from app.code.interface import OuterController
+from app.code.interface import Controller #OuterController
 from app.code.enums import Task, Process
 from app.code.scan_functions_spacy import *
 from app.code.scan_functions import scan_hypothesis_anova
 import flask
+import pickle
 
 @app.route('/')
 @app.route('/index', methods=['GET','POST'])
 def index():
-    form = BaseForm()
-    controller :OuterController = OuterController()
-    print('2 - ' + str(controller.analysis_type))
-    #controller.print_internal_state()
+    #Get controller
+    with open('app/controller.pickle', 'rb') as f:
+        mc:dict = pickle.load(f)
+        ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
+        if not ip in list(mc.keys()):
+            mc[ip] = Controller()
+        controller = mc[ip]
+        
+    #Assign local variables
     varnames = [['dummy1'],['dummy2']]
+    form = BaseForm()
     if flask.request.method == 'GET':
         controller.reset()
+        #Save controller
+        with open('app/controller.pickle', 'wb') as f:
+            pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL)
         instruction = controller.protocol[0][0]
-        print('GET ALERT')
         return render_template('index.html', display=instruction, 
                                form=form, skip=False, submit_field=7, varnames=varnames)
     elif flask.request.method == 'POST':        
@@ -26,6 +35,7 @@ def index():
         textfields:list = [x for x in dir(form) if str(type(form.__getattribute__(x))) in ["<class 'wtforms.fields.core.StringField'>","<class 'wtforms.fields.core.SelectField'>","<class 'wtforms.fields.simple.TextAreaField'>"]]
         textdict:dict = dict([(x, form.__getattribute__(x).data) for x in textfields])        
         
+        #Prepare webpage parameters
         if form.submit.data:
             output_text : str = controller.update(textdict)
             if controller.assignment != None: #Retrieve variable names
@@ -36,16 +46,25 @@ def index():
                 form = SmallForm()
                 controller.formmode = False
                 instruction = controller.print_assignment()
+                #Store controller
+                with open('app/controller.pickle', 'wb') as f:
+                    pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL)    
                 return render_template('smallform.html', form=form, instruction=instruction, displays=[[''] for i in range(12)], shape=form_shape, varnames=varnames)
             elif controller.formmode and form_shape > 2 and form_shape < 6:
                 form = BigForm()
                 controller.formmode = False
                 instruction = controller.print_assignment()
+                #Store controller
+                with open('app/controller.pickle', 'wb') as f:
+                    pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL)    
                 return render_template('bigform.html', form=form, instruction=instruction, displays=[[''] for i in range(7)], shape=form_shape, varnames=varnames)
             elif form_shape == 7:
                 form = ReportForm()
                 controller.formmode = False
                 instruction = output_text
+                #Store controller
+                with open('app/controller.pickle', 'wb') as f:
+                    pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL)    
                 return render_template('reportform.html', form=form, instruction=instruction, display='')
         if form.skip.data:
             output_text : str = controller.update({'inputtext': 'skip'})
@@ -69,16 +88,25 @@ def index():
         submit_field :int = controller.submit_field.value
         if controller.protocol[controller.index][1] in [scan_decision, scan_decision_anova, scan_decision_rmanova, scan_interpretation, scan_interpretation_anova, scan_hypothesis_anova]: #Convert textbox to large textbox if appropriate
             submit_field = 10
-        print('1 - ' + str(controller.analysis_type))
+        
+        #Store controller
+        with open('app/controller.pickle', 'wb') as f:
+            pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL)    
+        
+        #Render page
         return render_template('index.html', display=output_text, answer_text=answer_text, form=form, skip=skip, prev=prev, answer=answer, submit_field=submit_field, varnames=varnames)
     else:
         print('ERROR: INVALID METHOD')
 
 @app.route('/bigform', methods=['POST'])
 def bigform():
-    form = BigForm()
-    controller : OuterController = OuterController()
+    #Get controller
+    with open('app/controller.pickle', 'rb') as f:
+        mc:dict = pickle.load(f)
+        ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
+        controller = mc[ip]
     a = controller.assignment
+    form = BigForm()
     varnames:list = [[a['independent']] + a['levels']] if a['assignment_type'] != 4 else [[a['independent']] + a['levels'],[a['independent2']] + a['levels2']]
         
     if flask.request.method == 'POST':
@@ -87,6 +115,8 @@ def bigform():
             textfields = [x for x in dir(form) if str(type(form.__getattribute__(x))) in ["<class 'wtforms.fields.core.StringField'>","<class 'wtforms.fields.simple.TextAreaField'>"]]
             textdict = dict([(x, form.__getattribute__(x).data) for x in textfields])
             instruction, outputfields = controller.update_form_anova(textdict)
+            with open('app/controller.pickle', 'wb') as f:
+                pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL) 
             return render_template('bigform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames)
         elif form.nextt.data:
             skip:bool = controller.skipable
@@ -109,17 +139,21 @@ def bigform():
         
 @app.route('/smallform', methods=['POST'])
 def smallform():
-    form = SmallForm()
-    controller : OuterController = OuterController()
+    with open('app/controller.pickle', 'rb') as f:
+        mc:dict = pickle.load(f)
+        ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
+        controller = mc[ip]
     a = controller.assignment
+    form = SmallForm()
     varnames:list = [[a['independent']] + a['levels']] if a['assignment_type'] != 4 else [[a['independent']] + a['levels'],[a['independent2']] + a['levels2']]
-        
     if flask.request.method == 'POST':
         if form.submit.data:
             form_shape = controller.analysis_type.value
             textfields = [x for x in dir(form) if str(type(form.__getattribute__(x))) in ["<class 'wtforms.fields.core.StringField'>","<class 'wtforms.fields.simple.TextAreaField'>"]]
             textdict = dict([(x, form.__getattribute__(x).data) for x in textfields])
             instruction, outputfields = controller.update_form_ttest(textdict)
+            with open('app/controller.pickle', 'wb') as f:
+                pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL) 
             return render_template('smallform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames)
         elif form.nextt.data:
             skip :bool = controller.skipable
@@ -142,16 +176,19 @@ def smallform():
         
 @app.route('/reportform', methods=['POST'])
 def reportform():
-    form = ReportForm()
-    controller : OuterController = OuterController()
-    #a = controller.assignment
+    with open('app/controller.pickle', 'rb') as f:
+        mc:dict = pickle.load(f)
+        ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
+        controller = mc[ip]
     varnames:list = []#[[a['independent']] + a['levels']] if a['assignment_type'] != 4 else [[a['independent']] + a['levels'],[a['independent2']] + a['levels2']]
-    
+    form = ReportForm()
     if flask.request.method == 'POST':
         if form.submit.data:
             textfields = [x for x in dir(form) if str(type(form.__getattribute__(x))) == "<class 'wtforms.fields.simple.TextAreaField'>"]
             textdict = dict([(x, form.__getattribute__(x).data) for x in textfields])
             instruction, output = controller.update_form_report(textdict)
+            with open('app/controller.pickle', 'wb') as f:
+                pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL) 
             return render_template('reportform.html', form=form, instruction=instruction, display=output)
         elif form.nextt.data:
             skip :bool = controller.skipable
