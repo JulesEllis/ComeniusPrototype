@@ -249,10 +249,10 @@ def detect_decision_ancova(sent:Doc, solution:dict) -> List[str]:
     rejected:bool = solution['p'][-1] < 0.05
     tokens:list = [x.text for x in sent]
     scorepoints:dict = {'sign_val': 'significant voorspellende waarde' in sent.text,
-        'indep': solution['independent'] in tokens or any([x in tokens for x in solution['ind_syns']]),
-        'cov1': solution['predictor_names'][0] in tokens or any([x in tokens for x in solution['predictor_syns'][0]]),
-        'cov2': solution['predictor_names'][1] in tokens or any([x in tokens for x in solution['predictor_syns'][1]]),
-        'dep': solution['dependent'] in tokens or any([x in tokens for x in solution['dep_syns']]),
+        'indep': solution['independent'] in sent.text or any([x in sent.text for x in solution['ind_syns']]),
+        'cov1': solution['predictor_names'][0] in sent.text or any([x in sent.text for x in solution['predictor_syns'][0]]),
+        'cov2': solution['predictor_names'][1] in sent.text or any([x in sent.text for x in solution['predictor_syns'][1]]),
+        'dep': solution['dependent'] in sent.text or any([x in sent.text for x in solution['dep_syns']]),
         'neg': bool(negation_counter(tokens) % 2) != rejected }
     
     output:List[str] = []
@@ -262,7 +262,7 @@ def detect_decision_ancova(sent:Doc, solution:dict) -> List[str]:
         output.append(' -onafhankelijke factor niet genoemd')
     if not scorepoints['cov1'] and not scorepoints['cov2']:
         output.append(' -beide covariaten niet genoemd')
-    elif not scorepoints['cov2'] or not scorepoints['indy2']:
+    elif not scorepoints['cov1'] or not scorepoints['cov2']:
         output.append(' -een van de covariaten niet genoemd')
     if not scorepoints['dep']:
         output.append(' -afhankelijke variabele niet genoemd')
@@ -537,7 +537,6 @@ def detect_p(doc:Doc, value:float, num:int=1, label:str=None, margin=0.01) -> Li
         return [' -de juiste p-waarde '+appendix+'wordt niet genoemd']
     
 def detect_name(doc:Doc, solution:Dict) -> List[str]:
-    tokens = [x.text for x in doc]
     names:list = []
     if solution['assignment_type'] == 1:
         names = [('t','-','toets','voor','onafhankelijke','variabelen'),('between','-','subject','t','-','test'),('t','-','toets','voor','onafhankelijke','subjecten')]
@@ -555,7 +554,7 @@ def detect_name(doc:Doc, solution:Dict) -> List[str]:
         names = [('manova')]
     if solution['assignment_type'] == 12:
         names = [('ancova')]
-    if any([all([x in tokens for x in y]) for y in names]):
+    if any([all([x in doc.text for x in y]) for y in names]):
         return ['']
     else:
         return [' -naam van de analyse niet juist genoemd']
@@ -810,7 +809,8 @@ def split_grade_ancova(text:str, solution:dict) -> str:
     output += '<br>'+'<br>'.join(detect_decision_ancova(doc, solution))
     output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][-1]))
     output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][-1]))
-    output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][-1], aliases=['r2','r','kwadraat']))
+    #output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][-1], aliases=['r2','r','kwadraat']))
+    output += '<br>'+'<br>'.join(detect_report_stat(doc, 'eta<sup>2</sup>', solution['r2'][-1], aliases=['eta2','eta']))
     if(solution['p'][-2] < 0.05):
         #output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][-1]))
         output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][-2], label=solution['independent']))

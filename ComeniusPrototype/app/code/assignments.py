@@ -208,7 +208,7 @@ class Assignments:
         output['var_obs'] = (1 + chi2.ppf(p, df=10)) * 10 ** s
         r2 = random.random() ** 2
         output['var_pred'] = output['var_obs'] * r2
-        output['data']: dict={'predictoren':['Intercept','Sociale vaardigheden', 'Depressieve gedachten', 'Eetlust','Intelligentie','Assertiviteit','Ervaren geluk'][:n_predictors+1]}
+        output['data']: dict={'predictoren':['intercept','sociale vaardigheden', 'depressieve gedachten', 'eetlust','intelligentie','assertiviteit','ervaren geluk'][:n_predictors+1]}
         output['levels'] = output['data']['predictoren']
         output['level_syns'] = [[] for x in output['levels']]
         output['dependent'] = 'gewicht'
@@ -234,7 +234,7 @@ class Assignments:
         output['var_obs'] = (1 + chi2.ppf(p, df=10)) * 10 ** s
         r2 = random.random() ** 2
         output['var_pred'] = output['var_obs'] * r2
-        output['data']: dict={'predictoren':['Sociale vaardigheden', 'Depressieve gedachten', 'Eetlust',
+        output['data']: dict={'predictoren':['sociale vaardigheden', 'depressieve gedachten', 'eetlust',
               'Intelligentie','Assertiviteit','Ervaren geluk'][:2]}
         output['predictor_names'] = output['data']['predictoren']
         output['predictor_syns'] = [[] for x in output['levels']]
