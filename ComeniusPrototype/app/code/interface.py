@@ -453,7 +453,7 @@ class OuterController:
                 ('Beschrijf de nulhypothese van de subjecten.',scan_hypothesis_rmanova,[self.solution], Process.QUESTION,self.solution['null2']),
                 ('Vul de tabel hieronder in.',scan_table,[self.solution, 0.02], Process.TABLE, self.assignments.print_report({**self.assignment, **self.solution}, answer=True)),
                 ('Voer de beslissing in van de condities.',scan_decision,[self.solution,True,1], Process.QUESTION,self.solution['decision']),
-                ('Voer de beslissing in van de subjecten.',scan_decision_rmanova,[self.solution], Process.QUESTION,self.solution['decision2']),
+                ('Voer de beslissing in van de subjecten.',scan_decision_rmanova,[self.solution,2], Process.QUESTION,self.solution['decision2']),
                 ('Voer de causale interpretatie voor de condities in.',scan_interpretation,[self.solution, True, 1], Process.LAST_QUESTION,self.solution['interpretation'])]
             return output
         

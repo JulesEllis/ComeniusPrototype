@@ -169,7 +169,7 @@ class Assignments:
         
         var_i = random.choice([0,1,2])
         var_j = random.choice([0,1,2])
-        output['independent'] = ['seizoen','leeftijd',''][var_i]
+        output['independent'] = ['seizoen','leeftijd','tijdperk'][var_i]
         output['ind_syns'] = [['seizoenen'],['leeftijden'],['tijdperk']][var_i]
         output['levels'] = [['winter', 'lente', 'zomer', 'herfst'],['kind', 'jong', 'volwassen', 'oud'],['precambrium', 'siluur', 'paleolithicum', 'quartair']][var_i][:n_conditions]
         output['level_syns'] = [[],[],[],[]][:n_conditions]
@@ -365,7 +365,7 @@ class Assignments:
         output_text += '<tr><td>N</td><td>' + str(data['n_subjects']) + '</td></tr></table>'
         output_text += '<br>Originele scores:'
         output_text += '<br><table style="width:45%">'
-        output_text += '<tr><td>Subject</td>' + ''.join(['<td>'+x+'</td>' for x in assignment['levels'][0][:n_conditions]]) + '<td>Opgevoerde meting</td></tr>'
+        output_text += '<tr><td>Subject</td>' + ''.join(['<td>'+x+'</td>' for x in assignment['levels'][:n_conditions]]) + '<td>Opgevoerde meting</td></tr>'
         for i in range(assignment['data']['n_subjects']):
             output_text += '<tr><td>'+str(i+1)+'</td>' + ''.join(['<td>'+str(x)+'</td>' for x in [data['scores'][j][i] for j in range(n_conditions)]]) + '<td>' + str(round(data['jackedmeans'][i],2)) + '</td></tr>'
         return output_text + '</table>'
@@ -704,12 +704,15 @@ class Assignments:
         solution['null']: str = 'h0: ' + ' == '.join(['mu(' + x + ')' for x in assignment['levels']])
         solution['null2']: str = 'h0: De personen hebben gelijke ware scores op de opgevoerde meting in de populatie.'
         rejected: Tuple[str] = ('verworpen','ongelijk') if solution['p'][0] < 0.05 else ('behouden', 'gelijk')
-        solution['decision']: str = 'h0 ' + rejected[0] + ', de populatiegemiddelden van kwartalen ' + ' en '.join(assignment['levels']) + ' zijn gemiddeld ' + rejected[1] + '.'
+        solution['decision']: str = 'h0 ' + rejected[0] + ', de populatiegemiddelden van '+solution['dependent']+' ' + ' en '.join(assignment['levels']) + ' zijn gemiddeld ' + rejected[1] + '. '
         if solution['p'][0]:
             sterkte:str = 'sterk' if solution['r2'][0] > 0.2 else 'matig' if solution['r2'][0] > 0.1 else 'klein'
             solution['decision'] += 'Het effect is '+sterkte+'.'
         rejected2: Tuple[str] = ('verworpen','ongelijk') if solution['p'][1] < 0.05 else ('behouden', 'gelijk')
-        solution['decision2']: str = 'h0 ' + rejected2[0] + ', de opgevoerde gemiddelden van de personen in de populatie zijn ' + rejected2[1] + '.'
+        solution['decision2']: str = 'h0 ' + rejected2[0] + ', de opgevoerde gemiddelden van de personen in de populatie zijn ' + rejected2[1] + '. '
+        sterkte2:str = 'sterk' if solution['r2'][1] > 0.2 else 'matig' if solution['r2'][1] > 0.1 else 'klein'
+        if solution['p'][1] < 0.05:
+            solution['decision2'] += 'Het effect is ' + sterkte2 + '. '        
         n1 = '' if solution['p'][0] < 0.05 else 'niet '
         if assignment['control']:
             solution['interpretation']: str = 'Experiment, dus er is een verklaring mogelijk. De primaire verklaring is dat '+solution['dependent']+' '+n1+' wordt veroorzaakt door '+solution['independent']
@@ -753,7 +756,7 @@ class Assignments:
             return assignment['independent'] + ', kwalitatief, met niveaus ' + levels[0] + ' en ' + levels[1] + '.'
         else:    
             i_key:str = 'independent' if num < 2 else 'independent' + str(num)
-            return assignment[i_key] + ', een between-subject factor met niveaus ' + levels[0] + ' en ' + levels[1] + '.'
+            return assignment[i_key] + ', een within-subject factor met niveaus ' + ' en '.join(levels) + '.'
     
     def print_dependent(self, assignment:dict) -> str:
         return assignment['dependent'] + ', kwantitatief'

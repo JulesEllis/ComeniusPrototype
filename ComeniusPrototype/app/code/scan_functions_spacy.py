@@ -77,7 +77,10 @@ def detect_h0(sent:Doc, solution:dict, num:int=1) -> List[str]:
         if num < 2:
             output.append(' -hypothese niet genoemd')
         elif num < 3:
-            output.append(' -hypothese van factor '+str(num)+' niet genoemd')
+            if solution['assignment_type'] != 5:
+                output.append(' -hypothese van factor '+str(num)+' niet genoemd')
+            else:
+                output.append(' -hypothese van de subjecten niet genoemd')
         else:
             output.append(' -de interactiehypothese wordt niet genoemd')
     return output
@@ -141,6 +144,8 @@ def detect_comparison(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]
             scorepoints['right_negation'] = not_present == (solution['p'][num-1] < 0.05)
         else:
             scorepoints['right_negation'] = not_present != (solution['p'][num-1] < 0.05)
+    else:
+        scorepoints['right_negation'] = True
     
     mean = [x for x in sent if x.text == 'gemiddelde' or x.text == 'gemiddelden' or x.text == 'gemiddeld']
     mean_2 = [x for x in sent if x.text == 'populatiegemiddelde' or x.text == 'populatiegemiddelden']
@@ -277,13 +282,15 @@ def detect_true_scores(sent:Doc, solution:dict, num=2) -> List[str]:
     comparisons = [x for x in sent if x.text in ['gelijk','ongelijk','anders','verschillend']]
     if comparisons != []:
         comproot = comparisons[num-1] if len(comparisons) >= num else comparisons[0]
-        comptree:List = descendants(comproot)
-        not_present = 'niet' in [x.text for x in comptree]
+        #comptree:List = descendants(comproot)
+        not_present = bool(negation_counter(tokens) % 2)
         scorepoints['right_comparison'] = comproot.text in ['gelijk','ongelijk','anders','verschillend']
         if comproot.text in ['ongelijk','anders','verschillend']:
             scorepoints['right_negation'] = not_present != rejected
         elif comproot.text == 'gelijk':
             scorepoints['right_negation'] = not_present == rejected
+    else:
+        scorepoints['right_negation'] = True
     scorepoints['jacked'] = 'opgevoerde' in [x.text for x in sent]
         
     mean = [x for x in sent if x.text == 'gemiddelde' or x.text == 'gemiddelden' or x.text == 'gemiddeld']
@@ -291,6 +298,7 @@ def detect_true_scores(sent:Doc, solution:dict, num=2) -> List[str]:
     scorepoints['mean_present'] = any(mean) or any(mean_2)
     scorepoints['pop_present'] = any(mean_2) or 'populatie' in [x.text for x in sent] or any([x in tokens for x in ['significant','significante']])
     scorepoints['contrasign'] = not ((any(mean_2) or 'populatie' in tokens) and any([x in tokens for x in ['significant','significante']]))
+    print(scorepoints)
     
     #Add strings
     if not scorepoints['right_comparison']:
@@ -333,7 +341,7 @@ def detect_strength(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]:
         scorepoints['right_strength'] = e_root.text in ['sterk','groot'] if gold_strength == 2 else e_root.text in ['matig'] if gold_strength == 1 else e_root.text in ['klein','zwak']
     
     #Add strings
-    appendix:str = '' if num < 2 else 'bij factor ' + str(num) if num < 3 else ' bij de interactie '
+    appendix:str = '' if num < 2 else 'bij factor ' + str(num)+' ' if num == 2 and solution['assignment_type'] != 5 else 'bij de subjecten ' if num < 3 else ' bij de interactie '
     if not scorepoints['effect_present'] and scorepoints['strength_present']:
         output.append(' -de effectgrootte '+appendix+'wordt niet genoemd')
     if not scorepoints['strength_present']:
@@ -588,7 +596,7 @@ def scan_decision_rmanova(doc:Doc, solution:dict, num:int=1, prefix=True, elemen
     else:
         output.extend(detect_significance(doc, solution, num))
     output.extend(detect_true_scores(doc, solution, 2))
-    if not (solution['p'][num - 1] > 0.05 or math.isnan(solution['p'][num - 1])):
+    if solution['p'][1] < 0.05:
         output.extend(detect_strength(doc, solution, True, num))
     correct:bool = len(output) == 1 if prefix else output == []
     if correct:
