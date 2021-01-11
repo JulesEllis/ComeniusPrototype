@@ -72,22 +72,22 @@ class Assignments:
         report_type = 'elementair' if elementary else 'beknopt'
         instruction: str = 'Maak een '+report_type+' rapport van onderstaande data voor de hypothese dat '
         if hyp_type == 0:
-            instruction += 'de '+dependent+' bij het ' + independent + ' ' + levels[0] + ' gemiddeld ongelijk is aan die bij ' + levels[1] + '.<br><br>'
+            instruction += dependent+' bij ' + independent + ' ' + levels[0] + ' gemiddeld ongelijk is aan die bij ' + levels[1] + '.<br><br>'
         if hyp_type == 1:
-            instruction += 'de '+dependent+' bij het ' + independent + ' ' + levels[0] + ' gemiddeld groter is dan die bij ' + levels[1] + '.<br><br>'
+            instruction += dependent+' bij ' + independent + ' ' + levels[0] + ' gemiddeld groter is dan die bij ' + levels[1] + '.<br><br>'
         if hyp_type == 2:
-            instruction += "de "+dependent+" bij het " + independent + " " + levels[0] + " gemiddeld kleiner is dan die bij " + levels[1] + ".<br><br>"
-        instruction += "De persoon moet een tijdje achter een beeldscherm zo snel mogelijk op een knop" +" drukken zodra een wit vierkantje veranderd in een zwart vierkantje. De milliseconden tussen het veranderen" + " van het beeld en het indrukken van de knop worden gemeten en opgeteld. "        
+            instruction += dependent+" bij " + independent + " " + levels[0] + " gemiddeld kleiner is dan die bij " + levels[1] + ".<br><br>"
         if between_subject:
-            instruction += 'De proefpersonen krijgen allemaal ofwel een ' + levels[0] + ' ofwel een '+ levels[1] + ' als stimulus te zien. De niveaus zijn: ' + levels[0] + '/' + levels[1] + '. Voer je antwoorden alsjeblieft tot op 2 decimalen in'\
-                 ' en gebruik dezelfde vergelijking van de gemiddelden in je antwoord als in de vraagstelling staat (e.g. "groter" of "kleiner"). '
-            if control:
-                instruction += 'De personen van elk beroep zijn willekeurig geselecteerd. '
+            instruction += 'De proefpersonen doen een experiment, waarin ze worden ingedeeld op hun ' + independent + ' in de groepen '+ levels[0] + ' en ' + levels[1]
         else:
-            instruction += 'De proefpersonen werden tweemaal getoetst op hun '+dependent+', een keer overdag en een keer s\'nachts. ' + 'De niveaus zijn dag/nacht. Voer je antwoorden alsjeblieft tot op 2 decimalen in'\
-            ' en gebruik dezelfde vergelijking van de gemiddelden in je antwoord als in de vraagstelling staat (e.g. "groter" of "kleiner"). '
-            if control:
+            instruction += 'De proefpersonen doen allemeaal mee aan een experiment, met als ' + independent + ' zowel ' + levels[0] + ' als ' + levels[1]
+        if control:
+            if between_subject:
+                instruction += 'De personen van elk beroep zijn willekeurig geselecteerd. '
+            else:
                 instruction += 'De volgorde van de toetsen was gerandomiseerd. '
+        instruction += 'Voer je antwoorden alsjeblieft tot op 2 decimalen in'\
+             ' en gebruik dezelfde vergelijking van de gemiddelden in je antwoord als in de vraagstelling staat (e.g. "groter" of "kleiner"). '
         
         #Generate datapoints: Floats are rounded to 2 decimals
         return{'instruction': instruction,
@@ -177,8 +177,8 @@ class Assignments:
         output['dep_syns'] = [['gewichten'],[],['geheugenscores']][var_j]
         
         report_type = 'elementair' if elementary else 'beknopt'
-        output['instruction']: str = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn '+output['independent']+' en '+output['dependent']+'. Voer je antwoorden alsjeblieft tot op 2 decimalen in '\
-                 'en gebruik dezelfde vergelijking van de gemiddelden in je antwoord als in de vraagstelling staat (e.g. "groter" of "kleiner"). '
+        output['instruction']: str = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn '+output['dependent']+' en '+output['independent']+ ' met niveaus '+' en '.join(output['levels']) + ''\
+            '. Voer je antwoorden alsjeblieft tot op 2 decimalen in en gebruik dezelfde vergelijking van de gemiddelden in je antwoord als in de vraagstelling staat (e.g. "groter" of "kleiner"). '
         if control:
             output['instruction'] += 'De subjecten in het experiment zijn willekeurig geselecteerd. '
         true_means = [int(random.uniform(50,120)) for i in range(n_conditions)]
@@ -241,7 +241,7 @@ class Assignments:
         output['dependent'] = 'gewicht'
         output['dep_syns'] = ['gewichten']
         #output['correlations'] = [random.random() for i in range(int(((n_predictors + 1) ** 2 - n_predictors - 1) * 0.5))]
-        output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De onafhankelijke variabelen zijn '+output['independent']+' als factor, met '+' en '.join(output['data']['predictoren'])+' als predictoren en '+output['dependent']+' als afhankelijke variabele. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
+        output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De onafhankelijke variabelen zijn de factor '+output['independent']+' en '+output['dependent']+', met '+' en '.join(output['data']['predictoren'])+' als predictoren. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
         return output
     
     def solve_ancova(self, assignment: Dict, solution:Dict) -> Dict:

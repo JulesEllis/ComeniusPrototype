@@ -806,6 +806,9 @@ def split_grade_ancova(text:str, solution:dict) -> str:
     doc = nl_nlp(text.lower())
     output:str = ''
     output += '<br>'+'<br>'.join(detect_name(doc,solution))
+    output += '<br>' + scan_design(doc, solution, prefix=False)[1]
+    output += '<br>' + scan_predictors(doc, solution, prefix=False)[1]
+    
     output += '<br>'+'<br>'.join(detect_decision_ancova(doc, solution))
     output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][-1]))
     output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][-1]))
@@ -815,7 +818,6 @@ def split_grade_ancova(text:str, solution:dict) -> str:
         #output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][-1]))
         output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][-2], label=solution['independent']))
         #output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][-1], aliases=['r2','r','kwadraat']))
-    output += '<br>' + scan_predictors(doc, solution, prefix=False)[1]
     if output.replace('<br>','') == '':
         return 'Mooi, dit beknopt rapport bevat alle juiste details!'
     else:
