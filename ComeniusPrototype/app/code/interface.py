@@ -345,7 +345,7 @@ class Controller:
             elif again:
                 return self.assignments.print_assignment(self.assignment) + '<br>' + output_text
             else:
-                self.index += 1
+                self.index += 1 #TODO: COMMENT IF FEEDBACK MEANS NO PROGRESS
                 self.submit_field = Task.TEXT_FIELD
                 self.answer_triggered = False
                 return self.assignments.print_assignment(self.assignment) + '<br>' + output_text + self.protocol[self.index][0]
@@ -382,7 +382,7 @@ class Controller:
             else:
                 if self.index == 0:
                     self.prevable = True
-                self.index += 1
+                self.index += 1 #TODO: COMMENT IF FEEDBACK MEANS NO PROGRESS
                 self.answer_triggered = False
                 if self.protocol[self.index][3] == Process.TABLE:
                     self.submit_field = self.analysis_type #Signal to the routes class that the next text field has to be a table
