@@ -724,6 +724,30 @@ def scan_design(doc:Doc, solution:dict, prefix:bool=True) -> [bool, List[str]]:
         return False, 'Mooi, dit design klopt.' if prefix else ''
     else:
         return True, '<br>'.join(output)
+    
+def scan_design_manova(doc:Doc, solution:dict, prefix:bool=True):
+    text = doc.text
+    scorepoints = {'levels1':all([x in text for x in solution['levels']]),
+                   'levels2':all([x in text for x in solution['levels2']]),
+                   'mes':all([solution[x] in text for x in ['dependent','dependent2','dependent3']]),
+                   'dep':'afhankelijke' in text or 'afhankelijk' in text,
+                   'size': str(len(solution['levels'])) in text and 'x '+str(len(solution['levels2'])) in text
+            }
+    output:List[str] = []
+    if not scorepoints['levels1']:
+        output.append(' -niet alle niveaus van de eerste onafhankelijke variabele genoemd')
+    if not scorepoints['levels2']:
+        output.append(' -niet alle niveaus van de tweede onafhankelijke variabele genoemd')
+    if not scorepoints['dep']:
+        output.append(' -geen afhankelijke variabele genoemd')
+    elif not scorepoints['mes']:
+        output.append(' -niet alle aparte afhankelijke variabelen genoemd')
+    if not scorepoints['size']:
+        output.append(' -dimensies van de onafhankelijke variabelen niet genoemd')
+    if not False in list(scorepoints.values()):        
+        return False, 'Mooi, dit design klopt.' if prefix else ''
+    else:
+        return True, '<br>'.join(output)
 
 def split_grade_ttest(text: str, solution:dict, between_subject:bool) -> str:
     nl_nlp = spacy.load('nl')
@@ -823,6 +847,17 @@ def split_grade_ancova(text:str, solution:dict) -> str:
     else:
         return 'Er ontbreekt nog wat aan je antwoord, namelijk:' + re.sub(r'<br>(<br>)+', '<br>', output)
  
+def split_grade_manova(text:str, solution:dict) -> str:
+    nl_nlp = spacy.load('nl')
+    doc = nl_nlp(text.lower())
+    output:str = ''
+    output += '<br>'+'<br>'.join(detect_name(doc,solution))
+    output += '<br>' + scan_design_manova(doc, solution, prefix=False)[1]
+    if output.replace('<br>','') == '':
+        return 'Mooi, dit beknopt rapport bevat alle juiste details!'
+    else:
+        return 'Er ontbreekt nog wat aan je antwoord, namelijk:' + re.sub(r'<br>(<br>)+', '<br>', output)
+    
 """
 FUNCTIONS FOR TESTING
 """

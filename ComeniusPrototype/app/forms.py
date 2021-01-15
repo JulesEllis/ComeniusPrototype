@@ -12,7 +12,7 @@ class BaseForm(FlaskForm):
     r_choices = ['Elementair rapport (oefenmodus)','Elementair rapport (tentamenmodus)','Beknopt rapport']
     selectanalysis = SelectField(label='Kies je analyse', choices=a_choices)
     selectreport = SelectField(label='Kies wat voor rapport je wil oefenen', choices=r_choices)
-    submit = SubmitField('Feedback')
+    submit = SubmitField('Doorgaan')
     skip = SubmitField('Volgende')
     prev = SubmitField('Vorige')
     answer = SubmitField('Antwoord')
@@ -69,7 +69,7 @@ class SmallForm(FlaskForm):
     inputtext10 = TextAreaField('', validators=[DataRequired()]) #StringField('', validators=[DataRequired()])
     inputtext11 = TextAreaField('', validators=[DataRequired()]) #StringField('', validators=[DataRequired()])
     
-    submit = SubmitField('Enter')
+    submit = SubmitField('Feedback')
     answer = SubmitField('Antwoord')
     nextt = SubmitField('Next')
 
@@ -91,7 +91,7 @@ class BigForm(FlaskForm):
     inputtext62 = TextAreaField('', validators=[DataRequired()]) #StringField('', validators=[DataRequired()])
     inputtext63 = TextAreaField('', validators=[DataRequired()]) #StringField('', validators=[DataRequired()])
     
-    submit = SubmitField('Enter')
+    submit = SubmitField('Feedback')
     answer = SubmitField('Antwoord')
     nextt = SubmitField('Next')
     
@@ -124,7 +124,7 @@ class BigForm(FlaskForm):
     
 class ReportForm(FlaskForm):
     inputtext = TextAreaField('', validators=[DataRequired()])
-    submit = SubmitField('Enter')
+    submit = SubmitField('Feedback')
     nextt = SubmitField('Next')
     
     

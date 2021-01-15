@@ -217,6 +217,8 @@ class Controller:
             feedback = split_grade_rmanova(text, self.solution)
         if self.assignment['assignment_type'] == 6:
             feedback = split_grade_mregression(text, self.solution)
+        if self.assignment['assignment_type'] == 11:
+            feedback = split_grade_manova(text, self.solution)
         if self.assignment['assignment_type'] == 12:
             feedback = split_grade_ancova(text, self.solution)
         return instruction, feedback

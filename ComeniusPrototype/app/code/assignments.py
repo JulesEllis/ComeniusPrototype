@@ -565,37 +565,40 @@ class Assignments:
         output['ind2_syns'] = [['stimulusvormen'],['filmgenres'],['bloedtypen','bloedtypes']][var_k]
         output['levels2'] = [['vierkant','rond'],['drama','horror'],['A','B']][var_k]
         output['level2_syns'] = [[['vierkante'],['ronde']],[[],[]],[[],[]]][var_k]
+        output['control'] = control
         output['control2'] = control2
         
         output['ind_syns'] = [['stimuluskleuren'],['weerssituaties'],[]][indy_int]
         output['level_syns'] = [[['rode'],['blauwe']],[['zonnig'],['regenachtig']],[['klassieke'],[]]][indy_int]
         output['dependent'] = 'gewicht'
         output['dependent2'] = 'lengte'
-        output['dependent3'] = 'reactietijd'
-        output['dep_syns'] = ['gewichten']; output['dep2_syns'] = ['lengten']; output['dep3_syns'] = ['reactietijden'];
-        output['control'] = control
+        output['dependent3'] = 'leeftijd'
+        output['dep_syns'] = ['gewichten']; output['dep2_syns'] = ['lengten']; output['dep3_syns'] = ['leeftijden'];
         dependents = [output['dependent'], output['dependent2'], output['dependent3']]
         N = int(200 * random.random()); output['ns'] = [N]
         
-        output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De onafhankelijke variabele is de factor '+output['independent']+', en de afhankelijke zijn '+' en '.join(dependents)+'. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
+        output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De onafhankelijke variabelen zijn '+\
+            output['independent']+' ('+', '.join(output['levels'])+') en '+output['independent2']+' ('+', '.join(output['levels2'])+')'\
+            '. De afhankelijke variabelen zijn '+' en '.join(dependents)+'. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
         return output
     
     def solve_manova(self, assignment: Dict, solution:Dict) -> Dict:
-        solution = {'df':{}, 'ss':{}, 'ms':{},'F':{},'eta':{}}
+        solution = {'df':{}, 'ss':{}, 'ms':{},'F':{},'p':{},'eta':{}}
         N = assignment['ns'][0]
         for key, value in list(assignment.items()):
             solution[key] = value
         for j in range(3):    
             ssreg = (N-1) * assignment['var_pred'][j]
-            pred_ss = [random.random() * 0.25 * ssreg, random.random() * 0.25 * ssreg]
+            pred_ss = [random.random() * 0.5 * ssreg, random.random() * 0.5 * ssreg]
             sstotal = (N-1) * assignment['var_obs']
             l1: int = len(solution['levels']); l2: int = len(solution['levels2'])
             lt: int = l1 * l2
             N: int = sum(assignment['ns'])
             solution['df'][j]: List[int] = [lt - 1, l1 - 1, l2 - 1, (l1-1) * (l2-1), N - lt, N - 1]
-            solution['ss'][j]: list[float] = [pred_ss[0], pred_ss[1], ssreg - sum(pred_ss), ssreg, sstotal - ssreg, sstotal]
+            solution['ss'][j]: list[float] = [ssreg, pred_ss[0], pred_ss[1], ssreg - sum(pred_ss), sstotal - ssreg, sstotal]
             solution['ms'][j]: List[float] = [solution['ss'][j][i] / solution['df'][j][i] for i in range(6)]
             solution['F'][j]: List[float] = [solution['ms'][j][i] / solution['ms'][j][5] for i in range(4)]
+            solution['p'][j]: List[float] = [1-stats.f.cdf(solution['F'][j][i],solution['df'][j][i], solution['df'][j][5]) for i in range(4)]
             solution['eta'][j]: List[float] = [solution['ss'][j][i] / (solution['ss'][j][i]+solution['ss'][j][4]) for i in range(4)]
         return solution
 	
@@ -793,18 +796,24 @@ class Assignments:
                 output += '<tr><td>'+data['predictoren'][i]+'</td><td>'+str(round(assignment['predictor_b'][i],2))+'</td><td>'+str(round(assignment['predictor_beta'][i],2))+'</td><td>'+str(round(assignment['predictor_se'][i],2))+'</td><td>'+str(round(assignment['predictor_t'][i],2))+'</td><td>'+str(round(assignment['predictor_p'][i],3))+'</td></tr>'
             output += '</table></p>'
         if assignment['assignment_type'] == 11:
-            N = str(sum(assignment['ns']) - 1)
-            output += '<p>Toetsing:<br><table style="width:30%">' 
-            output += '<tr><td></td><td>Hoofdeffect '+assignment['independent']+'</td><td>Hoofdeffect '+assignment['independent']+'</td><td>Interactie '+assignment['independent']+' x '+assignment['independent2']+'</td></tr>'
-            output += '<tr><td>'+assignment['dependent']+'</td><td>F(1, '+N+') = '+str(round(assignment['F'][0][1],2))+'</td><td>F(1, '+N+') = '+str(round(assignment['F'][0][2],2))+'</td><td>F(1, '+N+') = '+str(round(assignment['F'][0][3],2))+'</td></tr>'
-            output += '<tr><td></td><td>eta<sup>2</sup> = '+str(round(assignment['eta'][0][1],2))+'</td><td>eta<sup>2</sup> = '+str(round(assignment['eta'][0][2],2))+'</td><td>eta<sup>2</sup> = '+str(round(assignment['eta'][0][3],2))+'</td></tr>'
-            output += '<tr><td>'+assignment['dependent2']+'</td><td>F(1, '+N+') = '+str(round(assignment['F'][0][1],2))+'</td><td>F(1, '+N+') = '+str(round(assignment['F'][0][2],2))+'</td><td>F(1, '+N+') = '+str(round(assignment['F'][1][3],2))+'</td></tr>'
-            output += '<tr><td></td><td>eta<sup>2</sup> = '+str(round(assignment['eta'][1][1],2))+'</td><td>eta<sup>2</sup> = '+str(round(assignment['eta'][1][2],2))+'</td><td>eta<sup>2</sup> = '+str(round(assignment['eta'][0][3],2))+'</td></tr>'
-            output += '<tr><td>'+assignment['dependent3']+'</td><td>F(1, '+N+') = '+str(round(assignment['F'][0][1],2))+'</td><td>F(1, '+N+') = '+str(round(assignment['F'][0][2],2))+'</td><td>F(1, '+N+') = '+str(round(assignment['F'][2][3],2))+'</td></tr>'
-            output += '<tr><td></td><td>eta<sup>2</sup> = '+str(round(assignment['eta'][2][1],2))+'</td><td>eta<sup>2</sup> = '+str(round(assignment['eta'][2][2],2))+'</td><td>eta<sup>2</sup> = '+str(round(assignment['eta'][0][3],2))+'</td></tr>'
-            output += '</table></p>'
+            N = str(sum(assignment['ns']) - 1); N2 = sum(assignment['ns']) - 1
+            pvalues = [assignment['p'][x][y] for x in range(0,3) for y in range(1,4)] + [assignment['p'][i][0] for i in range(3)]
+            pstars = ['***' if x < 0.001 else '**' if x < 0.01 else '*' if x < 0.05 else '' for x in pvalues]
+            output += self.print_manova(assignment)
+            output += '<p>Toetsing:<br><table style="width:35%">' 
+            output += '<tr><td>Afhankelijke variabele</td><td>Hoofdeffect '+assignment['independent']+'</td><td>Hoofdeffect '+assignment['independent2']+'</td><td>Interactie '+assignment['independent']+' x '+assignment['independent2']+'</td></tr>'
+            output += '<tr><td>'+assignment['dependent']+'</td><td>F(1, '+N+')'+pstars[0]+' = '+str(round(assignment['F'][0][1],2))+'<br>eta<sup>2</sup> = '+str(round(assignment['eta'][0][1],2))+'</td><td>F(1, '+N+')'+pstars[1]+' = '+\
+                str(round(assignment['F'][0][2],2))+'<br>eta<sup>2</sup> = '+str(round(assignment['eta'][0][2],2))+'</td><td>F(1, '+N+')'+pstars[2]+' = '+str(round(assignment['F'][0][3],2))+'<br>eta<sup>2</sup> = '+str(round(assignment['eta'][0][3],2))+'</td></tr>'
+            output += '<tr><td>'+assignment['dependent2']+'</td><td>F(1, '+N+')'+pstars[3]+' = '+str(round(assignment['F'][1][1],2))+'<br>eta<sup>2</sup> = '+str(round(assignment['eta'][1][1],2))+'</td><td>F(1, '+N+')'+pstars[4]+' = '+\
+                str(round(assignment['F'][1][2],2))+'<br>eta<sup>2</sup> = '+str(round(assignment['eta'][1][2],2))+'</td><td>F(1, '+N+')'+pstars[5]+' = '+str(round(assignment['F'][1][3],2))+'<br>eta<sup>2</sup> = '+str(round(assignment['eta'][1][3],2))+'</td></tr>'
+            output += '<tr><td>'+assignment['dependent3']+'</td><td>F(1, '+N+')'+pstars[7]+' = '+str(round(assignment['F'][2][1],2))+'<br>eta<sup>2</sup> = '+str(round(assignment['eta'][2][1],2))+'</td><td>F(1, '+N+')'+pstars[8]+' = '+\
+                str(round(assignment['F'][2][2],2))+'<br>eta<sup>2</sup> = '+str(round(assignment['eta'][2][2],2))+'</td><td>F(1, '+N+')'+pstars[8]+' = '+str(round(assignment['F'][2][3],2))+'<br>eta<sup>2</sup> = '+str(round(assignment['eta'][2][3],2))+'</td></tr>'
+            output += '<tr><td>multivariaat</td><td>F(3, '+str(N2*3)+')'+pstars[9]+' = '+str(round(np.mean([assignment['F'][i][1] for i in range(0,2)]),2))+'<br>eta<sup>2</sup> = '+str(round(np.mean([assignment['eta'][i][1] for i in range(0,2)]),2))+'</td><td>F(3, '+str(N2*3)+')'+pstars[10]+' = '+\
+                str(round(np.mean([assignment['F'][i][2] for i in range(0,2)]),2))+'<br>eta<sup>2</sup> = '+str(round(np.mean([assignment['eta'][i][2] for i in range(0,2)]),2))+'</td><td>F(3, '+str(N2*3)+')'+pstars[11]+' = '+\
+                str(round(np.mean([assignment['F'][i][3] for i in range(0,2)]),2))+'<br>eta<sup>2</sup> = '+str(round(np.mean([assignment['eta'][i][3] for i in range(0,2)]),2))+'</td></tr>'
+            output += '</table>* p < .05; ** p < .01; *** p < .001</p>'
         if assignment['assignment_type'] == 12:
-            output += self.print_mregression(assignment)
+            output += self.print_ancova(assignment)
             output += '<p><table style="width:20%">'
             output += '<tr><td>Bron</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td><td>eta<sup>2</sup></td></tr>'
             output += '<tr><td>'+assignment['predictor_names'][0]+'</td>'+''.join(['<td>'+str(round(assignment[x][0],2))+'</td>' for x in names2])+'</tr>'

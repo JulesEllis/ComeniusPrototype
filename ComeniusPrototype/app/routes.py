@@ -81,6 +81,10 @@ def index():
         if controller.wipetext:
             form.inputtext.data = ""
             form.inputtextlarge.data = ""
+        if controller.submit_field == Task.INTRO or controller.submit_field == Task.CHOICE: #Determine enter button text
+            form.submit.label.text = 'Doorgaan'
+        else:
+            form.submit.label.text = 'Feedback'
         skip :bool = controller.skipable
         prev :bool = controller.prevable
         answer :bool = controller.answerable
