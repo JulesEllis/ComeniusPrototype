@@ -551,8 +551,8 @@ class Assignments:
         p = random.random()
         s = 3 * random.random()
         output['var_obs'] = (1 + chi2.ppf(p, df=10)) * 10 ** s
-        r2 = random.random() ** 2
-        output['var_pred'] = [output['var_obs'] * r2 for i in range(3)]
+        #r2 = random.random() ** 2
+        output['var_pred'] = [output['var_obs'] * random.random() ** 2 for i in range(3)]
         
         indy_int = random.choice([0,1,2]); var_k = random.choice([0,1,2])
         output['independent'] = ['stimuluskleur','weerssituatie','muziek'][indy_int]
