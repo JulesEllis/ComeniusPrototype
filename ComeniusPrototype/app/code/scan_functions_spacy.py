@@ -269,6 +269,25 @@ def detect_decision_ancova(sent:Doc, solution:dict) -> List[str]:
     if not scorepoints['neg']:
         output.append(' -ten onrechte een negatie toegevoegd of weggelaten bij de hoofdbeslissing')
     return output
+
+def detect_decision_manova(sent:Doc, solution:dict, variable:str, synonyms:list, p:float) -> List[str]:
+    rejected:bool = p < 0.05
+    tokens:list = [x.text for x in sent]
+    scorepoints:dict = {'sign_effect': 'significant' in sent.text and 'effect' in sent.text,
+        'indep': solution['independent'] in sent.text or any([x in sent.text for x in solution['ind_syns']]),
+        'dep': variable in sent.text or any([x in sent.text for x in synonyms]) or 'multivariabele' in variable,
+        'neg': bool(negation_counter(tokens) % 2) != rejected }
+    
+    output:List[str] = []
+    if not scorepoints['sign_effect']:
+        output.append(' -significant voorspellende waarde niet genoemd bij de beslissing van '+variable)
+    if not scorepoints['indep']:
+        output.append(' -onafhankelijke factor niet genoemd bij de beslissing van '+variable)
+    if not scorepoints['dep']:
+        output.append(' -afhankelijke variabele niet genoemd bij de beslissing van '+variable)
+    if not scorepoints['neg']:
+        output.append(' -ten onrechte een negatie toegevoegd of weggelaten bij de beslissing van '+variable)
+    return output
     
 def detect_true_scores(sent:Doc, solution:dict, num=2) -> List[str]:
     #Define variables
@@ -727,24 +746,47 @@ def scan_design(doc:Doc, solution:dict, prefix:bool=True) -> [bool, List[str]]:
     
 def scan_design_manova(doc:Doc, solution:dict, prefix:bool=True):
     text = doc.text
-    scorepoints = {'levels1':all([x in text for x in solution['levels']]),
-                   'levels2':all([x in text for x in solution['levels2']]),
+    scorepoints = {'indcorrect':False,
+                   'levels1':all([x in text for x in solution['levels']]),
                    'mes':all([solution[x] in text for x in ['dependent','dependent2','dependent3']]),
-                   'dep':'afhankelijke' in text or 'afhankelijk' in text,
-                   'size': str(len(solution['levels'])) in text and 'x '+str(len(solution['levels2'])) in text
-            }
+                   'dep1':False,
+                   'dep2':False,
+                   'dep3':False
+                   }
+    indeps = [x for x in doc if x.text == solution['independent'].lower()]
+    if indeps != []:
+        if indeps[0].dep_ == 'conj':
+            indep_span = descendants(indeps[0].head.head)
+        else:
+            indep_span = descendants(indeps[0].head)
+        scorepoints['indcorrect'] = 'onafhankelijke' in [x.text for x in indep_span] and not 'afhankelijke' in [x.text for x in indep_span] 
+    deps = [x for x in doc if x.text == solution['dependent'].lower()]
+    if deps != []:
+        dep_span = descendants(deps[0].head)
+        scorepoints['dep1'] = 'afhankelijke' in [x.text for x in dep_span] and not 'onafhankelijke' in [x.text for x in dep_span]
+    deps2 = [x for x in doc if x.text == solution['dependent'].lower()]
+    if deps2 != []:
+        dep2_span = descendants(deps2[0].head)
+        scorepoints['dep2'] = 'afhankelijke' in [x.text for x in dep2_span] and not 'onafhankelijke' in [x.text for x in dep2_span] 
+    deps3 = [x for x in doc if x.text == solution['dependent'].lower()]
+    if deps3 != []:
+        dep3_span = descendants(deps3[0].head)
+        scorepoints['dep3'] = 'afhankelijke' in [x.text for x in dep3_span] and not 'onafhankelijke' in [x.text for x in dep3_span] 
+    
     output:List[str] = []
     if not scorepoints['levels1']:
         output.append(' -niet alle niveaus van de eerste onafhankelijke variabele genoemd')
-    if not scorepoints['levels2']:
-        output.append(' -niet alle niveaus van de tweede onafhankelijke variabele genoemd')
-    if not scorepoints['dep']:
-        output.append(' -geen afhankelijke variabele genoemd')
+    if not scorepoints['dep1']:
+        output.append(' -eerste afhankelijke variabele niet juist genoemd')
+    if not scorepoints['dep2']:
+        output.append(' -tweede afhankelijke variabele niet juist genoemd')
+    if not scorepoints['dep3']:
+        output.append(' -derde afhankelijke variabele niet juist genoemd')
+    if not scorepoints['indcorrect']:
+        output.append(' -de onafhankelijke variabele wordt niet juist genoemd')
     elif not scorepoints['mes']:
-        output.append(' -niet alle aparte afhankelijke variabelen genoemd')
-    if not scorepoints['size']:
-        output.append(' -dimensies van de onafhankelijke variabelen niet genoemd')
-    if not False in list(scorepoints.values()):        
+        output.append(' -niet alle aparte afhankelijke variabelen juist genoemd')
+    if not False in list(scorepoints.values()):
         return False, 'Mooi, dit design klopt.' if prefix else ''
     else:
         return True, '<br>'.join(output)
@@ -816,7 +858,7 @@ def split_grade_mregression(text:str, solution:dict) -> str:
     output:str = ''
     output += '<br>'+'<br>'.join(detect_name(doc,solution))
     output += '<br>'+'<br>'.join(detect_comparison_mreg(doc, solution))
-    output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][0]))
+    output += '<br>'+'<br>'.join(detect_report_stat(doc, ' F', solution['F'][0]))
     output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][0]))
     output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][0], aliases=['r2','r','kwadraat']))
     output += '<br>' + scan_predictors(doc, solution, prefix=False)[1]
@@ -853,6 +895,19 @@ def split_grade_manova(text:str, solution:dict) -> str:
     output:str = ''
     output += '<br>'+'<br>'.join(detect_name(doc,solution))
     output += '<br>' + scan_design_manova(doc, solution, prefix=False)[1]
+    for i in range(3):
+        rangwoorden = ['eerste','tweede','derde']
+        var_key = 'dependent' if i < 2 else 'dependent' + str(i)
+        output += '<br>'+'<br>'.join(detect_decision_manova(doc,solution, variable=solution[var_key], synonyms=[], p=solution['p'][i][0]))
+        if solution['p'][i][0] < 0.05:
+            output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][i][0]))
+            output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][i][0], label=rangwoorden[i] + ' afhankelijke variabele'))
+            output += '<br>'+'<br>'.join(detect_report_stat(doc, 'eta<sup>2</sup>', solution['r2'][i][0], aliases=['eta','eta2','eta-kwadraat']))
+    output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F_multivar']))
+    output += '<br>'+'<br>'.join(detect_p(doc, solution['p_multivar'], label=rangwoorden[i] + ' afhankelijke variabele'))
+    output += '<br>'+'<br>'.join(detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta_multivar'], aliases=['eta','eta2','eta-kwadraat']))
+    output += '<br>'+'<br>'.join(detect_decision_manova(doc,solution,variable='het multivariabele effect',synonyms=[], p=solution['p_multivar']))
+    
     if output.replace('<br>','') == '':
         return 'Mooi, dit beknopt rapport bevat alle juiste details!'
     else:

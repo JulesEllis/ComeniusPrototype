@@ -551,22 +551,20 @@ class Assignments:
         p = random.random()
         s = 3 * random.random()
         output['var_obs'] = (1 + chi2.ppf(p, df=10)) * 10 ** s
-        #r2 = random.random() ** 2
         output['var_pred'] = [output['var_obs'] * random.random() ** 2 for i in range(3)]
         
-        indy_int = random.choice([0,1,2]); var_k = random.choice([0,1,2])
+        indy_int = random.choice([0,1,2])#; var_k = random.choice([0,1,2])
         output['independent'] = ['stimuluskleur','weerssituatie','muziek'][indy_int]
         output['levels'] = [['rood','blauw'],['zon','regen'],['klassiek','pop']][indy_int]
         output['ind_syns'] = [['stimuluskleuren'],['weerssituaties'],[]][indy_int]
         output['level_syns'] = [[['rode'],['blauwe']],[['zonnig'],['regenachtig']],[['klassieke'],[]]][indy_int]
-        output['independent'] = ['stimuluskleur','weerssituatie','muziek'][indy_int]
-        #Var2
-        output['independent2'] = ['stimulusvorm','filmgenre','bloedtype'][var_k]
-        output['ind2_syns'] = [['stimulusvormen'],['filmgenres'],['bloedtypen','bloedtypes']][var_k]
-        output['levels2'] = [['vierkant','rond'],['drama','horror'],['A','B']][var_k]
-        output['level2_syns'] = [[['vierkante'],['ronde']],[[],[]],[[],[]]][var_k]
         output['control'] = control
-        output['control2'] = control2
+        #Var2
+        #output['independent2'] = ['stimulusvorm','filmgenre','bloedtype'][var_k]
+        #output['ind2_syns'] = [['stimulusvormen'],['filmgenres'],['bloedtypen','bloedtypes']][var_k]
+        #output['levels2'] = [['vierkant','rond'],['drama','horror'],['A','B']][var_k]
+        #output['level2_syns'] = [[['vierkante'],['ronde']],[[],[]],[[],[]]][var_k]
+        #output['control2'] = control2
         
         output['ind_syns'] = [['stimuluskleuren'],['weerssituaties'],[]][indy_int]
         output['level_syns'] = [[['rode'],['blauwe']],[['zonnig'],['regenachtig']],[['klassieke'],[]]][indy_int]
@@ -577,8 +575,8 @@ class Assignments:
         dependents = [output['dependent'], output['dependent2'], output['dependent3']]
         N = int(200 * random.random()); output['ns'] = [N]
         
-        output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De onafhankelijke variabelen zijn '+\
-            output['independent']+' ('+', '.join(output['levels'])+') en '+output['independent2']+' ('+', '.join(output['levels2'])+')'\
+        output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De onafhankelijke variabele is '+\
+            output['independent']+' ('+', '.join(output['levels'])+')'\
             '. De afhankelijke variabelen zijn '+' en '.join(dependents)+'. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
         return output
     
@@ -589,17 +587,18 @@ class Assignments:
             solution[key] = value
         for j in range(3):    
             ssreg = (N-1) * assignment['var_pred'][j]
-            pred_ss = [random.random() * 0.5 * ssreg, random.random() * 0.5 * ssreg]
+            pred_ss = random.random() * 0.5 * ssreg
             sstotal = (N-1) * assignment['var_obs']
-            l1: int = len(solution['levels']); l2: int = len(solution['levels2'])
-            lt: int = l1 * l2
-            N: int = sum(assignment['ns'])
-            solution['df'][j]: List[int] = [lt - 1, l1 - 1, l2 - 1, (l1-1) * (l2-1), N - lt, N - 1]
-            solution['ss'][j]: list[float] = [ssreg, pred_ss[0], pred_ss[1], ssreg - sum(pred_ss), sstotal - ssreg, sstotal]
-            solution['ms'][j]: List[float] = [solution['ss'][j][i] / solution['df'][j][i] for i in range(6)]
-            solution['F'][j]: List[float] = [solution['ms'][j][i] / solution['ms'][j][5] for i in range(4)]
-            solution['p'][j]: List[float] = [1-stats.f.cdf(solution['F'][j][i],solution['df'][j][i], solution['df'][j][5]) for i in range(4)]
-            solution['eta'][j]: List[float] = [solution['ss'][j][i] / (solution['ss'][j][i]+solution['ss'][j][4]) for i in range(4)]
+            solution['df'][j]: List[float] = [len(assignment['levels']) - 1, N - len(assignment['levels']), N - 1]
+            solution['ss'][j]: List[float] = [pred_ss, sstotal-pred_ss, sstotal]
+            solution['ms'][j]: List[float] = [solution['ss'][j][i]/solution['df'][j][i] for i in range(2)]
+            solution['F'][j]: List[float] = [solution['ms'][j][0] / solution['ms'][j][1]]
+            solution['p'][j]: List[float] = [1 - stats.f.cdf(abs(solution['F'][j][0]),solution['df'][j][0],solution['df'][j][1])]
+            #solution['r2'][j]: List[float] = [solution['ss'][0]/solution['ss'][2]]
+            solution['eta'][j]: List[float] = [solution['ss'][j][0] / solution['ss'][j][2]] #+solution['ss'][j][2])]
+        solution['F_multivar'] = np.mean([solution['F'][i][0] for i in range(3)])
+        solution['p_multivar'] = np.mean([solution['p'][i][0] for i in range(3)])
+        solution['eta_multivar'] = np.mean([solution['eta'][i][0] for i in range(3)])
         return solution
 	
     def create_report(self, control: bool, choice: int=0):
@@ -716,7 +715,7 @@ class Assignments:
         output:str = '' #"Answer" is a parameter which triggers when only the mean/ANOVA tables have to be printed
         if assignment['assignment_type'] not in [1,2,11]:
             data:dict = assignment['data']
-        names = ['df','ss','ms','F','p','r2'];names2 = ['df','ss','ms','F','p','r2','eta']
+        names = ['df','ss','ms','F','p','r2'];names2 = ['df','ss','ms','F','p','eta']
         if assignment['assignment_type'] == 1:
             if not answer:
                 output += self.print_ttest(assignment)
@@ -796,22 +795,34 @@ class Assignments:
                 output += '<tr><td>'+data['predictoren'][i]+'</td><td>'+str(round(assignment['predictor_b'][i],2))+'</td><td>'+str(round(assignment['predictor_beta'][i],2))+'</td><td>'+str(round(assignment['predictor_se'][i],2))+'</td><td>'+str(round(assignment['predictor_t'][i],2))+'</td><td>'+str(round(assignment['predictor_p'][i],3))+'</td></tr>'
             output += '</table></p>'
         if assignment['assignment_type'] == 11:
-            N = str(sum(assignment['ns']) - 1); N2 = sum(assignment['ns']) - 1
-            pvalues = [assignment['p'][x][y] for x in range(0,3) for y in range(1,4)] + [assignment['p'][i][0] for i in range(3)]
-            pstars = ['***' if x < 0.001 else '**' if x < 0.01 else '*' if x < 0.05 else '' for x in pvalues]
             output += self.print_manova(assignment)
-            output += '<p>Toetsing:<br><table style="width:35%">' 
-            output += '<tr><td>Afhankelijke variabele</td><td>Hoofdeffect '+assignment['independent']+'</td><td>Hoofdeffect '+assignment['independent2']+'</td><td>Interactie '+assignment['independent']+' x '+assignment['independent2']+'</td></tr>'
-            output += '<tr><td>'+assignment['dependent']+'</td><td>F(1, '+N+')'+pstars[0]+' = '+str(round(assignment['F'][0][1],2))+'<br>eta<sup>2</sup> = '+str(round(assignment['eta'][0][1],2))+'</td><td>F(1, '+N+')'+pstars[1]+' = '+\
-                str(round(assignment['F'][0][2],2))+'<br>eta<sup>2</sup> = '+str(round(assignment['eta'][0][2],2))+'</td><td>F(1, '+N+')'+pstars[2]+' = '+str(round(assignment['F'][0][3],2))+'<br>eta<sup>2</sup> = '+str(round(assignment['eta'][0][3],2))+'</td></tr>'
-            output += '<tr><td>'+assignment['dependent2']+'</td><td>F(1, '+N+')'+pstars[3]+' = '+str(round(assignment['F'][1][1],2))+'<br>eta<sup>2</sup> = '+str(round(assignment['eta'][1][1],2))+'</td><td>F(1, '+N+')'+pstars[4]+' = '+\
-                str(round(assignment['F'][1][2],2))+'<br>eta<sup>2</sup> = '+str(round(assignment['eta'][1][2],2))+'</td><td>F(1, '+N+')'+pstars[5]+' = '+str(round(assignment['F'][1][3],2))+'<br>eta<sup>2</sup> = '+str(round(assignment['eta'][1][3],2))+'</td></tr>'
-            output += '<tr><td>'+assignment['dependent3']+'</td><td>F(1, '+N+')'+pstars[7]+' = '+str(round(assignment['F'][2][1],2))+'<br>eta<sup>2</sup> = '+str(round(assignment['eta'][2][1],2))+'</td><td>F(1, '+N+')'+pstars[8]+' = '+\
-                str(round(assignment['F'][2][2],2))+'<br>eta<sup>2</sup> = '+str(round(assignment['eta'][2][2],2))+'</td><td>F(1, '+N+')'+pstars[8]+' = '+str(round(assignment['F'][2][3],2))+'<br>eta<sup>2</sup> = '+str(round(assignment['eta'][2][3],2))+'</td></tr>'
-            output += '<tr><td>multivariaat</td><td>F(3, '+str(N2*3)+')'+pstars[9]+' = '+str(round(np.mean([assignment['F'][i][1] for i in range(0,2)]),2))+'<br>eta<sup>2</sup> = '+str(round(np.mean([assignment['eta'][i][1] for i in range(0,2)]),2))+'</td><td>F(3, '+str(N2*3)+')'+pstars[10]+' = '+\
-                str(round(np.mean([assignment['F'][i][2] for i in range(0,2)]),2))+'<br>eta<sup>2</sup> = '+str(round(np.mean([assignment['eta'][i][2] for i in range(0,2)]),2))+'</td><td>F(3, '+str(N2*3)+')'+pstars[11]+' = '+\
-                str(round(np.mean([assignment['F'][i][3] for i in range(0,2)]),2))+'<br>eta<sup>2</sup> = '+str(round(np.mean([assignment['eta'][i][3] for i in range(0,2)]),2))+'</td></tr>'
-            output += '</table>* p < .05; ** p < .01; *** p < .001</p>'
+            output += '<p><table style="width:20%">'
+            output += 'Tabel ' + assignment['dependent'] + ':'
+            output += '<tr><td>Bron</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>eta<sup>2</sup></td></tr>'
+            output += '<tr><td>Between</td>'+''.join(['<td>'+str(round(assignment[x][0][0],2))+'</td>' for x in names2])+'</tr>'
+            output += '<tr><td>Within</td>'+''.join(['<td>'+str(round(assignment[x][0][1],2))+'</td>' for x in names2[:3]])+'</tr>'
+            output += '<tr><td>Totaal</td>'+''.join(['<td>'+str(round(assignment[x][0][2],2))+'</td>' for x in names2[:2]])+'</tr>'
+            output += '</table></p>'
+            output += '<p><table style="width:20%">'
+            output += 'Tabel ' + assignment['dependent2'] + ':'
+            output += '<tr><td>Bron</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>eta<sup>2</sup></td></tr>'
+            output += '<tr><td>Between</td>'+''.join(['<td>'+str(round(assignment[x][1][0],2))+'</td>' for x in names2])+'</tr>'
+            output += '<tr><td>Within</td>'+''.join(['<td>'+str(round(assignment[x][1][1],2))+'</td>' for x in names2[:3]])+'</tr>'
+            output += '<tr><td>Totaal</td>'+''.join(['<td>'+str(round(assignment[x][1][2],2))+'</td>' for x in names2[:2]])+'</tr>'
+            output += '</table></p>'
+            output += '<p><table style="width:20%">'
+            output += 'Tabel ' + assignment['dependent3'] + ':'
+            output += '<tr><td>Bron</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>eta<sup>2</sup></td></tr>'
+            output += '<tr><td>Between</td>'+''.join(['<td>'+str(round(assignment[x][2][0],2))+'</td>' for x in names2])+'</tr>'
+            output += '<tr><td>Within</td>'+''.join(['<td>'+str(round(assignment[x][2][1],2))+'</td>' for x in names[:3]])+'</tr>'
+            output += '<tr><td>Totaal</td>'+''.join(['<td>'+str(round(assignment[x][2][2],2))+'</td>' for x in names[:2]])+'</tr>'
+            output += '</table></p>'
+            output += '<p><table style="width:20%">'
+            output += 'Multivariante beslissingsscores:'
+            output += '<tr><td>F</td><td>p</td><td>eta<sup>2</sup></td></tr>'
+            output += '<tr><td>'+str(round(np.mean([assignment['F'][i][0] for i in range(3)]),2))+'</td><td>'+str(round(np.mean([assignment['p'][i][0] for i in range(3)]),2))+'</td><td>'+\
+                str(round(np.mean([assignment['eta'][i][0] for i in range(3)]),2))+'</td></tr>'
+            output += '</table></p>'
         if assignment['assignment_type'] == 12:
             output += self.print_ancova(assignment)
             output += '<p><table style="width:20%">'
