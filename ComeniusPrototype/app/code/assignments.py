@@ -568,16 +568,18 @@ class Assignments:
         
         output['ind_syns'] = [['stimuluskleuren'],['weerssituaties'],[]][indy_int]
         output['level_syns'] = [[['rode'],['blauwe']],[['zonnig'],['regenachtig']],[['klassieke'],[]]][indy_int]
+        output['sumdependent'] = 'grootte'
         output['dependent'] = 'gewicht'
         output['dependent2'] = 'lengte'
-        output['dependent3'] = 'leeftijd'
+        output['dependent3'] = 'breedte'
         output['dep_syns'] = ['gewichten']; output['dep2_syns'] = ['lengten']; output['dep3_syns'] = ['leeftijden'];
         dependents = [output['dependent'], output['dependent2'], output['dependent3']]
         N = int(200 * random.random()); output['ns'] = [N]
         
         output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De onafhankelijke variabele is '+\
             output['independent']+' ('+', '.join(output['levels'])+')'\
-            '. De afhankelijke variabelen zijn '+' en '.join(dependents)+'. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
+            '. De afhankelijke variabelen zijn dimensies van de variabele '+output['sumdependent']+', namelijk '+\
+            ' en '.join(dependents)+'. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
         return output
     
     def solve_manova(self, assignment: Dict, solution:Dict) -> Dict:
@@ -820,8 +822,8 @@ class Assignments:
             output += '<p><table style="width:20%">'
             output += 'Multivariante beslissingsscores:'
             output += '<tr><td>F</td><td>p</td><td>eta<sup>2</sup></td></tr>'
-            output += '<tr><td>'+str(round(np.mean([assignment['F'][i][0] for i in range(3)]),2))+'</td><td>'+str(round(np.mean([assignment['p'][i][0] for i in range(3)]),2))+'</td><td>'+\
-                str(round(np.mean([assignment['eta'][i][0] for i in range(3)]),2))+'</td></tr>'
+            output += '<tr><td>'+str(round(assignment['F_multivar'],2))+'</td><td>'+str(round(assignment['p_multivar'],2))+'</td><td>'+\
+                str(round(assignment['eta_multivar'],2))+'</td></tr>'
             output += '</table></p>'
         if assignment['assignment_type'] == 12:
             output += self.print_ancova(assignment)
