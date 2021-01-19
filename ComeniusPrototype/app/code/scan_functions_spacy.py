@@ -273,14 +273,17 @@ def detect_decision_ancova(sent:Doc, solution:dict) -> List[str]:
 def detect_decision_manova(sent:Doc, solution:dict, variable:str, synonyms:list, p:float) -> List[str]:
     rejected:bool = p < 0.05
     tokens:list = [x.text for x in sent]
-    scorepoints:dict = {'sign_effect': 'significant' in sent.text and 'effect' in sent.text,
+    #print(rejected)
+    #print(tokens)
+    #print(negation_counter(tokens))
+    scorepoints:dict = {'sign_effect': 'significant' in sent.text,
         'indep': solution['independent'] in sent.text or any([x in sent.text for x in solution['ind_syns']]),
         'dep': variable in sent.text or any([x in sent.text for x in synonyms]) or 'multivariate' in variable,
         'neg': bool(negation_counter(tokens) % 2) != rejected }
     
     output:List[str] = []
     if not scorepoints['sign_effect']:
-        output.append(' -significant voorspellende waarde niet genoemd bij de beslissing van '+variable)
+        output.append(' -niet genoemd bij de beslissing van '+variable+' of het effect significant is')
     if not scorepoints['indep']:
         output.append(' -onafhankelijke factor niet genoemd bij de beslissing van '+variable)
     if not scorepoints['dep']:
@@ -753,13 +756,8 @@ def scan_design_manova(doc:Doc, solution:dict, prefix:bool=True):
                    'dep2':False,
                    'dep3':False
                    }
-    indeps = [x for x in doc if x.text == solution['independent'].lower()]
-    if indeps != []:
-        if indeps[0].dep_ == 'conj':
-            indep_span = descendants(indeps[0].head.head)
-        else:
-            indep_span = descendants(indeps[0].head)
-        scorepoints['indcorrect'] = 'onafhankelijke' in [x.text for x in indep_span] and not 'afhankelijke' in [x.text for x in indep_span] 
+    scorepoints['indcorrect'] = any([True if solution['independent'] in sent.text and ('factor' in sent.text \
+                                    or 'onafhankelijke' in sent.text) else False for sent in doc.sents])
     deps = [x for x in doc if x.text == solution['dependent'].lower()]
     if deps != []:
         dep_span = descendants(deps[0].head)
@@ -896,25 +894,27 @@ def split_grade_manova(text:str, solution:dict) -> str:
     output += '<br>'+'<br>'.join(detect_name(doc,solution))
     output += '<br>' + scan_design_manova(doc, solution, prefix=False)[1]
     for i in range(3):
-        rangwoorden = ['eerste','tweede','derde']
         var_key = 'dependent' if i < 1 else 'dependent' + str(i+1)
-        decision_sent = [x for x in doc.sents if solution[var_key] in x.text and ('significant' in x.text or 'effect' in x.text)]
-        if decision_sent != []:
-            output += '<br>'+'<br>'.join(detect_decision_manova(decision_sent[0],solution, variable=solution[var_key], synonyms=[], p=solution['p'][i][0]))
+        rangwoorden = ['eerste','tweede','derde']
+        if solution['p_multivar'] < 0.05:
+            decision_sent = [x for x in doc.sents if solution[var_key] in x.text and ('significant' in x.text or 'effect' in x.text)]
+            if decision_sent != []:
+                output += '<br>'+'<br>'.join(detect_decision_manova(decision_sent[0],solution, variable=solution[var_key], synonyms=[], p=solution['p'][i][0]))
         else:
             output += '<br> -de beslissing van '+solution[var_key]+' wordt niet genoemd'
-        if solution['p'][i][0] < 0.05:
+        if solution['p'][i][0] < 0.05 and solution['p_multivar'] < 0.05:
             output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][i][0]))
             output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][i][0], label=rangwoorden[i] + ' afhankelijke variabele'))
             output += '<br>'+'<br>'.join(detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta'][i][0], aliases=['eta','eta2','eta-kwadraat']))
     output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F_multivar']))
     output += '<br>'+'<br>'.join(detect_p(doc, solution['p_multivar'], label=rangwoorden[i] + ' afhankelijke variabele'))
     output += '<br>'+'<br>'.join(detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta_multivar'], aliases=['eta','eta2','eta-kwadraat']))
-    decision_sent = [x for x in doc.sents if solution['sumdependent'] in x.text and ('significant' in x.text or 'effect' in x.text)]
+    decision_sent = [x for x in doc.sents if (solution['sumdependent'] in x.text or 'multivariate' in x.text or 'multivariaat' in x.text) \
+                         and ('significant' in x.text or 'effect' in x.text)]
     if decision_sent != []:
-        output += '<br>'+'<br>'.join(detect_decision_manova(doc,solution,variable='grootte',synonyms=[], p=solution['p_multivar']))
+        output += '<br>'+'<br>'.join(detect_decision_manova(doc,solution,variable=solution['sumdependent'],synonyms=['multivariate'], p=solution['p_multivar']))
     else:
-        output += '<br> -de multivariante beslissing niet genoemd'
+        output += '<br> -de multivariate beslissing niet genoemd'
     if output.replace('<br>','') == '':
         return 'Mooi, dit beknopt rapport bevat alle juiste details!'
     else:
