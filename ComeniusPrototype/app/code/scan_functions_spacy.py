@@ -917,8 +917,8 @@ def split_grade_manova(text:str, solution:dict) -> str:
             decision_sent = [x for x in doc.sents if solution[var_key] in x.text and ('significant' in x.text or 'effect' in x.text)]
             if decision_sent != []:
                 output += '<br>'+'<br>'.join(detect_decision_manova(decision_sent[0],solution, variable=solution[var_key], synonyms=[], p=solution['p'][i][0], eta=solution['eta'][i][0], num=i+1))
-        else:
-            output += '<br> -de beslissing van '+solution[var_key]+' wordt niet genoemd'
+            else:
+                output += '<br> -de beslissing van '+solution[var_key]+' wordt niet genoemd'
         if solution['p'][i][0] < 0.05 and solution['p_multivar'] < 0.05:
             output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][i][0], appendix='bij de '+rangwoorden[i] + ' afhankelijke variabele '))
             output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][i][0], label='de '+rangwoorden[i] + ' afhankelijke variabele '))
