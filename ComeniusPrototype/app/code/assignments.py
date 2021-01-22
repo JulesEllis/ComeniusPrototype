@@ -13,7 +13,12 @@ from scipy.stats.distributions import chi2
 from typing import Dict, List, Tuple
 #import typing
 #from typing import *
+def format_table(terms:list) -> str:
+    return '<tr><td>' + '</td><td>'.join([str(round(x,2)) if type(x) != str else x for x in terms]) + '</td></tr>'
 
+def cap(term:str) -> str:
+    return term[0].upper() + term[1:]
+    
 class Assignments:
     def __init__(self):
         pass
@@ -548,7 +553,7 @@ class Assignments:
     def create_manova(self, control: bool, control2:bool=False, elementary:bool=False):
         output = {'assignment_type':12}
         report_type = 'elementair' if elementary else 'beknopt'
-        p = random.random()
+        p = random.random() ** 2
         s = 3 * random.random()
         output['var_obs'] = (1 + chi2.ppf(p, df=10)) * 10 ** s
         output['var_pred'] = [output['var_obs'] * random.random() ** 2 for i in range(3)]
@@ -559,12 +564,6 @@ class Assignments:
         output['ind_syns'] = [['stimuluskleuren'],['weerssituaties'],[]][indy_int]
         output['level_syns'] = [[['rode'],['blauwe']],[['zonnig'],['regenachtig']],[['klassieke'],[]]][indy_int]
         output['control'] = control
-        #Var2
-        #output['independent2'] = ['stimulusvorm','filmgenre','bloedtype'][var_k]
-        #output['ind2_syns'] = [['stimulusvormen'],['filmgenres'],['bloedtypen','bloedtypes']][var_k]
-        #output['levels2'] = [['vierkant','rond'],['drama','horror'],['A','B']][var_k]
-        #output['level2_syns'] = [[['vierkante'],['ronde']],[[],[]],[[],[]]][var_k]
-        #output['control2'] = control2
         
         output['ind_syns'] = [['stimuluskleuren'],['weerssituaties'],[]][indy_int]
         output['level_syns'] = [[['rode'],['blauwe']],[['zonnig'],['regenachtig']],[['klassieke'],[]]][indy_int]
@@ -601,6 +600,24 @@ class Assignments:
         solution['F_multivar'] = np.mean([solution['F'][i][0] for i in range(3)])
         solution['p_multivar'] = np.mean([solution['p'][i][0] for i in range(3)])
         solution['eta_multivar'] = np.mean([solution['eta'][i][0] for i in range(3)])
+        
+        #Fill table 1 vars
+        #eigenvalues = []
+        v0 = random.random()*120; solution['value'] = [random.random(),random.random(),v0,v0]+[random.random(),random.random(),random.random()*2.5,random.random()*2.5]
+        f0 = random.random()*500; solution['F1'] = [f0 for i in range(4)] + [solution['F_multivar'] for i in range(4)]
+        solution['p1'] = [0.0 for i in range(4)] + [solution['p_multivar'] for i in range(4)]
+        intr2 = 0.9*random.random()*0.10; solution['eta1'] = [intr2 for i in range(4)] + [solution['eta_multivar'] for i in range(4)]
+        
+        #Fill table 2 vars
+        intercepts = [30000 + 2000 * random.random() for i in range(3)]
+        solution['ss0'] = [solution['ss'][i][0] for i in range(3)]+intercepts+[solution['ss'][i][0] for i in range(3)]+\
+                           [solution['ss'][i][1] for i in range(3)]+[solution['ss'][i][2]+intercepts[i] for i in range(3)]+[solution['ss'][i][2] for i in range(3)]
+        nt = sum(assignment['ns']); nl = len(assignment['levels']) #Total subjects #Number of levels per factor
+        dfs = [nl-1,nl-1,nl-1,1,1,1,nl-1,nl-1,nl-1,nt-nl,nt-nl,nt-nl,nt,nt,nt,nt-1,nt-1,nt-1]
+        solution['ms0'] = [solution['ss0'][i] / dfs[i] for i in range(12)]
+        solution['F0'] = [solution['ms0'][i] / solution['ms'][i%3][1] for i in range(9)]
+        solution['p0'] = [1-stats.f.cdf(solution['F0'][i],dfs[i],nt-nl-1) for i in range(9)]
+        solution['eta0'] = [solution['ss0'][i] / solution['ss'][i%3][2] for i in range(9)]
         return solution
 	
     def create_report(self, control: bool, choice: int=0):
@@ -797,33 +814,41 @@ class Assignments:
                 output += '<tr><td>'+data['predictoren'][i]+'</td><td>'+str(round(assignment['predictor_b'][i],2))+'</td><td>'+str(round(assignment['predictor_beta'][i],2))+'</td><td>'+str(round(assignment['predictor_se'][i],2))+'</td><td>'+str(round(assignment['predictor_t'][i],2))+'</td><td>'+str(round(assignment['predictor_p'][i],3))+'</td></tr>'
             output += '</table></p>'
         if assignment['assignment_type'] == 11:
+            nt = sum(assignment['ns']) #Total number of subjects
+            nl = len(assignment['levels']) #Number of levels factor
             output += self.print_manova(assignment)
-            output += '<p><table style="width:20%">'
-            output += 'Tabel ' + assignment['dependent'] + ':'
-            output += '<tr><td>Bron</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>eta<sup>2</sup></td></tr>'
-            output += '<tr><td>Between</td>'+''.join(['<td>'+str(round(assignment[x][0][0],2))+'</td>' for x in names2])+'</tr>'
-            output += '<tr><td>Within</td>'+''.join(['<td>'+str(round(assignment[x][0][1],2))+'</td>' for x in names2[:3]])+'</tr>'
-            output += '<tr><td>Totaal</td>'+''.join(['<td>'+str(round(assignment[x][0][2],2))+'</td>' for x in names2[:2]])+'</tr>'
+            output += '<p>Multivariate tests<table style="width:20%">'
+            output += format_table(['Effect','','Waarde','F','Hypothese df','Error df','p','eta<sup>2</sup> (gedeeltelijk)'])
+            output += format_table(['Intercept',"Pillai's trace",assignment['value'][0],assignment['F1'][0],nl-1,nt-nl,assignment['p1'][0],assignment['eta1'][0]])
+            output += format_table(['',"Wilks' lambda",assignment['value'][1],assignment['F1'][1],nl-1,nt-nl,assignment['p1'][1],assignment['eta1'][1]])
+            output += format_table(['',"Hotelling's trace",assignment['value'][2],assignment['F1'][2],nl-1,nt-nl,assignment['p1'][2],assignment['eta1'][2]])
+            output += format_table(['',"Roy's largest root",assignment['value'][3],assignment['F1'][3],nl-1,nt-nl,assignment['p1'][3],assignment['eta1'][3]])
+            output += format_table([cap(assignment['independent']),"Pillai's trace",assignment['value'][4],assignment['F1'][4],nl-1,nt-nl,assignment['p1'][4],assignment['eta1'][4]])
+            output += format_table(['',"Wilks' lambda",assignment['value'][5],assignment['F1'][5],nl-1,nt-nl,assignment['p1'][5],assignment['eta1'][5]])
+            output += format_table(['',"Hotelling's trace",assignment['value'][6],assignment['F1'][6],nl-1,nt-nl,assignment['p1'][6],assignment['eta1'][6]])
+            output += format_table(['',"Roy's largest root",assignment['value'][7],assignment['F1'][7],nl-1,nt-nl,assignment['p1'][7],assignment['eta1'][7]])
             output += '</table></p>'
-            output += '<p><table style="width:20%">'
-            output += 'Tabel ' + assignment['dependent2'] + ':'
-            output += '<tr><td>Bron</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>eta<sup>2</sup></td></tr>'
-            output += '<tr><td>Between</td>'+''.join(['<td>'+str(round(assignment[x][1][0],2))+'</td>' for x in names2])+'</tr>'
-            output += '<tr><td>Within</td>'+''.join(['<td>'+str(round(assignment[x][1][1],2))+'</td>' for x in names2[:3]])+'</tr>'
-            output += '<tr><td>Totaal</td>'+''.join(['<td>'+str(round(assignment[x][1][2],2))+'</td>' for x in names2[:2]])+'</tr>'
-            output += '</table></p>'
-            output += '<p><table style="width:20%">'
-            output += 'Tabel ' + assignment['dependent3'] + ':'
-            output += '<tr><td>Bron</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>eta<sup>2</sup></td></tr>'
-            output += '<tr><td>Between</td>'+''.join(['<td>'+str(round(assignment[x][2][0],2))+'</td>' for x in names2])+'</tr>'
-            output += '<tr><td>Within</td>'+''.join(['<td>'+str(round(assignment[x][2][1],2))+'</td>' for x in names[:3]])+'</tr>'
-            output += '<tr><td>Totaal</td>'+''.join(['<td>'+str(round(assignment[x][2][2],2))+'</td>' for x in names[:2]])+'</tr>'
-            output += '</table></p>'
-            output += '<p><table style="width:20%">'
-            output += 'Multivariante beslissingsscores:'
-            output += '<tr><td>F</td><td>p</td><td>eta<sup>2</sup></td></tr>'
-            output += '<tr><td>'+str(round(assignment['F_multivar'],2))+'</td><td>'+str(round(assignment['p_multivar'],2))+'</td><td>'+\
-                str(round(assignment['eta_multivar'],2))+'</td></tr>'
+            
+            output += '<p>Tests van within-subject effecten<table style="width:50%">'
+            output += format_table(['Bron','Variabele','SS','df','MS','F','p','eta<sup>2</sup> (gedeeltelijk)'])
+            output += format_table(['Gecorrigeerde model',assignment['dependent'],assignment['ss0'][0],nl-1,assignment['ms0'][0],assignment['F0'][0],assignment['p0'][0],assignment['eta0'][0]])
+            output += format_table(['',assignment['dependent2'],assignment['ss0'][1],nl-1,assignment['ms0'][1],assignment['F0'][1],assignment['p0'][1],assignment['eta0'][1]])
+            output += format_table(['',assignment['dependent3'],assignment['ss0'][2],nl-1,assignment['ms0'][2],assignment['F0'][2],assignment['p0'][2],assignment['eta0'][2]])
+            output += format_table(['Intercept',assignment['dependent'],assignment['ss0'][3],1,assignment['ms0'][3],assignment['F0'][3],assignment['p0'][3],assignment['eta0'][3]])
+            output += format_table(['',assignment['dependent2'],assignment['ss0'][4],1,assignment['ms0'][4],assignment['F0'][4],assignment['p0'][4],assignment['eta0'][4]])
+            output += format_table(['',assignment['dependent3'],assignment['ss0'][5],1,assignment['ms0'][5],assignment['F0'][5],assignment['p0'][5],assignment['eta0'][5]])
+            output += format_table([cap(assignment['independent']),assignment['dependent'],assignment['ss0'][6],nl-1,assignment['ms0'][6],assignment['F0'][6],assignment['p0'][6],assignment['eta0'][6]])
+            output += format_table(['',assignment['dependent2'],assignment['ss0'][7],nl-1,assignment['ms0'][7],assignment['F0'][7],assignment['p0'][7],assignment['eta0'][7]])
+            output += format_table(['',assignment['dependent3'],assignment['ss0'][8],nl-1,assignment['ms0'][8],assignment['F0'][8],assignment['p0'][8],assignment['eta0'][8]])
+            output += format_table(['Error',assignment['dependent'],assignment['ss0'][9],nt-nl,assignment['ms0'][9],'','',''])
+            output += format_table(['',assignment['dependent2'],assignment['ss0'][10],nt-nl,assignment['ms0'][10],'','',''])
+            output += format_table(['',assignment['dependent3'],assignment['ss0'][11],nt-nl,assignment['ms0'][11],'','',''])
+            output += format_table(['Totaal',assignment['dependent'],assignment['ss0'][12],nt,'','','',''])
+            output += format_table(['',assignment['dependent2'],assignment['ss0'][13],nt,'','','',''])
+            output += format_table(['',assignment['dependent3'],assignment['ss0'][14],nt,'','','',''])
+            output += format_table(['Gecorrigeerd totaal',assignment['dependent'],assignment['ss0'][15],nt-1,'','','',''])
+            output += format_table(['',assignment['dependent2'],assignment['ss0'][16],nt-1,'','','',''])
+            output += format_table(['',assignment['dependent3'],assignment['ss0'][17],nt-1,'','','',''])
             output += '</table></p>'
         if assignment['assignment_type'] == 12:
             output += self.print_ancova(assignment)
