@@ -515,7 +515,7 @@ class Assignments:
         output['dependent'] = 'gewicht'
         output['dep_syns'] = ['gewichten']
         #output['correlations'] = [random.random() for i in range(int(((n_predictors + 1) ** 2 - n_predictors - 1) * 0.5))]
-        output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De onafhankelijke variabelen zijn de factor '+output['independent']+' en '+output['dependent']+', met '+' en '.join(output['data']['predictoren'])+' als predictoren. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
+        output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn de factor '+output['independent']+' en '+output['dependent']+', met '+' en '.join(output['data']['predictoren'])+' als predictoren. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
         return output
     
     def solve_ancova(self, assignment: Dict, solution:Dict) -> Dict:
@@ -527,13 +527,13 @@ class Assignments:
         ssreg = (N-1) * assignment['var_pred']
         pred_ss = [random.random() * 0.25 * ssreg, random.random() * 0.25 * ssreg]
         sstotal = (N-1) * assignment['var_obs']
-        solution['df']: list[int] = [1,1,2,4,N-5,N-1]
-        solution['ss']: list[float] = [pred_ss[0], pred_ss[1], ssreg - sum(pred_ss), ssreg, sstotal - ssreg, sstotal]
-        solution['ms']: List[float] = [solution['ss'][i] / solution['df'][i] for i in range(6)]
-        solution['F']: List[float] = [solution['ms'][i] / solution['ms'][5] for i in range(4)]
-        solution['p']: List[float] = [1-stats.f.cdf(solution['F'][i],solution['df'][i], solution['df'][5]) for i in range(4)]
-        solution['r2']: List[float] = [solution['ss'][i] / solution['ss'][5] for i in range(4)]
-        solution['eta']: List[float] = [solution['ss'][i] / (solution['ss'][i]+solution['ss'][4]) for i in range(4)]
+        solution['df']: list[int] = [1,1,2,4,N-5,N-1,1,N]
+        solution['ss']: list[float] = [pred_ss[0], pred_ss[1], ssreg - sum(pred_ss), ssreg, sstotal - ssreg, sstotal, random.random() * sstotal, sstotal+10*sstotal*random.random()]
+        solution['ms']: List[float] = [solution['ss'][i] / solution['df'][i] for i in range(8)]
+        solution['F']: List[float] = [solution['ms'][i] / solution['ms'][5] for i in range(8)]
+        solution['p']: List[float] = [1-stats.f.cdf(solution['F'][i],solution['df'][i], solution['df'][5]) for i in range(8)]
+        solution['eta']: List[float] = [solution['ss'][i] / solution['ss'][5] for i in range(8)]
+        #solution['eta']: List[float] = [solution['ss'][i] / (solution['ss'][i]+solution['ss'][4]) for i in range(4)]
         
         #Compute p-values
         n_predictors = assignment['n_predictors']
@@ -818,7 +818,7 @@ class Assignments:
             nl = len(assignment['levels']) #Number of levels factor
             output += self.print_manova(assignment)
             output += '<p>Multivariate tests<table style="width:20%">'
-            output += format_table(['Effect','','Waarde','F','Hypothese df','Error df','p','eta<sup>2</sup> (gedeeltelijk)'])
+            output += format_table(['Effect','','Value','F','Hypothesis df','Error df','p','Partial eta<sup>2</sup>'])
             output += format_table(['Intercept',"Pillai's trace",assignment['value'][0],assignment['F1'][0],nl-1,nt-nl,assignment['p1'][0],assignment['eta1'][0]])
             output += format_table(['',"Wilks' lambda",assignment['value'][1],assignment['F1'][1],nl-1,nt-nl,assignment['p1'][1],assignment['eta1'][1]])
             output += format_table(['',"Hotelling's trace",assignment['value'][2],assignment['F1'][2],nl-1,nt-nl,assignment['p1'][2],assignment['eta1'][2]])
@@ -830,8 +830,8 @@ class Assignments:
             output += '</table></p>'
             
             output += '<p>Tests van within-subject effecten<table style="width:50%">'
-            output += format_table(['Bron','Variabele','SS','df','MS','F','p','eta<sup>2</sup> (gedeeltelijk)'])
-            output += format_table(['Gecorrigeerde model',assignment['dependent'],assignment['ss0'][0],nl-1,assignment['ms0'][0],assignment['F0'][0],assignment['p0'][0],assignment['eta0'][0]])
+            output += format_table(['Bron','Variabele','SS','df','MS','F','p','Partial eta<sup>2</sup>'])
+            output += format_table(['Corrected model',assignment['dependent'],assignment['ss0'][0],nl-1,assignment['ms0'][0],assignment['F0'][0],assignment['p0'][0],assignment['eta0'][0]])
             output += format_table(['',assignment['dependent2'],assignment['ss0'][1],nl-1,assignment['ms0'][1],assignment['F0'][1],assignment['p0'][1],assignment['eta0'][1]])
             output += format_table(['',assignment['dependent3'],assignment['ss0'][2],nl-1,assignment['ms0'][2],assignment['F0'][2],assignment['p0'][2],assignment['eta0'][2]])
             output += format_table(['Intercept',assignment['dependent'],assignment['ss0'][3],1,assignment['ms0'][3],assignment['F0'][3],assignment['p0'][3],assignment['eta0'][3]])
@@ -843,23 +843,25 @@ class Assignments:
             output += format_table(['Error',assignment['dependent'],assignment['ss0'][9],nt-nl,assignment['ms0'][9],'','',''])
             output += format_table(['',assignment['dependent2'],assignment['ss0'][10],nt-nl,assignment['ms0'][10],'','',''])
             output += format_table(['',assignment['dependent3'],assignment['ss0'][11],nt-nl,assignment['ms0'][11],'','',''])
-            output += format_table(['Totaal',assignment['dependent'],assignment['ss0'][12],nt,'','','',''])
+            output += format_table(['Total',assignment['dependent'],assignment['ss0'][12],nt,'','','',''])
             output += format_table(['',assignment['dependent2'],assignment['ss0'][13],nt,'','','',''])
             output += format_table(['',assignment['dependent3'],assignment['ss0'][14],nt,'','','',''])
-            output += format_table(['Gecorrigeerd totaal',assignment['dependent'],assignment['ss0'][15],nt-1,'','','',''])
+            output += format_table(['Corrected total',assignment['dependent'],assignment['ss0'][15],nt-1,'','','',''])
             output += format_table(['',assignment['dependent2'],assignment['ss0'][16],nt-1,'','','',''])
             output += format_table(['',assignment['dependent3'],assignment['ss0'][17],nt-1,'','','',''])
             output += '</table></p>'
         if assignment['assignment_type'] == 12:
             output += self.print_ancova(assignment)
             output += '<p><table style="width:20%">'
-            output += '<tr><td>Bron</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td><td>eta<sup>2</sup></td></tr>'
-            output += '<tr><td>'+assignment['predictor_names'][0]+'</td>'+''.join(['<td>'+str(round(assignment[x][0],2))+'</td>' for x in names2])+'</tr>'
-            output += '<tr><td>'+assignment['predictor_names'][1]+'</td>'+''.join(['<td>'+str(round(assignment[x][1],2))+'</td>' for x in names2])+'</tr>'
-            output += '<tr><td>'+assignment['independent']+'</td>'+''.join(['<td>'+str(round(assignment[x][2],2))+'</td>' for x in names2])+'</tr>'
-            output += '<tr><td>Model</td>'+''.join(['<td>'+str(round(assignment[x][3],2))+'</td>' for x in names2])+'</tr>'
-            output += '<tr><td>Residu</td>'+''.join(['<td>'+str(round(assignment[x][4],2))+'</td>' for x in names[:3]])+'</tr>'
-            output += '<tr><td>Totaal</td>'+''.join(['<td>'+str(round(assignment[x][5],2))+'</td>' for x in names[:3]])+'</tr>'
+            output += '<tr><td>Bron</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>eta<sup>2</sup></td></tr>'
+            output += '<tr><td>Corrected model</td>'+''.join(['<td>'+str(round(assignment[x][3],2))+'</td>' for x in names2])+'</tr>'
+            output += '<tr><td>Intercept</td>'+''.join(['<td>'+str(round(assignment[x][6],2))+'</td>' for x in names2])+'</tr>'
+            output += '<tr><td>'+cap(assignment['predictor_names'][0])+'</td>'+''.join(['<td>'+str(round(assignment[x][0],2))+'</td>' for x in names2])+'</tr>'
+            output += '<tr><td>'+cap(assignment['predictor_names'][1])+'</td>'+''.join(['<td>'+str(round(assignment[x][1],2))+'</td>' for x in names2])+'</tr>'
+            output += '<tr><td>'+cap(assignment['independent'])+'</td>'+''.join(['<td>'+str(round(assignment[x][2],2))+'</td>' for x in names2])+'</tr>'
+            output += '<tr><td>Error</td>'+''.join(['<td>'+str(round(assignment[x][4],2))+'</td>' for x in names[:3]])+'</tr>'
+            output += '<tr><td>Total</td>'+''.join(['<td>'+str(round(assignment[x][7],2))+'</td>' for x in names[:2]])+'</tr>'
+            output += '<tr><td>Corrected total</td>'+''.join(['<td>'+str(round(assignment[x][5],2))+'</td>' for x in names[:2]])+'</tr>'
             output += '</table></p>'
         return output
     

@@ -891,14 +891,12 @@ def split_grade_ancova(text:str, solution:dict) -> str:
     output += '<br>' + scan_predictors(doc, solution, prefix=False)[1]
     
     output += '<br>'+'<br>'.join(detect_decision_ancova(doc, solution))
-    output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][-1]))
-    output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][-1]))
-    #output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][-1], aliases=['r2','r','kwadraat']))
-    output += '<br>'+'<br>'.join(detect_report_stat(doc, 'eta<sup>2</sup>', solution['r2'][-1], aliases=['eta2','eta']))
+    output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][3]))
+    output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][3]))
+    output += '<br>'+'<br>'.join(detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta'][3], aliases=['eta2','eta']))
+    print(str(solution['F'][3]) + ' - '+ str(solution['p'][3]) + ' - '+ str(solution['eta'][3]))
     if(solution['p'][-2] < 0.05):
-        #output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][-1]))
-        output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][-2], label=solution['independent']))
-        #output += '<br>'+'<br>'.join(detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][-1], aliases=['r2','r','kwadraat']))
+        output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][2], label=solution['independent']))
     if output.replace('<br>','') == '':
         return 'Mooi, dit beknopt rapport bevat alle juiste details!'
     else:
