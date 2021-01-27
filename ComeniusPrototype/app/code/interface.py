@@ -221,6 +221,8 @@ class Controller:
             feedback = split_grade_manova(text, self.solution)
         if self.assignment['assignment_type'] == 12:
             feedback = split_grade_ancova(text, self.solution)
+        if self.assignment['assignment_type'] == 13:
+            feedback = split_grade_multirm(text, self.solution)
         return instruction, feedback
     
     def update(self, textfields: Dict) -> str:
@@ -291,7 +293,7 @@ class Controller:
             if analysis == 'Multiple-regressieanalyse':
                 self.analysis_type = Task.MREGRESSION
                 if report != 'Beknopt rapport':
-                    return self.protocol[self.index][0] + '<span style="color: blue;">Sorry, bij multiple regressie kan je alleen een beknopt rapport maken.</span>'
+                    return self.protocol[self.index][0] + '<span style="color: blue;">Sorry, bij multipele regressie kan je alleen een beknopt rapport maken.</span>'
             if analysis == 'MANOVA':
                 self.analysis_type = Task.MANOVA
                 if report != 'Beknopt rapport':
@@ -300,6 +302,10 @@ class Controller:
                 self.analysis_type = Task.ANCOVA
                 if report != 'Beknopt rapport':
                     return self.protocol[self.index][0] + '<span style="color: blue;">Sorry, bij ANCOVA kan je alleen een beknopt rapport maken.</span>'
+            if analysis == 'Multiple-RMANOVA':
+                self.analysis_type = Task.MULTIRM
+                if report != 'Beknopt rapport':
+                    return self.protocol[self.index][0] + '<span style="color: blue;">Sorry, bij multipele RMANOVA kan je alleen een beknopt rapport maken.</span>'
             
             #Select report type
             self.index = 0

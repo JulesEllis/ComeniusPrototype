@@ -18,6 +18,7 @@ class Task(Enum):
     TEXT_FIELD_LARGE = 10
     MANOVA = 11
     ANCOVA = 12
+    MULTIRM = 13
     
 #Variable indicating whether and how the given function from the protocol index should be called
 #e.g. as bool, bool, or bool, str, or not at all

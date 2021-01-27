@@ -257,15 +257,15 @@ def detect_decision_ancova(sent:Doc, solution:dict) -> List[str]:
     
     output:List[str] = []
     if not scorepoints['sign_val']:
-        output.append(' -significant voorspellende waarde niet genoemd')
+        output.append(' -significant voorspellende waarde niet genoemd in de hoofdbeslissing')
     if not scorepoints['indep']:
-        output.append(' -onafhankelijke factor niet genoemd')
+        output.append(' -onafhankelijke factor niet genoemd in de hoofdbeslissing')
     if not scorepoints['cov1'] and not scorepoints['cov2']:
-        output.append(' -beide covariaten niet genoemd')
+        output.append(' -beide covariaten niet genoemd in de hoofdbeslissing')
     elif not scorepoints['cov1'] or not scorepoints['cov2']:
-        output.append(' -een van de covariaten niet genoemd')
+        output.append(' -een van de covariaten niet genoemd in de hoofdbeslissing')
     if not scorepoints['dep']:
-        output.append(' -afhankelijke variabele niet genoemd')
+        output.append(' -afhankelijke variabele niet genoemd in de hoofdbeslissing')
     if not scorepoints['neg']:
         output.append(' -ten onrechte een negatie toegevoegd of weggelaten bij de hoofdbeslissing')
     return output
@@ -894,8 +894,8 @@ def split_grade_ancova(text:str, solution:dict) -> str:
     output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][3]))
     output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][3]))
     output += '<br>'+'<br>'.join(detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta'][3], aliases=['eta2','eta']))
-    print(str(solution['F'][3]) + ' - '+ str(solution['p'][3]) + ' - '+ str(solution['eta'][3]))
-    if(solution['p'][-2] < 0.05):
+    #print(str(solution['F'][3]) + ' - '+ str(solution['p'][3]) + ' - '+ str(solution['eta'][3]))
+    if(solution['p'][2] < 0.05):
         output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][2], label=solution['independent']))
     if output.replace('<br>','') == '':
         return 'Mooi, dit beknopt rapport bevat alle juiste details!'
@@ -930,6 +930,17 @@ def split_grade_manova(text:str, solution:dict) -> str:
         output += '<br>'+'<br>'.join(detect_decision_manova(doc,solution,variable=solution['sumdependent'],synonyms=['multivariate'], p=solution['p_multivar'], eta=solution['eta_multivar'], num=0))
     else:
         output += '<br> -de multivariate beslissing wordt niet genoemd'
+    if output.replace('<br>','') == '':
+        return 'Mooi, dit beknopt rapport bevat alle juiste details!'
+    else:
+        return 'Er ontbreekt nog wat aan je antwoord, namelijk:' + re.sub(r'<br>(<br>)+', '<br>', output)
+    
+def split_grade_multirm(text:str, solution:dict) -> str:
+    nl_nlp = spacy.load('nl')
+    doc = nl_nlp(text.lower())
+    output:str = ''
+    output += '<br>'+'<br>'.join(detect_name(doc,solution))
+    
     if output.replace('<br>','') == '':
         return 'Mooi, dit beknopt rapport bevat alle juiste details!'
     else:

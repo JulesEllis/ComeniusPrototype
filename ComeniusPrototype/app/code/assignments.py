@@ -443,7 +443,7 @@ class Assignments:
         output = {'assignment_type':6}
         output['independent'] = 'predictoren'
         output['ind_syns'] = []
-        N = int(200 * random.random())
+        N = 50 + int(150 * random.random())
         output['ns'] = [N]
         n_predictors = random.choice([3,4,5,6])
         output['n_predictors'] = n_predictors
@@ -499,7 +499,7 @@ class Assignments:
         output['levels'] = [['rood','blauw'],['zon','regen'],['klassiek','pop']][indy_int]
         output['ind_syns'] = [['stimuluskleuren'],['weerssituaties'],[]][indy_int]
         output['level_syns'] = [[['rode'],['blauwe']],[['zonnig'],['regenachtig']],[['klassieke'],[]]][indy_int]
-        N = int(200 * random.random())
+        N = N = 50 + int(150 * random.random())
         output['ns'] = [N]
         output['n_predictors'] = 2
         
@@ -573,7 +573,7 @@ class Assignments:
         output['dependent3'] = 'breedte'
         output['dep_syns'] = ['gewichten']; output['dep2_syns'] = ['lengten']; output['dep3_syns'] = ['leeftijden'];
         dependents = [output['dependent'], output['dependent2'], output['dependent3']]
-        N = int(200 * random.random()); output['ns'] = [N]
+        N = 50 + int(150 * random.random()); output['ns'] = [N]
         
         output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De onafhankelijke variabele is '+\
             output['independent']+' ('+', '.join(output['levels'])+')'\
@@ -607,6 +607,8 @@ class Assignments:
         f0 = random.random()*500; solution['F1'] = [f0 for i in range(4)] + [solution['F_multivar'] for i in range(4)]
         solution['p1'] = [0.0 for i in range(4)] + [solution['p_multivar'] for i in range(4)]
         intr2 = 0.9*random.random()*0.10; solution['eta1'] = [intr2 for i in range(4)] + [solution['eta_multivar'] for i in range(4)]
+        solution['hdf'] = [len(assignment['levels']) - 1 for i in range(8) for i in range(8)]
+        solution['edf'] = [N - len(assignment['levels']) for i in range(8) for i in range(8)]
         
         #Fill table 2 vars
         intercepts = [30000 + 2000 * random.random() for i in range(3)]
@@ -619,10 +621,53 @@ class Assignments:
         solution['p0'] = [1-stats.f.cdf(solution['F0'][i],dfs[i],nt-nl-1) for i in range(9)]
         solution['eta0'] = [solution['ss0'][i] / solution['ss'][i%3][2] for i in range(9)]
         return solution
+    
+    def create_multirm(self, control: bool, control2:bool=False, elementary:bool=False):
+        output = {'assignment_type':13}
+        report_type = 'elementair' if elementary else 'beknopt'
+        p = random.random() ** 2
+        s = 3 * random.random()
+        N = 50 + int(150 * random.random()); output['ns'] = [N]
+        output['var_obs'] = [(1 + chi2.ppf(p, df=10)) * 10 ** s for i in range(3)]
+        output['var_pred'] = [output['var_obs'][i] * random.random() ** 2 for i in range(3)]
+        indy_int = random.choice([0,1])#; var_k = random.choice([0,1,2])
+        output['independent'] = ['seizoen','weerssituatie'][indy_int]
+        output['levels'] = [['winter','lente','zomer','herfst'],['dag','nacht']][indy_int]
+        output['ind_syns'] = [['seizoenen'],['tijdstippen'],[]][indy_int]
+        output['level_syns'] = [[[],['voorjaar'],[],[]],[[],[]]][indy_int]
+        output['control'] = control
+        
+        output['sumdependent'] = 'grootte'
+        output['dependent'] = 'gewicht'
+        output['dependent2'] = 'lengte'
+        output['dependent3'] = 'breedte'
+        output['dep_syns'] = ['gewichten']; output['dep2_syns'] = ['lengten']; output['dep3_syns'] = ['leeftijden'];
+        dependents = [output['dependent'], output['dependent2'], output['dependent3']]
+        output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De onafhankelijke variabele is '+\
+            output['independent']+' ('+', '.join(output['levels'])+')'\
+            '. De afhankelijke variabelen zijn dimensies van de variabele '+output['sumdependent']+', namelijk '+\
+            ' en '.join(dependents)+'. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
+        return output
+    
+    def solve_multirm(self, assignment: Dict, solution:Dict) -> Dict:
+        solution = {'df':{}, 'ss':{}, 'ms':{},'F':{},'p':{},'eta':{}}
+        N = assignment['ns'][0]
+        for key, value in list(assignment.items()):
+            solution[key] = value
+        for j in range(3):    
+            ssm = (N-1) * assignment['var_pred'][j] #pred_ss = random.random() * 0.5 * ssreg
+            sstotal = (N-1) * assignment['var_obs'][j]
+            nlev = len(assignment['levels'])
+            solution['ss'][j]: List[float] = [ssm, sstotal - ssm, sstotal]
+            solution['df'][j]: List[float] = [nlev - 1, N - nlev, N - 1]
+            solution['ms'][j]: List[float] = [solution['ss'][j][i]/solution['df'][j][i] for i in range(3)]
+            solution['F'][j]: List[float] = [solution['ms'][j][0] / solution['ms'][j][1]]
+            solution['p'][j]: List[float] = [1 - stats.f.cdf(abs(solution['F'][j][0]),solution['df'][j][0],solution['df'][j][1])]
+            solution['eta'][j]: List[float] = [solution['ss'][j][0]/solution['ss'][j][2]]
+            print(solution)
+        return solution
 	
     def create_report(self, control: bool, choice: int=0):
-        if choice == 0:
-            choice = random.choice([1,2,3,4,5])
         hyp_type = random.choice([0,1,2])
         if choice == 1:
             assignment = self.create_ttest(True, hyp_type, control, False)
@@ -648,6 +693,9 @@ class Assignments:
         if choice == 12:    
             assignment = self.create_ancova(control, False)
             output = {**assignment, **self.solve_ancova(assignment, {})}
+        if choice == 13:    
+            assignment = self.create_multirm(control, False)
+            output = {**assignment, **self.solve_multirm(assignment, {})}
         output['assignment_type'] = choice
         return output
             
@@ -715,24 +763,12 @@ class Assignments:
             output_text += '<tr><td>'+str(i+1)+'</td>' + ''.join(['<td>'+str(x)+'</td>' for x in [data['scores'][j][i] for j in range(n_conditions)]]) + '<td>' + str(round(data['jackedmeans'][i],2)) + '</td></tr>'
         return output_text + '</table>'
     
-    def print_mregression(self, assignment: Dict):
-        output_text = assignment['instruction'] + '<br>'
-        #output_text += '<br><table style="width:30%">'
-        #output_text += '<tr><td>Statistiek</td><td>N</td><td>Variantie geobserveerde scores</td><td>Variantie voorspelde scores</td></tr>'
-        #output_text += '<tr><td>Waarde</td><td>'+str(assignment['ns'][0])+'</td><td>'+str(round(assignment['var_obs'],2))+'</td><td>'+str(round(assignment['var_pred'],2))+'</td></tr>'
-        return output_text #+ '</table>'
-    
-    def print_manova(self, assignment: Dict):
-        output_text = assignment['instruction'] + '<br>'
-        return output_text
-    
-    def print_ancova(self, assignment: Dict):
-        output_text = assignment['instruction'] + '<br>'
-        return output_text
+    def print_analysis(self, assignment: Dict):
+        return assignment['instruction'] + '<br>'  
     
     def print_report(self, assignment: Dict, answer=False) -> str: 
         output:str = '' #"Answer" is a parameter which triggers when only the mean/ANOVA tables have to be printed
-        if assignment['assignment_type'] not in [1,2,11]:
+        if assignment['assignment_type'] not in [1,2,11,13]:
             data:dict = assignment['data']
         names = ['df','ss','ms','F','p','r2'];names2 = ['df','ss','ms','F','p','eta']
         if assignment['assignment_type'] == 1:
@@ -800,7 +836,7 @@ class Assignments:
             output += '<tr><td>Totaal</td>'+''.join(['<td>'+str(round(assignment[x][3],2))+'</td>' for x in names if len(assignment[x]) > 3])+'</tr>'
             output += '</table></p>'
         if assignment['assignment_type'] == 6:
-            output += self.print_mregression(assignment)
+            output += self.print_analysis(assignment)
             output += '<p><table style="width:20%">'
             output += '<tr><td>Bron</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td></tr>'
             output += '<tr><td>Regressie</td>'+''.join(['<td>'+str(round(assignment[x][0],2))+'</td>' for x in names])+'</tr>'
@@ -816,17 +852,18 @@ class Assignments:
         if assignment['assignment_type'] == 11:
             nt = sum(assignment['ns']) #Total number of subjects
             nl = len(assignment['levels']) #Number of levels factor
-            output += self.print_manova(assignment)
+            hdf = assignment['hdf']; edf = assignment['edf']
+            output += self.print_analysis(assignment)
             output += '<p>Multivariate tests<table style="width:20%">'
             output += format_table(['Effect','','Value','F','Hypothesis df','Error df','p','Partial eta<sup>2</sup>'])
-            output += format_table(['Intercept',"Pillai's trace",assignment['value'][0],assignment['F1'][0],nl-1,nt-nl,assignment['p1'][0],assignment['eta1'][0]])
-            output += format_table(['',"Wilks' lambda",assignment['value'][1],assignment['F1'][1],nl-1,nt-nl,assignment['p1'][1],assignment['eta1'][1]])
-            output += format_table(['',"Hotelling's trace",assignment['value'][2],assignment['F1'][2],nl-1,nt-nl,assignment['p1'][2],assignment['eta1'][2]])
-            output += format_table(['',"Roy's largest root",assignment['value'][3],assignment['F1'][3],nl-1,nt-nl,assignment['p1'][3],assignment['eta1'][3]])
-            output += format_table([cap(assignment['independent']),"Pillai's trace",assignment['value'][4],assignment['F1'][4],nl-1,nt-nl,assignment['p1'][4],assignment['eta1'][4]])
-            output += format_table(['',"Wilks' lambda",assignment['value'][5],assignment['F1'][5],nl-1,nt-nl,assignment['p1'][5],assignment['eta1'][5]])
-            output += format_table(['',"Hotelling's trace",assignment['value'][6],assignment['F1'][6],nl-1,nt-nl,assignment['p1'][6],assignment['eta1'][6]])
-            output += format_table(['',"Roy's largest root",assignment['value'][7],assignment['F1'][7],nl-1,nt-nl,assignment['p1'][7],assignment['eta1'][7]])
+            output += format_table(['Intercept',"Pillai's trace",assignment['value'][0],assignment['F1'][0],hdf[0],edf[0],assignment['p1'][0],assignment['eta1'][0]])
+            output += format_table(['',"Wilks' lambda",assignment['value'][1],assignment['F1'][1],hdf[1],edf[1],assignment['p1'][1],assignment['eta1'][1]])
+            output += format_table(['',"Hotelling's trace",assignment['value'][2],assignment['F1'][2],hdf[2],edf[2],assignment['p1'][2],assignment['eta1'][2]])
+            output += format_table(['',"Roy's largest root",assignment['value'][3],assignment['F1'][3],hdf[3],edf[3],assignment['p1'][3],assignment['eta1'][3]])
+            output += format_table([cap(assignment['independent']),"Pillai's trace",assignment['value'][4],assignment['F1'][4],hdf[4],edf[4],assignment['p1'][4],assignment['eta1'][4]])
+            output += format_table(['',"Wilks' lambda",assignment['value'][5],assignment['F1'][5],hdf[5],edf[5],assignment['p1'][5],assignment['eta1'][5]])
+            output += format_table(['',"Hotelling's trace",assignment['value'][6],assignment['F1'][6],hdf[6],edf[6],assignment['p1'][6],assignment['eta1'][6]])
+            output += format_table(['',"Roy's largest root",assignment['value'][7],assignment['F1'][7],hdf[7],edf[7],assignment['p1'][7],assignment['eta1'][7]])
             output += '</table></p>'
             
             output += '<p>Tests van within-subject effecten<table style="width:50%">'
@@ -851,7 +888,7 @@ class Assignments:
             output += format_table(['',assignment['dependent3'],assignment['ss0'][17],nt-1,'','','',''])
             output += '</table></p>'
         if assignment['assignment_type'] == 12:
-            output += self.print_ancova(assignment)
+            output += self.print_analysis(assignment)
             output += '<p><table style="width:20%">'
             output += '<tr><td>Bron</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>eta<sup>2</sup></td></tr>'
             output += '<tr><td>Corrected model</td>'+''.join(['<td>'+str(round(assignment[x][3],2))+'</td>' for x in names2])+'</tr>'
@@ -862,6 +899,18 @@ class Assignments:
             output += '<tr><td>Error</td>'+''.join(['<td>'+str(round(assignment[x][4],2))+'</td>' for x in names[:3]])+'</tr>'
             output += '<tr><td>Total</td>'+''.join(['<td>'+str(round(assignment[x][7],2))+'</td>' for x in names[:2]])+'</tr>'
             output += '<tr><td>Corrected total</td>'+''.join(['<td>'+str(round(assignment[x][5],2))+'</td>' for x in names[:2]])+'</tr>'
+            output += '</table></p>'
+        if assignment['assignment_type'] == 13:
+            output += self.print_analysis(assignment)
+            output += '<p><table style="width:20%">'
+            print(['',assignment['dependent2']] + [assignment[x][1][0] for x in names2])
+            output += format_table(['Source','Measure','df','SS','MS','F','p','eta<sup>2</sup>'])
+            output += format_table(['Intercept',assignment['dependent']] + [assignment[x][0][0] for x in names2])
+            output += format_table(['',assignment['dependent2']] + [assignment[x][1][0] for x in names2])
+            output += format_table(['',assignment['dependent3']] + [assignment[x][2][0] for x in names2])
+            output += format_table(['Error',assignment['dependent']] + [assignment[x][0][1] for x in names2[:3]])
+            output += format_table(['',assignment['dependent2']] + [assignment[x][1][1] for x in names2[:3]])
+            output += format_table(['',assignment['dependent3']] + [assignment[x][2][1] for x in names2[:3]])
             output += '</table></p>'
         return output
     
