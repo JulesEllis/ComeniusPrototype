@@ -627,44 +627,68 @@ class Assignments:
         report_type = 'elementair' if elementary else 'beknopt'
         p = random.random() ** 2
         s = 3 * random.random()
-        N = 50 + int(150 * random.random()); output['ns'] = [N]
-        output['var_obs'] = [(1 + chi2.ppf(p, df=10)) * 10 ** s for i in range(3)]
-        output['var_pred'] = [output['var_obs'][i] * random.random() ** 2 for i in range(3)]
-        indy_int = random.choice([0,1])#; var_k = random.choice([0,1,2])
-        output['independent'] = ['seizoen','weerssituatie'][indy_int]
-        output['levels'] = [['winter','lente','zomer','herfst'],['dag','nacht']][indy_int]
-        output['ind_syns'] = [['seizoenen'],['tijdstippen'],[]][indy_int]
-        output['level_syns'] = [[[],['voorjaar'],[],[]],[[],[]]][indy_int]
-        output['control'] = control
+        output['ns'] = [int(random.random() * 65) + 10, int(random.random() * 65) + 10]
+        output['var_obs'] = [(1 + chi2.ppf(p, df=10)) * 10 ** s for i in range(2)]
+        output['var_pred'] = [output['var_obs'][i] * random.random() ** 2 for i in range(2)]
         
-        output['sumdependent'] = 'grootte'
-        output['dependent'] = 'gewicht'
-        output['dependent2'] = 'lengte'
-        output['dependent3'] = 'breedte'
-        output['dep_syns'] = ['gewichten']; output['dep2_syns'] = ['lengten']; output['dep3_syns'] = ['leeftijden'];
-        dependents = [output['dependent'], output['dependent2'], output['dependent3']]
-        output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De onafhankelijke variabele is '+\
-            output['independent']+' ('+', '.join(output['levels'])+')'\
-            '. De afhankelijke variabelen zijn dimensies van de variabele '+output['sumdependent']+', namelijk '+\
-            ' en '.join(dependents)+'. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
+        indy_int = random.choice([0,1]); var_k = random.choice([0,1,2])
+        output['independent'] = ['meting','tijdstip'][indy_int] #WITHIN-SUBJECT FACTOR
+        output['levels'] = [['voor','na','followup'],['dag','avond','nacht']][indy_int]
+        output['ind_syns'] = [['metingen'],['tijdstippen'],[]][indy_int]
+        output['level_syns'] = [[[],[],['follow-up']],[['dagen'],['avonden'],['nachten']]][indy_int]
+        output['control'] = control
+        output['independent2'] = ['stimulusvorm','filmgenre','bloedtype'][var_k] #BETWEEN-SUBJECT FACTOR
+        output['ind2_syns'] = [['stimulusvormen'],['filmgenres'],['bloedtypen','bloedtypes']][var_k]
+        output['levels2'] = [['vierkant','rond'],['drama','horror'],['A','B']][var_k]
+        output['level2_syns'] = [[['vierkante'],['ronde']],[[],[]],[[],[]]][var_k]
+        output['control2'] = control2
+        if output['independent2'] in ['bloedtype']:
+            output['control2'] = False
+        
+        output['dependent'] = 'score';output['dependent2'] = 'tevredenheid'
+        output['dep_syns'] = ['gewichten'];output['dep2_syns'] = []
+        output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. Dit onderzoek bevat de factoren '+\
+            output['independent']+' ('+', '.join(output['levels'])+') en ' + output['independent2'] + ' ('+', '.join(output['levels2'])+')'\
+            '. De afhankelijke variabelen zijn '+output['dependent']+' en '+output['dependent2']+'. Voer je antwoorden alsjeblieft tot op 2'\
+            ' decimalen in. '
         return output
     
     def solve_multirm(self, assignment: Dict, solution:Dict) -> Dict:
         solution = {'df':{}, 'ss':{}, 'ms':{},'F':{},'p':{},'eta':{}}
-        N = assignment['ns'][0]
+        N = sum(assignment['ns']); ntimes = len(assignment['levels']); nlevels = len(assignment['levels2'])
         for key, value in list(assignment.items()):
             solution[key] = value
-        for j in range(3):    
-            ssm = (N-1) * assignment['var_pred'][j] #pred_ss = random.random() * 0.5 * ssreg
-            sstotal = (N-1) * assignment['var_obs'][j]
-            nlev = len(assignment['levels'])
-            solution['ss'][j]: List[float] = [ssm, sstotal - ssm, sstotal]
-            solution['df'][j]: List[float] = [nlev - 1, N - nlev, N - 1]
-            solution['ms'][j]: List[float] = [solution['ss'][j][i]/solution['df'][j][i] for i in range(3)]
-            solution['F'][j]: List[float] = [solution['ms'][j][0] / solution['ms'][j][1]]
-            solution['p'][j]: List[float] = [1 - stats.f.cdf(abs(solution['F'][j][0]),solution['df'][j][0],solution['df'][j][1])]
-            solution['eta'][j]: List[float] = [solution['ss'][j][0]/solution['ss'][j][2]]
-            print(solution)
+        
+        # Tests of Between-Subject Objects
+        ssm = [(N-1) * assignment['var_pred'][j] for j in range(2)] #pred_ss = random.random() * 0.5 * ssreg
+        sstotal = [(N-1) * assignment['var_obs'][j] for j in range(2)]
+        nlev = len(assignment['levels2'])
+        print(nlev)
+        print(assignment['levels2'])
+        solution['ss']: List[float] = [random.random()*1000, random.random()*1000, ssm[0], ssm[1],sstotal[0]-ssm[0],sstotal[1]-ssm[1]]
+        solution['df']: List[float] = [1,1,nlev - 1, nlev - 1,N - nlev, N - nlev]
+        solution['ms']: List[float] = [solution['ss'][i]/solution['df'][i] for i in range(6)]
+        solution['F']: List[float] = [solution['ms'][i] / solution['ms'][(i+4) % 2] for i in range(4)]
+        solution['p']: List[float] = [1 - stats.f.cdf(abs(solution['F'][i]),solution['df'][i],solution['df'][(i+4) % 2]) for i in range(4)]
+        solution['eta']: List[float] = [solution['ss'][i]/sstotal[i % 2] for i in range(4)]
+        
+        # Multivariate Tests
+        solution['value'] = [random.random() for i in range(16)]
+        solution['hdf'] = [(nlevels-1) * 2 for i in range(2)] + [(ntimes-1) * 2 for i in range(2)]
+        solution['edf'] = [N - 1 - (nlevels-1) * 2 for i in range(2)] + [N - 1 - (ntimes-1) * 2 for i in range(2)]
+        solution['F0'] = [assignment['var_obs'][i%2] * random.random() ** 2 for i in range(4)]
+        solution['p0'] = [1-stats.f.cdf(solution['F0'][i], solution['hdf'][i], solution['edf'][i]) for i in range(4)]
+        solution['eta0'] = [solution['value'][4*i] for i in range(4)]
+        
+        # Tests of Within-Subjects Effects
+        solution['df1'] = [1 for i in range(8)] + [N-2 for i in range(4)]
+        ssprep = [assignment['var_obs'][i%2] * random.random() ** 2 for i in range(8)]
+        print(ssprep)
+        solution['ss1'] = ssprep + [assignment['var_obs'][i%2] - ssprep[i] for i in range(4)]
+        solution['ms1'] = [solution['ss1'][i]/solution['df1'][i] for i in range(12)]
+        solution['F1'] = [solution['ss1'][i] / solution['ss1'][8+i%4] for i in range(8)]
+        solution['p1'] = [1-stats.f.cdf(solution['F1'][i], solution['df1'][i], solution['df1'][4+i%2]) for i in range(8)]
+        solution['eta1'] = [solution['ss1'][i] / (solution['ss1'][i] + solution['ss1'][4+i%2]) for i in range(8)]
         return solution
 	
     def create_report(self, control: bool, choice: int=0):
@@ -902,15 +926,38 @@ class Assignments:
             output += '</table></p>'
         if assignment['assignment_type'] == 13:
             output += self.print_analysis(assignment)
-            output += '<p><table style="width:20%">'
-            print(['',assignment['dependent2']] + [assignment[x][1][0] for x in names2])
+            output += '<p>Multivariate Tests<table style="width:60%">'
+            output += format_table(['Effect', '', '', 'Value', 'Hypothesis df','Error df','F','p','eta<sup>2</sup>'])
+            for i in range(16):
+                i2 = i // 4
+                header = 'Between Subjects' if i == 0 else 'Within Subjects' if i == 8 else ''
+                header2 = 'Intercept' if i == 0 else assignment['independent2'] if i == 4 else assignment['independent'] if i == 8 else \
+                        assignment['independent']+' * '+assignment['independent2'] if i == 12 else ''
+                measure = ["Pillai's Trace","Wilks' Lambda","Hotelling's Trace","Roy's Largest Root"][i2]
+                output += format_table([header,header2,measure,assignment['value'][i],assignment['hdf'][i2],assignment['edf'][i2],
+                                        assignment['F0'][i2],assignment['p0'][i2],assignment['eta0'][i2]])
+            output += '</table></p>'
+            output += '<p>Tests of Within-Subjects Contrasts<table style="width:60%">'
+            output += format_table(['Source', 'Measure', assignment['independent'], 'SS','df','MS','F','p','eta<sup>2</sup>'])
+            for i in range(12):
+                header = assignment['independent'] if i == 0 else assignment['independent']+' * '+assignment['independent2'] if i == 4 else 'Error('+assignment['independent']+')' if i == 8 else ''
+                header2 = assignment['dependent'] if (i+2) % 4 == 0 else assignment['dependent2'] if i % 4 == 0 else ''
+                measure = assignment['levels'][0]+' vs. '+assignment['levels'][1] if i % 2 == 0 else assignment['levels'][1]+' vs. '+assignment['levels'][2]
+                if i < 8:
+                    output += format_table([header,header2,measure,assignment['ss1'][i],assignment['df1'][i],assignment['ms1'][i],
+                                        assignment['F1'][i],assignment['p1'][i],assignment['eta1'][i]])
+                else:
+                    output += format_table([header,header2,measure,assignment['ss1'][i],assignment['df1'][i],assignment['ms1'][i],
+                                        '','',''])
+            output += '</table></p>'
+            output += '<p>Tests of Between-Subjects Effects<table style="width:20%">'
             output += format_table(['Source','Measure','df','SS','MS','F','p','eta<sup>2</sup>'])
-            output += format_table(['Intercept',assignment['dependent']] + [assignment[x][0][0] for x in names2])
-            output += format_table(['',assignment['dependent2']] + [assignment[x][1][0] for x in names2])
-            output += format_table(['',assignment['dependent3']] + [assignment[x][2][0] for x in names2])
-            output += format_table(['Error',assignment['dependent']] + [assignment[x][0][1] for x in names2[:3]])
-            output += format_table(['',assignment['dependent2']] + [assignment[x][1][1] for x in names2[:3]])
-            output += format_table(['',assignment['dependent3']] + [assignment[x][2][1] for x in names2[:3]])
+            output += format_table(['Intercept',assignment['dependent']] + [assignment[x][0] for x in names2])
+            output += format_table(['',assignment['dependent2']] + [assignment[x][1] for x in names2])
+            output += format_table([assignment['independent2'],assignment['dependent']] + [assignment[x][2] for x in names2])
+            output += format_table(['',assignment['dependent2']] + [assignment[x][3] for x in names2])
+            output += format_table(['Error',assignment['dependent']] + [assignment[x][4] for x in names2[:3]])
+            output += format_table(['',assignment['dependent2']] + [assignment[x][5] for x in names2[:3]])
             output += '</table></p>'
         return output
     

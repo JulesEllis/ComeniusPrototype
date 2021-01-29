@@ -595,6 +595,9 @@ def detect_name(doc:Doc, solution:Dict) -> List[str]:
         names = [('manova')]
     if solution['assignment_type'] == 12:
         names = [('ancova')]
+    if solution['assignment_type'] == 13:
+        names = [('multipele','repeated-measures','anova'),('multipele','rmanova'),('dubbel','multivariate','repeated-measures-anova'),
+                 ('dubbel','multivariate','repeated-measures','anova'),('multivariate','variantieanalyse')]
     if any([all([x in doc.text for x in y]) for y in names]):
         return ['']
     else:
