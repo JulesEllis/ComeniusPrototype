@@ -19,6 +19,7 @@ class Task(Enum):
     MANOVA = 11
     ANCOVA = 12
     MULTIRM = 13
+    MULTIRM2 = 14
     
 #Variable indicating whether and how the given function from the protocol index should be called
 #e.g. as bool, bool, or bool, str, or not at all

@@ -723,8 +723,10 @@ def scan_predictors(doc:Doc, solution:dict, prefix:bool=True):
         return True, '<br>'.join(output)
 
 def scan_design(doc:Doc, solution:dict, prefix:bool=True) -> [bool, List[str]]:
-    criteria = ['ind', 'indcorrect','ind2','ind2correct','dep','depcorrect']
+    criteria = ['ind', 'indcorrect','ind2','ind2correct','dep','depcorrect','factor1','factor2']
     scorepoints = dict([(x,False) for x in criteria])
+    if solution['assignment_type'] == 13:
+        scorepoints['factor1'] = True;scorepoints['factor2'] = True
     output:List[str] = []
     indeps = [x for x in doc if x.text == solution['independent'].lower()]
     if indeps != []:
@@ -733,8 +735,10 @@ def scan_design(doc:Doc, solution:dict, prefix:bool=True) -> [bool, List[str]]:
             indep_span = descendants(indeps[0].head.head)
         else:
             indep_span = descendants(indeps[0].head)
-        scorepoints['indcorrect'] = 'onafhankelijke' in [x.text for x in indep_span] and not 'afhankelijke' in [x.text for x in indep_span] 
-    if solution['assignment_type'] == 2:    
+        scorepoints['indcorrect'] = 'onafhankelijke' in [x.text for x in indep_span] or 'factor' in [x.text for x in indep_span] 
+        if solution['assignment_type'] == 13:
+            scorepoints['factor2'] = 'within-subject' in [x.text for x in indep_span]
+    if solution['assignment_type'] == 2 or solution['assignment_type'] == 13:    
         indeps2 = [x for x in doc if x.text == solution['independent'].lower()]
         if indeps2 != []:
             scorepoints['ind2'] = True
@@ -742,7 +746,9 @@ def scan_design(doc:Doc, solution:dict, prefix:bool=True) -> [bool, List[str]]:
                 indep2_span = descendants(indeps2[0].head.head)
             else:
                 indep2_span = descendants(indeps2[0].head)
-            scorepoints['ind2correct'] = 'onafhankelijke' in [x.text for x in indep2_span] and not 'afhankelijke' in [x.text for x in indep2_span] 
+            scorepoints['ind2correct'] = 'onafhankelijke' in [x.text for x in indep2_span] or 'factor' in [x.text for x in indep2_span] 
+            if solution['assignment_type'] == 13:
+                scorepoints['factor2'] = 'between-subject' in [x.text for x in indep2_span]
     else:
         scorepoints['ind2'] = True;scorepoints['ind2correct'] = True
     deps = [x for x in doc if x.text == solution['dependent'].lower()]
@@ -937,8 +943,39 @@ def split_grade_manova(text:str, solution:dict) -> str:
         return 'Mooi, dit beknopt rapport bevat alle juiste details!'
     else:
         return 'Er ontbreekt nog wat aan je antwoord, namelijk:' + re.sub(r'<br>(<br>)+', '<br>', output)
-    
+
 def split_grade_multirm(text:str, solution:dict) -> str:
+    nl_nlp = spacy.load('nl')
+    doc = nl_nlp(text.lower())
+    output:str = ''
+    output += '<br>'+'<br>'.join(detect_name(doc,solution))
+    output += '<br>'+scan_design(doc,solution)
+    if solution['p0'][0] < 0.05:
+        output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F0'][0], appendix='bij de within-subject factor '))
+        output += '<br>'+'<br>'.join(detect_p(doc, solution['p0'][0], label='bij de within-subject factor '))
+        output += '<br>'+'<br>'.join(detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta0'][0], aliases=['eta','eta2','eta-kwadraat'],appendix='bij de within-subject factor '))
+        if solution['p1'][0] < 0.05:
+            output += '<br>'+'<br>'.join(detect_p(doc, solution['p1'][0], label='van het contrast tussen'+solution['levels'][0]+' en '+solution['levels'][1]+' '))
+        if solution['p1'][1] < 0.05:
+            output += '<br>'+'<br>'.join(detect_p(doc, solution['p1'][1], label='van het contrast tussen'+solution['levels'][1]+' en '+solution['levels'][2]+' '))
+    if solution['p0'][1] < 0.05:
+        output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F0'][1], appendix='bij de interactie '))
+        output += '<br>'+'<br>'.join(detect_p(doc, solution['p0'][1], label='bij de interactie '))
+        output += '<br>'+'<br>'.join(detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta0'][1], aliases=['eta','eta2','eta-kwadraat'],appendix='bij de interactie '))
+        if solution['p1'][2] < 0.05:
+            output += '<br>'+'<br>'.join(detect_p(doc, solution['p1'][2], label='van het contrast tussen'+solution['levels'][0]+' en '+solution['levels'][1]+' '))
+        if solution['p1'][3] < 0.05:
+            output += '<br>'+'<br>'.join(detect_p(doc, solution['p1'][3], label='van het contrast tussen'+solution['levels'][1]+' en '+solution['levels'][2]+' '))
+    if solution['p'][0] < 0.05:
+        output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][0], appendix='bij de between-subject factor '))
+        output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][0], label='bij de between-subject factor '))
+        output += '<br>'+'<br>'.join(detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta'][0], aliases=['eta','eta2','eta-kwadraat'],appendix='bij de between-subject factor '))
+    if output.replace('<br>','') == '':
+        return 'Mooi, dit beknopt rapport bevat alle juiste details!'
+    else:
+        return 'Er ontbreekt nog wat aan je antwoord, namelijk:' + re.sub(r'<br>(<br>)+', '<br>', output)
+
+def split_grade_multirm2(text:str, solution:dict) -> str:
     nl_nlp = spacy.load('nl')
     doc = nl_nlp(text.lower())
     output:str = ''

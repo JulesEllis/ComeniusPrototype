@@ -503,7 +503,7 @@ class Assignments:
         output['ns'] = [N]
         output['n_predictors'] = 2
         
-        p = random.random()
+        p = random.random() * 0.05 if random.choice([True, False]) else random.random() * 0.95 + 0.05
         s = 3 * random.random()
         output['var_obs'] = (1 + chi2.ppf(p, df=10)) * 10 ** s
         r2 = random.random() ** 2
@@ -553,7 +553,7 @@ class Assignments:
     def create_manova(self, control: bool, control2:bool=False, elementary:bool=False):
         output = {'assignment_type':12}
         report_type = 'elementair' if elementary else 'beknopt'
-        p = random.random() ** 2
+        p = random.random() * 0.05 if random.choice([True, False]) else random.random() * 0.95 + 0.05
         s = 3 * random.random()
         output['var_obs'] = (1 + chi2.ppf(p, df=10)) * 10 ** s
         output['var_pred'] = [output['var_obs'] * random.random() ** 2 for i in range(3)]
@@ -622,10 +622,76 @@ class Assignments:
         solution['eta0'] = [solution['ss0'][i] / solution['ss'][i%3][2] for i in range(9)]
         return solution
     
-    def create_multirm(self, control: bool, control2:bool=False, elementary:bool=False):
+    def create_multirm(self, control: bool, control2:bool=False, elementary:bool=False) -> dict:
         output = {'assignment_type':13}
         report_type = 'elementair' if elementary else 'beknopt'
-        p = random.random() ** 2
+        p = random.random() * 0.05 if random.choice([True, False]) else random.random() * 0.95 + 0.05
+        s = 3 * random.random()
+        output['ns'] = [int(random.random() * 65) + 10, int(random.random() * 65) + 10]
+        output['var_obs'] = (1 + chi2.ppf(p, df=10)) * 10 ** s
+        output['var_pred'] = output['var_obs'] * random.random() ** 2
+        
+        indy_int = random.choice([0,1]); var_k = random.choice([0,1,2])
+        output['independent'] = ['meting','tijdstip'][indy_int] #WITHIN-SUBJECT FACTOR
+        output['levels'] = [['voor','na','followup'],['dag','avond','nacht']][indy_int]
+        output['ind_syns'] = [['metingen'],['tijdstippen'],[]][indy_int]
+        output['level_syns'] = [[[],[],['follow-up']],[['dagen'],['avonden'],['nachten']]][indy_int]
+        output['control'] = control
+        output['independent2'] = ['stimulusvorm','filmgenre','bloedtype'][var_k] #BETWEEN-SUBJECT FACTOR
+        output['ind2_syns'] = [['stimulusvormen'],['filmgenres'],['bloedtypen','bloedtypes']][var_k]
+        output['levels2'] = [['vierkant','rond'],['drama','horror'],['A','B']][var_k]
+        output['level2_syns'] = [[['vierkante'],['ronde']],[[],[]],[[],[]]][var_k]
+        output['control2'] = control2
+        if output['independent2'] in ['bloedtype']:
+            output['control2'] = False
+        
+        output['dependent'] = 'onzekerheid'
+        output['dep_syns'] = ['onzekerheden']
+        output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. Dit onderzoek bevat de factoren '+\
+            output['independent']+' ('+', '.join(output['levels'])+') en ' + output['independent2'] + ' ('+', '.join(output['levels2'])+')'\
+            '. De afhankelijke variabele is '+output['dependent']+'. Voer je antwoorden alsjeblieft tot op 2'\
+            ' decimalen in. '
+        return output
+    
+    def solve_multirm(self, assignment: Dict, solution:Dict) -> Dict:
+        solution = {}
+        N = sum(assignment['ns']); ntimes = len(assignment['levels']); nlev = len(assignment['levels2'])
+        for key, value in list(assignment.items()):
+            solution[key] = value
+        # Tests of Between-Subject Effects
+        ssm = (N-1) * assignment['var_pred']
+        sstotal = (N-1) * assignment['var_obs']
+        nlev = len(assignment['levels2'])
+        solution['df']: List[float] = [1,nlev - 1,N - nlev]
+        solution['p'] = [random.random() * 0.05 if random.choice([True, False]) else random.random() * 0.95 + 0.05 for i in range(2)]
+        solution['F'] = [stats.f.isf(abs(solution['p'][i]),solution['df'][i],solution['df'][2]) for i in range(2)]
+        mse = (sstotal - ssm) * solution['df'][2]
+        solution['ms'] = [solution['F'][i] * mse for i in range(2)] + [mse]
+        solution['ss'] = [solution['ms'][i] * solution['df'][i] for i in range(3)]
+        solution['eta'] = [solution['ss'][i]/(solution['ss'][i] + mse) for i in range(2)]
+        
+        # Multivariate Tests
+        solution['value'] = [random.random() for i in range(8)]
+        solution['hdf'] = [(ntimes-1) * 2 for i in range(2)]
+        solution['edf'] = [N - 1 - (ntimes-1) * 2 for i in range(2)]
+        solution['F0'] = [assignment['var_obs'] * random.random() ** 2 for i in range(2)]
+        solution['p0'] = [random.random() * 0.05 if random.choice([True, False]) else random.random() * 0.95 + 0.05 for i in range(2)]
+        #solution['eta0'] = [solution['value'][4*i] for i in range(2)]
+        
+        # Tests of Within-Subjects Contrasts
+        solution['df1'] = [1 for i in range(4)] + [N-2 for i in range(2)]
+        solution['p1'] = [random.random() * 0.05 if random.choice([True, False]) else random.random() * 0.95 + 0.05 for i in range(4)]
+        solution['F1'] = [stats.f.isf(abs(solution['p1'][i]),solution['df1'][i],solution['df1'][4+i%2]) for i in range(4)]
+        mse = [random.random() * 40 for i in range(2)]
+        solution['ms1'] = [solution['F1'][i] * mse[i%2] for i in range(4)] + mse
+        solution['ss1'] = [solution['ms1'][i] * solution['df1'][i] for i in range(6)]
+        solution['eta1'] = [solution['ss1'][i] / (solution['ss1'][i] + solution['ss1'][4+i%2]) for i in range(4)]
+        return solution
+        
+    def create_multirm2(self, control: bool, control2:bool=False, elementary:bool=False):
+        output = {'assignment_type':13}
+        report_type = 'elementair' if elementary else 'beknopt'
+        p = random.random() * 0.05 if random.choice([True, False]) else random.random() * 0.95 + 0.05
         s = 3 * random.random()
         output['ns'] = [int(random.random() * 65) + 10, int(random.random() * 65) + 10]
         output['var_obs'] = [(1 + chi2.ppf(p, df=10)) * 10 ** s for i in range(2)]
@@ -645,49 +711,48 @@ class Assignments:
         if output['independent2'] in ['bloedtype']:
             output['control2'] = False
         
-        output['dependent'] = 'score';output['dependent2'] = 'tevredenheid'
-        output['dep_syns'] = ['gewichten'];output['dep2_syns'] = []
+        output['dependent'] = 'onzekerheid';output['dependent2'] = 'tevredenheid'
+        output['dep_syns'] = ['onzekerheden'];output['dep2_syns'] = []
         output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. Dit onderzoek bevat de factoren '+\
             output['independent']+' ('+', '.join(output['levels'])+') en ' + output['independent2'] + ' ('+', '.join(output['levels2'])+')'\
             '. De afhankelijke variabelen zijn '+output['dependent']+' en '+output['dependent2']+'. Voer je antwoorden alsjeblieft tot op 2'\
             ' decimalen in. '
         return output
     
-    def solve_multirm(self, assignment: Dict, solution:Dict) -> Dict:
-        solution = {'df':{}, 'ss':{}, 'ms':{},'F':{},'p':{},'eta':{}}
+    def solve_multirm2(self, assignment: Dict, solution:Dict) -> Dict:
+        solution = {}
         N = sum(assignment['ns']); ntimes = len(assignment['levels']); nlevels = len(assignment['levels2'])
         for key, value in list(assignment.items()):
             solution[key] = value
         
-        # Tests of Between-Subject Objects
-        ssm = [(N-1) * assignment['var_pred'][j] for j in range(2)] #pred_ss = random.random() * 0.5 * ssreg
+        # Tests of Between-Subject Effects
+        ssm = [(N-1) * assignment['var_pred'][j] for j in range(2)]
         sstotal = [(N-1) * assignment['var_obs'][j] for j in range(2)]
         nlev = len(assignment['levels2'])
-        print(nlev)
-        print(assignment['levels2'])
-        solution['ss']: List[float] = [random.random()*1000, random.random()*1000, ssm[0], ssm[1],sstotal[0]-ssm[0],sstotal[1]-ssm[1]]
+        
         solution['df']: List[float] = [1,1,nlev - 1, nlev - 1,N - nlev, N - nlev]
-        solution['ms']: List[float] = [solution['ss'][i]/solution['df'][i] for i in range(6)]
-        solution['F']: List[float] = [solution['ms'][i] / solution['ms'][(i+4) % 2] for i in range(4)]
-        solution['p']: List[float] = [1 - stats.f.cdf(abs(solution['F'][i]),solution['df'][i],solution['df'][(i+4) % 2]) for i in range(4)]
-        solution['eta']: List[float] = [solution['ss'][i]/sstotal[i % 2] for i in range(4)]
+        solution['p'] = [random.random() * 0.05 if random.choice([True, False]) else random.random() * 0.95 + 0.05 for i in range(4)]
+        solution['F'] = [stats.f.isf(abs(solution['p'][i]),solution['df'][i],solution['df'][(i+4) % 2]) for i in range(4)]
+        mse = [(sstotal[i] - ssm[i]) * solution['df'][i+4] for i in range(2)]
+        solution['ms'] = [solution['F'][i] * mse[i%2] for i in range(4)] + mse
+        solution['ss'] = [solution['ms'][i] * solution['df'][i] for i in range(6)]
+        solution['eta'] = [solution['ss'][i]/(solution['ss'][i] + mse[i%2]) for i in range(4)]
         
         # Multivariate Tests
         solution['value'] = [random.random() for i in range(16)]
         solution['hdf'] = [(nlevels-1) * 2 for i in range(2)] + [(ntimes-1) * 2 for i in range(2)]
         solution['edf'] = [N - 1 - (nlevels-1) * 2 for i in range(2)] + [N - 1 - (ntimes-1) * 2 for i in range(2)]
         solution['F0'] = [assignment['var_obs'][i%2] * random.random() ** 2 for i in range(4)]
-        solution['p0'] = [1-stats.f.cdf(solution['F0'][i], solution['hdf'][i], solution['edf'][i]) for i in range(4)]
+        solution['p0'] = [random.random() * 0.05 if random.choice([True, False]) else random.random() * 0.95 + 0.05 for i in range(4)]
         solution['eta0'] = [solution['value'][4*i] for i in range(4)]
         
         # Tests of Within-Subjects Effects
         solution['df1'] = [1 for i in range(8)] + [N-2 for i in range(4)]
-        ssprep = [assignment['var_obs'][i%2] * random.random() ** 2 for i in range(8)]
-        print(ssprep)
-        solution['ss1'] = ssprep + [assignment['var_obs'][i%2] - ssprep[i] for i in range(4)]
-        solution['ms1'] = [solution['ss1'][i]/solution['df1'][i] for i in range(12)]
-        solution['F1'] = [solution['ss1'][i] / solution['ss1'][8+i%4] for i in range(8)]
-        solution['p1'] = [1-stats.f.cdf(solution['F1'][i], solution['df1'][i], solution['df1'][4+i%2]) for i in range(8)]
+        solution['p1'] = [random.random() * 0.05 if random.choice([True, False]) else random.random() * 0.95 + 0.05 for i in range(8)]
+        solution['F1'] = [stats.f.isf(abs(solution['p1'][i]),solution['df1'][i],solution['df1'][(i+4) % 2]) for i in range(8)]
+        mse = [random.random() * 40 for i in range(4)]
+        solution['ms1'] = [solution['F1'][i] * mse[i%4] for i in range(8)] + mse
+        solution['ss1'] = [solution['ms1'][i] * solution['df1'][i] for i in range(12)]
         solution['eta1'] = [solution['ss1'][i] / (solution['ss1'][i] + solution['ss1'][4+i%2]) for i in range(8)]
         return solution
 	
@@ -720,6 +785,9 @@ class Assignments:
         if choice == 13:    
             assignment = self.create_multirm(control, False)
             output = {**assignment, **self.solve_multirm(assignment, {})}
+        if choice == 14:    
+            assignment = self.create_multirm2(control, False)
+            output = {**assignment, **self.solve_multirm2(assignment, {})}
         output['assignment_type'] = choice
         return output
             
@@ -792,7 +860,7 @@ class Assignments:
     
     def print_report(self, assignment: Dict, answer=False) -> str: 
         output:str = '' #"Answer" is a parameter which triggers when only the mean/ANOVA tables have to be printed
-        if assignment['assignment_type'] not in [1,2,11,13]:
+        if assignment['assignment_type'] not in [1,2,11,13,14]:
             data:dict = assignment['data']
         names = ['df','ss','ms','F','p','r2'];names2 = ['df','ss','ms','F','p','eta']
         if assignment['assignment_type'] == 1:
@@ -927,15 +995,44 @@ class Assignments:
         if assignment['assignment_type'] == 13:
             output += self.print_analysis(assignment)
             output += '<p>Multivariate Tests<table style="width:60%">'
-            output += format_table(['Effect', '', '', 'Value', 'Hypothesis df','Error df','F','p','eta<sup>2</sup>'])
+            output += format_table(['Effect', '', 'Value', 'Hypothesis df','Error df','F','p'])#,'eta<sup>2</sup>'])
+            for i in range(8):
+                i2 = i // 4
+                header = assignment['independent'] if i == 0 else assignment['independent']+' * '+assignment['independent2'] if i == 4 else ''
+                measure = ["Pillai's Trace","Wilks' Lambda","Hotelling's Trace","Roy's Largest Root"][i%4]
+                output += format_table([header,measure,assignment['value'][i],assignment['hdf'][i2],assignment['edf'][i2],
+                                        assignment['F0'][i2],assignment['p0'][i2]])#,assignment['eta0'][i2]])
+            output += '</table></p>'
+            output += '<p>Tests of Within-Subjects Contrasts<table style="width:60%">'
+            output += format_table(['Source', assignment['independent'], 'SS','df','MS','F','p','eta<sup>2</sup>'])
+            for i in range(6):
+                header = assignment['independent'] if i == 0 else assignment['independent']+' * '+assignment['independent2'] if i == 2 else 'Error('+assignment['independent']+')' if i == 4 else ''
+                measure = assignment['levels'][0]+' vs. '+assignment['levels'][1] if i % 2 == 0 else assignment['levels'][1]+' vs. '+assignment['levels'][2]
+                if i < 4:
+                    output += format_table([header,measure,assignment['ss1'][i],assignment['df1'][i],assignment['ms1'][i],
+                                        assignment['F1'][i],assignment['p1'][i],assignment['eta1'][i]])
+                else:
+                    output += format_table([header,measure,assignment['ss1'][i],assignment['df1'][i],assignment['ms1'][i],
+                                        '','',''])
+            output += '</table></p>'
+            output += '<p>Tests of Between-Subjects Effects<table style="width:20%">'
+            output += format_table(['Source','df','SS','MS','F','p','eta<sup>2</sup>'])
+            output += format_table(['Intercept'] + [assignment[x][0] for x in names2])
+            output += format_table([assignment['independent2']] + [assignment[x][1] for x in names2])
+            output += format_table(['Error'] + [assignment[x][2] for x in names2[:3]])
+            output += '</table></p>'
+        if assignment['assignment_type'] == 14:
+            output += self.print_analysis(assignment)
+            output += '<p>Multivariate Tests<table style="width:60%">'
+            output += format_table(['Effect', '', '', 'Value', 'Hypothesis df','Error df','F','p'])#,'eta<sup>2</sup>'])
             for i in range(16):
                 i2 = i // 4
                 header = 'Between Subjects' if i == 0 else 'Within Subjects' if i == 8 else ''
                 header2 = 'Intercept' if i == 0 else assignment['independent2'] if i == 4 else assignment['independent'] if i == 8 else \
                         assignment['independent']+' * '+assignment['independent2'] if i == 12 else ''
-                measure = ["Pillai's Trace","Wilks' Lambda","Hotelling's Trace","Roy's Largest Root"][i2]
+                measure = ["Pillai's Trace","Wilks' Lambda","Hotelling's Trace","Roy's Largest Root"][i%4]
                 output += format_table([header,header2,measure,assignment['value'][i],assignment['hdf'][i2],assignment['edf'][i2],
-                                        assignment['F0'][i2],assignment['p0'][i2],assignment['eta0'][i2]])
+                                        assignment['F0'][i2],assignment['p0'][i2]])#,assignment['eta0'][i2]])
             output += '</table></p>'
             output += '<p>Tests of Within-Subjects Contrasts<table style="width:60%">'
             output += format_table(['Source', 'Measure', assignment['independent'], 'SS','df','MS','F','p','eta<sup>2</sup>'])
