@@ -597,7 +597,7 @@ def detect_name(doc:Doc, solution:Dict) -> List[str]:
         names = [('ancova')]
     if solution['assignment_type'] == 13:
         names = [('multipele','repeated-measures','anova'),('multipele','rmanova'),('dubbel','multivariate','repeated-measures-anova'),
-                 ('dubbel','multivariate','repeated-measures','anova'),('multivariate','variantieanalyse')]
+                 ('dubbel','multivariate','repeated-measures','anova'),('multivariate','variantieanalyse'),('multivariate','rmanova')]
     if any([all([x in doc.text for x in y]) for y in names]):
         return ['']
     else:
@@ -728,34 +728,28 @@ def scan_design(doc:Doc, solution:dict, prefix:bool=True) -> [bool, List[str]]:
     if solution['assignment_type'] == 13:
         scorepoints['factor1'] = True;scorepoints['factor2'] = True
     output:List[str] = []
-    indeps = [x for x in doc if x.text == solution['independent'].lower()]
+    indeps = [x for x in doc.sents if solution['independent'] in x.text or any([y in x.text for y in solution['ind_syns']])]#if x.text == solution['independent']]
     if indeps != []:
         scorepoints['ind'] = True
-        if indeps[0].dep_ == 'conj':
-            indep_span = descendants(indeps[0].head.head)
-        else:
-            indep_span = descendants(indeps[0].head)
-        scorepoints['indcorrect'] = 'onafhankelijke' in [x.text for x in indep_span] or 'factor' in [x.text for x in indep_span] 
+        indep_span = indeps[0]
+        scorepoints['indcorrect'] = 'onafhankelijke' in indep_span.text or 'factor' in indep_span.text
         if solution['assignment_type'] == 13:
-            scorepoints['factor2'] = 'within-subject' in [x.text for x in indep_span]
+            scorepoints['factor2'] = 'within-subject' in indep_span.text
     if solution['assignment_type'] == 2 or solution['assignment_type'] == 13:    
-        indeps2 = [x for x in doc if x.text == solution['independent'].lower()]
+        indeps2 = [x for x in doc.sents if solution['independent2'] in x.text or any([y in x.text for y in solution['ind2_syns']])]
         if indeps2 != []:
             scorepoints['ind2'] = True
-            if indeps2[0].dep_ == 'conj':
-                indep2_span = descendants(indeps2[0].head.head)
-            else:
-                indep2_span = descendants(indeps2[0].head)
-            scorepoints['ind2correct'] = 'onafhankelijke' in [x.text for x in indep2_span] or 'factor' in [x.text for x in indep2_span] 
+            indep2_span = indeps2[0]
+            scorepoints['ind2correct'] = 'onafhankelijke' in indep2_span.text or 'factor' in indep2_span.text 
             if solution['assignment_type'] == 13:
-                scorepoints['factor2'] = 'between-subject' in [x.text for x in indep2_span]
+                scorepoints['factor2'] = 'between-subject' in indep2_span.text
     else:
         scorepoints['ind2'] = True;scorepoints['ind2correct'] = True
-    deps = [x for x in doc if x.text == solution['dependent'].lower()]
+    deps = [x for x in doc.sents if solution['dependent'] in x.text or any([y in x.text for y in solution['dep_syns']])]
     if deps != []:
         scorepoints['dep'] = True
-        dep_span = descendants(deps[0].head)
-        scorepoints['depcorrect'] = 'afhankelijke' in [x.text for x in dep_span] and not 'onafhankelijke' in [x.text for x in dep_span] 
+        dep_span = deps[0]
+        scorepoints['depcorrect'] = 'afhankelijke' in dep_span.text and not 'onafhankelijke' in dep_span.text 
     
     #Add feedback text
     if not scorepoints['ind']:
@@ -949,27 +943,30 @@ def split_grade_multirm(text:str, solution:dict) -> str:
     doc = nl_nlp(text.lower())
     output:str = ''
     output += '<br>'+'<br>'.join(detect_name(doc,solution))
-    output += '<br>'+scan_design(doc,solution)
+    output += '<br>'+scan_design(doc,solution,prefix=False)[1]
+    #Multivar within subject
     if solution['p0'][0] < 0.05:
         output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F0'][0], appendix='bij de within-subject factor '))
         output += '<br>'+'<br>'.join(detect_p(doc, solution['p0'][0], label='bij de within-subject factor '))
         output += '<br>'+'<br>'.join(detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta0'][0], aliases=['eta','eta2','eta-kwadraat'],appendix='bij de within-subject factor '))
         if solution['p1'][0] < 0.05:
-            output += '<br>'+'<br>'.join(detect_p(doc, solution['p1'][0], label='van het contrast tussen'+solution['levels'][0]+' en '+solution['levels'][1]+' '))
+            output += '<br>'+'<br>'.join(detect_p(doc, solution['p1'][0], label='van het contrast tussen '+solution['levels'][0]+' en '+solution['levels'][1]+' '))
         if solution['p1'][1] < 0.05:
-            output += '<br>'+'<br>'.join(detect_p(doc, solution['p1'][1], label='van het contrast tussen'+solution['levels'][1]+' en '+solution['levels'][2]+' '))
+            output += '<br>'+'<br>'.join(detect_p(doc, solution['p1'][1], label='van het contrast tussen '+solution['levels'][1]+' en '+solution['levels'][2]+' '))
+    #Multivar interaction
     if solution['p0'][1] < 0.05:
         output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F0'][1], appendix='bij de interactie '))
         output += '<br>'+'<br>'.join(detect_p(doc, solution['p0'][1], label='bij de interactie '))
         output += '<br>'+'<br>'.join(detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta0'][1], aliases=['eta','eta2','eta-kwadraat'],appendix='bij de interactie '))
         if solution['p1'][2] < 0.05:
-            output += '<br>'+'<br>'.join(detect_p(doc, solution['p1'][2], label='van het contrast tussen'+solution['levels'][0]+' en '+solution['levels'][1]+' '))
+            output += '<br>'+'<br>'.join(detect_p(doc, solution['p1'][2], label='van het contrast tussen '+solution['levels'][0]+' en '+solution['levels'][1]+' '))
         if solution['p1'][3] < 0.05:
-            output += '<br>'+'<br>'.join(detect_p(doc, solution['p1'][3], label='van het contrast tussen'+solution['levels'][1]+' en '+solution['levels'][2]+' '))
-    if solution['p'][0] < 0.05:
-        output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][0], appendix='bij de between-subject factor '))
-        output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][0], label='bij de between-subject factor '))
-        output += '<br>'+'<br>'.join(detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta'][0], aliases=['eta','eta2','eta-kwadraat'],appendix='bij de between-subject factor '))
+            output += '<br>'+'<br>'.join(detect_p(doc, solution['p1'][3], label='van het contrast tussen '+solution['levels'][1]+' en '+solution['levels'][2]+' '))
+    #Between-subject
+    if solution['p'][1] < 0.05:
+        output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][1], appendix='bij de between-subject factor '))
+        output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][1], label='bij de between-subject factor '))
+        output += '<br>'+'<br>'.join(detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta'][1], aliases=['eta','eta2','eta-kwadraat'],appendix='bij de between-subject factor '))
     if output.replace('<br>','') == '':
         return 'Mooi, dit beknopt rapport bevat alle juiste details!'
     else:
@@ -980,7 +977,6 @@ def split_grade_multirm2(text:str, solution:dict) -> str:
     doc = nl_nlp(text.lower())
     output:str = ''
     output += '<br>'+'<br>'.join(detect_name(doc,solution))
-    
     if output.replace('<br>','') == '':
         return 'Mooi, dit beknopt rapport bevat alle juiste details!'
     else:

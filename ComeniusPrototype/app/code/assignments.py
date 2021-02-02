@@ -208,9 +208,9 @@ class Assignments:
         output['dependent'] = ['gewicht','bloeddruk','geheugenscore'][var_j]
         output['dep_syns'] = [['gewichten'],[],['geheugenscores']][var_j]
         if two_way:
-            output['independent2'] = ['stimulusvorm','filmgenre','bloedtype'][var_k]
-            output['ind2_syns'] = [['stimulusvormen'],['filmgenres'],['bloedtypen','bloedtypes']][var_k]
-            output['levels2'] = [['vierkant','rond'],['drama','horror'],['A','B']][var_k]
+            output['independent2'] = ['stimulusvorm','woonplaats','bloedtype'][var_k]
+            output['ind2_syns'] = [['stimulusvormen'],['woonplaatsen'],['bloedtypen','bloedtypes']][var_k]
+            output['levels2'] = [['vierkant','rond'],['nijmegen','amsterdam'],['A','B']][var_k]
             output['level2_syns'] = [[['vierkante'],['ronde']],[[],[]],[[],[]]][var_k]
             output['control2'] = control2
             if output['independent2'] in ['bloedtype']:
@@ -637,9 +637,9 @@ class Assignments:
         output['ind_syns'] = [['metingen'],['tijdstippen'],[]][indy_int]
         output['level_syns'] = [[[],[],['follow-up']],[['dagen'],['avonden'],['nachten']]][indy_int]
         output['control'] = control
-        output['independent2'] = ['stimulusvorm','filmgenre','bloedtype'][var_k] #BETWEEN-SUBJECT FACTOR
-        output['ind2_syns'] = [['stimulusvormen'],['filmgenres'],['bloedtypen','bloedtypes']][var_k]
-        output['levels2'] = [['vierkant','rond'],['drama','horror'],['A','B']][var_k]
+        output['independent2'] = ['stimulusvorm','nationaliteit','bloedtype'][var_k] #BETWEEN-SUBJECT FACTOR
+        output['ind2_syns'] = [['stimulusvormen'],['nationaliteiten'],['bloedtypen','bloedtypes']][var_k]
+        output['levels2'] = [['vierkant','rond'],['nederlands','duits'],['A','B']][var_k]
         output['level2_syns'] = [[['vierkante'],['ronde']],[[],[]],[[],[]]][var_k]
         output['control2'] = control2
         if output['independent2'] in ['bloedtype']:
@@ -676,7 +676,7 @@ class Assignments:
         solution['edf'] = [N - 1 - (ntimes-1) * 2 for i in range(2)]
         solution['F0'] = [assignment['var_obs'] * random.random() ** 2 for i in range(2)]
         solution['p0'] = [random.random() * 0.05 if random.choice([True, False]) else random.random() * 0.95 + 0.05 for i in range(2)]
-        #solution['eta0'] = [solution['value'][4*i] for i in range(2)]
+        solution['eta0'] = [solution['value'][4*i] for i in range(2)]
         
         # Tests of Within-Subjects Contrasts
         solution['df1'] = [1 for i in range(4)] + [N-2 for i in range(2)]
@@ -995,13 +995,13 @@ class Assignments:
         if assignment['assignment_type'] == 13:
             output += self.print_analysis(assignment)
             output += '<p>Multivariate Tests<table style="width:60%">'
-            output += format_table(['Effect', '', 'Value', 'Hypothesis df','Error df','F','p'])#,'eta<sup>2</sup>'])
+            output += format_table(['Effect', '', 'Value', 'Hypothesis df','Error df','F','p','eta<sup>2</sup>'])
             for i in range(8):
                 i2 = i // 4
                 header = assignment['independent'] if i == 0 else assignment['independent']+' * '+assignment['independent2'] if i == 4 else ''
                 measure = ["Pillai's Trace","Wilks' Lambda","Hotelling's Trace","Roy's Largest Root"][i%4]
                 output += format_table([header,measure,assignment['value'][i],assignment['hdf'][i2],assignment['edf'][i2],
-                                        assignment['F0'][i2],assignment['p0'][i2]])#,assignment['eta0'][i2]])
+                                        assignment['F0'][i2],assignment['p0'][i2],assignment['eta0'][i2]])
             output += '</table></p>'
             output += '<p>Tests of Within-Subjects Contrasts<table style="width:60%">'
             output += format_table(['Source', assignment['independent'], 'SS','df','MS','F','p','eta<sup>2</sup>'])
@@ -1035,13 +1035,13 @@ class Assignments:
                                         assignment['F0'][i2],assignment['p0'][i2]])#,assignment['eta0'][i2]])
             output += '</table></p>'
             output += '<p>Tests of Within-Subjects Contrasts<table style="width:60%">'
-            output += format_table(['Source', 'Measure', assignment['independent'], 'SS','df','MS','F','p','eta<sup>2</sup>'])
+            output += format_table(['Source', 'Measure', assignment['independent'], 'df','SS','MS','F','p','eta<sup>2</sup>'])
             for i in range(12):
                 header = assignment['independent'] if i == 0 else assignment['independent']+' * '+assignment['independent2'] if i == 4 else 'Error('+assignment['independent']+')' if i == 8 else ''
                 header2 = assignment['dependent'] if (i+2) % 4 == 0 else assignment['dependent2'] if i % 4 == 0 else ''
                 measure = assignment['levels'][0]+' vs. '+assignment['levels'][1] if i % 2 == 0 else assignment['levels'][1]+' vs. '+assignment['levels'][2]
                 if i < 8:
-                    output += format_table([header,header2,measure,assignment['ss1'][i],assignment['df1'][i],assignment['ms1'][i],
+                    output += format_table([header,header2,measure,assignment['df1'][i],assignment['ss1'][i],assignment['ms1'][i],
                                         assignment['F1'][i],assignment['p1'][i],assignment['eta1'][i]])
                 else:
                     output += format_table([header,header2,measure,assignment['ss1'][i],assignment['df1'][i],assignment['ms1'][i],
