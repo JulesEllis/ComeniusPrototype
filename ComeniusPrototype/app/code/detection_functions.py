@@ -7,6 +7,20 @@ Created on Wed Feb  3 21:28:37 2021
 
 STANDARD FUNCTIONS:
 """
+import math
+import random
+import numpy as np
+import nltk
+import spacy
+import re
+from copy import copy
+from spacy.tokens.token import Token
+from spacy.tokens.doc import Doc
+from spacy import displacy
+from nltk import CFG, Tree
+from scipy import stats
+from typing import Dict, List, Tuple
+
 def negation_counter(tokens: List[str]) -> int:
     count: int = 0
     for token in tokens:
@@ -267,8 +281,38 @@ def detect_decision_manova(sent:Doc, solution:dict, variable:str, synonyms:list,
     scorepoints:dict = {'sign_effect': 'significant' in sent.text,
         'indep': solution['independent'] in sent.text or any([x in sent.text for x in solution['ind_syns']]),
         'dep': variable in sent.text or any([x in sent.text for x in synonyms]) or 'multivariate' in variable,
-        'neg': bool(negation_counter(tokens) % 2) != rejected,
-        'effect_present': p > 0.05,
+        'neg': bool(negation_counter(tokens) % 2) != rejected}
+    
+    output:List[str] = []
+    if not scorepoints['sign_effect']:
+        output.append(' -niet genoemd bij de beslissing van '+variable+' of het effect significant is')
+    if not scorepoints['indep']:
+        output.append(' -onafhankelijke variabele niet genoemd bij de beslissing van '+variable)
+    if not scorepoints['dep']:
+        output.append(' -afhankelijke variabele niet genoemd bij de beslissing van '+variable)
+    if not scorepoints['neg']:
+        output.append(' -ten onrechte een negatie toegevoegd of weggelaten bij de beslissing van '+variable)
+    return output
+
+def detect_decision_multirm(sent:Doc, solution:dict, variable:str, synonyms:list, p:float, eta:float, num:int) -> List[str]:
+    rejected:bool = p < 0.05
+    tokens:list = [x.text for x in sent]
+    scorepoints:dict = {'sign_effect': 'significant' in sent.text,
+        'var': variable in sent.text or any([x in sent.text for x in synonyms]) or 'multivariate' in variable,
+        'neg': bool(negation_counter(tokens) % 2) != rejected}
+    
+    output:List[str] = []
+    if not scorepoints['sign_effect']:
+        output.append(' -niet genoemd bij de beslissing van '+variable+' of het effect significant is')
+    if not scorepoints['var']:
+        output.append(' -'+variable+' niet genoemd bij de beslissing van '+variable)
+    if not scorepoints['neg']:
+        output.append(' -ten onrechte een negatie toegevoegd of weggelaten bij de beslissing van '+variable)
+    return output
+
+def detect_effect(sent:Doc, solution:dict, variable:str, p:float, eta:float, num:int) -> List[str]:
+    output:List[str] = []
+    scorepoints:dict ={'effect_present': p > 0.05,
         'strength_present': p > 0.05,
         'right_strength': p > 0.05}
     gold_strength: int = 2 if eta > 0.2 else 1 if eta > 0.1 else 0
@@ -280,16 +324,6 @@ def detect_decision_manova(sent:Doc, solution:dict, variable:str, synonyms:list,
         scorepoints['effect_present'] = e_root.head.text == 'effect' or 'effect' in [x.text for x in e_tree]
         scorepoints['strength_present'] = True #any([x in [y.text for y in e_tree] for x in ['klein','matig','sterk']]) or e_root.head.text in ['klein','matig','sterk']
         scorepoints['right_strength'] = e_root.text in ['sterk','groot'] if gold_strength == 2 else e_root.text in ['matig'] if gold_strength == 1 else e_root.text in ['klein','zwak']
-    
-    output:List[str] = []
-    if not scorepoints['sign_effect']:
-        output.append(' -niet genoemd bij de beslissing van '+variable+' of het effect significant is')
-    if not scorepoints['indep']:
-        output.append(' -onafhankelijke factor niet genoemd bij de beslissing van '+variable)
-    if not scorepoints['dep']:
-        output.append(' -afhankelijke variabele niet genoemd bij de beslissing van '+variable)
-    if not scorepoints['neg']:
-        output.append(' -ten onrechte een negatie toegevoegd of weggelaten bij de beslissing van '+variable)
     if not scorepoints['effect_present'] and scorepoints['strength_present']:
         output.append(' -de effectgrootte van '+variable+' wordt niet genoemd')
     if not scorepoints['strength_present']:

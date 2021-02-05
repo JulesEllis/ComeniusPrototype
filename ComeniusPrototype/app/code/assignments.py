@@ -85,7 +85,7 @@ class Assignments:
         if between_subject:
             instruction += 'De proefpersonen doen een experiment, waarin ze worden ingedeeld op hun ' + independent + ' in de groepen '+ levels[0] + ' en ' + levels[1]
         else:
-            instruction += 'De proefpersonen doen allemeaal mee aan een experiment, met als ' + independent + ' zowel ' + levels[0] + ' als ' + levels[1]
+            instruction += 'De proefpersonen doen allemaal mee aan een experiment, met als ' + independent + ' zowel ' + levels[0] + ' als ' + levels[1]
         if control:
             if between_subject:
                 instruction += 'De personen van elk beroep zijn willekeurig geselecteerd. '

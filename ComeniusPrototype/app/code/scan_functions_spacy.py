@@ -18,7 +18,7 @@ from spacy import displacy
 from nltk import CFG, Tree
 from scipy import stats
 from typing import Dict, List, Tuple
-from detection_functions import *
+from app.code.detection_functions import *
 
 def negation_counter(tokens: List[str]) -> int:
     count: int = 0
@@ -180,7 +180,7 @@ def scan_design(doc:Doc, solution:dict, prefix:bool=True) -> [bool, List[str]]:
         indep_span = indeps[0]
         scorepoints['indcorrect'] = 'onafhankelijke' in indep_span.text or 'factor' in indep_span.text
         if solution['assignment_type'] == 13:
-            scorepoints['factor1'] = 'within-subject' in indep_span.text
+            scorepoints['factor1'] = 'within-subject' in indep_span.text or 'within' in indep_span.text
     if solution['assignment_type'] == 2 or solution['assignment_type'] == 13:    
         indeps2 = [x for x in doc.sents if solution['independent2'] in x.text or any([y in x.text for y in solution['ind2_syns']])]
         if indeps2 != []:
@@ -188,7 +188,7 @@ def scan_design(doc:Doc, solution:dict, prefix:bool=True) -> [bool, List[str]]:
             indep2_span = indeps2[0]
             scorepoints['ind2correct'] = 'onafhankelijke' in indep2_span.text or 'factor' in indep2_span.text 
             if solution['assignment_type'] == 13:
-                scorepoints['factor2'] = 'between-subject' in indep2_span.text
+                scorepoints['factor2'] = 'between-subject' in indep2_span.text or 'between' in indep2_span.text
     else:
         scorepoints['ind2'] = True;scorepoints['ind2correct'] = True
     deps = [x for x in doc.sents if solution['dependent'] in x.text or any([y in x.text for y in solution['dep_syns']])]
@@ -381,6 +381,7 @@ def split_grade_manova(text:str, solution:dict) -> str:
                          and ('significant' in x.text or 'effect' in x.text)]
     if decision_sent != []:
         output += '<br>'+'<br>'.join(detect_decision_manova(doc,solution,variable=solution['sumdependent'],synonyms=['multivariate'], p=solution['p_multivar'], eta=solution['eta_multivar'], num=0))
+        output += '<br>'+'<br>'.join(detect_effect(doc,solution, variable=solution['sumdependent'], p=solution['p_multivar'], eta=solution['eta_multivar'], num=0))
     else:
         output += '<br> -de multivariate beslissing wordt niet genoemd'
     if output.replace('<br>','') == '':
@@ -395,14 +396,15 @@ def split_grade_multirm(text:str, solution:dict) -> str:
     output += '<br>'+'<br>'.join(detect_name(doc,solution))
     output += '<br>'+scan_design(doc,solution,prefix=False)[1]
     #Multivar within subject
+    decision_sent = [x for x in doc.sents if (solution['independent'] in x.text or 'within-subject' in x.text) \
+                         and ('significant' in x.text or 'effect' in x.text)]
+    if decision_sent != []: 
+        num += 1
+        output += '<br>'+'<br>'.join(detect_decision_multirm(decision_sent[0],solution,variable=solution['independent'],synonyms=['multivariate within-subject'], p=solution['p0'][0], eta=solution['eta0'][0], num=num))
+        output += '<br>'+'<br>'.join(detect_effect(doc,solution, variable=solution['independent'], p=solution['p0'][0], eta=solution['eta0'][0], num=num))
+    else:
+        output += '<br> -de multivariate within-subject beslissing wordt niet genoemd'
     if solution['p0'][0] < 0.05:
-        decision_sent = [x for x in doc.sents if (solution['independent'] in x.text or 'within-subject' in x.text) \
-                             and ('significant' in x.text or 'effect' in x.text)]
-        if decision_sent != []: 
-            num += 1
-            output += '<br>'+'<br>'.join(detect_decision_manova(doc,solution,variable=solution['independent'],synonyms=['multivariate within-subject'], p=solution['p0'][0], eta=solution['eta0'][0], num=num))
-        else:
-            output += '<br> -de multivariate within-subject beslissing wordt niet genoemd'
         output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F0'][0], appendix='bij de within-subject factor '))
         output += '<br>'+'<br>'.join(detect_p(doc, solution['p0'][0], label='bij de within-subject factor '))
         output += '<br>'+'<br>'.join(detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta0'][0], aliases=['eta','eta2','eta-kwadraat'],appendix='bij de within-subject factor '))
@@ -411,14 +413,14 @@ def split_grade_multirm(text:str, solution:dict) -> str:
         if solution['p1'][1] < 0.05:
             output += '<br>'+'<br>'.join(detect_p(doc, solution['p1'][1], label='van het contrast tussen '+solution['levels'][1]+' en '+solution['levels'][2]+' '))
     #Multivar interaction
+    decision_sent2 = [x for x in doc.sents if ('interactie' in x.text) and ('significant' in x.text or 'effect' in x.text)]
+    if decision_sent2 != []:
+        num += 1
+        output += '<br>'+'<br>'.join(detect_decision_multirm(decision_sent2[0],solution,variable='interactie',synonyms=[], p=solution['p0'][1], eta=solution['eta0'][1], num=num))
+        output += '<br>'+'<br>'.join(detect_effect(doc,solution, variable='interactie', p=solution['p0'][1], eta=solution['eta0'][1], num=num))
+    else:
+        output += '<br> -de interactiebeslissing wordt niet genoemd'
     if solution['p0'][1] < 0.05:
-        decision_sent = [x for x in doc.sents if ('interactie' in x.text) \
-                             and ('significant' in x.text or 'effect' in x.text)]
-        if decision_sent != []:
-            num += 1
-            output += '<br>'+'<br>'.join(detect_decision_manova(doc,solution,variable='interactie',synonyms=[], p=solution['p0'][1], eta=solution['eta0'][1], num=num))
-        else:
-            output += '<br> -de interactiebeslissing wordt niet genoemd'
         output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F0'][1], appendix='bij de interactie '))
         output += '<br>'+'<br>'.join(detect_p(doc, solution['p0'][1], label='bij de interactie '))
         output += '<br>'+'<br>'.join(detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta0'][1], aliases=['eta','eta2','eta-kwadraat'],appendix='bij de interactie '))
@@ -427,14 +429,14 @@ def split_grade_multirm(text:str, solution:dict) -> str:
         if solution['p1'][3] < 0.05:
             output += '<br>'+'<br>'.join(detect_p(doc, solution['p1'][3], label='van het contrast tussen '+solution['levels'][1]+' en '+solution['levels'][2]+' bij de interactie '))
     #Between-subject
+    decision_sent3 = [x for x in doc.sents if (solution['independent2'] in x.text or 'between-subject' in x.text) and ('significant' in x.text or 'effect' in x.text)]
+    if decision_sent3 != []:
+        num += 1
+        output += '<br>'+'<br>'.join(detect_decision_multirm(decision_sent3[0],solution,variable=solution['independent2'],synonyms=['multivariate between-subject'], p=solution['p'][1], eta=solution['eta'][1], num=num))
+        output += '<br>'+'<br>'.join(detect_effect(doc,solution, variable=solution['independent2'], p=solution['p'][1], eta=solution['eta'][1], num=num))
+    else:
+        output += '<br> -de between-subject beslissing wordt niet genoemd'
     if solution['p'][1] < 0.05:
-        decision_sent = [x for x in doc.sents if (solution['independent2'] in x.text or 'between-subject' in x.text) \
-                             and ('significant' in x.text or 'effect' in x.text)]
-        if decision_sent != []:
-            num += 1
-            output += '<br>'+'<br>'.join(detect_decision_manova(doc,solution,variable=solution['independent2'],synonyms=['multivariate between-subject'], p=solution['p'][1], eta=solution['eta'][1], num=num))
-        else:
-            output += '<br> -de between-subject beslissing wordt niet genoemd'
         output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][1], appendix='bij de between-subject factor '))
         output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][1], label='bij de between-subject factor '))
         output += '<br>'+'<br>'.join(detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta'][1], aliases=['eta','eta2','eta-kwadraat'],appendix='bij de between-subject factor '))

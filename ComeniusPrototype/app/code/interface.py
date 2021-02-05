@@ -408,7 +408,7 @@ class Controller:
             print('ERROR SWITCHING PROTOCOLS')
             
     def intro_protocol(self) -> List[Tuple]:
-        return [('Hoi, met dit programma kan je elementaire en beknopte rapporten oefenen. Klik op de enter-knop om verder te gaan.', 
+        return [('Hoi, met dit programma kan je elementaire en beknopte rapporten oefenen. Klik op de knop hieronder om verder te gaan.', 
                  scan_dummy, [], Process.INTRO, None)]
 
     def completion_protocol(self) -> List[Tuple]:
@@ -455,9 +455,9 @@ class Controller:
                 ('Voer de beslissing in voor de eerste onafhankelijke variabele.', scan_decision,[self.solution, True, 1], Process.QUESTION,self.solution['decision']),
                 ('Voer de beslissing in voor de tweede onafhankelijke variabele.', scan_decision,[self.solution, True, 2], Process.QUESTION,self.solution['decision2']),
                 ('Voer de beslissing in voor de interactie.', scan_decision_anova,[self.solution], Process.QUESTION, self.solution['decision3']),
-                ('Voer de causale interpretatie voor de eerste factor in.',scan_interpretation,[self.solution, True, 1], Process.QUESTION,self.solution['interpretation']),
-                ('Voer de causale interpretatie voor de tweede factor in.',scan_interpretation,[self.solution, True, 2], Process.QUESTION,self.solution['interpretation2']),
-                ('Voer de causale interpretatie voor de interactie in.',scan_interpretation_anova,[self.solution], Process.LAST_QUESTION,self.solution['interpretation3'])]
+                ('Voer de causale interpretatie in voor de eerste factor.',scan_interpretation,[self.solution, True, 1], Process.QUESTION,self.solution['interpretation']),
+                ('Voer de causale interpretatie in voor de tweede factor.',scan_interpretation,[self.solution, True, 2], Process.QUESTION,self.solution['interpretation2']),
+                ('Voer de causale interpretatie in voor de interactie.',scan_interpretation_anova,[self.solution], Process.LAST_QUESTION,self.solution['interpretation3'])]
         return output
     
     def rmanova_protocol(self) -> List[Tuple]:
@@ -469,7 +469,7 @@ class Controller:
             ('Vul de tabel hieronder in.',scan_table,[self.solution, 0.02], Process.TABLE, self.assignments.print_report({**self.assignment, **self.solution}, answer=True)),
             ('Voer de beslissing in van de condities.',scan_decision,[self.solution,True,1], Process.QUESTION,self.solution['decision']),
             ('Voer de beslissing in van de subjecten.',scan_decision_rmanova,[self.solution,2], Process.QUESTION,self.solution['decision2']),
-            ('Voer de causale interpretatie voor de condities in.',scan_interpretation,[self.solution, True, 1], Process.LAST_QUESTION,self.solution['interpretation'])]
+            ('Voer de causale interpretatie in voor de condities.',scan_interpretation,[self.solution, True, 1], Process.LAST_QUESTION,self.solution['interpretation'])]
         return output
     
     def print_assignment(self):
