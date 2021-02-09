@@ -885,7 +885,7 @@ class Assignments:
                 output += self.print_ttest(assignment)
             output += '<p><table style="width:20%">'
             output += '<tr><td>'+str(assignment['independent'])+'</td><td>Gemiddelde</td><td>Standaarddeviatie</td><td>N</td></tr>'
-            output += '<tr><td>Verschilscores</td><td>'+str(round(assignment['means'][0],2))+'</td><td>'+str(round(assignment['stds'][0],2))+'</td><td>'+str(round(assignment['ns'][0],2))+'</td></tr>'
+            output += format_table(['Verschilscores']+[assignment['means'][0],assignment['stds'][0],assignment['ns'][0]])
             output += '</table></p>'
             if not answer:
                 output += '<p><table style="width:20%">'
@@ -901,39 +901,39 @@ class Assignments:
                 output += self.print_anova(assignment)
             output += '<p><table style="width:20%">'
             output += '<tr><td>Bron</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td></tr>'
-            output += '<tr><td>Between</td>'+''.join(['<td>'+str(round(assignment[x][0],2))+'</td>' for x in names if len(assignment[x]) > 0])+'</tr>'
-            output += '<tr><td>Within</td>'+''.join(['<td>'+str(round(assignment[x][1],2))+'</td>' for x in names if len(assignment[x]) > 1])+'</tr>'
-            output += '<tr><td>Totaal</td>'+''.join(['<td>'+str(round(assignment[x][2],2))+'</td>' for x in names if len(assignment[x]) > 2])+'</tr>'
+            output += format_table(['Between']+[assignment[x][0] for x in names if len(assignment[x]) > 0])
+            output += format_table(['Within']+[assignment[x][1] for x in names if len(assignment[x]) > 1])
+            output += format_table(['Totaal']+[assignment[x][2] for x in names if len(assignment[x]) > 2])
             output += '</table></p>'
         if assignment['assignment_type'] == 4:
             if not answer:
                 output += self.print_anova(assignment)
             output += '<p><table style="width:20%">'
             output += '<tr><td>Bron</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td></tr>'
-            output += '<tr><td>Between</td>'+''.join(['<td>'+str(round(assignment[x][0],2))+'</td>' for x in names[:3]])+'</tr>'
-            output += '<tr><td>'+assignment['independent']+'</td>'+''.join(['<td>'+str(round(assignment[x][1],2))+'</td>' for x in names[:3]])+''.join(['<td>'+str(round(assignment[x][0],2))+'</td>' for x in names[3:]])+'</tr>'
-            output += '<tr><td>'+assignment['independent2']+'</td>'+''.join(['<td>'+str(round(assignment[x][2],2))+'</td>' for x in names[:3]])+''.join(['<td>'+str(round(assignment[x][1],2))+'</td>' for x in names[3:]])+'</tr>'
-            output += '<tr><td>Interaction</td>'+''.join(['<td>'+str(round(assignment[x][3],2))+'</td>' for x in names[:3]])+''.join(['<td>'+str(round(assignment[x][2],2))+'</td>' for x in names[3:]])+'</tr>'
-            output += '<tr><td>Within</td>'+''.join(['<td>'+str(round(assignment[x][4],2))+'</td>' for x in names[:3]])+'</tr>'
-            output += '<tr><td>Totaal</td>'+''.join(['<td>'+str(round(assignment[x][5],2))+'</td>' for x in names[:2]])+'</tr>'
+            output += format_table(['Between']+[assignment[x][0] for x in names[:3]])
+            output += format_table([cap(assignment['independent'])]+[assignment[x][1] for x in names[:3]]+[assignment[x][0] for x in names[3:]])
+            output += format_table([cap(assignment['independent2'])]+[assignment[x][2] for x in names[:3]]+[assignment[x][1] for x in names[3:]])
+            output += format_table(['Interaction']+[assignment[x][3] for x in names[:3]]+[assignment[x][2] for x in names[3:]])
+            output += format_table(['Within']+[assignment[x][4] for x in names[:3]])
+            output += format_table(['Totaal']+[assignment[x][5] for x in names[:2]])
             output += '</table></p>'
         if assignment['assignment_type'] == 5:
             if not answer:
                 output += self.print_rmanova(assignment)
             output += '<p><table style="width:20%">'
             output += '<tr><td>Bron</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td></tr>'
-            output += '<tr><td>'+assignment['independent']+'</td>'+''.join(['<td>'+str(round(assignment[x][0],2))+'</td>' for x in names if len(assignment[x]) > 0])+'</tr>'
-            output += '<tr><td>Persoon</td>'+''.join(['<td>'+str(round(assignment[x][1],2))+'</td>' for x in names if len(assignment[x]) > 1])+'</tr>'
-            output += '<tr><td>Interactie</td>'+''.join(['<td>'+str(round(assignment[x][0],2))+'</td>' for x in names if len(assignment[x]) > 2])+'</tr>'
-            output += '<tr><td>Totaal</td>'+''.join(['<td>'+str(round(assignment[x][3],2))+'</td>' for x in names if len(assignment[x]) > 3])+'</tr>'
+            output += format_table([cap(assignment['independent'])]+[assignment[x][0] for x in names if len(assignment[x]) > 0])
+            output += format_table(['Persoon']+[assignment[x][1] for x in names if len(assignment[x]) > 1])
+            output += format_table(['Interactie']+[assignment[x][0] for x in names if len(assignment[x]) > 2])
+            output += format_table(['Totaal']+[assignment[x][3] for x in names if len(assignment[x]) > 3])
             output += '</table></p>'
         if assignment['assignment_type'] == 6:
             output += self.print_analysis(assignment)
             output += '<p><table style="width:20%">'
             output += '<tr><td>Bron</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td></tr>'
-            output += '<tr><td>Regressie</td>'+''.join(['<td>'+str(round(assignment[x][0],2))+'</td>' for x in names])+'</tr>'
-            output += '<tr><td>Residu</td>'+''.join(['<td>'+str(round(assignment[x][1],2))+'</td>' for x in names[:3]])+'</tr>'
-            output += '<tr><td>Totaal</td>'+''.join(['<td>'+str(round(assignment[x][2],2))+'</td>' for x in names[:2]])+'</tr>'
+            output += format_table(['Regressie']+[assignment[x][0] for x in names])
+            output += format_table(['Residu']+[assignment[x][1] for x in names[:3]])
+            output += format_table(['Totaal']+[assignment[x][2] for x in names[:2]])+'</tr>'
             output += '</table></p>'
             
             output += '<p><table style="width:20%">'
@@ -982,15 +982,15 @@ class Assignments:
         if assignment['assignment_type'] == 12:
             output += self.print_analysis(assignment)
             output += '<p><table style="width:20%">'
-            output += '<tr><td>Bron</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>eta<sup>2</sup></td></tr>'
-            output += '<tr><td>Corrected model</td>'+''.join(['<td>'+str(round(assignment[x][3],2))+'</td>' for x in names2])+'</tr>'
-            output += '<tr><td>Intercept</td>'+''.join(['<td>'+str(round(assignment[x][6],2))+'</td>' for x in names2])+'</tr>'
-            output += '<tr><td>'+cap(assignment['predictor_names'][0])+'</td>'+''.join(['<td>'+str(round(assignment[x][0],2))+'</td>' for x in names2])+'</tr>'
-            output += '<tr><td>'+cap(assignment['predictor_names'][1])+'</td>'+''.join(['<td>'+str(round(assignment[x][1],2))+'</td>' for x in names2])+'</tr>'
-            output += '<tr><td>'+cap(assignment['independent'])+'</td>'+''.join(['<td>'+str(round(assignment[x][2],2))+'</td>' for x in names2])+'</tr>'
-            output += '<tr><td>Error</td>'+''.join(['<td>'+str(round(assignment[x][4],2))+'</td>' for x in names[:3]])+'</tr>'
-            output += '<tr><td>Total</td>'+''.join(['<td>'+str(round(assignment[x][7],2))+'</td>' for x in names[:2]])+'</tr>'
-            output += '<tr><td>Corrected total</td>'+''.join(['<td>'+str(round(assignment[x][5],2))+'</td>' for x in names[:2]])+'</tr>'
+            output += format_table(['Bron', 'df', 'SS', 'MS', 'F', 'p', 'eta<sup>2</sup>'])
+            output += format_table(['Corrected model']+[assignment[x][3] for x in names2])
+            output += format_table(['Intercept']+[assignment[x][6] for x in names2])
+            output += format_table([cap(assignment['predictor_names'][0])]+[assignment[x][0] for x in names2])
+            output += format_table([cap(assignment['predictor_names'][1])]+[assignment[x][1] for x in names2])
+            output += format_table([cap(assignment['independent'])]+[assignment[x][2] for x in names2])
+            output += format_table(['Error']+[assignment[x][4] for x in names[:3]])
+            output += format_table(['Total']+[assignment[x][7] for x in names[:2]])
+            output += format_table(['Corrected total']+[assignment[x][5] for x in names[:2]])
             output += '</table></p>'
         if assignment['assignment_type'] == 13:
             output += self.print_analysis(assignment)

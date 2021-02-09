@@ -31,7 +31,7 @@ def index():
             pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL)
         instruction = controller.protocol[0][0]
         return render_template('index.html', display=instruction, 
-                               form=form, skip=False, submit_field=7, varnames=varnames)
+                               form=form, skip=False, submit_field=8, varnames=varnames)
     elif flask.request.method == 'POST':        
         #Isolate text fields
         textfields:list = [x for x in dir(form) if str(type(form.__getattribute__(x))) in ["<class 'wtforms.fields.core.StringField'>","<class 'wtforms.fields.core.SelectField'>","<class 'wtforms.fields.simple.TextAreaField'>"]]
@@ -81,7 +81,7 @@ def index():
         if controller.wipetext:
             form.inputtext.data = ""
             form.inputtextlarge.data = ""
-        if controller.submit_field == Task.INTRO or controller.submit_field == Task.CHOICE: #Determine enter button text
+        if controller.submit_field == Task.INTRO or controller.submit_field == Task.CHOICE or controller.submit_field == Task.FINISHED: #Determine enter button text
             form.submit.label.text = 'Doorgaan'
         else:
             form.submit.label.text = 'Feedback'

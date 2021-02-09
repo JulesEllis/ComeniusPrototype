@@ -400,7 +400,8 @@ def split_grade_multirm(text:str, solution:dict) -> str:
                          and ('significant' in x.text or 'effect' in x.text)]
     if decision_sent != []: 
         num += 1
-        output += '<br>'+'<br>'.join(detect_decision_multirm(decision_sent[0],solution,variable=solution['independent'],synonyms=['multivariate within-subject'], p=solution['p0'][0], eta=solution['eta0'][0], num=num))
+        user_given_name:str = solution['independent'] if solution['independent'] in decision_sent[0].text else 'within-subject'
+        output += '<br>'+'<br>'.join(detect_decision_multirm(decision_sent[0],solution,variable=user_given_name,synonyms=['multivariate within-subject'], p=solution['p0'][0], eta=solution['eta0'][0], num=num))
         output += '<br>'+'<br>'.join(detect_effect(doc,solution, variable=solution['independent'], p=solution['p0'][0], eta=solution['eta0'][0], num=num))
     else:
         output += '<br> -de multivariate within-subject beslissing wordt niet genoemd'
@@ -419,7 +420,7 @@ def split_grade_multirm(text:str, solution:dict) -> str:
         output += '<br>'+'<br>'.join(detect_decision_multirm(decision_sent2[0],solution,variable='interactie',synonyms=[], p=solution['p0'][1], eta=solution['eta0'][1], num=num))
         output += '<br>'+'<br>'.join(detect_effect(doc,solution, variable='interactie', p=solution['p0'][1], eta=solution['eta0'][1], num=num))
     else:
-        output += '<br> -de interactiebeslissing wordt niet genoemd'
+        output += '<br> -de multivariate interactiebeslissing wordt niet genoemd'
     if solution['p0'][1] < 0.05:
         output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F0'][1], appendix='bij de interactie '))
         output += '<br>'+'<br>'.join(detect_p(doc, solution['p0'][1], label='bij de interactie '))
@@ -432,7 +433,8 @@ def split_grade_multirm(text:str, solution:dict) -> str:
     decision_sent3 = [x for x in doc.sents if (solution['independent2'] in x.text or 'between-subject' in x.text) and ('significant' in x.text or 'effect' in x.text)]
     if decision_sent3 != []:
         num += 1
-        output += '<br>'+'<br>'.join(detect_decision_multirm(decision_sent3[0],solution,variable=solution['independent2'],synonyms=['multivariate between-subject'], p=solution['p'][1], eta=solution['eta'][1], num=num))
+        user_given_name:str = solution['independent2'] if solution['independent2'] in decision_sent3[0].text else 'between-subject'
+        output += '<br>'+'<br>'.join(detect_decision_multirm(decision_sent3[0],solution,variable=user_given_name,synonyms=['multivariate between-subject'], p=solution['p'][1], eta=solution['eta'][1], num=num))
         output += '<br>'+'<br>'.join(detect_effect(doc,solution, variable=solution['independent2'], p=solution['p'][1], eta=solution['eta'][1], num=num))
     else:
         output += '<br> -de between-subject beslissing wordt niet genoemd'

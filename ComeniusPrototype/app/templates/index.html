@@ -15,8 +15,13 @@
         <form action="index" method="post" novalidate>
         {{ form.hidden_tag() }}
         
+        {% if submit_field | int == 8 %}
+        <br>{{ form.selectlanguage.label }}<br>
+        {{ form.selectlanguage() }}<br>
+        {% endif %}
+        
         {% if submit_field | int == 9 %}
-        {{ form.selectanalysis.label }}<br>
+        <br>{{ form.selectanalysis.label }}<br>
         {{ form.selectanalysis() }}<br>
         
         {{ form.selectreport.label }}<br>

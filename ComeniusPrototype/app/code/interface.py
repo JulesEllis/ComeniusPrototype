@@ -15,6 +15,7 @@ from scipy import stats
 from app.code.enums import Process, Task
 from app.code.assignments import Assignments
 from app.code.scan_functions import * #Regular scan functions
+from app.code.language import LanguageInterface #Regular scan functions
 from app.code.scan_functions_spacy import * #Scan functions for decision and interpretation
 from typing import Dict, List, Callable, Tuple
 
@@ -22,6 +23,8 @@ from typing import Dict, List, Callable, Tuple
 class Controller:
     def __init__(self):
         self.assignments: Assignments = Assignments()
+        self.languages = LanguageInterface()
+        self.mes = None
         self.skipable: bool = False
         self.prevable: bool = False
         self.answerable: bool = False
@@ -38,6 +41,8 @@ class Controller:
     
     def reset(self):
         self.assignments: Assignments = Assignments()
+        self.languages = LanguageInterface()
+        self.mes = None
         self.skipable: bool = False
         self.prevable: bool = False
         self.answerable: bool = False
@@ -330,12 +335,12 @@ class Controller:
                 if analysis == 'Repeated Measures Anova':
                     self.protocol = self.rmanova_protocol()
             if report == 'Elementair rapport (tentamenmodus)':
-                self.submit_field = Task.INTRO
+                self.submit_field = Task.FINISHED #Task.INTRO
                 self.skipable = False
                 self.formmode = True
                 self.protocol = self.completion_protocol()
             if report == 'Beknopt rapport':
-                self.submit_field = Task.INTRO
+                self.submit_field = Task.FINISHED
                 self.skipable = False
                 self.formmode= True
                 self.assignment = self.assignments.create_report(control, self.analysis_type.value)
@@ -377,7 +382,7 @@ class Controller:
                 self.answer_triggered = False
                 self.protocol = self.completion_protocol()
                 self.index = 0
-                self.submit_field = Task.INTRO
+                self.submit_field = Task.FINISHED #Task.INTRO
                 if input_text == 'skip':
                     return self.protocol[self.index][0]
                 else:

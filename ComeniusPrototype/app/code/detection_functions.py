@@ -17,7 +17,7 @@ from copy import copy
 from spacy.tokens.token import Token
 from spacy.tokens.doc import Doc
 from spacy import displacy
-from nltk import CFG, Tree
+from nltk import CFG, Tree, edit_distance
 from scipy import stats
 from typing import Dict, List, Tuple
 
@@ -34,6 +34,9 @@ def descendants(node) -> List[Token]:
         output.append(child)
         output += descendants(child)
     return output
+
+def lef(a:str,b:str) -> float:
+    return edit_distance(a,b,transposition=True)
 
 def check_causality(independent:Doc, dependent:Doc, alternative:bool=False) -> bool:
     #print(independent.dep_ + '-' + dependent.dep_)
@@ -298,7 +301,7 @@ def detect_decision_multirm(sent:Doc, solution:dict, variable:str, synonyms:list
     rejected:bool = p < 0.05
     tokens:list = [x.text for x in sent]
     scorepoints:dict = {'sign_effect': 'significant' in sent.text,
-        'var': variable in sent.text or any([x in sent.text for x in synonyms]) or 'multivariate' in variable,
+        'var': variable in sent.text or any([x in sent.text for x in synonyms]),
         'neg': bool(negation_counter(tokens) % 2) != rejected}
     
     output:List[str] = []
