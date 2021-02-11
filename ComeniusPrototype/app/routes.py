@@ -23,6 +23,10 @@ def index():
         
     #Assign local variables
     varnames = [['dummy1'],['dummy2']]
+    if not controller.mes == None:
+        title:str = controller.mes['M_TITLE']
+    else:
+        title:str = 'Oefeningsmodule voor statistische rapporten'
     form = BaseForm()
     if flask.request.method == 'GET':
         controller.reset()
@@ -31,7 +35,7 @@ def index():
             pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL)
         instruction = controller.protocol[0][0]
         return render_template('index.html', display=instruction, 
-                               form=form, skip=False, submit_field=8, varnames=varnames)
+                               form=form, skip=False, submit_field=8, varnames=varnames, title=title)
     elif flask.request.method == 'POST':        
         #Isolate text fields
         textfields:list = [x for x in dir(form) if str(type(form.__getattribute__(x))) in ["<class 'wtforms.fields.core.StringField'>","<class 'wtforms.fields.core.SelectField'>","<class 'wtforms.fields.simple.TextAreaField'>"]]
@@ -47,11 +51,11 @@ def index():
             if controller.formmode and form_shape > 0 and form_shape < 3:
                 form = SmallForm()
                 controller.formmode = False
-                instruction = controller.print_assignment()
+                instruction = controller.print_afssignment()
                 #Store controller
                 with open(path, 'wb') as f:
                     pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL)    
-                return render_template('smallform.html', form=form, instruction=instruction, displays=[[''] for i in range(12)], shape=form_shape, varnames=varnames)
+                return render_template('smallform.html', form=form, instruction=instruction, displays=[[''] for i in range(12)], shape=form_shape, varnames=varnames, title=title)
             elif controller.formmode and form_shape > 2 and form_shape < 6:
                 form = BigForm()
                 controller.formmode = False
@@ -59,7 +63,7 @@ def index():
                 #Store controller
                 with open(path, 'wb') as f:
                     pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL)    
-                return render_template('bigform.html', form=form, instruction=instruction, displays=[[''] for i in range(7)], shape=form_shape, varnames=varnames)
+                return render_template('bigform.html', form=form, instruction=instruction, displays=[[''] for i in range(7)], shape=form_shape, varnames=varnames, title=title)
             elif form_shape == 7:
                 form = ReportForm()
                 controller.formmode = False
@@ -67,7 +71,7 @@ def index():
                 #Store controller
                 with open(path, 'wb') as f:
                     pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL)    
-                return render_template('reportform.html', form=form, instruction=instruction, display='')
+                return render_template('reportform.html', form=form, instruction=instruction, display='', title=title)
         if form.skip.data:
             output_text : str = controller.update({'inputtext': 'skip'})
         if form.prev.data:
@@ -85,6 +89,13 @@ def index():
             form.submit.label.text = 'Doorgaan'
         else:
             form.submit.label.text = 'Feedback'
+        if controller.submit_field == Task.CHOICE: #Determine dropdown language options
+            mes:dict = controller.mes
+            form.__getattribute__('selectanalysis').choices = [mes['M_ANALYSIS' + str(i+1)] for i in range(9)]
+            form.__getattribute__('selectanalysis').label = mes['M_CHOOSEANALYSIS']
+            form.__getattribute__('selectreport').choices = [mes['M_REPORT' + str(i+1)] for i in range(3)]
+            form.__getattribute__('selectreport').label = mes['M_CHOOSEREPORT']
+            
         skip :bool = controller.skipable
         prev :bool = controller.prevable
         answer :bool = controller.answerable
@@ -92,7 +103,8 @@ def index():
         if answer_text != '': #Capitalize the first letter of each answer
             answer_text = answer_text[0].upper() + answer_text[1:]
         submit_field :int = controller.submit_field.value
-        if controller.protocol[controller.index][1] in [scan_decision, scan_decision_anova, scan_decision_rmanova, scan_interpretation, scan_interpretation_anova, scan_hypothesis_anova]: #Convert textbox to large textbox if appropriate
+        if controller.protocol[controller.index][1] in [scan_decision, scan_decision_anova, scan_decision_rmanova, scan_interpretation, scan_interpretation_anova, scan_hypothesis_anova]: 
+            #Convert textbox to large textbox if appropriate
             submit_field = 10
         
         #Store controller
@@ -100,7 +112,7 @@ def index():
             pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL)    
         
         #Render page
-        return render_template('index.html', display=output_text, answer_text=answer_text, form=form, skip=skip, prev=prev, answer=answer, submit_field=submit_field, varnames=varnames)
+        return render_template('index.html', display=output_text, answer_text=answer_text, form=form, skip=skip, prev=prev, answer=answer, submit_field=submit_field, varnames=varnames, title=title)
     else:
         print('ERROR: INVALID METHOD')
 
@@ -114,6 +126,7 @@ def bigform():
         controller = mc[ip]
     a = controller.assignment
     form = BigForm()
+    title:str = controller.mes['M_TITLE']
     varnames:list = [[a['independent']] + a['levels']] if a['assignment_type'] != 4 else [[a['independent']] + a['levels'],[a['independent2']] + a['levels2']]
         
     if flask.request.method == 'POST':
@@ -124,7 +137,7 @@ def bigform():
             instruction, outputfields = controller.update_form_anova(textdict)
             with open(path, 'wb') as f:
                 pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL) 
-            return render_template('bigform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames)
+            return render_template('bigform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames, title=title)
         elif form.nextt.data:
             skip:bool = controller.skipable
             prev:bool = controller.prevable
@@ -135,7 +148,7 @@ def bigform():
         elif form.answer.data:
             form_shape = controller.analysis_type.value
             instruction, outputfields = controller.form_answers_anova()
-            return render_template('bigform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames)
+            return render_template('bigform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames, title=title)
         else:
             print('ERROR: INVALID METHOD')
     #elif flask.request.method == 'GET':
@@ -153,6 +166,7 @@ def smallform():
         controller = mc[ip]
     a = controller.assignment
     form = SmallForm()
+    title:str = controller.mes['M_TITLE']
     varnames:list = [[a['independent']] + a['levels']] if a['assignment_type'] != 4 else [[a['independent']] + a['levels'],[a['independent2']] + a['levels2']]
     if flask.request.method == 'POST':
         if form.submit.data:
@@ -162,7 +176,7 @@ def smallform():
             instruction, outputfields = controller.update_form_ttest(textdict)
             with open(path, 'wb') as f:
                 pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL) 
-            return render_template('smallform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames)
+            return render_template('smallform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames, title=title)
         elif form.nextt.data:
             skip :bool = controller.skipable
             prev :bool = controller.prevable
@@ -173,7 +187,7 @@ def smallform():
         elif form.answer.data:
             form_shape = controller.analysis_type.value
             instruction, outputfields = controller.form_answers()
-            return render_template('smallform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames)
+            return render_template('smallform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames, title=title)
         else:
             print('ERROR: INVALID METHOD')
     #elif flask.request.method == 'GET':
@@ -191,6 +205,7 @@ def reportform():
         controller = mc[ip]
     varnames:list = []#[[a['independent']] + a['levels']] if a['assignment_type'] != 4 else [[a['independent']] + a['levels'],[a['independent2']] + a['levels2']]
     form = ReportForm()
+    title:str = controller.mes['M_TITLE']
     if flask.request.method == 'POST':
         if form.submit.data:
             textfields = [x for x in dir(form) if str(type(form.__getattribute__(x))) == "<class 'wtforms.fields.simple.TextAreaField'>"]
@@ -198,7 +213,7 @@ def reportform():
             instruction, output = controller.update_form_report(textdict)
             with open(path, 'wb') as f:
                 pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL) 
-            return render_template('reportform.html', form=form, instruction=instruction, display=output)
+            return render_template('reportform.html', form=form, instruction=instruction, display=output, title=title)
         elif form.nextt.data:
             skip :bool = controller.skipable
             prev :bool = controller.prevable
@@ -206,7 +221,7 @@ def reportform():
             form = BaseForm()
             form.inputtext.data = ""
             field = controller.submit_field.value
-            return render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=field, varnames=varnames)
+            return render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=field, varnames=varnames, title=title)
         else:
             print('ERROR: INVALID METHOD')
     #elif flask.request.method == 'GET':

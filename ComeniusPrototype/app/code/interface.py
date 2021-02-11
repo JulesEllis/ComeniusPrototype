@@ -261,6 +261,10 @@ class Controller:
         
         #Execute the correct response
         if process == Process.INTRO: #If intro protocol:
+            if textfields['selectlanguage'] == 'Nederlands':
+                self.mes = self.languages.get_messages(False)
+            else:
+                self.mes = self.languages.get_messages(True)
             self.protocol = self.choice_protocol()
             self.submit_field = Task.CHOICE
             self.formmode = False
@@ -271,12 +275,12 @@ class Controller:
             hyp_type: int = random.choice([0,1,2])
             instruction: str = ''
             #Select analysis
-            if analysis == 'T-toets onafhankelijke variabelen':
+            if analysis in ['T-toets onafhankelijke variabelen','T-test for independent samples']:
                 self.assignment = self.assignments.create_ttest(True, hyp_type, control)
                 self.solution = self.assignments.solve_ttest(self.assignment, {})
                 instruction = self.assignments.print_ttest(self.assignment)
                 self.analysis_type = Task.TTEST_BETWEEN
-            if analysis == 'T-toets voor gekoppelde paren':
+            if analysis in ['T-toets voor gekoppelde paren','T-test for paired samples']:
                 self.assignment = self.assignments.create_ttest(False, hyp_type, control)
                 self.solution = self.assignments.solve_ttest(self.assignment, {})
                 instruction = self.assignments.print_ttest(self.assignment)
@@ -297,49 +301,49 @@ class Controller:
                 self.solution = self.assignments.solve_rmanova(self.assignment, {})
                 instruction = self.assignments.print_rmanova(self.assignment)
                 self.analysis_type = Task.WITHIN_ANOVA
-            if analysis == 'Multiple-regressieanalyse':
+            if analysis in ['Multipele-regressieanalyse', 'Multiple-regression analysis']:
                 self.analysis_type = Task.MREGRESSION
-                if report != 'Beknopt rapport':
+                if report not in ['Beknopt rapport', 'Summary report']:
                     return self.protocol[self.index][0] + '<span style="color: blue;">Sorry, bij multipele regressie kan je alleen een beknopt rapport maken.</span>'
             if analysis == 'MANOVA':
                 self.analysis_type = Task.MANOVA
-                if report != 'Beknopt rapport':
+                if report not in ['Beknopt rapport', 'Summary report']:
                     return self.protocol[self.index][0] + '<span style="color: blue;">Sorry, bij MANOVA kan je alleen een beknopt rapport maken.</span>'
             if analysis == 'ANCOVA':
                 self.analysis_type = Task.ANCOVA
-                if report != 'Beknopt rapport':
+                if report not in ['Beknopt rapport', 'Summary report']:
                     return self.protocol[self.index][0] + '<span style="color: blue;">Sorry, bij ANCOVA kan je alleen een beknopt rapport maken.</span>'
             if analysis == 'Multivariate-RMANOVA':
                 self.analysis_type = Task.MULTIRM
-                if report != 'Beknopt rapport':
+                if report not in ['Beknopt rapport', 'Summary report']:
                     return self.protocol[self.index][0] + '<span style="color: blue;">Sorry, bij multipele RMANOVA kan je alleen een beknopt rapport maken.</span>'
-            if analysis == 'Dubbel Multivariate-RMANOVA':
+            if analysis in ['Dubbel Multivariate-RMANOVA','Dubble multivariate RMANOVA']:
                 self.analysis_type = Task.MULTIRM2
-                if report != 'Beknopt rapport':
+                if report not in ['Beknopt rapport', 'Summary report']:
                     return self.protocol[self.index][0] + '<span style="color: blue;">Sorry, bij multipele RMANOVA kan je alleen een beknopt rapport maken.</span>'
             
             #Select report type
             self.index = 0
-            if report == 'Elementair rapport (oefenmodus)':
+            if report in ['Elementair rapport (oefenmodus)','Elementary report (practice mode)']:
                 self.skipable = True
                 self.answerable = True
                 self.submit_field = Task.TEXT_FIELD
-                if analysis == 'T-toets onafhankelijke variabelen':
+                if self.analysis_type == Task.TTEST_BETWEEN: #'T-toets onafhankelijke variabelen':
                     self.protocol = self.ttest_protocol()
-                if analysis == 'T-toets voor gekoppelde paren':
+                if self.analysis_type == Task.TTEST_WITHIN:
                     self.protocol = self.ttest_protocol()
-                if analysis == 'One-way ANOVA':
+                if self.analysis_type == Task.ONEWAY_ANOVA:
                     self.protocol = self.anova_protocol()
-                if analysis == 'Two-way ANOVA':
+                if self.analysis_type == Task.TWOWAY_ANOVA:
                     self.protocol = self.anova_protocol()
-                if analysis == 'Repeated Measures Anova':
+                if self.analysis_type == Task.RMANOVA:
                     self.protocol = self.rmanova_protocol()
-            if report == 'Elementair rapport (tentamenmodus)':
+            if report in ['Elementair rapport (tentamenmodus)','Elementary report (examination mode)']:
                 self.submit_field = Task.FINISHED #Task.INTRO
                 self.skipable = False
                 self.formmode = True
                 self.protocol = self.completion_protocol()
-            if report == 'Beknopt rapport':
+            if report in ['Beknopt rapport', 'Summary report']:
                 self.submit_field = Task.FINISHED
                 self.skipable = False
                 self.formmode= True
@@ -421,7 +425,7 @@ class Controller:
                  scan_dummy, [], Process.INTRO, None)]
         
     def choice_protocol(self) -> List[Tuple]:
-        return [('Voer hieronder het soort opgave in dat je wil oefenen.<br>',None,[], Process.CHOOSE_ANALYSIS, None)]
+        return [(self.mes['Q_CHOICE'],None,[], Process.CHOOSE_ANALYSIS, None)]
    
     def ttest_protocol(self) -> List[Tuple]:
         output : List[Tuple] = [('Beschrijf de onafhankelijke variabele.', scan_indep, [self.solution], Process.QUESTION,self.assignments.print_independent(self.assignment)),

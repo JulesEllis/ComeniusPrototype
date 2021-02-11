@@ -344,11 +344,15 @@ def split_grade_ancova(text:str, solution:dict) -> str:
     output += '<br>' + scan_predictors(doc, solution, prefix=False)[1]
     
     output += '<br>'+'<br>'.join(detect_decision_ancova(doc, solution))
+    output += '<br>'+'<br>'.join(detect_effect(doc,solution, variable='multivariate', p=solution['p'][2], eta=solution['eta'][2], num=1))
     output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][3]))
     output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][3]))
     output += '<br>'+'<br>'.join(detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta'][3], aliases=['eta2','eta']))
+    
     #print(str(solution['F'][3]) + ' - '+ str(solution['p'][3]) + ' - '+ str(solution['eta'][3]))
+    output += '<br>'+'<br>'.join(detect_decision_multirm(doc, solution, solution['independent'], ['between-subject'], solution['p'][2],solution['eta'][2],num=1))
     if(solution['p'][2] < 0.05):
+        output += '<br>'+'<br>'.join(detect_effect(doc,solution, variable=solution['independent'], p=solution['p'][2], eta=solution['eta'][2], num=1))
         output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][2], label=solution['independent']))
     if output.replace('<br>','') == '':
         return 'Mooi, dit beknopt rapport bevat alle juiste details!'

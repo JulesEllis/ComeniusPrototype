@@ -13,7 +13,33 @@ import spacy
 import logging
 import nltk
 from scipy import stats
+from spacy.tokens.token import Token
+from spacy.tokens.doc import Doc
 from typing import Dict, List, Callable, Tuple
+from spacy.pipeline import merge_noun_chunks, merge_entities
+
+def detect_eq(text:str):
+    nlp = spacy.load('nl')
+    doc = nlp(text)
+    merge_noun_chunks(doc)
+    merge_entities(doc)
+    for token in doc:
+        # We have an attribute and direct object, so check for subject
+        if token.dep_ in ("attr", "dobj"):
+            subj = [w for w in token.head.lefts if w.dep_ == "nsubj"]
+            if subj:
+                print(subj[0], "-->", token)
+        if token.dep_ in ("amod"):
+            subj = [w for w in token.lefts if w.dep_ == "obl"]s
+            if subj:
+                print(subj[0], "-->", token)
+        # We have a prepositional object with a preposition
+        elif token.dep_ == "pobj" and token.head.dep_ == "prep":
+            print(token.head.head, "-->", token)
+    
+
+#detect_eq('De winst was meer dan $10.')
+detect_eq('Het design heeft woningnood als onafhankelijke variabele en depressie als afhankelijke variabele.')
 
 def closest_effect(var:str, words:list, unidirectional = False, weighted = False):
     if not var in words:
@@ -49,7 +75,7 @@ def associate(text:str, method:int):
         answers = [closest_effect(x, words, weighted=True) for x in varss]
     return sum([answers[i] == golds[i] for i in range(len(golds))]) / len(golds)
         
-
+"""
 sent = 'Bij de within-subject multivariate beslissing is er een sterk significant effect (F = 6.89, p = 0.01, eta = 0.65). '\
     'Dit komt door het contrast tussen na en followup (p = 0.0).'\
     'Bij de interactie tussen meting en bloedtype is er een significant effect. Dit effect is klein .'\
@@ -58,3 +84,4 @@ print('Volgorde: ' + str(associate(sent, 0)))
 print('Symmetrische afstand: ' + str(associate(sent, 1)))
 print('Afstand rechts: ' + str(associate(sent, 2)))
 print('Gewogen afstand: ' + str(associate(sent, 3)))
+"""
