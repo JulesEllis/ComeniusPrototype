@@ -6,17 +6,13 @@ Created on Tue Feb  9 18:41:13 2021
 @author: jelmer
 """
 import os
-import sys
-from importlib import reload  
 
 class LanguageInterface:
     def __init__(self):
-        reload(sys)
-        sys.setdefaultencoding('utf8')
         path = '/home/jelmer/Github/ComeniusPrototype/ComeniusPrototype/app/code/texts.csv' if 'Github' in os.getcwd() else '/var/www/ComeniusPrototype/ComeniusPrototype/app/code/texts.csv'
         dutch_pairs = []
         english_pairs = []
-        with open(path) as file:
+        with open(path, encoding='utf-8', errors='ignore') as file:
             for line in file.readlines():
                 parts = line.split('","')
                 dutch_pairs.append((parts[0][1:], parts[1]))
