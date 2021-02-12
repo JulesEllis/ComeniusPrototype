@@ -254,7 +254,7 @@ def detect_interaction(doc:Doc, solution:dict, anova:bool) -> List[str]:
     return output
 
 def detect_decision_ancova(sent:Doc, solution:dict) -> List[str]:
-    rejected:bool = solution['p'][-1] < 0.05
+    rejected:bool = solution['p'][3] < 0.05
     tokens:list = [x.text for x in sent]
     scorepoints:dict = {'sign_val': 'significant voorspellende waarde' in sent.text,
         'indep': solution['independent'] in sent.text or any([x in sent.text for x in solution['ind_syns']]),

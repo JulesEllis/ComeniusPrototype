@@ -343,14 +343,22 @@ def split_grade_ancova(text:str, solution:dict) -> str:
     output += '<br>' + scan_design(doc, solution, prefix=False)[1]
     output += '<br>' + scan_predictors(doc, solution, prefix=False)[1]
     
-    output += '<br>'+'<br>'.join(detect_decision_ancova(doc, solution))
+    multivar_sent = [x for x in doc.sents if 'voorspellende waarde' in x.text]
+    if multivar_sent != []:
+        output += '<br>'+'<br>'.join(detect_decision_ancova(doc, solution))
+    else:
+        output += '<br> -niet genoemd of het model een significant voorspellende waarde heeft'
     output += '<br>'+'<br>'.join(detect_effect(doc,solution, variable='multivariate', p=solution['p'][2], eta=solution['eta'][2], num=1))
     output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][3]))
     output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][3]))
     output += '<br>'+'<br>'.join(detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta'][3], aliases=['eta2','eta']))
     
     #print(str(solution['F'][3]) + ' - '+ str(solution['p'][3]) + ' - '+ str(solution['eta'][3]))
-    output += '<br>'+'<br>'.join(detect_decision_multirm(doc, solution, solution['independent'], ['between-subject'], solution['p'][2],solution['eta'][2],num=1))
+    between_sent = [x for x in doc.sents if (solution['independent'] in x.text or 'between-subject' in x.text) and ('significant' in x.text or 'effect' in x.text)]
+    if between_sent != []:
+        output += '<br>'+'<br>'.join(detect_decision_multirm(doc, solution, solution['independent'], ['between-subject'], solution['p'][2],solution['eta'][2],num=1))
+    else:
+        output += '<br> -de beslissing van de between-subjectfactor wordt niet genoemd'
     if(solution['p'][2] < 0.05):
         output += '<br>'+'<br>'.join(detect_effect(doc,solution, variable=solution['independent'], p=solution['p'][2], eta=solution['eta'][2], num=1))
         output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][2], label=solution['independent']))
