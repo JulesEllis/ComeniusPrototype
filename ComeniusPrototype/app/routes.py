@@ -23,10 +23,7 @@ def index():
         
     #Assign local variables
     varnames = [['dummy1'],['dummy2']]
-    if not controller.mes == None:
-        title:str = controller.mes['M_TITLE']
-    else:
-        title:str = 'Oefeningsmodule voor statistische rapporten'
+    title:str = 'Oefeningsmodule voor statistische rapporten'
     form = BaseForm()
     if flask.request.method == 'GET':
         controller.reset()
@@ -44,6 +41,10 @@ def index():
         #Prepare webpage parameters
         if form.submit.data:
             output_text : str = controller.update(textdict)
+            if not controller.mes == None:
+                title:str = controller.mes['M_TITLE']
+            else:
+                title:str = 'Oefeningsmodule voor statistische rapporten'
             if controller.assignment != None: #Retrieve variable names
                 a = controller.assignment
                 varnames:list = [[a['independent']] + a['levels']] if a['assignment_type'] != 4 else [[a['independent']] + a['levels'],[a['independent2']] + a['levels2']]
