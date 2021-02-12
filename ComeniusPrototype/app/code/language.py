@@ -5,6 +5,7 @@ Created on Tue Feb  9 18:41:13 2021
 
 @author: jelmer
 """
+import os
 
 class LanguageInterface:
     def __init__(self):
