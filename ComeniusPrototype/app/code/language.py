@@ -8,7 +8,7 @@ Created on Tue Feb  9 18:41:13 2021
 
 class LanguageInterface:
     def __init__(self):
-        path = '/home/jelmer/Github/ComeniusPrototype/ComeniusPrototype/app/code/texts.csv'#'app/code/texts.csv'
+        path = '/home/jelmer/Github/ComeniusPrototype/ComeniusPrototype/app/code/texts.csv' if 'Github' in os.getcwd() else '/var/www/ComeniusPrototype/ComeniusPrototype/app/code/texts.csv'
         dutch_pairs = []
         english_pairs = []
         with open(path) as file:
