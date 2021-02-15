@@ -21,7 +21,7 @@ def cap(term:str) -> str:
     
 class Assignments:
     def __init__(self):
-        pass
+        self.mes = None
         
     #Checks the nature of the given assignment and returns the output of the right print function
     def print_assignment(self, assignment: Dict) -> str:
@@ -38,6 +38,9 @@ class Assignments:
         else:
             print('ERROR: ASSIGNMENT TYPE NOT RECOGNIZED')
             return None
+        
+    def set_messages(self, mes:dict):
+        self.mes = mes
         
     #Creates the assignment's data as a tuple of floats
     #If the assignment is a within-subject T-test, n1 and n2 have the same number of samples
@@ -83,9 +86,9 @@ class Assignments:
         if hyp_type == 2:
             instruction += dependent+" bij " + independent + " " + levels[0] + " gemiddeld kleiner is dan die bij " + levels[1] + ".<br><br>"
         if between_subject:
-            instruction += 'De proefpersonen doen een experiment, waarin ze worden ingedeeld op hun ' + independent + ' in de groepen '+ levels[0] + ' en ' + levels[1]
+            instruction += 'De proefpersonen doen een experiment, waarin ze worden ingedeeld op hun ' + independent + ' in de groepen '+ levels[0] + ' en ' + levels[1] + '. '
         else:
-            instruction += 'De proefpersonen doen allemaal mee aan een experiment, met als ' + independent + ' zowel ' + levels[0] + ' als ' + levels[1]
+            instruction += 'De proefpersonen doen allemaal mee aan een experiment, met als ' + independent + ' zowel ' + levels[0] + ' als ' + levels[1] + '. '
         if control:
             if between_subject:
                 instruction += 'De personen van elk beroep zijn willekeurig geselecteerd. '

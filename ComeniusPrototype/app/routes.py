@@ -31,47 +31,86 @@ def index():
         with open(path, 'wb') as f:
             pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL)
         instruction = controller.protocol[0][0]
+        if controller.mes != None:
+            title:str = controller.mes['M_TITLE']
         return render_template('index.html', display=instruction, 
                                form=form, skip=False, submit_field=8, varnames=varnames, title=title)
     elif flask.request.method == 'POST':        
         #Isolate text fields
+        mes = controller.mes
+        if not controller.mes == None:
+            title:str = controller.mes['M_TITLE']
         textfields:list = [x for x in dir(form) if str(type(form.__getattribute__(x))) in ["<class 'wtforms.fields.core.StringField'>","<class 'wtforms.fields.core.SelectField'>","<class 'wtforms.fields.simple.TextAreaField'>"]]
         textdict:dict = dict([(x, form.__getattribute__(x).data) for x in textfields])        
         
         #Prepare webpage parameters
         if form.submit.data:
             output_text : str = controller.update(textdict)
-            if not controller.mes == None:
-                title:str = controller.mes['M_TITLE']
-            else:
-                title:str = 'Oefeningsmodule voor statistische rapporten'
             if controller.assignment != None: #Retrieve variable names
                 a = controller.assignment
                 varnames:list = [[a['independent']] + a['levels']] if a['assignment_type'] != 4 else [[a['independent']] + a['levels'],[a['independent2']] + a['levels2']]
             form_shape = controller.analysis_type.value
             if controller.formmode and form_shape > 0 and form_shape < 3:
                 form = SmallForm()
-                controller.formmode = False
-                instruction = controller.print_afssignment()
-                #Store controller
-                with open(path, 'wb') as f:
-                    pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL)    
-                return render_template('smallform.html', form=form, instruction=instruction, displays=[[''] for i in range(12)], shape=form_shape, varnames=varnames, title=title)
-            elif controller.formmode and form_shape > 2 and form_shape < 6:
-                form = BigForm()
+                form.__getattribute__('inputtext1').label = mes['Q_IND']
+                form.__getattribute__('inputtext2').label = mes['Q_DEP']
+                form.__getattribute__('inputtext3').label = mes['Q_MEASURE']
+                form.__getattribute__('inputtext4').label = mes['Q_HYP']
+                form.__getattribute__('inputtext5').label = mes['Q_DF']
+                form.__getattribute__('inputtext6').label = mes['Q_RAW']
+                form.__getattribute__('inputtext7').label = mes['Q_RELATIVE']
+                form.__getattribute__('inputtext8').label = mes['Q_T']
+                form.__getattribute__('inputtext9').label = mes['Q_P']
+                form.__getattribute__('inputtext10').label = mes['Q_DECISION']
+                form.__getattribute__('inputtext11').label = mes['Q_INTERPRET']
+                form.__getattribute__('mean1').label = mes['Q_TABLE']
+                form.__getattribute__('mean2').label = mes['A_STATISTIC']
+                form.__getattribute__('std1').label = mes['A_MEAN']
+                form.__getattribute__('std2').label = mes['A_STD']
                 controller.formmode = False
                 instruction = controller.print_assignment()
                 #Store controller
                 with open(path, 'wb') as f:
-                    pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL)    
+                    pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL)        
+                
+                return render_template('smallform.html', form=form, instruction=instruction, displays=[[''] for i in range(12)], shape=form_shape, varnames=varnames, title=title)
+            elif controller.formmode and form_shape > 2 and form_shape < 6:
+                form = BigForm()
+                form.__getattribute__('inputtext1').label = mes['Q_IND']
+                form.__getattribute__('inputtext12').label = mes['Q_IND2']
+                form.__getattribute__('inputtext2').label = mes['Q_DEP']
+                form.__getattribute__('inputtext3').label = mes['Q_MEASURE']
+                form.__getattribute__('inputtext32').label = mes['Q_MEASURE2']
+                form.__getattribute__('inputtext4').label = mes['Q_HYP']
+                form.__getattribute__('inputtext42').label = mes['Q_HYP2']
+                form.__getattribute__('inputtext43').label = mes['Q_HYPINT']
+                form.__getattribute__('inputtext5').label = mes['Q_DECISION']
+                form.__getattribute__('inputtext52').label = mes['Q_DECISION2']
+                form.__getattribute__('inputtext53').label = mes['Q_DECISIONINT']
+                form.__getattribute__('inputtext6').label = mes['Q_INTERPRET']
+                form.__getattribute__('inputtext62').label = mes['Q_INTERPRET2']
+                form.__getattribute__('inputtext63').label = mes['Q_INTERPRETINT']
+                form.__getattribute__('df1').label = mes['Q_TABLE']
+                form.__getattribute__('df2').label = mes['A_SOURCE']
+                form.__getattribute__('df3').label = mes['A_PERSON']
+                form.__getattribute__('df4').label = mes['A_INTERACT']
+                form.__getattribute__('df5').label = mes['A_TOTAL']
+                controller.formmode = False
+                instruction = controller.print_assignment()
+                #Store controller
+                with open(path, 'wb') as f:
+                    pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL)            
+                
                 return render_template('bigform.html', form=form, instruction=instruction, displays=[[''] for i in range(7)], shape=form_shape, varnames=varnames, title=title)
             elif form_shape == 7:
                 form = ReportForm()
+                form.__getattribute__('inputtext').label = mes['Q_SHORTREPORT']
                 controller.formmode = False
                 instruction = output_text
                 #Store controller
                 with open(path, 'wb') as f:
                     pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL)    
+                
                 return render_template('reportform.html', form=form, instruction=instruction, display='', title=title)
         if form.skip.data:
             output_text : str = controller.update({'inputtext': 'skip'})
@@ -87,7 +126,10 @@ def index():
             form.inputtext.data = ""
             form.inputtextlarge.data = ""
         if controller.submit_field == Task.INTRO or controller.submit_field == Task.CHOICE or controller.submit_field == Task.FINISHED: #Determine enter button text
-            form.submit.label.text = 'Doorgaan'
+            if not controller.mes['L_ENGLISH']:
+                form.submit.label.text = 'Doorgaan'
+            else:
+                form.submit.label.text = 'Continue'
         else:
             form.submit.label.text = 'Feedback'
         if controller.submit_field == Task.CHOICE: #Determine dropdown language options
@@ -96,7 +138,15 @@ def index():
             form.__getattribute__('selectanalysis').label = mes['M_CHOOSEANALYSIS']
             form.__getattribute__('selectreport').choices = [mes['M_REPORT' + str(i+1)] for i in range(3)]
             form.__getattribute__('selectreport').label = mes['M_CHOOSEREPORT']
-            
+        if controller.submit_field.value > 0 and controller.submit_field.value < 6:
+            form.__getattribute__('mean2').label = mes['A_STATISTIC']
+            form.__getattribute__('std1').label = mes['A_MEAN']
+            form.__getattribute__('std2').label = mes['A_STD']
+            form.__getattribute__('df2').label = mes['A_SOURCE']
+            form.__getattribute__('df3').label = mes['A_PERSON']
+            form.__getattribute__('df4').label = mes['A_INTERACT']
+            form.__getattribute__('df5').label = mes['A_TOTAL']
+            form.__getattribute__('n1').label = mes['A_DIFF']
         skip :bool = controller.skipable
         prev :bool = controller.prevable
         answer :bool = controller.answerable
@@ -125,11 +175,34 @@ def bigform():
         mc:dict = pickle.load(f)
         ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
         controller = mc[ip]
+    mes:dict = controller.mes
     a = controller.assignment
     form = BigForm()
-    title:str = controller.mes['M_TITLE']
+    title:str = mes['M_TITLE']
+    
+    #Fill text positions that will be shown in the form
     varnames:list = [[a['independent']] + a['levels']] if a['assignment_type'] != 4 else [[a['independent']] + a['levels'],[a['independent2']] + a['levels2']]
-        
+    form.__getattribute__('inputtext1').label = mes['Q_IND']
+    form.__getattribute__('inputtext12').label = mes['Q_IND2']
+    form.__getattribute__('inputtext2').label = mes['Q_DEP']
+    form.__getattribute__('inputtext3').label = mes['Q_MEASURE']
+    form.__getattribute__('inputtext32').label = mes['Q_MEASURE2']
+    form.__getattribute__('inputtext4').label = mes['Q_HYP']
+    form.__getattribute__('inputtext42').label = mes['Q_HYP2']
+    form.__getattribute__('inputtext43').label = mes['Q_HYPINT']
+    form.__getattribute__('inputtext5').label = mes['Q_DECISION']
+    form.__getattribute__('inputtext52').label = mes['Q_DECISION2']
+    form.__getattribute__('inputtext53').label = mes['Q_DECISIONINT']
+    form.__getattribute__('inputtext6').label = mes['Q_INTERPRET']
+    form.__getattribute__('inputtext62').label = mes['Q_INTERPRET2']
+    form.__getattribute__('inputtext63').label = mes['Q_INTERPRETINT']
+    form.__getattribute__('df1').label = mes['Q_TABLE']
+    form.__getattribute__('df2').label = mes['A_SOURCE']
+    form.__getattribute__('df3').label = mes['A_PERSON']
+    form.__getattribute__('df4').label = mes['A_INTERACT']
+    form.__getattribute__('df5').label = mes['A_TOTAL']
+    
+    #Determine rendering parameters    
     if flask.request.method == 'POST':
         if form.submit.data:
             form_shape = controller.analysis_type.value
@@ -165,10 +238,31 @@ def smallform():
         mc:dict = pickle.load(f)
         ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
         controller = mc[ip]
+    mes:dict = controller.mes
     a = controller.assignment
     form = SmallForm()
     title:str = controller.mes['M_TITLE']
+    print(title)
+    
+    #Enter text labels
     varnames:list = [[a['independent']] + a['levels']] if a['assignment_type'] != 4 else [[a['independent']] + a['levels'],[a['independent2']] + a['levels2']]
+    form.__getattribute__('inputtext1').label = mes['Q_IND']
+    form.__getattribute__('inputtext2').label = mes['Q_DEP']
+    form.__getattribute__('inputtext3').label = mes['Q_MEASURE']
+    form.__getattribute__('inputtext4').label = mes['Q_HYP']
+    form.__getattribute__('inputtext5').label = mes['Q_DF']
+    form.__getattribute__('inputtext6').label = mes['Q_RAW']
+    form.__getattribute__('inputtext7').label = mes['Q_RELATIVE']
+    form.__getattribute__('inputtext8').label = mes['Q_T']
+    form.__getattribute__('inputtext9').label = mes['Q_P']
+    form.__getattribute__('inputtext10').label = mes['Q_DECISION']
+    form.__getattribute__('inputtext11').label = mes['Q_INTERPRET']
+    form.__getattribute__('mean1').label = mes['Q_TABLE']
+    form.__getattribute__('mean2').label = mes['A_STATISTIC']
+    form.__getattribute__('std1').label = mes['A_MEAN']
+    form.__getattribute__('std2').label = mes['A_STD']
+    
+    #Deterimine rendering parameters
     if flask.request.method == 'POST':
         if form.submit.data:
             form_shape = controller.analysis_type.value
@@ -204,9 +298,15 @@ def reportform():
         mc:dict = pickle.load(f)
         ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
         controller = mc[ip]
+    mes:dict = controller.mes
     varnames:list = []#[[a['independent']] + a['levels']] if a['assignment_type'] != 4 else [[a['independent']] + a['levels'],[a['independent2']] + a['levels2']]
     form = ReportForm()
+    
+    #Fill text fields
     title:str = controller.mes['M_TITLE']
+    form.__getattribute__('inputtext').label = mes['Q_SHORTREPORT']
+    
+    #Determine rendering parameters
     if flask.request.method == 'POST':
         if form.submit.data:
             textfields = [x for x in dir(form) if str(type(form.__getattribute__(x))) == "<class 'wtforms.fields.simple.TextAreaField'>"]

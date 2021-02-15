@@ -171,39 +171,39 @@ class Controller:
             print('ERROR: INVALID TABLE SHAPE')
         if not self.assignment['two_way'] and not 'jackedmeans' in list(self.assignment['data'].keys()):
             #One-way ANOVA
-            output[0].append('Antwoord: '+self.assignments.print_independent(self.assignment))
-            output[1].append('Antwoord: '+self.assignments.print_dependent(self.assignment))
-            output[2].append('Antwoord: '+['Passief-observerend','Experiment'][int(self.solution['control'])])
-            output[3].append('Antwoord: '+self.solution['null'])
-            output[4].append('Antwoord: '+self.assignments.print_report({**self.assignment, **self.solution}, answer=True))
-            output[5].append('Antwoord: '+self.solution['decision'])
-            output[6].append('Antwoord: '+self.solution['interpretation'])
+            output[0].append(self.mes['A_ANSWER']+self.assignments.print_independent(self.assignment))
+            output[1].append(self.mes['A_ANSWER']+self.assignments.print_dependent(self.assignment))
+            output[2].append(self.mes['A_ANSWER']+['Passief-observerend','Experiment'][int(self.solution['control'])])
+            output[3].append(self.mes['A_ANSWER']+self.solution['null'])
+            output[4].append(self.mes['A_ANSWER']+self.assignments.print_report({**self.assignment, **self.solution}, answer=True))
+            output[5].append(self.mes['A_ANSWER']+self.solution['decision'])
+            output[6].append(self.mes['A_ANSWER']+self.solution['interpretation'])
         elif self.assignment['two_way']:
-            output[0].append('Antwoord: '+self.assignments.print_independent(self.assignment))
-            output[0].append('Antwoord: '+self.assignments.print_independent(self.assignment, num=2))
-            output[1].append('Antwoord: '+self.assignments.print_dependent(self.assignment))
-            output[2].append('Antwoord: '+['Passief-observerend','Experiment'][int(self.solution['control'])])
-            output[2].append('Antwoord: '+['Passief-observerend','Experiment'][int(self.solution['control2'])])
-            output[3].append('Antwoord: '+self.solution['null'])
-            output[3].append('Antwoord: '+self.solution['null2'])
-            output[3].append('Antwoord: '+self.solution['null3'])
-            output[4].append('Antwoord: '+self.assignments.print_report({**self.assignment, **self.solution}, answer=True))
-            output[5].append('Antwoord: '+self.solution['decision'])
-            output[5].append('Antwoord: '+self.solution['decision2'])
-            output[5].append('Antwoord: '+self.solution['decision3'])
-            output[6].append('Antwoord: '+self.solution['interpretation'])
-            output[6].append('Antwoord: '+self.solution['interpretation2'])
-            output[6].append('Antwoord: '+self.solution['interpretation3'])
+            output[0].append(self.mes['A_ANSWER']+self.assignments.print_independent(self.assignment))
+            output[0].append(self.mes['A_ANSWER']+self.assignments.print_independent(self.assignment, num=2))
+            output[1].append(self.mes['A_ANSWER']+self.assignments.print_dependent(self.assignment))
+            output[2].append(self.mes['A_ANSWER']+['Passief-observerend','Experiment'][int(self.solution['control'])])
+            output[2].append(self.mes['A_ANSWER']+['Passief-observerend','Experiment'][int(self.solution['control2'])])
+            output[3].append(self.mes['A_ANSWER']+self.solution['null'])
+            output[3].append(self.mes['A_ANSWER']+self.solution['null2'])
+            output[3].append(self.mes['A_ANSWER']+self.solution['null3'])
+            output[4].append(self.mes['A_ANSWER']+self.assignments.print_report({**self.assignment, **self.solution}, answer=True))
+            output[5].append(self.mes['A_ANSWER']+self.solution['decision'])
+            output[5].append(self.mes['A_ANSWER']+self.solution['decision2'])
+            output[5].append(self.mes['A_ANSWER']+self.solution['decision3'])
+            output[6].append(self.mes['A_ANSWER']+self.solution['interpretation'])
+            output[6].append(self.mes['A_ANSWER']+self.solution['interpretation2'])
+            output[6].append(self.mes['A_ANSWER']+self.solution['interpretation3'])
         elif 'jackedmeans' in list(self.assignment['data'].keys()):
-            output[0].append('Antwoord: '+self.assignments.print_independent(self.assignment))
-            output[1].append('Antwoord: '+self.assignments.print_dependent(self.assignment))
-            output[2].append('Antwoord: '+['Passief-observerend','Experiment'][int(self.solution['control'])])
-            output[3].append('Antwoord: '+self.solution['null'])
-            output[3].append('Antwoord: '+self.solution['null2'])
-            output[4].append('Antwoord: '+self.assignments.print_report({**self.assignment, **self.solution}, answer=True))
-            output[5].append('Antwoord: '+self.solution['decision'])
-            output[5].append('Antwoord: '+self.solution['decision2'])
-            output[6].append('Antwoord: '+self.solution['interpretation'])
+            output[0].append(self.mes['A_ANSWER']+self.assignments.print_independent(self.assignment))
+            output[1].append(self.mes['A_ANSWER']+self.assignments.print_dependent(self.assignment))
+            output[2].append(self.mes['A_ANSWER']+['Passief-observerend','Experiment'][int(self.solution['control'])])
+            output[3].append(self.mes['A_ANSWER']+self.solution['null'])
+            output[3].append(self.mes['A_ANSWER']+self.solution['null2'])
+            output[4].append(self.mes['A_ANSWER']+self.assignments.print_report({**self.assignment, **self.solution}, answer=True))
+            output[5].append(self.mes['A_ANSWER']+self.solution['decision'])
+            output[5].append(self.mes['A_ANSWER']+self.solution['decision2'])
+            output[6].append(self.mes['A_ANSWER']+self.solution['interpretation'])
         return instruction, output
     
     def update_form_report(self, textfields: Dict) -> List[str]:
@@ -265,11 +265,17 @@ class Controller:
                 self.mes = self.languages.get_messages(False)
             else:
                 self.mes = self.languages.get_messages(True)
+            self.assignments.set_messages(self.mes)
             self.protocol = self.choice_protocol()
             self.submit_field = Task.CHOICE
             self.formmode = False
             self.analysis_type = Task.INTRO
             return self.protocol[0][0]
+        elif process == Process.FINISH:
+            self.protocol = self.choice_protocol()
+            self.submit_field = Task.CHOICE
+            self.formmode = False
+            self.analysis_type = Task.FINISHED
         elif process == Process.CHOOSE_ANALYSIS: #If choice protocol index 1 or return protocol index 2
             control: bool = random.choice([True,False])
             hyp_type: int = random.choice([0,1,2])
@@ -324,7 +330,7 @@ class Controller:
             
             #Select report type
             self.index = 0
-            if report in ['Elementair rapport (oefenmodus)','Elementary report (practice mode)']:
+            if report in ['Elementair rapport (oefenmodus)','Elementary rapport (practice mode)']:
                 self.skipable = True
                 self.answerable = True
                 self.submit_field = Task.TEXT_FIELD
@@ -336,9 +342,9 @@ class Controller:
                     self.protocol = self.anova_protocol()
                 if self.analysis_type == Task.TWOWAY_ANOVA:
                     self.protocol = self.anova_protocol()
-                if self.analysis_type == Task.RMANOVA:
+                if self.analysis_type == Task.WITHIN_ANOVA:
                     self.protocol = self.rmanova_protocol()
-            if report in ['Elementair rapport (tentamenmodus)','Elementary report (examination mode)']:
+            if report in ['Elementair rapport (tentamenmodus)','Elementary rapport (examination mode)']:
                 self.submit_field = Task.FINISHED #Task.INTRO
                 self.skipable = False
                 self.formmode = True
@@ -421,64 +427,64 @@ class Controller:
                  scan_dummy, [], Process.INTRO, None)]
 
     def completion_protocol(self) -> List[Tuple]:
-        return [('Gefeliciteerd, je rapport is af! Klik op de knop hieronder om verder te gaan.', 
-                 scan_dummy, [], Process.INTRO, None)]
+        return [(self.mes['Q_COMPLETION'], 
+                 scan_dummy, [], Process.FINISH, None)]
         
     def choice_protocol(self) -> List[Tuple]:
         return [(self.mes['Q_CHOICE'],None,[], Process.CHOOSE_ANALYSIS, None)]
    
     def ttest_protocol(self) -> List[Tuple]:
-        output : List[Tuple] = [('Beschrijf de onafhankelijke variabele.', scan_indep, [self.solution], Process.QUESTION,self.assignments.print_independent(self.assignment)),
-           ('Beschrijf de afhankelijke variabele.', scan_dep, [self.solution], Process.QUESTION,self.assignments.print_dependent(self.assignment)),
-           ('Beschrijf de mate van controle.', scan_control, [self.solution], Process.QUESTION,['Passief-observerend','Experiment'][int(self.solution['control'])]),
-           ('Voer de ondestaande tabel in.',scan_table_ttest,[self.solution],Process.TABLE,self.assignments.print_report({**self.assignment, **self.solution}, answer=True)),
-           ('Voer de nulhypothese in, geformuleerd met "H0" en "mu".',scan_hypothesis,[self.solution, 1], Process.QUESTION,self.solution['null']),
-           ('Voer de het aantal vrijheidsgraden in.',scan_number,['df', self.solution, 0.01], Process.QUESTION,str(self.solution['df'][0])),
-           ('Voer de het ruwe effect in dat je hebt berekend.',scan_number,['raw_effect', self.solution, 0.01], Process.QUESTION,str(self.solution['raw_effect'][0])),
-           ('Voer de het relatieve effect in dat je hebt berekend.',scan_number,['relative_effect', self.solution, 0.01], Process.QUESTION,str(self.solution['relative_effect'][0])),
-           ('Voer de T-waarde in.',scan_number,['T', self.solution, 0.02], Process.QUESTION,str(self.solution['T'][0])),
-           ('Voer de p-waarde in.',scan_p,[self.solution, 0.02], Process.QUESTION,str(self.solution['p'][0])),
-           ('Voer de beslissing in.',scan_decision,[self.solution, False], Process.QUESTION,self.solution['decision']),
-           ('Voer de causale interpretatie in.',scan_interpretation,[self.solution, False], Process.LAST_QUESTION,self.solution['interpretation'])]
+        output : List[Tuple] = [(self.mes['Q_IND'], scan_indep, [self.solution], Process.QUESTION,self.assignments.print_independent(self.assignment)),
+           (self.mes['Q_DEP'], scan_dep, [self.solution], Process.QUESTION,self.assignments.print_dependent(self.assignment)),
+           (self.mes['Q_MEASURE'], scan_control, [self.solution], Process.QUESTION,['Passief-observerend','Experiment'][int(self.solution['control'])]),
+           (self.mes['Q_TABLE'],scan_table_ttest,[self.solution],Process.TABLE,self.assignments.print_report({**self.assignment, **self.solution}, answer=True)),
+           (self.mes['Q_HYP'],scan_hypothesis,[self.solution, 1], Process.QUESTION,self.solution['null']),
+           (self.mes['Q_DF'],scan_number,['df', self.solution, 0.01], Process.QUESTION,str(self.solution['df'][0])),
+           (self.mes['Q_RAW'],scan_number,['raw_effect', self.solution, 0.01], Process.QUESTION,str(self.solution['raw_effect'][0])),
+           (self.mes['Q_RELATIVE'],scan_number,['relative_effect', self.solution, 0.01], Process.QUESTION,str(self.solution['relative_effect'][0])),
+           (self.mes['Q_T'],scan_number,['T', self.solution, 0.02], Process.QUESTION,str(self.solution['T'][0])),
+           (self.mes['Q_P'],scan_p,[self.solution, 0.02], Process.QUESTION,str(self.solution['p'][0])),
+           (self.mes['Q_DECISION'],scan_decision,[self.solution, False], Process.QUESTION,self.solution['decision']),
+           (self.mes['Q_INTERPRET'],scan_interpretation,[self.solution, False], Process.LAST_QUESTION,self.solution['interpretation'])]
         return output
     
     def anova_protocol(self) -> List[Tuple]:
         if not self.assignment['two_way']:
-            output :str = [('Beschrijf de onafhankelijke variabele.',scan_indep_anova,[self.solution], Process.QUESTION, self.assignments.print_independent(self.assignment)),
-                ('Beschrijf de afhankelijke variabele.',scan_dep,[self.solution], Process.QUESTION, self.assignments.print_dependent(self.assignment)),
-                ('Beschrijf de mate van controle.',scan_control,[self.solution], Process.QUESTION,['Passief-observerend','Experiment'][int(self.solution['control'])]),
-                ('Voer de nulhypothese in, geformuleerd met "H0" en "mu".',scan_hypothesis,[self.solution, 1], Process.QUESTION, self.solution['null']),
-                ('Vul de tabel hieronder in.',scan_table,[self.solution, 0.02], Process.TABLE, self.assignments.print_report({**self.assignment, **self.solution}, answer=True)),     
-                ('Voer de beslissing in', scan_decision,[self.solution, True, 1], Process.QUESTION, self.solution['decision']),
-                ('Voer de causale interpretatie in.',scan_interpretation,[self.solution, True], Process.LAST_QUESTION, self.solution['interpretation'])]
+            output :str = [(self.mes['Q_IND'],scan_indep_anova,[self.solution], Process.QUESTION, self.assignments.print_independent(self.assignment)),
+                (self.mes['Q_DEP'],scan_dep,[self.solution], Process.QUESTION, self.assignments.print_dependent(self.assignment)),
+                (self.mes['Q_MEASURE'],scan_control,[self.solution], Process.QUESTION,['Passief-observerend','Experiment'][int(self.solution['control'])]),
+                (self.mes['Q_HYP'],scan_hypothesis,[self.solution, 1], Process.QUESTION, self.solution['null']),
+                (self.mes['Q_TABLE'],scan_table,[self.solution, 0.02], Process.TABLE, self.assignments.print_report({**self.assignment, **self.solution}, answer=True)),     
+                (self.mes['Q_DECISION'], scan_decision,[self.solution, True, 1], Process.QUESTION, self.solution['decision']),
+                (self.mes['Q_INTERPRET'],scan_interpretation,[self.solution, True], Process.LAST_QUESTION, self.solution['interpretation'])]
         else:
-            output :str = [('Beschrijf de eerste onafhankelijke variabele.',scan_indep_anova,[self.solution], Process.QUESTION, self.assignments.print_independent(self.assignment)),
-                ('Beschrijf de tweede onafhankelijke variabele.',scan_indep_anova,[self.solution,2], Process.QUESTION, self.assignments.print_independent(self.assignment, num=2)),
-                ('Beschrijf de afhankelijke variabele.',scan_dep,[self.solution], Process.QUESTION, self.assignments.print_dependent(self.assignment)),
-                ('Beschrijf de mate van controle voor factor 1.',scan_control,[self.solution], Process.QUESTION,['Passief-observerend','Experiment'][int(self.solution['control'])]),
-                ('Beschrijf de mate van controle voor factor 2.',scan_control,[self.solution, 2], Process.QUESTION,['Passief-observerend','Experiment'][int(self.solution['control2'])]),
-                ('Voer de nulhypothese in voor de eerste onafhankelijke variabele, geformuleerd met "H0" en "mu".',scan_hypothesis,[self.solution, 1], Process.QUESTION,self.solution['null']),
-                ('Voer de nulhypothese in voor de tweede onafhankelijke variabele, geformuleerd met "H0" en "mu".',scan_hypothesis,[self.solution, 2], Process.QUESTION,self.solution['null2']),
-                ('Voer de interactienulhypothese in. Je mag deze inkorten door alleen de eerste en laatste vergelijking van de hypothese te geven.',scan_hypothesis_anova,[self.solution], Process.QUESTION,self.solution['null3']),
-                ('Vul de tabel hieronder in.',scan_table,[self.solution, 0.02], Process.TABLE, self.assignments.print_report({**self.assignment, **self.solution}, answer=True)),    
-                ('Voer de beslissing in voor de eerste onafhankelijke variabele.', scan_decision,[self.solution, True, 1], Process.QUESTION,self.solution['decision']),
-                ('Voer de beslissing in voor de tweede onafhankelijke variabele.', scan_decision,[self.solution, True, 2], Process.QUESTION,self.solution['decision2']),
-                ('Voer de beslissing in voor de interactie.', scan_decision_anova,[self.solution], Process.QUESTION, self.solution['decision3']),
-                ('Voer de causale interpretatie in voor de eerste factor.',scan_interpretation,[self.solution, True, 1], Process.QUESTION,self.solution['interpretation']),
-                ('Voer de causale interpretatie in voor de tweede factor.',scan_interpretation,[self.solution, True, 2], Process.QUESTION,self.solution['interpretation2']),
-                ('Voer de causale interpretatie in voor de interactie.',scan_interpretation_anova,[self.solution], Process.LAST_QUESTION,self.solution['interpretation3'])]
+            output :str = [(self.mes['Q_IND1'],scan_indep_anova,[self.solution], Process.QUESTION, self.assignments.print_independent(self.assignment)),
+                (self.mes['Q_IND2'],scan_indep_anova,[self.solution,2], Process.QUESTION, self.assignments.print_independent(self.assignment, num=2)),
+                (self.mes['Q_DEP'],scan_dep,[self.solution], Process.QUESTION, self.assignments.print_dependent(self.assignment)),
+                (self.mes['Q_MEASURE1'],scan_control,[self.solution], Process.QUESTION,['Passief-observerend','Experiment'][int(self.solution['control'])]),
+                (self.mes['Q_MEASURE2'],scan_control,[self.solution, 2], Process.QUESTION,['Passief-observerend','Experiment'][int(self.solution['control2'])]),
+                (self.mes['Q_HYP1'],scan_hypothesis,[self.solution, 1], Process.QUESTION,self.solution['null']),
+                (self.mes['Q_HYP2'],scan_hypothesis,[self.solution, 2], Process.QUESTION,self.solution['null2']),
+                (self.mes['Q_HYPINT'],scan_hypothesis_anova,[self.solution], Process.QUESTION,self.solution['null3']),
+                (self.mes['Q_TABLE'],scan_table,[self.solution, 0.02], Process.TABLE, self.assignments.print_report({**self.assignment, **self.solution}, answer=True)),    
+                (self.mes['Q_DECISION1'], scan_decision,[self.solution, True, 1], Process.QUESTION,self.solution['decision']),
+                (self.mes['Q_DECISION2'], scan_decision,[self.solution, True, 2], Process.QUESTION,self.solution['decision2']),
+                (self.mes['Q_DECISIONINT'], scan_decision_anova,[self.solution], Process.QUESTION, self.solution['decision3']),
+                (self.mes['Q_INTERPRET1'],scan_interpretation,[self.solution, True, 1], Process.QUESTION,self.solution['interpretation']),
+                (self.mes['Q_INTERPRET2'],scan_interpretation,[self.solution, True, 2], Process.QUESTION,self.solution['interpretation2']),
+                (self.mes['Q_INTERPRETINT'],scan_interpretation_anova,[self.solution], Process.LAST_QUESTION,self.solution['interpretation3'])]
         return output
     
     def rmanova_protocol(self) -> List[Tuple]:
-        output :str = [('Beschrijf de onafhankelijke variabele.',scan_indep_anova,[self.solution,1,False], Process.QUESTION,self.assignments.print_independent(self.assignment)),
-            ('Beschrijf de afhankelijke variabele (het aantal metingen per persoon hoef je niet te geven).',scan_dep,[self.solution], Process.QUESTION,self.assignments.print_dependent(self.assignment)),
-            ('Beschrijf de mate van controle.',scan_control,[self.solution], Process.QUESTION,['Passief-observerend','Experiment'][int(self.solution['control'])]),
-            ('Beschrijf de nulhypothese van de condities.',scan_hypothesis,[self.solution,1], Process.QUESTION,self.solution['null']),
-            ('Beschrijf de nulhypothese van de subjecten.',scan_hypothesis_rmanova,[self.solution], Process.QUESTION,self.solution['null2']),
-            ('Vul de tabel hieronder in.',scan_table,[self.solution, 0.02], Process.TABLE, self.assignments.print_report({**self.assignment, **self.solution}, answer=True)),
-            ('Voer de beslissing in van de condities.',scan_decision,[self.solution,True,1], Process.QUESTION,self.solution['decision']),
-            ('Voer de beslissing in van de subjecten.',scan_decision_rmanova,[self.solution,2], Process.QUESTION,self.solution['decision2']),
-            ('Voer de causale interpretatie in voor de condities.',scan_interpretation,[self.solution, True, 1], Process.LAST_QUESTION,self.solution['interpretation'])]
+        output :str = [(self.mes['Q_IND'],scan_indep_anova,[self.solution,1,False], Process.QUESTION,self.assignments.print_independent(self.assignment)),
+            (self.mes['Q_DEPRM'],scan_dep,[self.solution], Process.QUESTION,self.assignments.print_dependent(self.assignment)),
+            (self.mes['Q_MEASURE'],scan_control,[self.solution], Process.QUESTION,['Passief-observerend','Experiment'][int(self.solution['control'])]),
+            (self.mes['Q_HYPCON'],scan_hypothesis,[self.solution,1], Process.QUESTION,self.solution['null']),
+            (self.mes['Q_HYPSUB'],scan_hypothesis_rmanova,[self.solution], Process.QUESTION,self.solution['null2']),
+            (self.mes['Q_TABLE'],scan_table,[self.solution, 0.02], Process.TABLE, self.assignments.print_report({**self.assignment, **self.solution}, answer=True)),
+            (self.mes['Q_DECCON'],scan_decision,[self.solution,True,1], Process.QUESTION,self.solution['decision']),
+            (self.mes['Q_DECSUB'],scan_decision_rmanova,[self.solution,2], Process.QUESTION,self.solution['decision2']),
+            (self.mes['Q_INTERCON'],scan_interpretation,[self.solution, True, 1], Process.LAST_QUESTION,self.solution['interpretation'])]
         return output
     
     def print_assignment(self):

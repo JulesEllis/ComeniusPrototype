@@ -12,8 +12,8 @@
         {{ form.hidden_tag() }}
         {{ instruction | safe}}
         
-        <p>Schrijf hieronder je beknopte rapport. 
-            {{ form.inputtext.label(id='input') }}<br>
+        <p>
+            {{ form.inputtext.label }}<br>
             {{ form.inputtext(cols="80", rows="12")|safe }}
         </p>
         <span style="color: blue;">{{ display | safe}}</span>

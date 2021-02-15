@@ -13,54 +13,54 @@
         {{ form.hidden_tag() }}
         {{ instruction | safe}}
         
-        <p>Voer de onafhankelijke variabele in
+        <p>
             {{ form.inputtext1.label }}<br>
             {{ form.inputtext1(size=48) }}
         </p>
         <span style="color: blue;">{{ displays[0][0] | safe}}</span>
         
         {% if shape | int == 4 %}
-        <p>Voer de tweede onafhankelijke variabele in
+        <p>
             {{ form.inputtext12.label }}<br>
             {{ form.inputtext12(size=48) }}
         </p>
         <span style="color: blue;">{{ displays[0][1] | safe}}</span>
         {% endif %}
         
-        <p>Voer de afhankelijke variabele in
+        <p>
             {{ form.inputtext2.label }}<br>
             {{ form.inputtext2(size=48) }}
         </p>
         <span style="color: blue;">{{ displays[1][0] | safe}}</span>
         
-        <p>Voer de mate van controle in voor factor 1
+        <p>
             {{ form.inputtext3.label }}<br>
             {{ form.inputtext3(size=48) }}
         </p>
         <span style="color: blue;">{{ displays[2][0] | safe}}</span>
         
         {% if shape | int == 4 %}
-        <p>Voer de mate van controle in voor factor 2
+        <p>
             {{ form.inputtext32.label }}<br>
             {{ form.inputtext32(size=48) }}
         </p>
         <span style="color: blue;">{{ displays[2][1] | safe}}</span>
         {% endif %}
         
-        <p>Voer de nulhypothese in
+        <p>
             {{ form.inputtext4.label }}<br>
             {{ form.inputtext4(size=48) }}
         </p>
         <span style="color: blue;">{{ displays[3][0] | safe}}</span>
         
         {% if shape | int == 4 %}
-        <p>Voer de tweede nulhypothese in
+        <p>
             {{ form.inputtext42.label }}<br>
             {{ form.inputtext42(size=48) }}
         </p>
         <span style="color: blue;">{{ displays[3][1] | safe}}</span>
         
-        <p>Voer de interactienulhypothese in, je mag deze inkorten door alleen de eerste en laatste vergelijking van de hypothese te geven
+        <p>
             {{ form.inputtext43.label }}<br>
             {{ form.inputtext43(cols="80", rows="4") }}
         </p>
@@ -68,7 +68,7 @@
         {% endif %}
         
         {% if shape | int == 5 %}
-        <p>Voer de nulhypothese van de subjecten in
+        <p>
             {{ form.inputtext42.label }}<br>
             {{ form.inputtext42(size=48) }}
         </p>
@@ -77,52 +77,55 @@
         
         </p>
         {% if shape | int == 3 %}
-        <p>Vul de ANOVA-tabel in<table style="width:20%">
-        <tr><td>Bron</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td></tr>
+        <p>{{ form.df1.label }}
+        <table style="width:20%">
+        <tr><td>{{ form.df2.label }}</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td></tr>
         <tr><td>Between</td><td>{{form.df1()}}</td><td>{{form.ss1()}}</td><td>{{form.ms1()}}</td><td>{{form.f1()}}</td><td>{{form.p1()}}</td><td>{{form.r21()}}</td></tr>
         <tr><td>Within</td><td>{{form.df2()}}</td><td>{{form.ss2()}}</td><td>{{form.ms2()}}</td></tr>
-        <tr><td>Total</td><td>{{form.df3()}}</td><td>{{form.ss3()}}</td></tr>
+        <tr><td>{{ form.df5.label }}</td><td>{{form.df3()}}</td><td>{{form.ss3()}}</td></tr>
         </table></p>
         <span style="color: blue;">{{ displays[4][0] | safe}}</span>
         {% endif %}
         
         {% if shape | int == 4 %}
-        <p>Vul de ANOVA-tabel in<table style="width:20%">
-        <tr><td>Bron</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td></tr>
+        <p>{{ form.df1.label }}
+        <table style="width:20%">
+        <tr><td>{{ form.df2.label }}</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td></tr>
         <tr><td>Between</td><td>{{form.df1()}}</td><td>{{form.ss1()}}</td><td>{{form.ms1()}}</td></tr>
         <tr><td>{{varnames[0][0]}}</td><td>{{form.df2()}}</td><td>{{form.ss2()}}</td><td>{{form.ms2()}}</td><td>{{form.f1()}}</td><td>{{form.p1()}}</td><td>{{form.r21()}}</td></tr>
         <tr><td>{{varnames[1][0]}}</td><td>{{form.df3()}}</td><td>{{form.ss3()}}</td><td>{{form.ms3()}}</td><td>{{form.f2()}}</td><td>{{form.p2()}}</td><td>{{form.r22()}}</td></tr>
-        <tr><td>Interaction</td><td>{{form.df4()}}</td><td>{{form.ss4()}}</td><td>{{form.ms4()}}</td><td>{{form.f3()}}</td><td>{{form.p3()}}</td><td>{{form.r23()}}</td></tr>
+        <tr><td>{{ form.df4.label }}</td><td>{{form.df4()}}</td><td>{{form.ss4()}}</td><td>{{form.ms4()}}</td><td>{{form.f3()}}</td><td>{{form.p3()}}</td><td>{{form.r23()}}</td></tr>
         <tr><td>Within</td><td>{{form.df5()}}</td><td>{{form.ss5()}}</td><td>{{form.ms5()}}</td></tr>
-        <tr><td>Total</td><td>{{form.df6()}}</td><td>{{form.ss6()}}</td></tr>
+        <tr><td>{{ form.df5.label }}</td><td>{{form.df6()}}</td><td>{{form.ss6()}}</td></tr>
         </table></p>
         <span style="color: blue;">{{ displays[4][0] | safe}}</span>
         {% endif %}
         
         {% if shape | int == 5 %}
-        <p>Vul de ANOVA-tabel in<table style="width:20%">
-        <tr><td>Bron</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td></tr>
+        <p>{{ form.df1.label }}
+        <table style="width:20%">
+        <tr><td>{{ form.df2.label }}</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td></tr>
         <tr><td>{{varnames[0][0]}}</td><td>{{form.df1()}}</td><td>{{form.ss1()}}</td><td>{{form.ms1()}}</td><td>{{form.f1()}}</td><td>{{form.p1()}}</td><td>{{form.r21()}}</td></tr>
-        <tr><td>Persoon</td><td>{{form.df2()}}</td><td>{{form.ss2()}}</td><td>{{form.ms2()}}</td><td>{{form.f2()}}</td><td>{{form.p2()}}</td><td>{{form.r22()}}</td></tr>
-        <tr><td>Interactie</td><td>{{form.df3()}}</td><td>{{form.ss3()}}</td><td>{{form.ms3()}}</td></tr>
-        <tr><td>Total</td><td>{{form.df4()}}</td><td>{{form.ss4()}}</td></tr>
+        <tr><td>{{ form.df3.label }}</td><td>{{form.df2()}}</td><td>{{form.ss2()}}</td><td>{{form.ms2()}}</td><td>{{form.f2()}}</td><td>{{form.p2()}}</td><td>{{form.r22()}}</td></tr>
+        <tr><td>{{ form.df4.label }}</td><td>{{form.df3()}}</td><td>{{form.ss3()}}</td><td>{{form.ms3()}}</td></tr>
+        <tr><td>{{ form.df5.label }}</td><td>{{form.df4()}}</td><td>{{form.ss4()}}</td></tr>
         </table></p>
         <span style="color: blue;">{{ displays[4][0] | safe}}</span>
         {% endif %}
         
-        <p>Voer de beslissing in
+        <p>
             {{ form.inputtext5.label }}<br>
             {{ form.inputtext5(cols="80", rows="4")|safe }}
         </p>
         <span style="color: blue;">{{ displays[5][0] | safe}}</span>
         
         {% if shape | int == 4 %}
-        <p>Voer de tweede beslissing in
+        <p>
             {{ form.inputtext52.label }}<br>
             {{ form.inputtext52(cols="80", rows="4") }}
         </p>
         <span style="color: blue;">{{ displays[5][1] | safe}}</span>
-        <p>Voer de interactiebeslissing in
+        <p>
             {{ form.inputtext53.label }}<br>
             {{ form.inputtext53(cols="80", rows="4") }}
         </p>
@@ -130,26 +133,26 @@
         {% endif %}
         
         {% if shape | int == 5 %}
-        <p>Voer de beslissing van de subjecten in
+        <p>
             {{ form.inputtext52.label }}<br>
             {{ form.inputtext52(cols="80", rows="4") }}
         </p>
         <span style="color: blue;">{{ displays[5][1] | safe}}</span>
         {% endif %}
         
-        <p>Voer de causale interpretatie in
+        <p>
             {{ form.inputtext6.label }}<br>
             {{ form.inputtext6(cols="80", rows="4") }}
         </p>
         <span style="color: blue;">{{ displays[6][0] | safe}}</span>
         
         {% if shape | int == 4 %}
-        <p>Voer de tweede causale interpretatie in
+        <p>
             {{ form.inputtext62.label }}<br>
             {{ form.inputtext62(cols="80", rows="4") }}
         </p>
         <span style="color: blue;">{{ displays[6][1] | safe}}</span>
-        <p>Voer de causale interpretatie van de interactie in
+        <p>
             {{ form.inputtext63.label }}<br>
             {{ form.inputtext63(cols="80", rows="4") }}
         </p>

@@ -32,3 +32,4 @@ class Process(Enum):
     CHOOSE_ANALYSIS = 4
     TABLE = 5
     ANOTHER = 6
+    FINISH = 7

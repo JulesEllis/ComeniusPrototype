@@ -10,8 +10,8 @@ import os
 class LanguageInterface:
     def __init__(self):
         path = '/home/jelmer/Github/ComeniusPrototype/ComeniusPrototype/app/code/texts.csv' if 'Github' in os.getcwd() else '/var/www/ComeniusPrototype/ComeniusPrototype/app/code/texts.csv'
-        dutch_pairs = []
-        english_pairs = []
+        dutch_pairs = [('L_ENGLISH',False)]
+        english_pairs = [('L_ENGLISH',True)]
         with open(path, encoding='utf-8', errors='ignore') as file:
             for line in file.readlines():
                 parts = line.split('","')
