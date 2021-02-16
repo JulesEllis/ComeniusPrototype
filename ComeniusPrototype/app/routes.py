@@ -195,7 +195,7 @@ def bigform():
     a = controller.assignment
     form = BigForm()
     title:str = mes['M_TITLE']
-    form.__getattribute__('skip').label.text = mes['B_NEXT']
+    form.__getattribute__('nextt').label.text = mes['B_NEXT']
     form.__getattribute__('answer').label.text = mes['B_ANSWER']
     
     #Fill text positions that will be shown in the form
@@ -260,7 +260,7 @@ def smallform():
     a = controller.assignment
     form = SmallForm()
     title:str = controller.mes['M_TITLE']
-    form.__getattribute__('skip').label.text = mes['B_NEXT']
+    form.__getattribute__('nextt').label.text = mes['B_NEXT']
     form.__getattribute__('answer').label.text = mes['B_ANSWER']
     
     #Enter text labels
@@ -322,7 +322,7 @@ def reportform():
     
     #Fill text fields
     title:str = controller.mes['M_TITLE']
-    form.__getattribute__('skip').label.text = mes['B_NEXT']
+    form.__getattribute__('nextt').label.text = mes['B_NEXT']
     form.__getattribute__('answer').label.text = mes['B_ANSWER']
     form.__getattribute__('inputtext').label = mes['Q_SHORTREPORT']
     
