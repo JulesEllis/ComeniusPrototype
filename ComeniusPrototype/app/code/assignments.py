@@ -41,6 +41,44 @@ class Assignments:
         
     def set_messages(self, mes:dict):
         self.mes = mes
+    
+    def get_factor(self, within_subject:bool = False, control:bool = False, ttest:bool = False) -> Tuple:
+        if within_subject:
+            nc = 2 if ttest else random.randint(2,4) #Number of conditions
+            if self.mes['L_ENGLISH']:
+                choices = [('season',['seasons'],['winter', 'spring', 'summer', 'fall'][:nc],[['winters'],[],['summers'],[]][:nc]),
+                        ('age',['ages'],['child', 'teenager', 'adult', 'old'][:nc],[['children'],['teenagers'],['adults'],[]][:nc]),
+                        ('epoch',['epoch'],['precambrium', 'silurian', 'paleolithic', 'quaternary'][:nc],[[],[],[],[]][:nc])
+                        ]
+                if ttest:
+                    choices.append(('timeslot',['timeslots'],['day','night'],[['days'],['nights']]))
+            else:
+                choices = [('seizoen',['seizoenen'],['winter', 'lente', 'zomer', 'herfst'][:nc],[['winters'],[],['zomers'],[]][:nc]),
+                        ('leeftijd',['leeftijden'],['kind', 'jong', 'volwassen', 'oud'][:nc],[['kinderen'],[],['volwassenen'],['ouderen']][:nc]),
+                        ('tijdperk',['tijdperken'],['precambrian', 'siluur', 'paleolithic', 'quartair'][:nc],[[],[],[],[]][:nc])
+                        ]
+                if ttest:
+                    choices.append(('tijdstip',['tijdstippen'],['dag','nacht'],[['dagen'],['nachten']]))
+        else:
+            if self.mes['L_ENGLISH']:
+                if control:
+                    choices = [('nationality',['nationalities'],['Dutch','German'],[[],['Germans']]),
+                               ('birthplace',['birthplaces'],['Nijmegen','Amsterdam'],[[],[]])]
+                else:
+                    choices = [('stimulus',['stimuli'],['square','round'],[[],[]]),
+                               ('weather',[],['clear','rainy'],[[],[]])]
+            else:
+                if control:
+                    choices = [('nationaliteit',['nationaliteiten'],['Nederlands','Duits'],[['Nederlanders'],['Duitsers']]),
+                               ('geboortestad',[],['Nijmegen','Amsterdam'],[[],[]])]
+                else:
+                    choices = [('stimulusvorm',['stimulusvormen'],['vierkant','rond'],[[],[]]),
+                               ('weer',[],['helder','regen'],[[],[]])]
+        return random.choice(choices)
+    
+    def get_dependent(self) -> Tuple:
+        choices:list = [('reactietijd',['reactietijden']),('bloeddruk',[]),('gewicht',['gewichten'])]
+        return random.choice(choices)
         
     #Creates the assignment's data as a tuple of floats
     #If the assignment is a within-subject T-test, n1 and n2 have the same number of samples
@@ -60,19 +98,11 @@ class Assignments:
         
         #Generate the datapoints as a dictionary of where the list of float entries is 
         #described by the variable name key
-        var_i:int = random.choice([0,1,2])
-        var_j:int = random.choice([0,1,2])
-        dependent = ['reactietijd','bloeddruk','concentratieniveau'][var_j]
+        dependent, dep_syns = self.get_dependent()
         if between_subject:
-            independent = ['stimulus','nationaliteit','religie'][var_i]
-            levels = [['vierkant','cirkel'],['nederlands','duits'],['christelijk','moslim']][var_i]
-            ind_syns = [['stimuli'],['nationaliteiten'],['religies']][var_i]
-            level_syns = [[['vierkanten'], ['cirkels']],[['nederlandse'],['duitse']],[['christelijke'],['moslims','islamitische']]][var_i]
+            independent, ind_syns, levels, level_syns = self.get_factor(within_subject=False, control=control,ttest=True)
         else:
-            independent = ['tijdstip','examentaal','stimulussmaak'][var_i]
-            levels = [['dag','nacht'],['nederlands','frans'],['zoet','zout']][var_i]
-            ind_syns = [['tijdstippen'],['examentalen'],['stimulussmaken']][var_i]
-            level_syns = [[['dagen'], ['nachten']],[['nederlandse'],['franse']],[['zoete'],['zoute']]][var_i]
+            independent, ind_syns, levels, level_syns = self.get_factor(within_subject=True, control=control,ttest=True)
         if independent in ['nationaliteit','religie']:
             control = False
         
@@ -103,7 +133,7 @@ class Assignments:
                'between_subject': between_subject,
                'control': control,
                'dependent': dependent,
-               'dep_syns': [['reactietijden'],['bloeddrukken'],['concentratieniveaus','concentratie']][var_j],
+               'dep_syns': dep_syns,
                'assignment_type':1 if between_subject else 2,
                'independent':independent,
                'levels':levels,
@@ -201,24 +231,11 @@ class Assignments:
         output['instruction']: str = None
         output['assignment_type']: int = 4 if two_way else 3
         
-        var_i = random.choice([0,1,2])
-        var_j = random.choice([0,1,2])
-        var_k = random.choice([0,1,2])
-        output['independent'] = ['stimuluskleur','weerssituatie','muziek'][var_i]
-        output['levels'] = [['rood','blauw'],['zon','regen'],['klassiek','pop']][var_i]
-        output['ind_syns'] = [['stimuluskleuren'],['weerssituaties'],[]][var_i]
-        output['level_syns'] = [[['rode'],['blauwe']],[['zonnig'],['regenachtig']],[['klassieke'],[]]][var_i]
-        output['dependent'] = ['gewicht','bloeddruk','geheugenscore'][var_j]
-        output['dep_syns'] = [['gewichten'],[],['geheugenscores']][var_j]
+        output['independent'], output['ind_syns'], output['levels'], output['level_syns'] = self.get_factor(within_subject=False, control=control,ttest=False)
+        output['dependent'], output['dep_syns'] = self.get_dependent()
         if two_way:
-            output['independent2'] = ['stimulusvorm','woonplaats','bloedtype'][var_k]
-            output['ind2_syns'] = [['stimulusvormen'],['woonplaatsen'],['bloedtypen','bloedtypes']][var_k]
-            output['levels2'] = [['vierkant','rond'],['nijmegen','amsterdam'],['A','B']][var_k]
-            output['level2_syns'] = [[['vierkante'],['ronde']],[[],[]],[[],[]]][var_k]
+            output['independent2'], output['ind2_syns'], output['levels2'], output['level2_syns'] = self.get_factor(within_subject=False, control=control2,ttest=False)
             output['control2'] = control2
-            if output['independent2'] in ['bloedtype']:
-                output['control2'] = False
-                control2 = False
         
         #Decide the variable names
         report_type = 'elementair' if elementary else 'beknopt'
@@ -363,14 +380,8 @@ class Assignments:
         n_conditions = random.randint(2,4)
         n_subjects = int(random.uniform(8,15))
         
-        var_i = random.choice([0,1,2])
-        var_j = random.choice([0,1,2])
-        output['independent'] = ['seizoen','leeftijd','tijdperk'][var_i]
-        output['ind_syns'] = [['seizoenen'],['leeftijden'],['tijdperk']][var_i]
-        output['levels'] = [['winter', 'lente', 'zomer', 'herfst'],['kind', 'jong', 'volwassen', 'oud'],['precambrium', 'siluur', 'paleolithicum', 'quartair']][var_i][:n_conditions]
-        output['level_syns'] = [[],[],[],[]][:n_conditions]
-        output['dependent'] = ['gewicht','bloeddruk','geheugenscore'][var_j]
-        output['dep_syns'] = [['gewichten'],[],['geheugenscores']][var_j]
+        output['independent'], output['ind_syns'], output['levels'], output['level_syns'] = self.get_factor(within_subject=True, control=control,ttest=False)
+        output['dependent'], output['dep_syns'] = self.get_dependent()
         
         report_type = 'elementair' if elementary else 'beknopt'
         output['instruction']: str = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn '+output['dependent']+' en '+output['independent']+ ' met niveaus '+' en '.join(output['levels']) + ''\
@@ -459,8 +470,7 @@ class Assignments:
         output['data']: dict={'predictoren':['intercept','sociale vaardigheden', 'depressieve gedachten', 'eetlust','intelligentie','assertiviteit','ervaren geluk'][:n_predictors+1]}
         output['levels'] = output['data']['predictoren']
         output['level_syns'] = [[] for x in output['levels']]
-        output['dependent'] = 'gewicht'
-        output['dep_syns'] = ['gewichten']
+        output['dependent'], output['dep_syns'] = self.get_dependent()
         #output['correlations'] = [random.random() for i in range(int(((n_predictors + 1) ** 2 - n_predictors - 1) * 0.5))]
         output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn '+' en '.join(output['data']['predictoren'][1:])+' als predictoren en '+output['dependent']+' als criterium. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
         return output
@@ -497,11 +507,7 @@ class Assignments:
     def create_ancova(self, control: bool, elementary:bool=False):
         report_type = 'elementair' if elementary else 'beknopt'
         output = {'assignment_type':12}
-        indy_int = random.choice([0,1,2])
-        output['independent'] = ['stimuluskleur','weerssituatie','muziek'][indy_int]
-        output['levels'] = [['rood','blauw'],['zon','regen'],['klassiek','pop']][indy_int]
-        output['ind_syns'] = [['stimuluskleuren'],['weerssituaties'],[]][indy_int]
-        output['level_syns'] = [[['rode'],['blauwe']],[['zonnig'],['regenachtig']],[['klassieke'],[]]][indy_int]
+        output['independent'], output['ind_syns'], output['levels'], output['level_syns'] = self.get_factor(within_subject=False, control=control,ttest=False)
         N = N = 50 + int(150 * random.random())
         output['ns'] = [N]
         output['n_predictors'] = 2
@@ -515,8 +521,7 @@ class Assignments:
               'Intelligentie','Assertiviteit','Ervaren geluk'][:2]}
         output['predictor_names'] = output['data']['predictoren']
         output['predictor_syns'] = [[] for x in output['levels']]
-        output['dependent'] = 'gewicht'
-        output['dep_syns'] = ['gewichten']
+        output['dependent'], output['dep_syns'] = self.get_dependent()
         #output['correlations'] = [random.random() for i in range(int(((n_predictors + 1) ** 2 - n_predictors - 1) * 0.5))]
         output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn de factor '+output['independent']+' en '+output['dependent']+', met '+' en '.join(output['data']['predictoren'])+' als predictoren. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
         return output
@@ -561,15 +566,9 @@ class Assignments:
         output['var_obs'] = (1 + chi2.ppf(p, df=10)) * 10 ** s
         output['var_pred'] = [output['var_obs'] * random.random() ** 2 for i in range(3)]
         
-        indy_int = random.choice([0,1,2])#; var_k = random.choice([0,1,2])
-        output['independent'] = ['stimuluskleur','weerssituatie','muziek'][indy_int]
-        output['levels'] = [['rood','blauw'],['zon','regen'],['klassiek','pop']][indy_int]
-        output['ind_syns'] = [['stimuluskleuren'],['weerssituaties'],[]][indy_int]
-        output['level_syns'] = [[['rode'],['blauwe']],[['zonnig'],['regenachtig']],[['klassieke'],[]]][indy_int]
+        output['independent'], output['ind_syns'], output['levels'], output['level_syns'] = self.get_factor(within_subject=False, control=control,ttest=False)
         output['control'] = control
         
-        output['ind_syns'] = [['stimuluskleuren'],['weerssituaties'],[]][indy_int]
-        output['level_syns'] = [[['rode'],['blauwe']],[['zonnig'],['regenachtig']],[['klassieke'],[]]][indy_int]
         output['sumdependent'] = 'grootte'
         output['dependent'] = 'gewicht'
         output['dependent2'] = 'lengte'
@@ -634,22 +633,12 @@ class Assignments:
         output['var_obs'] = (1 + chi2.ppf(p, df=10)) * 10 ** s
         output['var_pred'] = output['var_obs'] * random.random() ** 2
         
-        indy_int = random.choice([0,1]); var_k = random.choice([0,1,2])
-        output['independent'] = ['meting','tijdstip'][indy_int] #WITHIN-SUBJECT FACTOR
-        output['levels'] = [['voor','na','followup'],['dag','avond','nacht']][indy_int]
-        output['ind_syns'] = [['metingen'],['tijdstippen'],[]][indy_int]
-        output['level_syns'] = [[[],[],['follow-up']],[['dagen'],['avonden'],['nachten']]][indy_int]
+        output['independent'], output['ind_syns'], output['levels'], output['level_syns'] = self.get_factor(within_subject=True, control=control,ttest=False)
         output['control'] = control
-        output['independent2'] = ['stimulusvorm','nationaliteit','bloedtype'][var_k] #BETWEEN-SUBJECT FACTOR
-        output['ind2_syns'] = [['stimulusvormen'],['nationaliteiten'],['bloedtypen','bloedtypes']][var_k]
-        output['levels2'] = [['vierkant','rond'],['nederlands','duits'],['A','B']][var_k]
-        output['level2_syns'] = [[['vierkante'],['ronde']],[[],[]],[[],[]]][var_k]
+        output['independent2'], output['ind2_syns'], output['levels2'], output['level2_syns'] = self.get_factor(within_subject=False, control=control2,ttest=False)
         output['control2'] = control2
-        if output['independent2'] in ['bloedtype']:
-            output['control2'] = False
         
-        output['dependent'] = 'onzekerheid'
-        output['dep_syns'] = ['onzekerheden']
+        output['dependent'], output['dep_syns'] = self.get_dependent()
         output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. Dit onderzoek bevat de factoren '+\
             output['independent']+' ('+', '.join(output['levels'])+') en ' + output['independent2'] + ' ('+', '.join(output['levels2'])+')'\
             '. De afhankelijke variabele is '+output['dependent']+'. Voer je antwoorden alsjeblieft tot op 2'\
@@ -700,22 +689,15 @@ class Assignments:
         output['var_obs'] = [(1 + chi2.ppf(p, df=10)) * 10 ** s for i in range(2)]
         output['var_pred'] = [output['var_obs'][i] * random.random() ** 2 for i in range(2)]
         
-        indy_int = random.choice([0,1]); var_k = random.choice([0,1,2])
-        output['independent'] = ['meting','tijdstip'][indy_int] #WITHIN-SUBJECT FACTOR
-        output['levels'] = [['voor','na','followup'],['dag','avond','nacht']][indy_int]
-        output['ind_syns'] = [['metingen'],['tijdstippen'],[]][indy_int]
-        output['level_syns'] = [[[],[],['follow-up']],[['dagen'],['avonden'],['nachten']]][indy_int]
+        output['independent'], output['ind_syns'], output['levels'], output['level_syns'] = self.get_factor(within_subject=True, control=control,ttest=True)
         output['control'] = control
-        output['independent2'] = ['stimulusvorm','filmgenre','bloedtype'][var_k] #BETWEEN-SUBJECT FACTOR
-        output['ind2_syns'] = [['stimulusvormen'],['filmgenres'],['bloedtypen','bloedtypes']][var_k]
-        output['levels2'] = [['vierkant','rond'],['drama','horror'],['A','B']][var_k]
-        output['level2_syns'] = [[['vierkante'],['ronde']],[[],[]],[[],[]]][var_k]
+        output['independent2'], output['ind2_syns'], output['levels2'], output['level2_syns'] = self.get_factor(within_subject=True, control=control,ttest=True)
         output['control2'] = control2
         if output['independent2'] in ['bloedtype']:
             output['control2'] = False
         
-        output['dependent'] = 'onzekerheid';output['dependent2'] = 'tevredenheid'
-        output['dep_syns'] = ['onzekerheden'];output['dep2_syns'] = []
+        output['dependent'], output['dep_syns'] = self.get_dependent();
+        output['dependent2'] = 'tevredenheid';output['dep2_syns'] = []
         output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. Dit onderzoek bevat de factoren '+\
             output['independent']+' ('+', '.join(output['levels'])+') en ' + output['independent2'] + ' ('+', '.join(output['levels2'])+')'\
             '. De afhankelijke variabelen zijn '+output['dependent']+' en '+output['dependent2']+'. Voer je antwoorden alsjeblieft tot op 2'\
@@ -825,20 +807,20 @@ class Assignments:
         output_text = assignment['instruction'] + '<br><table style="width:30%">'
         if not assignment['two_way']:
             output_text += '<tr><td>Gewicht:</td></tr>'
-            output_text += '<tr><td>' + data['varnames'][0][0] + '</td><td>' + 'Gemiddelde</td><td>Standaarddeviatie</td><td>N' + '</td></tr>'
+            output_text += '<tr><td>' + data['varnames'][0][0] + '</td><td>' + self.mes['A_MEAN'] +'</td><td>'+self.mes['A_STD']+'</td><td>N' + '</td></tr>'
             output_text += '<tr><td>' + data['varnames'][0][1] + '</td><td>' + str(data['means'][0]) + '</td><td>' + str(data['stds'][0]) + '</td><td>' + str(data['ns'][0]) + '</td></tr>'
             output_text += '<tr><td>' + data['varnames'][0][2] + '</td><td>' + str(data['means'][1]) + '</td><td>' + str(data['stds'][1]) + '</td><td>' + str(data['ns'][1]) + '</td></tr>'
         else:
-            output_text += '<tr><td>Gemiddelden:</td></tr>'
-            output_text += '<tr><td>Niveau</td><td>' + data['varnames'][1][1] + '</td><td>' + data['varnames'][1][2] + '</td></tr>'
+            output_text += '<tr><td>'+self.mes['A_MEANS']+'</td></tr>'
+            output_text += '<tr><td>'+self.mes['A_LEVEL']+'</td><td>' + data['varnames'][1][1] + '</td><td>' + data['varnames'][1][2] + '</td></tr>'
             output_text += '<tr><td>' + data['varnames'][0][1] + '</td><td>' + str(data['means'][0]) + '</td><td>' + str(data['means'][1]) + '</td></tr>'
             output_text += '<tr><td>' + data['varnames'][0][2] + '</td><td>' + str(data['means'][2]) + '</td><td>' + str(data['means'][3]) + '</td></tr>'
-            output_text += '<tr><td>Standaarddeviaties:</td></tr>'
-            output_text += '<tr><td>Niveau</td><td>' + data['varnames'][1][1] + '</td><td>' + data['varnames'][1][2] + '</td></tr>'
+            output_text += '<tr><td>'+self.mes['A_STDS']+'</td></tr>'
+            output_text += '<tr><td>'+self.mes['A_LEVEL']+'</td><td>' + data['varnames'][1][1] + '</td><td>' + data['varnames'][1][2] + '</td></tr>'
             output_text += '<tr><td>' + data['varnames'][0][1] + '</td><td>' + str(data['stds'][0]) + '</td><td>' + str(data['stds'][1]) + '</td></tr>'
             output_text += '<tr><td>' + data['varnames'][0][2] + '</td><td>' + str(data['stds'][2]) + '</td><td>' + str(data['stds'][3]) + '</td></tr>'
             output_text += '<tr><td>N:</td></tr>'
-            output_text += '<tr><td>Niveau</td><td>' + data['varnames'][1][1] + '</td><td>' + data['varnames'][1][2] + '</td></tr>'
+            output_text += '<tr><td>'+self.mes['A_LEVEL']+'</td><td>' + data['varnames'][1][1] + '</td><td>' + data['varnames'][1][2] + '</td></tr>'
             output_text += '<tr><td>' + data['varnames'][0][1] + '</td><td>' + str(data['ns'][0]) + '</td><td>' + str(data['ns'][1]) + '</td></tr>'
             output_text += '<tr><td>' + data['varnames'][0][2] + '</td><td>' + str(data['ns'][2]) + '</td><td>' + str(data['ns'][3]) + '</td></tr>'
         return output_text + '</table>'
@@ -847,13 +829,13 @@ class Assignments:
         data: Dict = assignment['data']
         n_conditions = len(data['means'])
         output_text = assignment['instruction'] + '<br><table style="width:45%">'
-        output_text += '<tr><td>'+assignment['independent']+'</td>' + ''.join(['<td>'+x+'</td>' for x in assignment['levels'][:n_conditions]]) + '<td>Opgevoerde meting</td></tr>'
-        output_text += '<tr><td>Gemiddelde</td>' + ''.join(['<td>'+str(x)+'</td>' for x in data['means'][:n_conditions]]) + '<td>' + str(round(np.mean(data['jackedmeans']),2)) + '</td></tr>'
-        output_text += '<tr><td>Standaardeviatie</td>' + ''.join(['<td>'+str(x)+'</td>' for x in data['stds'][:n_conditions]]) + '<td>' + str(round(np.std(data['jackedmeans'], ddof=1),2)) + '</td></tr>'
+        output_text += '<tr><td>'+cap(assignment['independent'])+'</td>' + ''.join(['<td>'+x+'</td>' for x in assignment['levels'][:n_conditions]]) + '<td>'+self.mes['A_BOOSTED']+'</td></tr>'
+        output_text += '<tr><td>'+self.mes['A_MEAN']+'</td>' + ''.join(['<td>'+str(x)+'</td>' for x in data['means'][:n_conditions]]) + '<td>' + str(round(np.mean(data['jackedmeans']),2)) + '</td></tr>'
+        output_text += '<tr><td>'+self.mes['A_STD']+'</td>' + ''.join(['<td>'+str(x)+'</td>' for x in data['stds'][:n_conditions]]) + '<td>' + str(round(np.std(data['jackedmeans'], ddof=1),2)) + '</td></tr>'
         output_text += '<tr><td>N</td><td>' + str(data['n_subjects']) + '</td></tr></table>'
-        output_text += '<br>Originele scores:'
+        output_text += '<br>'+self.mes['A_OGSCORES']
         output_text += '<br><table style="width:45%">'
-        output_text += '<tr><td>Subject</td>' + ''.join(['<td>'+x+'</td>' for x in assignment['levels'][:n_conditions]]) + '<td>Opgevoerde meting</td></tr>'
+        output_text += '<tr><td>Subject</td>' + ''.join(['<td>'+x+'</td>' for x in assignment['levels'][:n_conditions]]) + '<td>'+self.mes['A_BOOSTED']+'</td></tr>'
         for i in range(assignment['data']['n_subjects']):
             output_text += '<tr><td>'+str(i+1)+'</td>' + ''.join(['<td>'+str(x)+'</td>' for x in [data['scores'][j][i] for j in range(n_conditions)]]) + '<td>' + str(round(data['jackedmeans'][i],2)) + '</td></tr>'
         return output_text + '</table>'
@@ -866,36 +848,26 @@ class Assignments:
         if assignment['assignment_type'] not in [1,2,11,13,14]:
             data:dict = assignment['data']
         names = ['df','ss','ms','F','p','r2'];names2 = ['df','ss','ms','F','p','eta']
-        if assignment['assignment_type'] == 1:
+        if assignment['assignment_type'] in [1,2]:
             if not answer:
                 output += self.print_ttest(assignment)
-            output += '<p><table style="width:20%">'
-            output += '<tr><td>'+str(assignment['independent'])+'</td><td>Gemiddelde</td><td>Standaarddeviatie</td><td>N</td></tr>'
-            output += '<tr><td>'+str(assignment['levels'][0])+'</td><td>'+str(round(assignment['means'][0],2))+'</td><td>'+str(round(assignment['stds'][0],2))+'</td><td>'+str(assignment['ns'][0])+'</td></tr>'
-            output += '<tr><td>'+str(assignment['levels'][1])+'</td><td>'+str(round(assignment['means'][1],2))+'</td><td>'+str(round(assignment['stds'][1],2))+'</td><td>'+str(assignment['ns'][1])+'</td></tr>'
-            output += '</table></p>'
-            if not answer:
+            if assignment['assignment_type'] == 1:
                 output += '<p><table style="width:20%">'
-                output += '<tr><td>Statistiek</td><td>Waarde</td></tr>'
-                output += '<tr><td>Vrijheidsgraden (df)</td><td>'+str(assignment['df'][0])+'</td></tr>'
-                output += '<tr><td>Ruw effect</td><td>'+str(round(assignment['raw_effect'][0],2))+'</td></tr>'
-                output += '<tr><td>Relatief effect</td><td>'+str(round(assignment['relative_effect'][0],2))+'</td></tr>'
-                output += '<tr><td>T</td><td>'+str(round(assignment['T'][0],2))+'</td></tr>'
-                output += '<tr><td>p</td><td>'+str(round(assignment['p'][0],2))+'</td></tr>'
+                output += '<tr><td>'+cap(assignment['independent'])+'</td><td>'+self.mes['A_MEAN']+'</td><td>'+self.mes['A_STD']+'</td><td>N</td></tr>'
+                output += '<tr><td>'+cap(assignment['levels'][0])+'</td><td>'+str(round(assignment['means'][0],2))+'</td><td>'+str(round(assignment['stds'][0],2))+'</td><td>'+str(assignment['ns'][0])+'</td></tr>'
+                output += '<tr><td>'+cap(assignment['levels'][1])+'</td><td>'+str(round(assignment['means'][1],2))+'</td><td>'+str(round(assignment['stds'][1],2))+'</td><td>'+str(assignment['ns'][1])+'</td></tr>'
                 output += '</table></p>'
-        if assignment['assignment_type'] == 2:
-            if not answer:
-                output += self.print_ttest(assignment)
-            output += '<p><table style="width:20%">'
-            output += '<tr><td>'+str(assignment['independent'])+'</td><td>Gemiddelde</td><td>Standaarddeviatie</td><td>N</td></tr>'
-            output += format_table(['Verschilscores']+[assignment['means'][0],assignment['stds'][0],assignment['ns'][0]])
-            output += '</table></p>'
+            else:
+                output += '<p><table style="width:20%">'
+                output += '<tr><td>'+cap(assignment['independent'])+'</td><td>Gemiddelde</td><td>Standaarddeviatie</td><td>N</td></tr>'
+                output += format_table(['Verschilscores']+[assignment['means'][0],assignment['stds'][0],assignment['ns'][0]])
+                output += '</table></p>'
             if not answer:
                 output += '<p><table style="width:20%">'
-                output += '<tr><td>Statistiek</td><td>Waarde</td></tr>'
-                output += '<tr><td>Vrijheidsgraden (df)</td><td>'+str(assignment['df'][0])+'</td></tr>'
-                output += '<tr><td>Ruw effect</td><td>'+str(round(assignment['raw_effect'][0],2))+'</td></tr>'
-                output += '<tr><td>Relatief effect</td><td>'+str(round(assignment['relative_effect'][0],2))+'</td></tr>'
+                output += '<tr><td>'+self.mes['A_STATISTIC']+'</td><td>'+self.mes['A_VALUE']+'</td></tr>'
+                output += '<tr><td>'+self.mes['A_DF']+' (df)</td><td>'+str(assignment['df'][0])+'</td></tr>'
+                output += '<tr><td>'+self.mes['A_RAW']+'</td><td>'+str(round(assignment['raw_effect'][0],2))+'</td></tr>'
+                output += '<tr><td>'+self.mes['A_RELATIVE']+'</td><td>'+str(round(assignment['relative_effect'][0],2))+'</td></tr>'
                 output += '<tr><td>T</td><td>'+str(round(assignment['T'][0],2))+'</td></tr>'
                 output += '<tr><td>p</td><td>'+str(round(assignment['p'][0],2))+'</td></tr>'
                 output += '</table></p>'
@@ -949,7 +921,7 @@ class Assignments:
             nl = len(assignment['levels']) #Number of levels factor
             hdf = assignment['hdf']; edf = assignment['edf']
             output += self.print_analysis(assignment)
-            output += '<p>Multivariate tests<table style="width:20%">'
+            output += '<p>'+self.mes['A_MULTIVAR']+'<table style="width:20%">'
             output += format_table(['Effect','','Value','F','Hypothesis df','Error df','p','Partial eta<sup>2</sup>'])
             output += format_table(['Intercept',"Pillai's trace",assignment['value'][0],assignment['F1'][0],hdf[0],edf[0],assignment['p1'][0],assignment['eta1'][0]])
             output += format_table(['',"Wilks' lambda",assignment['value'][1],assignment['F1'][1],hdf[1],edf[1],assignment['p1'][1],assignment['eta1'][1]])
@@ -961,26 +933,26 @@ class Assignments:
             output += format_table(['',"Roy's largest root",assignment['value'][7],assignment['F1'][7],hdf[7],edf[7],assignment['p1'][7],assignment['eta1'][7]])
             output += '</table></p>'
             
-            output += '<p>Tests van within-subject effecten<table style="width:50%">'
-            output += format_table(['Bron','Variabele','SS','df','MS','F','p','Partial eta<sup>2</sup>'])
-            output += format_table(['Corrected model',assignment['dependent'],assignment['ss0'][0],nl-1,assignment['ms0'][0],assignment['F0'][0],assignment['p0'][0],assignment['eta0'][0]])
-            output += format_table(['',assignment['dependent2'],assignment['ss0'][1],nl-1,assignment['ms0'][1],assignment['F0'][1],assignment['p0'][1],assignment['eta0'][1]])
-            output += format_table(['',assignment['dependent3'],assignment['ss0'][2],nl-1,assignment['ms0'][2],assignment['F0'][2],assignment['p0'][2],assignment['eta0'][2]])
-            output += format_table(['Intercept',assignment['dependent'],assignment['ss0'][3],1,assignment['ms0'][3],assignment['F0'][3],assignment['p0'][3],assignment['eta0'][3]])
-            output += format_table(['',assignment['dependent2'],assignment['ss0'][4],1,assignment['ms0'][4],assignment['F0'][4],assignment['p0'][4],assignment['eta0'][4]])
-            output += format_table(['',assignment['dependent3'],assignment['ss0'][5],1,assignment['ms0'][5],assignment['F0'][5],assignment['p0'][5],assignment['eta0'][5]])
-            output += format_table([cap(assignment['independent']),assignment['dependent'],assignment['ss0'][6],nl-1,assignment['ms0'][6],assignment['F0'][6],assignment['p0'][6],assignment['eta0'][6]])
-            output += format_table(['',assignment['dependent2'],assignment['ss0'][7],nl-1,assignment['ms0'][7],assignment['F0'][7],assignment['p0'][7],assignment['eta0'][7]])
-            output += format_table(['',assignment['dependent3'],assignment['ss0'][8],nl-1,assignment['ms0'][8],assignment['F0'][8],assignment['p0'][8],assignment['eta0'][8]])
-            output += format_table(['Error',assignment['dependent'],assignment['ss0'][9],nt-nl,assignment['ms0'][9],'','',''])
-            output += format_table(['',assignment['dependent2'],assignment['ss0'][10],nt-nl,assignment['ms0'][10],'','',''])
-            output += format_table(['',assignment['dependent3'],assignment['ss0'][11],nt-nl,assignment['ms0'][11],'','',''])
-            output += format_table(['Total',assignment['dependent'],assignment['ss0'][12],nt,'','','',''])
-            output += format_table(['',assignment['dependent2'],assignment['ss0'][13],nt,'','','',''])
-            output += format_table(['',assignment['dependent3'],assignment['ss0'][14],nt,'','','',''])
-            output += format_table(['Corrected total',assignment['dependent'],assignment['ss0'][15],nt-1,'','','',''])
-            output += format_table(['',assignment['dependent2'],assignment['ss0'][16],nt-1,'','','',''])
-            output += format_table(['',assignment['dependent3'],assignment['ss0'][17],nt-1,'','','',''])
+            output += '<p>'+self.mes['A_WITHIN']+'<table style="width:50%">'
+            output += format_table(['Bron','Variable','SS','df','MS','F','p','Partial eta<sup>2</sup>'])
+            output += format_table(['Corrected model',cap(assignment['dependent']),assignment['ss0'][0],nl-1,assignment['ms0'][0],assignment['F0'][0],assignment['p0'][0],assignment['eta0'][0]])
+            output += format_table(['',cap(assignment['dependent2']),assignment['ss0'][1],nl-1,assignment['ms0'][1],assignment['F0'][1],assignment['p0'][1],assignment['eta0'][1]])
+            output += format_table(['',cap(assignment['dependent3']),assignment['ss0'][2],nl-1,assignment['ms0'][2],assignment['F0'][2],assignment['p0'][2],assignment['eta0'][2]])
+            output += format_table(['Intercept',cap(assignment['dependent']),assignment['ss0'][3],1,assignment['ms0'][3],assignment['F0'][3],assignment['p0'][3],assignment['eta0'][3]])
+            output += format_table(['',cap(assignment['dependent2']),assignment['ss0'][4],1,assignment['ms0'][4],assignment['F0'][4],assignment['p0'][4],assignment['eta0'][4]])
+            output += format_table(['',cap(assignment['dependent3']),assignment['ss0'][5],1,assignment['ms0'][5],assignment['F0'][5],assignment['p0'][5],assignment['eta0'][5]])
+            output += format_table([cap(assignment['independent']),cap(assignment['dependent']),assignment['ss0'][6],nl-1,assignment['ms0'][6],assignment['F0'][6],assignment['p0'][6],assignment['eta0'][6]])
+            output += format_table(['',cap(assignment['dependent2']),assignment['ss0'][7],nl-1,assignment['ms0'][7],assignment['F0'][7],assignment['p0'][7],assignment['eta0'][7]])
+            output += format_table(['',cap(assignment['dependent3']),assignment['ss0'][8],nl-1,assignment['ms0'][8],assignment['F0'][8],assignment['p0'][8],assignment['eta0'][8]])
+            output += format_table(['Error',cap(assignment['dependent']),assignment['ss0'][9],nt-nl,assignment['ms0'][9],'','',''])
+            output += format_table(['',cap(assignment['dependent2']),assignment['ss0'][10],nt-nl,assignment['ms0'][10],'','',''])
+            output += format_table(['',cap(assignment['dependent3']),assignment['ss0'][11],nt-nl,assignment['ms0'][11],'','',''])
+            output += format_table(['Total',cap(assignment['dependent']),assignment['ss0'][12],nt,'','','',''])
+            output += format_table(['',cap(assignment['dependent2']),assignment['ss0'][13],nt,'','','',''])
+            output += format_table(['',cap(assignment['dependent3']),assignment['ss0'][14],nt,'','','',''])
+            output += format_table(['Corrected total',cap(assignment['dependent']),assignment['ss0'][15],nt-1,'','','',''])
+            output += format_table(['',cap(assignment['dependent2']),assignment['ss0'][16],nt-1,'','','',''])
+            output += format_table(['',cap(assignment['dependent3']),assignment['ss0'][17],nt-1,'','','',''])
             output += '</table></p>'
         if assignment['assignment_type'] == 12:
             output += self.print_analysis(assignment)
@@ -997,19 +969,19 @@ class Assignments:
             output += '</table></p>'
         if assignment['assignment_type'] == 13:
             output += self.print_analysis(assignment)
-            output += '<p>Multivariate Tests<table style="width:60%">'
+            output += '<p>'+self.mes['A_MULTIVAR']+'<table style="width:60%">'
             output += format_table(['Effect', '', 'Value', 'Hypothesis df','Error df','F','p','eta<sup>2</sup>'])
             for i in range(8):
                 i2 = i // 4
-                header = assignment['independent'] if i == 0 else assignment['independent']+' * '+assignment['independent2'] if i == 4 else ''
+                header = cap(assignment['independent']) if i == 0 else cap(assignment['independent'])+' * '+cap(assignment['independent2']) if i == 4 else ''
                 measure = ["Pillai's Trace","Wilks' Lambda","Hotelling's Trace","Roy's Largest Root"][i%4]
                 output += format_table([header,measure,assignment['value'][i],assignment['hdf'][i2],assignment['edf'][i2],
                                         assignment['F0'][i2],assignment['p0'][i2],assignment['eta0'][i2]])
             output += '</table></p>'
-            output += '<p>Tests of Within-Subjects Contrasts<table style="width:60%">'
+            output += '<p>'+self.mes['A_WITHINCON']+'<table style="width:60%">'
             output += format_table(['Source', assignment['independent'], 'SS','df','MS','F','p','eta<sup>2</sup>'])
             for i in range(6):
-                header = assignment['independent'] if i == 0 else assignment['independent']+' * '+assignment['independent2'] if i == 2 else 'Error('+assignment['independent']+')' if i == 4 else ''
+                header = cap(assignment['independent']) if i == 0 else cap(assignment['independent'])+' * '+cap(assignment['independent2']) if i == 2 else 'Error('+cap(assignment['independent'])+')' if i == 4 else ''
                 measure = assignment['levels'][0]+' vs. '+assignment['levels'][1] if i % 2 == 0 else assignment['levels'][1]+' vs. '+assignment['levels'][2]
                 if i < 4:
                     output += format_table([header,measure,assignment['ss1'][i],assignment['df1'][i],assignment['ms1'][i],
@@ -1018,30 +990,30 @@ class Assignments:
                     output += format_table([header,measure,assignment['ss1'][i],assignment['df1'][i],assignment['ms1'][i],
                                         '','',''])
             output += '</table></p>'
-            output += '<p>Tests of Between-Subjects Effects<table style="width:20%">'
+            output += '<p>'+self.mes['A_BETWEEN']+'<table style="width:20%">'
             output += format_table(['Source','df','SS','MS','F','p','eta<sup>2</sup>'])
             output += format_table(['Intercept'] + [assignment[x][0] for x in names2])
-            output += format_table([assignment['independent2']] + [assignment[x][1] for x in names2])
+            output += format_table([cap(assignment['independent2'])] + [assignment[x][1] for x in names2])
             output += format_table(['Error'] + [assignment[x][2] for x in names2[:3]])
             output += '</table></p>'
         if assignment['assignment_type'] == 14:
             output += self.print_analysis(assignment)
-            output += '<p>Multivariate Tests<table style="width:60%">'
+            output += '<p>'+self.mes['A_MULTIVAR']+'<table style="width:60%">'
             output += format_table(['Effect', '', '', 'Value', 'Hypothesis df','Error df','F','p'])#,'eta<sup>2</sup>'])
             for i in range(16):
                 i2 = i // 4
                 header = 'Between Subjects' if i == 0 else 'Within Subjects' if i == 8 else ''
-                header2 = 'Intercept' if i == 0 else assignment['independent2'] if i == 4 else assignment['independent'] if i == 8 else \
-                        assignment['independent']+' * '+assignment['independent2'] if i == 12 else ''
+                header2 = 'Intercept' if i == 0 else cap(assignment['independent2']) if i == 4 else cap(assignment['independent']) if i == 8 else \
+                        cap(assignment['independent'])+' * '+cap(assignment['independent2']) if i == 12 else ''
                 measure = ["Pillai's Trace","Wilks' Lambda","Hotelling's Trace","Roy's Largest Root"][i%4]
                 output += format_table([header,header2,measure,assignment['value'][i],assignment['hdf'][i2],assignment['edf'][i2],
                                         assignment['F0'][i2],assignment['p0'][i2]])#,assignment['eta0'][i2]])
             output += '</table></p>'
-            output += '<p>Tests of Within-Subjects Contrasts<table style="width:60%">'
-            output += format_table(['Source', 'Measure', assignment['independent'], 'df','SS','MS','F','p','eta<sup>2</sup>'])
+            output += '<p>'+self.mes['A_WITHINCON']+'<table style="width:60%">'
+            output += format_table(['Source', 'Measure', cap(assignment['independent']), 'df','SS','MS','F','p','eta<sup>2</sup>'])
             for i in range(12):
-                header = assignment['independent'] if i == 0 else assignment['independent']+' * '+assignment['independent2'] if i == 4 else 'Error('+assignment['independent']+')' if i == 8 else ''
-                header2 = assignment['dependent'] if (i+2) % 4 == 0 else assignment['dependent2'] if i % 4 == 0 else ''
+                header = assignment['independent'] if i == 0 else cap(assignment['independent'])+' * '+assignment['independent2'] if i == 4 else 'Error('+cap(assignment['independent'])+')' if i == 8 else ''
+                header2 = cap(assignment['dependent']) if (i+2) % 4 == 0 else cap(assignment['dependent2']) if i % 4 == 0 else ''
                 measure = assignment['levels'][0]+' vs. '+assignment['levels'][1] if i % 2 == 0 else assignment['levels'][1]+' vs. '+assignment['levels'][2]
                 if i < 8:
                     output += format_table([header,header2,measure,assignment['df1'][i],assignment['ss1'][i],assignment['ms1'][i],
@@ -1050,14 +1022,14 @@ class Assignments:
                     output += format_table([header,header2,measure,assignment['ss1'][i],assignment['df1'][i],assignment['ms1'][i],
                                         '','',''])
             output += '</table></p>'
-            output += '<p>Tests of Between-Subjects Effects<table style="width:20%">'
+            output += '<p>'+self.mes['A_BETWEEN']+'<table style="width:20%">'
             output += format_table(['Source','Measure','df','SS','MS','F','p','eta<sup>2</sup>'])
-            output += format_table(['Intercept',assignment['dependent']] + [assignment[x][0] for x in names2])
-            output += format_table(['',assignment['dependent2']] + [assignment[x][1] for x in names2])
-            output += format_table([assignment['independent2'],assignment['dependent']] + [assignment[x][2] for x in names2])
-            output += format_table(['',assignment['dependent2']] + [assignment[x][3] for x in names2])
-            output += format_table(['Error',assignment['dependent']] + [assignment[x][4] for x in names2[:3]])
-            output += format_table(['',assignment['dependent2']] + [assignment[x][5] for x in names2[:3]])
+            output += format_table(['Intercept',cap(assignment['dependent'])] + [assignment[x][0] for x in names2])
+            output += format_table(['',cap(assignment['dependent2'])] + [assignment[x][1] for x in names2])
+            output += format_table([assignment['independent2'],cap(assignment['dependent'])] + [assignment[x][2] for x in names2])
+            output += format_table(['',cap(assignment['dependent2'])] + [assignment[x][3] for x in names2])
+            output += format_table(['Error',cap(assignment['dependent'])] + [assignment[x][4] for x in names2[:3]])
+            output += format_table(['',cap(assignment['dependent2'])] + [assignment[x][5] for x in names2[:3]])
             output += '</table></p>'
         return output
     

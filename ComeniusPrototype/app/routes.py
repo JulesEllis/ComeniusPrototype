@@ -5,6 +5,7 @@ from app.code.interface import Controller #OuterController
 from app.code.enums import Task, Process
 from app.code.scan_functions_spacy import *
 from app.code.scan_functions import scan_hypothesis_anova
+from app.code.assignments import cap
 import flask
 import pickle
 import os
@@ -48,7 +49,7 @@ def index():
             output_text : str = controller.update(textdict)
             if controller.assignment != None: #Retrieve variable names
                 a = controller.assignment
-                varnames:list = [[a['independent']] + a['levels']] if a['assignment_type'] != 4 else [[a['independent']] + a['levels'],[a['independent2']] + a['levels2']]
+                varnames:list = [[cap(a['independent'])] + [cap(x) for x in a['levels']]] if a['assignment_type'] != 4 else [[cap(a['independent'])] + [cap(x) for x in a['levels']],[cap(a['independent2'])] + [cap(x) for x in a['levels2']]]
             form_shape = controller.analysis_type.value
             if controller.formmode and form_shape > 0 and form_shape < 3:
                 form = SmallForm()
@@ -112,6 +113,8 @@ def index():
                     pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL)    
                 
                 return render_template('reportform.html', form=form, instruction=instruction, display='', title=title)
+        
+        #Detect which button triggered the current screen
         if form.skip.data:
             output_text : str = controller.update({'inputtext': 'skip'})
         if form.prev.data:
@@ -119,12 +122,18 @@ def index():
         if form.answer.data:
             controller.answer_triggered = not controller.answer_triggered
             output_text : str = controller.assignments.print_assignment(controller.assignment) + '<br>' + controller.protocol[controller.index][0]
-        if controller.assignment != None: #Retrieve variable names
+        
+        #Retrieve variable names
+        if controller.assignment != None: 
             a = controller.assignment
-            varnames:list = [[a['independent']] + a['levels']] if a['assignment_type'] != 4 else [[a['independent']] + a['levels'],[a['independent2']] + a['levels2']]
+            varnames:list = [[cap(a['independent'])] + [cap(x) for x in a['levels']]] if a['assignment_type'] != 4 else [[cap(a['independent'])] + [cap(x) for x in a['levels']],[cap(a['independent2'])] + [cap(x) for x in a['levels2']]]
+        
+        #Remove text from field after new question
         if controller.wipetext:
             form.inputtext.data = ""
             form.inputtextlarge.data = ""
+            
+        #Set Dutch or English text in fields
         if controller.submit_field == Task.INTRO or controller.submit_field == Task.CHOICE or controller.submit_field == Task.FINISHED: #Determine enter button text
             if not controller.mes['L_ENGLISH']:
                 form.submit.label.text = 'Doorgaan'
@@ -132,6 +141,11 @@ def index():
                 form.submit.label.text = 'Continue'
         else:
             form.submit.label.text = 'Feedback'
+        if not controller.submit_field == Task.INTRO:
+            mes:dict = controller.mes
+            form.__getattribute__('skip').label.text = mes['B_NEXT']
+            form.__getattribute__('prev').label.text = mes['B_PREV']
+            form.__getattribute__('answer').label.text = mes['B_ANSWER']
         if controller.submit_field == Task.CHOICE: #Determine dropdown language options
             mes:dict = controller.mes
             form.__getattribute__('selectanalysis').choices = [mes['M_ANALYSIS' + str(i+1)] for i in range(9)]
@@ -147,6 +161,8 @@ def index():
             form.__getattribute__('df4').label = mes['A_INTERACT']
             form.__getattribute__('df5').label = mes['A_TOTAL']
             form.__getattribute__('n1').label = mes['A_DIFF']
+        
+        #Prepare parameters for rendering
         skip :bool = controller.skipable
         prev :bool = controller.prevable
         answer :bool = controller.answerable
@@ -179,9 +195,11 @@ def bigform():
     a = controller.assignment
     form = BigForm()
     title:str = mes['M_TITLE']
+    form.__getattribute__('skip').label.text = mes['B_NEXT']
+    form.__getattribute__('answer').label.text = mes['B_ANSWER']
     
     #Fill text positions that will be shown in the form
-    varnames:list = [[a['independent']] + a['levels']] if a['assignment_type'] != 4 else [[a['independent']] + a['levels'],[a['independent2']] + a['levels2']]
+    varnames:list = [[cap(a['independent'])] + [cap(x) for x in a['levels']]] if a['assignment_type'] != 4 else [[cap(a['independent'])] + [cap(x) for x in a['levels']],[cap(a['independent2'])] + [cap(x) for x in a['levels2']]]
     form.__getattribute__('inputtext1').label = mes['Q_IND']
     form.__getattribute__('inputtext12').label = mes['Q_IND2']
     form.__getattribute__('inputtext2').label = mes['Q_DEP']
@@ -242,11 +260,11 @@ def smallform():
     a = controller.assignment
     form = SmallForm()
     title:str = controller.mes['M_TITLE']
-    print(title)
+    form.__getattribute__('skip').label.text = mes['B_NEXT']
+    form.__getattribute__('answer').label.text = mes['B_ANSWER']
     
     #Enter text labels
-    varnames:list = [[a['independent']] + a['levels']] if a['assignment_type'] != 4 else [[a['independent']] + a['levels'],[a['independent2']] + a['levels2']]
-    form.__getattribute__('inputtext1').label = mes['Q_IND']
+    varnames:list = [[cap(a['independent'])] + [cap(x) for x in a['levels']]] if a['assignment_type'] != 4 else [[cap(a['independent'])] + [cap(x) for x in a['levels']],[cap(a['independent2'])] + [cap(x) for x in a['levels2']]]
     form.__getattribute__('inputtext2').label = mes['Q_DEP']
     form.__getattribute__('inputtext3').label = mes['Q_MEASURE']
     form.__getattribute__('inputtext4').label = mes['Q_HYP']
@@ -304,6 +322,8 @@ def reportform():
     
     #Fill text fields
     title:str = controller.mes['M_TITLE']
+    form.__getattribute__('skip').label.text = mes['B_NEXT']
+    form.__getattribute__('answer').label.text = mes['B_ANSWER']
     form.__getattribute__('inputtext').label = mes['Q_SHORTREPORT']
     
     #Determine rendering parameters
