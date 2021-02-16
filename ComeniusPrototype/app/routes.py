@@ -323,7 +323,6 @@ def reportform():
     #Fill text fields
     title:str = controller.mes['M_TITLE']
     form.__getattribute__('nextt').label.text = mes['B_NEXT']
-    form.__getattribute__('answer').label.text = mes['B_ANSWER']
     form.__getattribute__('inputtext').label = mes['Q_SHORTREPORT']
     
     #Determine rendering parameters
