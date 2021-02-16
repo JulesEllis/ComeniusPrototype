@@ -265,6 +265,7 @@ def smallform():
     
     #Enter text labels
     varnames:list = [[cap(a['independent'])] + [cap(x) for x in a['levels']]] if a['assignment_type'] != 4 else [[cap(a['independent'])] + [cap(x) for x in a['levels']],[cap(a['independent2'])] + [cap(x) for x in a['levels2']]]
+    form.__getattribute__('inputtext1').label = mes['Q_IND']
     form.__getattribute__('inputtext2').label = mes['Q_DEP']
     form.__getattribute__('inputtext3').label = mes['Q_MEASURE']
     form.__getattribute__('inputtext4').label = mes['Q_HYP']
