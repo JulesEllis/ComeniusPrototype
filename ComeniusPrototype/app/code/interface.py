@@ -310,23 +310,23 @@ class Controller:
             if analysis in ['Multipele-regressieanalyse', 'Multiple-regression analysis']:
                 self.analysis_type = Task.MREGRESSION
                 if report not in ['Beknopt rapport', 'Summary report']:
-                    return self.protocol[self.index][0] + '<span style="color: blue;">Sorry, bij multipele regressie kan je alleen een beknopt rapport maken.</span>'
+                    return self.protocol[self.index][0] + '<br><span style="color: blue;">'+self.mes['M_APOLOGIES']+analysis+self.mes['S_SHORTONLY']+'</span>'
             if analysis == 'MANOVA':
                 self.analysis_type = Task.MANOVA
                 if report not in ['Beknopt rapport', 'Summary report']:
-                    return self.protocol[self.index][0] + '<span style="color: blue;">Sorry, bij MANOVA kan je alleen een beknopt rapport maken.</span>'
+                    return self.protocol[self.index][0] + '<br><span style="color: blue;">'+self.mes['M_APOLOGIES']+analysis+self.mes['S_SHORTONLY']+'</span>'
             if analysis == 'ANCOVA':
                 self.analysis_type = Task.ANCOVA
                 if report not in ['Beknopt rapport', 'Summary report']:
-                    return self.protocol[self.index][0] + '<span style="color: blue;">Sorry, bij ANCOVA kan je alleen een beknopt rapport maken.</span>'
-            if analysis == 'Multivariate-RMANOVA':
+                    return self.protocol[self.index][0] + '<br><span style="color: blue;">'+self.mes['M_APOLOGIES']+analysis+self.mes['S_SHORTONLY']+'</span>'
+            if analysis == 'Multivariate RMANOVA':
                 self.analysis_type = Task.MULTIRM
                 if report not in ['Beknopt rapport', 'Summary report']:
-                    return self.protocol[self.index][0] + '<span style="color: blue;">Sorry, bij multipele RMANOVA kan je alleen een beknopt rapport maken.</span>'
+                    return self.protocol[self.index][0] + '<br><span style="color: blue;">'+self.mes['M_APOLOGIES']+analysis+self.mes['S_SHORTONLY']+'</span>'
             if analysis in ['Dubbel Multivariate-RMANOVA','Dubble multivariate RMANOVA']:
                 self.analysis_type = Task.MULTIRM2
                 if report not in ['Beknopt rapport', 'Summary report']:
-                    return self.protocol[self.index][0] + '<span style="color: blue;">Sorry, bij multipele RMANOVA kan je alleen een beknopt rapport maken.</span>'
+                    return self.protocol[self.index][0] + '<br><span style="color: blue;">'+self.mes['M_APOLOGIES']+analysis+self.mes['S_SHORTONLY']+'</span>'
             
             #Select report type
             self.index = 0

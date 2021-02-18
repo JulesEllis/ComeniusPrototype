@@ -69,7 +69,7 @@ class SmallForm(FlaskForm):
     
     submit = SubmitField('Feedback')
     answer = SubmitField('Antwoord')
-    nextt = SubmitField('Next')
+    nextt = SubmitField('Volgende')
 
 class BigForm(FlaskForm):
     inputtext1 = StringField('', validators=[DataRequired()])
@@ -91,7 +91,7 @@ class BigForm(FlaskForm):
     
     submit = SubmitField('Feedback')
     answer = SubmitField('Antwoord')
-    nextt = SubmitField('Next')
+    nextt = SubmitField('Volgende')
     
     df1 = StringField('')
     df2 = StringField('')
@@ -123,7 +123,7 @@ class BigForm(FlaskForm):
 class ReportForm(FlaskForm):
     inputtext = TextAreaField('', validators=[DataRequired()])
     submit = SubmitField('Feedback')
-    nextt = SubmitField('Next')
+    nextt = SubmitField('Volgende')
     
     
     

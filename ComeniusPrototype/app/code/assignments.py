@@ -11,6 +11,7 @@ import numpy as np
 from scipy import stats
 from scipy.stats.distributions import chi2
 from typing import Dict, List, Tuple
+from random import shuffle
 #import typing
 #from typing import *
 def format_table(terms:list) -> str:
@@ -42,9 +43,9 @@ class Assignments:
     def set_messages(self, mes:dict):
         self.mes = mes
     
-    def get_factor(self, within_subject:bool = False, control:bool = False, ttest:bool = False) -> Tuple:
+    def get_factor(self, within_subject:bool = False, control:bool = False, ttest:bool = False, multirm:bool = False) -> Tuple:
         if within_subject:
-            nc = 2 if ttest else random.randint(2,4) #Number of conditions
+            nc = 2 if ttest else random.randint(2,4) if not multirm else 3 #nr of conditions
             if self.mes['L_ENGLISH']:
                 choices = [('season',['seasons'],['winter', 'spring', 'summer', 'fall'][:nc],[['winters'],[],['summers'],[]][:nc]),
                         ('age',['ages'],['child', 'teenager', 'adult', 'old'][:nc],[['children'],['teenagers'],['adults'],[]][:nc]),
@@ -77,8 +78,21 @@ class Assignments:
         return random.choice(choices)
     
     def get_dependent(self) -> Tuple:
-        choices:list = [('reactietijd',['reactietijden']),('bloeddruk',[]),('gewicht',['gewichten'])]
+        if not self.mes['L_ENGLISH']:
+            choices:list = [('reactietijd',['reactietijden']),('bloeddruk',[]),('gewicht',['gewichten'])]
+        else:
+            choices:list = [('response time',['response times']),('blood pressure',[]),('weight',[])]
         return random.choice(choices)
+    
+    def get_covariates(self, n:int, intercept:bool=False) -> list:
+        if self.mes['L_ENGLISH']:
+            pos:list = ['Social skills', 'Depression', 'Appetite', 'Intelligence','Aggression','Perceived happiness']
+        else:
+            pos:list = ['Sociale vaardigheden', 'Depressieve gedachten', 'Eetlust', 'Intelligentie','Assertiviteit','Ervaren geluk']
+        shuffle(pos)
+        output = pos[:n] if not intercept else ['Intercept'] + pos[:n]
+        n_syns = n if not intercept else n+1
+        return output, [[] for i in range(n_syns)]
         
     #Creates the assignment's data as a tuple of floats
     #If the assignment is a within-subject T-test, n1 and n2 have the same number of samples
@@ -103,29 +117,26 @@ class Assignments:
             independent, ind_syns, levels, level_syns = self.get_factor(within_subject=False, control=control,ttest=True)
         else:
             independent, ind_syns, levels, level_syns = self.get_factor(within_subject=True, control=control,ttest=True)
-        if independent in ['nationaliteit','religie']:
-            control = False
         
         #Create the assignment description
-        report_type = 'elementair' if elementary else 'beknopt'
-        instruction: str = 'Maak een '+report_type+' rapport van onderstaande data voor de hypothese dat '
+        report_type = self.mes['S_ELEM'] if elementary else self.mes['S_SHORT']
+        instruction: str = self.mes['I_CREATE']+report_type+self.mes['S_DATAHYP']
         if hyp_type == 0:
-            instruction += dependent+' bij ' + independent + ' ' + levels[0] + ' gemiddeld ongelijk is aan die bij ' + levels[1] + '.<br><br>'
+            instruction += dependent+self.mes['S_WITH'] + independent + ' ' + levels[0] + self.mes['S_UNEQUAL'] + levels[1] + '.<br><br>'
         if hyp_type == 1:
-            instruction += dependent+' bij ' + independent + ' ' + levels[0] + ' gemiddeld groter is dan die bij ' + levels[1] + '.<br><br>'
+            instruction += dependent+self.mes['S_WITH'] + independent + ' ' + levels[0] + self.mes['S_BIGGER'] + levels[1] + '.<br><br>'
         if hyp_type == 2:
-            instruction += dependent+" bij " + independent + " " + levels[0] + " gemiddeld kleiner is dan die bij " + levels[1] + ".<br><br>"
+            instruction += dependent+self.mes['S_WITH'] + independent + " " + levels[0] + self.mes['S_SMALLER'] + levels[1] + ".<br><br>"
         if between_subject:
-            instruction += 'De proefpersonen doen een experiment, waarin ze worden ingedeeld op hun ' + independent + ' in de groepen '+ levels[0] + ' en ' + levels[1] + '. '
+            instruction += self.mes['I_SUBJECTBETWEEN'] + independent + self.mes['S_GROUPS']+ levels[0] + self.mes['S_AND'] + levels[1] + '. '
         else:
-            instruction += 'De proefpersonen doen allemaal mee aan een experiment, met als ' + independent + ' zowel ' + levels[0] + ' als ' + levels[1] + '. '
+            instruction += self.mes['I_SUBJECTWITHIN'] + independent + self.mes['S_BOTH'] + levels[0] + self.mes['S_BOTHAND'] + levels[1] + '. '
         if control:
             if between_subject:
-                instruction += 'De personen van elk beroep zijn willekeurig geselecteerd. '
+                instruction += self.mes['I_RANDOMBETWEEN'] 
             else:
-                instruction += 'De volgorde van de toetsen was gerandomiseerd. '
-        instruction += 'Voer je antwoorden alsjeblieft tot op 2 decimalen in'\
-             ' en gebruik dezelfde vergelijking van de gemiddelden in je antwoord als in de vraagstelling staat (e.g. "groter" of "kleiner"). '
+                instruction += self.mes['I_RANDOMWITHIN']
+        instruction += self.mes['I_DECIMALS']
         
         #Generate datapoints: Floats are rounded to 2 decimals
         return{'instruction': instruction,
@@ -227,7 +238,6 @@ class Assignments:
         
     def create_anova(self, two_way: bool, control: bool, control2:bool=False, elementary:bool=True) -> Dict:
         output = {'two_way':two_way, 'control':control}
-        output['dependent'] = 'gewicht'
         output['instruction']: str = None
         output['assignment_type']: int = 4 if two_way else 3
         
@@ -238,21 +248,20 @@ class Assignments:
             output['control2'] = control2
         
         #Decide the variable names
-        report_type = 'elementair' if elementary else 'beknopt'
+        report_type = self.mes['S_ELEM'] if elementary else self.mes['S_SHORT']
         if not two_way:
-            output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn '+output['independent']+', met niveaus '+' en '.join(output['levels'])+', en '+output['dependent']+'. Voer je antwoorden alsjeblieft tot op 2 decimalen in '\
-                 'en gebruik dezelfde vergelijking van de gemiddelden in je antwoord als in de vraagstelling staat (e.g. "groter" of "kleiner"). '
+            output['instruction'] = self.mes['I_CREATE']+report_type+self.mes['S_VARSARE2']+output['independent']+self.mes['S_CLEVELS']+self.mes['S_AND'].join(output['levels'])+self.mes['S_CAND']+output['dependent']+'. '+self.mes['I_DECIMALS']
             if control:
-                output['instruction'] += 'De deelnemers zijn willekeurig verdeeld over de niveaus.'
+                output['instruction'] += self.mes['I_ONERANDOM']
         else:
-            output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn '+output['independent']+', met niveaus '+' en '.join(output['levels'])+', '+output['independent2']+' met niveaus '+' en '.join(output['levels2'])+', en '+output['dependent']+'. Voer je antwoorden alsjeblieft tot op 2 decimalen in '\
-                 'en gebruik dezelfde vergelijking van de gemiddelden in je antwoord als in de vraagstelling staat (e.g. "groter" of "kleiner"). '
+            output['instruction'] = self.mes['I_CREATE']+report_type+self.mes['S_VARSARE2']+output['independent']+self.mes['S_CLEVELS']+self.mes['S_AND'].join(output['levels'])+', '+output['independent2']+self.mes['S_WITHLEVELS'] +\
+                        self.mes['S_AND'].join(output['levels2'])+self.mes['S_CAND']+output['dependent']+'. '+self.mes['I_DECIMALS']
             if control and output['control2']:
-                output['instruction'] += 'De deelnemers zijn willekeurig gekozen voor beide factoren. '
+                output['instruction'] += self.mes['I_FULLRANDOM']
             elif control:
-                output['instruction'] += 'De deelnemers zijn willekeurig verdeeld bij de factor '+output['independent']+'. '
+                output['instruction'] += self.mes['I_RANDOMFACTOR']+output['independent']+'. '
             elif output['control2']:
-                output['instruction'] += 'De deelnemers zijn willekeurig verdeeld bij de factor '+output['independent2']+'. '
+                output['instruction'] += self.mes['I_RANDOMFACTOR']+output['independent2']+'. '
         
         #Generate summary statistics
         n: int = random.randint(9,16)
@@ -383,11 +392,10 @@ class Assignments:
         output['independent'], output['ind_syns'], output['levels'], output['level_syns'] = self.get_factor(within_subject=True, control=control,ttest=False)
         output['dependent'], output['dep_syns'] = self.get_dependent()
         
-        report_type = 'elementair' if elementary else 'beknopt'
-        output['instruction']: str = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn '+output['dependent']+' en '+output['independent']+ ' met niveaus '+' en '.join(output['levels']) + ''\
-            '. Voer je antwoorden alsjeblieft tot op 2 decimalen in en gebruik dezelfde vergelijking van de gemiddelden in je antwoord als in de vraagstelling staat (e.g. "groter" of "kleiner"). '
+        report_type = self.mes['S_ELEM'] if elementary else self.mes['S_SHORT']
+        output['instruction']: str = self.mes['I_CREATE']+report_type+self.mes['S_VARSARE2']+output['dependent']+self.mes['S_AND']+output['independent']+ self.mes['S_WITHLEVELS']+self.mes['S_AND'].join(output['levels'])+'. '+self.mes['I_DECIMALS']
         if control:
-            output['instruction'] += 'De subjecten in het experiment zijn willekeurig geselecteerd. '
+            output['instruction'] += self.mes['I_ONERANDOM']
         true_means = [int(random.uniform(50,120)) for i in range(n_conditions)]
         true_stds = [int(random.uniform(5,20)) for i in range(n_conditions)]
         output['data'] = {
@@ -453,7 +461,7 @@ class Assignments:
         return solution
     
     def create_mregression(self, control: bool, elementary:bool=False):
-        report_type = 'elementair' if elementary else 'beknopt'
+        report_type = self.mes['S_ELEM'] if elementary else self.mes['S_SHORT']
         output = {'assignment_type':6}
         output['independent'] = 'predictoren'
         output['ind_syns'] = []
@@ -467,12 +475,12 @@ class Assignments:
         output['var_obs'] = (1 + chi2.ppf(p, df=10)) * 10 ** s
         r2 = random.random() ** 2
         output['var_pred'] = output['var_obs'] * r2
-        output['data']: dict={'predictoren':['intercept','sociale vaardigheden', 'depressieve gedachten', 'eetlust','intelligentie','assertiviteit','ervaren geluk'][:n_predictors+1]}
-        output['levels'] = output['data']['predictoren']
-        output['level_syns'] = [[] for x in output['levels']]
+        output['levels'], output['level_syns'] = self.get_covariates(n_predictors, intercept=True)
+        output['data']: dict={'predictoren':output['levels']}
         output['dependent'], output['dep_syns'] = self.get_dependent()
         #output['correlations'] = [random.random() for i in range(int(((n_predictors + 1) ** 2 - n_predictors - 1) * 0.5))]
-        output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn '+' en '.join(output['data']['predictoren'][1:])+' als predictoren en '+output['dependent']+' als criterium. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
+        output['instruction'] = self.mes['I_CREATE']+report_type+self.mes['S_VARSARE2']+self.mes['S_AND'].join(output['data']['predictoren'][1:])+self.mes['S_PREDICTORS']+self.mes['S_AND']+\
+            output['dependent']+self.mes['S_CRITERIUM']+'. '+self.mes['I_DECSHORT']
         return output
     
     def solve_mregression(self, assignment: Dict, solution:Dict) -> Dict:
@@ -505,7 +513,7 @@ class Assignments:
         return solution
     
     def create_ancova(self, control: bool, elementary:bool=False):
-        report_type = 'elementair' if elementary else 'beknopt'
+        report_type = self.mes['S_ELEM'] if elementary else self.mes['S_SHORT']
         output = {'assignment_type':12}
         output['independent'], output['ind_syns'], output['levels'], output['level_syns'] = self.get_factor(within_subject=False, control=control,ttest=False)
         N = N = 50 + int(150 * random.random())
@@ -517,13 +525,12 @@ class Assignments:
         output['var_obs'] = (1 + chi2.ppf(p, df=10)) * 10 ** s
         r2 = random.random() ** 2
         output['var_pred'] = output['var_obs'] * r2
-        output['data']: dict={'predictoren':['sociale vaardigheden', 'depressieve gedachten', 'eetlust',
-              'Intelligentie','Assertiviteit','Ervaren geluk'][:2]}
-        output['predictor_names'] = output['data']['predictoren']
-        output['predictor_syns'] = [[] for x in output['levels']]
+        output['predictor_names'], output['predictor_syns'] = self.get_covariates(2, intercept=False)
+        output['data']: dict={'predictoren':output['predictor_names']}
         output['dependent'], output['dep_syns'] = self.get_dependent()
         #output['correlations'] = [random.random() for i in range(int(((n_predictors + 1) ** 2 - n_predictors - 1) * 0.5))]
-        output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De variabelen zijn de factor '+output['independent']+' en '+output['dependent']+', met '+' en '.join(output['data']['predictoren'])+' als predictoren. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
+        output['instruction'] = self.mes['I_CREATE']+report_type+self.mes['S_VARSARE2']+output['independent']+self.mes['S_AND']+output['dependent']+\
+            self.mes['I_METWITH']+' '+self.mes['S_AND'].join(output['data']['predictoren'])+self.mes['S_PREDICTORS']+'. '+self.mes['I_DECSHORT']
         return output
     
     def solve_ancova(self, assignment: Dict, solution:Dict) -> Dict:
@@ -560,7 +567,7 @@ class Assignments:
     
     def create_manova(self, control: bool, control2:bool=False, elementary:bool=False):
         output = {'assignment_type':12}
-        report_type = 'elementair' if elementary else 'beknopt'
+        report_type = self.mes['S_ELEM'] if elementary else self.mes['S_SHORT']
         p = random.random() * 0.05 if random.choice([True, False]) else random.random() * 0.95 + 0.05
         s = 3 * random.random()
         output['var_obs'] = (1 + chi2.ppf(p, df=10)) * 10 ** s
@@ -577,10 +584,10 @@ class Assignments:
         dependents = [output['dependent'], output['dependent2'], output['dependent3']]
         N = 50 + int(150 * random.random()); output['ns'] = [N]
         
-        output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. De onafhankelijke variabele is '+\
+        output['instruction'] = self.mes['I_CREATE']+report_type+self.mes['I_WITHINDEP']+\
             output['independent']+' ('+', '.join(output['levels'])+')'\
-            '. De afhankelijke variabelen zijn dimensies van de variabele '+output['sumdependent']+', namelijk '+\
-            ' en '.join(dependents)+'. Voer je antwoorden alsjeblieft tot op 2 decimalen in. '
+            '. '+self.mes['I_DIMENSIONS']+output['sumdependent']+', '+ self.mes['S_NAMELY']+' '+\
+                self.mes['S_AND'].join(dependents)+'. '+self.mes['I_DECSHORT']
         return output
     
     def solve_manova(self, assignment: Dict, solution:Dict) -> Dict:
@@ -597,7 +604,6 @@ class Assignments:
             solution['ms'][j]: List[float] = [solution['ss'][j][i]/solution['df'][j][i] for i in range(2)]
             solution['F'][j]: List[float] = [solution['ms'][j][0] / solution['ms'][j][1]]
             solution['p'][j]: List[float] = [1 - stats.f.cdf(abs(solution['F'][j][0]),solution['df'][j][0],solution['df'][j][1])]
-            #solution['r2'][j]: List[float] = [solution['ss'][0]/solution['ss'][2]]
             solution['eta'][j]: List[float] = [solution['ss'][j][0] / solution['ss'][j][2]] #+solution['ss'][j][2])]
         solution['F_multivar'] = np.mean([solution['F'][i][0] for i in range(3)])
         solution['p_multivar'] = np.mean([solution['p'][i][0] for i in range(3)])
@@ -626,23 +632,22 @@ class Assignments:
     
     def create_multirm(self, control: bool, control2:bool=False, elementary:bool=False) -> dict:
         output = {'assignment_type':13}
-        report_type = 'elementair' if elementary else 'beknopt'
+        report_type = self.mes['S_ELEM'] if elementary else self.mes['S_SHORT']
         p = random.random() * 0.05 if random.choice([True, False]) else random.random() * 0.95 + 0.05
         s = 3 * random.random()
         output['ns'] = [int(random.random() * 65) + 10, int(random.random() * 65) + 10]
         output['var_obs'] = (1 + chi2.ppf(p, df=10)) * 10 ** s
         output['var_pred'] = output['var_obs'] * random.random() ** 2
         
-        output['independent'], output['ind_syns'], output['levels'], output['level_syns'] = self.get_factor(within_subject=True, control=control,ttest=False)
+        output['independent'], output['ind_syns'], output['levels'], output['level_syns'] = self.get_factor(within_subject=True, control=control,ttest=False, multirm=True)
         output['control'] = control
         output['independent2'], output['ind2_syns'], output['levels2'], output['level2_syns'] = self.get_factor(within_subject=False, control=control2,ttest=False)
         output['control2'] = control2
         
         output['dependent'], output['dep_syns'] = self.get_dependent()
-        output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. Dit onderzoek bevat de factoren '+\
-            output['independent']+' ('+', '.join(output['levels'])+') en ' + output['independent2'] + ' ('+', '.join(output['levels2'])+')'\
-            '. De afhankelijke variabele is '+output['dependent']+'. Voer je antwoorden alsjeblieft tot op 2'\
-            ' decimalen in. '
+        output['instruction'] = self.mes['I_CREATE']+report_type+self.mes['I_WITHFACTORS']+\
+            output['independent']+' ('+', '.join(output['levels'])+')'+self.mes['S_AND'] + output['independent2'] + ' ('+', '.join(output['levels2'])+')'\
+            '. '+self.mes['I_INDEP']+output['dependent']+'. '+self.mes['I_DECSHORT']
         return output
     
     def solve_multirm(self, assignment: Dict, solution:Dict) -> Dict:
@@ -698,8 +703,8 @@ class Assignments:
         
         output['dependent'], output['dep_syns'] = self.get_dependent();
         output['dependent2'] = 'tevredenheid';output['dep2_syns'] = []
-        output['instruction'] = 'Maak een '+report_type+' rapport van de onderstaande data. Dit onderzoek bevat de factoren '+\
-            output['independent']+' ('+', '.join(output['levels'])+') en ' + output['independent2'] + ' ('+', '.join(output['levels2'])+')'\
+        output['instruction'] = self.mes['I_CREATE']+report_type+self.mes['I_WITHFACTORS']+\
+            output['independent']+' ('+', '.join(output['levels'])+')'+self.mes['S_AND'] + output['independent2'] + ' ('+', '.join(output['levels2'])+')'\
             '. De afhankelijke variabelen zijn '+output['dependent']+' en '+output['dependent2']+'. Voer je antwoorden alsjeblieft tot op 2'\
             ' decimalen in. '
         return output
@@ -782,9 +787,9 @@ class Assignments:
         data: List = [assignment['A'], assignment['B']]
         output_text += '<table style="width:20%">'
         if assignment['between_subject']:
-            output_text += '<tr><td>' + varnames[1] + '</td><td>' + varnames[2] + '</td></tr>'
+            output_text += '<tr><td>' + cap(varnames[1]) + '</td><td>' + cap(varnames[2]) + '</td></tr>'
         else:
-            output_text += '<tr><td>Nr</td><td>' + varnames[1] + '</td><td>' + varnames[2] + '</td></tr>'
+            output_text += '<tr><td>Nr</td><td>' + cap(varnames[1]) + '</td><td>' + cap(varnames[2]) + '</td></tr>'
         for i in range(max(len(data[0]),len(data[1]))):
             if i < len(data[0]):
                 d1 = str(data[0][i])
@@ -829,7 +834,7 @@ class Assignments:
         data: Dict = assignment['data']
         n_conditions = len(data['means'])
         output_text = assignment['instruction'] + '<br><table style="width:45%">'
-        output_text += '<tr><td>'+cap(assignment['independent'])+'</td>' + ''.join(['<td>'+x+'</td>' for x in assignment['levels'][:n_conditions]]) + '<td>'+self.mes['A_BOOSTED']+'</td></tr>'
+        output_text += '<tr><td>'+cap(assignment['independent'])+'</td>' + ''.join(['<td>'+cap(x)+'</td>' for x in assignment['levels'][:n_conditions]]) + '<td>'+self.mes['A_BOOSTED']+'</td></tr>'
         output_text += '<tr><td>'+self.mes['A_MEAN']+'</td>' + ''.join(['<td>'+str(x)+'</td>' for x in data['means'][:n_conditions]]) + '<td>' + str(round(np.mean(data['jackedmeans']),2)) + '</td></tr>'
         output_text += '<tr><td>'+self.mes['A_STD']+'</td>' + ''.join(['<td>'+str(x)+'</td>' for x in data['stds'][:n_conditions]]) + '<td>' + str(round(np.std(data['jackedmeans'], ddof=1),2)) + '</td></tr>'
         output_text += '<tr><td>N</td><td>' + str(data['n_subjects']) + '</td></tr></table>'
@@ -979,7 +984,7 @@ class Assignments:
                                         assignment['F0'][i2],assignment['p0'][i2],assignment['eta0'][i2]])
             output += '</table></p>'
             output += '<p>'+self.mes['A_WITHINCON']+'<table style="width:60%">'
-            output += format_table(['Source', assignment['independent'], 'SS','df','MS','F','p','eta<sup>2</sup>'])
+            output += format_table(['Source', cap(assignment['independent']), 'SS','df','MS','F','p','eta<sup>2</sup>'])
             for i in range(6):
                 header = cap(assignment['independent']) if i == 0 else cap(assignment['independent'])+' * '+cap(assignment['independent2']) if i == 2 else 'Error('+cap(assignment['independent'])+')' if i == 4 else ''
                 measure = assignment['levels'][0]+' vs. '+assignment['levels'][1] if i % 2 == 0 else assignment['levels'][1]+' vs. '+assignment['levels'][2]
@@ -998,38 +1003,6 @@ class Assignments:
             output += '</table></p>'
         if assignment['assignment_type'] == 14:
             output += self.print_analysis(assignment)
-            output += '<p>'+self.mes['A_MULTIVAR']+'<table style="width:60%">'
-            output += format_table(['Effect', '', '', 'Value', 'Hypothesis df','Error df','F','p'])#,'eta<sup>2</sup>'])
-            for i in range(16):
-                i2 = i // 4
-                header = 'Between Subjects' if i == 0 else 'Within Subjects' if i == 8 else ''
-                header2 = 'Intercept' if i == 0 else cap(assignment['independent2']) if i == 4 else cap(assignment['independent']) if i == 8 else \
-                        cap(assignment['independent'])+' * '+cap(assignment['independent2']) if i == 12 else ''
-                measure = ["Pillai's Trace","Wilks' Lambda","Hotelling's Trace","Roy's Largest Root"][i%4]
-                output += format_table([header,header2,measure,assignment['value'][i],assignment['hdf'][i2],assignment['edf'][i2],
-                                        assignment['F0'][i2],assignment['p0'][i2]])#,assignment['eta0'][i2]])
-            output += '</table></p>'
-            output += '<p>'+self.mes['A_WITHINCON']+'<table style="width:60%">'
-            output += format_table(['Source', 'Measure', cap(assignment['independent']), 'df','SS','MS','F','p','eta<sup>2</sup>'])
-            for i in range(12):
-                header = assignment['independent'] if i == 0 else cap(assignment['independent'])+' * '+assignment['independent2'] if i == 4 else 'Error('+cap(assignment['independent'])+')' if i == 8 else ''
-                header2 = cap(assignment['dependent']) if (i+2) % 4 == 0 else cap(assignment['dependent2']) if i % 4 == 0 else ''
-                measure = assignment['levels'][0]+' vs. '+assignment['levels'][1] if i % 2 == 0 else assignment['levels'][1]+' vs. '+assignment['levels'][2]
-                if i < 8:
-                    output += format_table([header,header2,measure,assignment['df1'][i],assignment['ss1'][i],assignment['ms1'][i],
-                                        assignment['F1'][i],assignment['p1'][i],assignment['eta1'][i]])
-                else:
-                    output += format_table([header,header2,measure,assignment['ss1'][i],assignment['df1'][i],assignment['ms1'][i],
-                                        '','',''])
-            output += '</table></p>'
-            output += '<p>'+self.mes['A_BETWEEN']+'<table style="width:20%">'
-            output += format_table(['Source','Measure','df','SS','MS','F','p','eta<sup>2</sup>'])
-            output += format_table(['Intercept',cap(assignment['dependent'])] + [assignment[x][0] for x in names2])
-            output += format_table(['',cap(assignment['dependent2'])] + [assignment[x][1] for x in names2])
-            output += format_table([assignment['independent2'],cap(assignment['dependent'])] + [assignment[x][2] for x in names2])
-            output += format_table(['',cap(assignment['dependent2'])] + [assignment[x][3] for x in names2])
-            output += format_table(['Error',cap(assignment['dependent'])] + [assignment[x][4] for x in names2[:3]])
-            output += format_table(['',cap(assignment['dependent2'])] + [assignment[x][5] for x in names2[:3]])
             output += '</table></p>'
         return output
     

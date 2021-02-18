@@ -68,6 +68,8 @@ def index():
                 form.__getattribute__('mean2').label = mes['A_STATISTIC']
                 form.__getattribute__('std1').label = mes['A_MEAN']
                 form.__getattribute__('std2').label = mes['A_STD']
+                form.__getattribute__('nextt').label.text = mes['B_NEXT']
+                form.__getattribute__('answer').label.text = mes['B_ANSWER']
                 controller.formmode = False
                 instruction = controller.print_assignment()
                 #Store controller
@@ -96,6 +98,8 @@ def index():
                 form.__getattribute__('df3').label = mes['A_PERSON']
                 form.__getattribute__('df4').label = mes['A_INTERACT']
                 form.__getattribute__('df5').label = mes['A_TOTAL']
+                form.__getattribute__('nextt').label.text = mes['B_NEXT']
+                form.__getattribute__('answer').label.text = mes['B_ANSWER']
                 controller.formmode = False
                 instruction = controller.print_assignment()
                 #Store controller
@@ -105,6 +109,7 @@ def index():
                 return render_template('bigform.html', form=form, instruction=instruction, displays=[[''] for i in range(7)], shape=form_shape, varnames=varnames, title=title)
             elif form_shape == 7:
                 form = ReportForm()
+                form.__getattribute__('nextt').label.text = mes['B_NEXT']
                 form.__getattribute__('inputtext').label = mes['Q_SHORTREPORT']
                 controller.formmode = False
                 instruction = output_text
@@ -236,7 +241,7 @@ def bigform():
             display = controller.protocol[0][0]
             form = BaseForm()
             field = controller.submit_field.value
-            return render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=field, varnames=varnames)
+            return render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=field, varnames=varnames, title=title)
         elif form.answer.data:
             form_shape = controller.analysis_type.value
             instruction, outputfields = controller.form_answers_anova()
@@ -260,6 +265,7 @@ def smallform():
     a = controller.assignment
     form = SmallForm()
     title:str = controller.mes['M_TITLE']
+    print(mes['B_NEXT'])
     form.__getattribute__('nextt').label.text = mes['B_NEXT']
     form.__getattribute__('answer').label.text = mes['B_ANSWER']
     
@@ -297,7 +303,7 @@ def smallform():
             display = controller.protocol[0][0]
             form = BaseForm()
             field = controller.submit_field.value
-            return render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=field, varnames=varnames)
+            return render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=field, varnames=varnames, title=title)
         elif form.answer.data:
             form_shape = controller.analysis_type.value
             instruction, outputfields = controller.form_answers()
