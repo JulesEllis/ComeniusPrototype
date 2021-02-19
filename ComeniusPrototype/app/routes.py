@@ -248,9 +248,6 @@ def bigform():
             return render_template('bigform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames, title=title)
         else:
             print('ERROR: INVALID METHOD')
-    #elif flask.request.method == 'GET':
-    #    form_shape = controller.analysis_type
-    #    return render_template('bigform.html', form=form, instruction='', displays=[[''] for i in range(7)], shape=form_shape)
     else:
         print('ERROR: INVALID METHOD')
         
@@ -310,9 +307,6 @@ def smallform():
             return render_template('smallform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames, title=title)
         else:
             print('ERROR: INVALID METHOD')
-    #elif flask.request.method == 'GET':
-    #    form_shape = controller.analysis_type
-    #    return render_template('smallform.html', form=form, instruction='', displays=[[''] for i in range(7)], shape=form_shape)
     else:
         print('ERROR: INVALID METHOD')
         
@@ -351,8 +345,5 @@ def reportform():
             return render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=field, varnames=varnames, title=title)
         else:
             print('ERROR: INVALID METHOD')
-    #elif flask.request.method == 'GET':
-    #    instruction = controller.print_assignment()
-    #    return render_template('reportform.html', form=form, instruction=instruction, display='')
     else:
         print('ERROR: INVALID METHOD')

@@ -20,7 +20,7 @@
 "Q_DEP","Beschrijf de afhankelijke variabele.","Describe the dependent variable."
 "Q_MEASURE","Beschrijf de mate van controle.","Describe the level of control."
 "Q_TABLE","Voer de ondestaande tabel in.","Fill out the table below."
-"Q_HYP","h0: De personen hebben gelijke ware scores op de opgevoerde meting in de populatie.","Enter the null hypothesis, formulated with “H0” and “mu”."
+"Q_HYP","Voer de nulhypothese in, geformuleerd met ""H0"" en ""mu"".","Enter the null hypothesis, formulated with “H0” and “mu”."
 "Q_DF","Voer de het aantal vrijheidsgraden in.","Enter the degrees of freedom."
 "Q_RAW","Voer de het ruwe effect in dat je hebt berekend.","Enter the raw effect."
 "Q_RELATIVE","Voer de het relatieve effect in dat je hebt berekend.","Enter the relative effect."

@@ -99,10 +99,10 @@ class Controller:
         output[3].append('Antwoord: '+self.assignments.print_report({**self.assignment, **self.solution}, answer=True))
         output[4].append('Antwoord: '+self.solution['null'])
         output[5].append('Antwoord: '+str(self.solution['df'][0]))
-        output[6].append('Antwoord: '+str(self.solution['raw_effect'][0]))
-        output[7].append('Antwoord: '+str(self.solution['relative_effect'][0]))
-        output[8].append('Antwoord: '+str(self.solution['T'][0]))
-        output[9].append('Antwoord: '+str(self.solution['p'][0]))
+        output[6].append('Antwoord: '+str(round(self.solution['raw_effect'][0],2)))
+        output[7].append('Antwoord: '+str(round(self.solution['relative_effect'][0],2)))
+        output[8].append('Antwoord: '+str(round(self.solution['T'][0],2)))
+        output[9].append('Antwoord: '+str(round(self.solution['p'][0],2)))
         output[10].append('Antwoord: '+self.solution['decision'])
         output[11].append('Antwoord: '+self.solution['interpretation'])
         return instruction, output
@@ -372,7 +372,7 @@ class Controller:
                 self.answer_triggered = False
                 return self.assignments.print_assignment(self.assignment) + '<br>' + self.protocol[self.index][0]
             elif again:
-                return self.assignments.print_assignment(self.assignment) + '<br>' + output_text
+                return self.assignments.print_assignment(self.assignment) + '<br>' + self.protocol[self.index][0] + '<br><br>' + output_text
             else:
                 self.index += 1 #TODO: COMMENT IF FEEDBACK MEANS NO PROGRESS
                 self.submit_field = Task.TEXT_FIELD
@@ -384,7 +384,7 @@ class Controller:
                 self.answer_triggered = False
                 return self.assignments.print_assignment(self.assignment) + '<br>' + self.protocol[self.index][0]
             elif again:
-                return self.assignments.print_assignment(self.assignment) + '<br>' + output_text
+                return self.assignments.print_assignment(self.assignment) + '<br>' + self.protocol[self.index][0] + '<br><br>' + output_text
             else:
                 self.skipable = False
                 self.prevable = False
@@ -407,7 +407,7 @@ class Controller:
                     self.submit_field = self.analysis_type
                 return self.assignments.print_assignment(self.assignment) + '<br>' + self.protocol[self.index][0]
             elif again:
-                return self.assignments.print_assignment(self.assignment) + '<br>' + output_text
+                return self.assignments.print_assignment(self.assignment) + '<br>' + self.protocol[self.index][0] + '<br><br>' + output_text
             else:
                 if self.index == 0:
                     self.prevable = True
