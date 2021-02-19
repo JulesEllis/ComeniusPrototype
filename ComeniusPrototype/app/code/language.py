@@ -8,7 +8,7 @@ Created on Tue Feb  9 18:41:13 2021
 import os
 
 class LanguageInterface:
-    def __init__(self):
+    def __init__(self, mes:dict=None):
         path = '/home/jelmer/Github/ComeniusPrototype/ComeniusPrototype/app/code/texts.csv' if 'Github' in os.getcwd() else '/var/www/ComeniusPrototype/ComeniusPrototype/app/code/texts.csv'
         dutch_pairs = [('L_ENGLISH',False)]
         english_pairs = [('L_ENGLISH',True)]

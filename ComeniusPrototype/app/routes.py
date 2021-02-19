@@ -7,20 +7,22 @@ from app.code.scan_functions_spacy import *
 from app.code.scan_functions import scan_hypothesis_anova
 from app.code.assignments import cap
 import flask
-import pickle
 import os
+import json
 
 @app.route('/')
 @app.route('/index', methods=['GET','POST'])
 def index():
     #Get controller
-    path = 'app/controller.pickle' if 'Github' in os.getcwd() else '/var/www/ComeniusPrototype/ComeniusPrototype/app/controller.pickle'
-    with open(path, 'rb') as f:
-        mc:dict = pickle.load(f)
+    path = 'app/controller.json' if 'Github' in os.getcwd() else '/var/www/ComeniusPrototype/ComeniusPrototype/app/controller.json'
+    with open(path, 'r') as f:
+        mc:dict = json.load(f)
         ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
         if not ip in list(mc.keys()):
             mc[ip] = Controller()
-        controller = mc[ip]
+            controller = mc[ip]
+        else:
+            controller = Controller(jsondict=mc[ip])
         
     #Assign local variables
     varnames = [['dummy1'],['dummy2']]
@@ -29,13 +31,13 @@ def index():
     if flask.request.method == 'GET':
         controller.reset()
         #Save controller
-        with open(path, 'wb') as f:
-            pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL)
+        with open(path, 'w') as f:
+            mc[ip] = controller.serialize()
+            json.dump(mc, f)
         instruction = controller.protocol[0][0]
         if controller.mes != None:
             title:str = controller.mes['M_TITLE']
-        return render_template('index.html', display=instruction, 
-                               form=form, skip=False, submit_field=8, varnames=varnames, title=title)
+        return render_template('index.html', display=instruction, form=form, skip=False, submit_field=8, varnames=varnames, title=title)
     elif flask.request.method == 'POST':        
         #Isolate text fields
         mes = controller.mes
@@ -73,8 +75,9 @@ def index():
                 controller.formmode = False
                 instruction = controller.print_assignment()
                 #Store controller
-                with open(path, 'wb') as f:
-                    pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL)        
+                with open(path, 'w') as f:        
+                    mc[ip] = controller.serialize()
+                    json.dump(mc, f)        
                 
                 return render_template('smallform.html', form=form, instruction=instruction, displays=[[''] for i in range(12)], shape=form_shape, varnames=varnames, title=title)
             elif controller.formmode and form_shape > 2 and form_shape < 6:
@@ -103,8 +106,9 @@ def index():
                 controller.formmode = False
                 instruction = controller.print_assignment()
                 #Store controller
-                with open(path, 'wb') as f:
-                    pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL)            
+                with open(path, 'w') as f:
+                    mc[ip] = controller.serialize()
+                    json.dump(mc, f)            
                 
                 return render_template('bigform.html', form=form, instruction=instruction, displays=[[''] for i in range(7)], shape=form_shape, varnames=varnames, title=title)
             elif form_shape == 7:
@@ -114,8 +118,9 @@ def index():
                 controller.formmode = False
                 instruction = output_text
                 #Store controller
-                with open(path, 'wb') as f:
-                    pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL)    
+                with open(path, 'w') as f:
+                    mc[ip] = controller.serialize()
+                    json.dump(mc, f)    
                 
                 return render_template('reportform.html', form=form, instruction=instruction, display='', title=title)
         
@@ -180,8 +185,9 @@ def index():
             submit_field = 10
         
         #Store controller
-        with open(path, 'wb') as f:
-            pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL)    
+        with open(path, 'w') as f:
+            mc[ip] = controller.serialize()
+            json.dump(mc, f)    
         
         #Render page
         return render_template('index.html', display=output_text, answer_text=answer_text, form=form, skip=skip, prev=prev, answer=answer, submit_field=submit_field, varnames=varnames, title=title)
@@ -191,11 +197,11 @@ def index():
 @app.route('/bigform', methods=['POST'])
 def bigform():
     #Get controller
-    path = 'app/controller.pickle' if 'Github' in os.getcwd() else '/var/www/ComeniusPrototype/ComeniusPrototype/app/controller.pickle'
-    with open(path, 'rb') as f:
-        mc:dict = pickle.load(f)
+    path = 'app/controller.json' if 'Github' in os.getcwd() else '/var/www/ComeniusPrototype/ComeniusPrototype/app/controller.json'
+    with open(path, 'r') as f:
+        mc:dict = json.load(f)
         ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
-        controller = mc[ip]
+        controller = Controller(jsondict=mc[ip])
     mes:dict = controller.mes
     a = controller.assignment
     form = BigForm()
@@ -232,8 +238,9 @@ def bigform():
             textfields = [x for x in dir(form) if str(type(form.__getattribute__(x))) in ["<class 'wtforms.fields.core.StringField'>","<class 'wtforms.fields.simple.TextAreaField'>"]]
             textdict = dict([(x, form.__getattribute__(x).data) for x in textfields])
             instruction, outputfields = controller.update_form_anova(textdict)
-            with open(path, 'wb') as f:
-                pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL) 
+            with open(path, 'w') as f:
+                mc[ip] = controller.serialize()
+                json.dump(mc, f) 
             return render_template('bigform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames, title=title)
         elif form.nextt.data:
             skip:bool = controller.skipable
@@ -253,11 +260,11 @@ def bigform():
         
 @app.route('/smallform', methods=['POST'])
 def smallform():
-    path = 'app/controller.pickle' if 'Github' in os.getcwd() else '/var/www/ComeniusPrototype/ComeniusPrototype/app/controller.pickle'
-    with open(path, 'rb') as f:
-        mc:dict = pickle.load(f)
+    path = 'app/controller.json' if 'Github' in os.getcwd() else '/var/www/ComeniusPrototype/ComeniusPrototype/app/controller.json'
+    with open(path, 'r') as f:
+        mc:dict = json.load(f)
         ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
-        controller = mc[ip]
+        controller = Controller(jsondict=mc[ip])
     mes:dict = controller.mes
     a = controller.assignment
     form = SmallForm()
@@ -291,8 +298,9 @@ def smallform():
             textfields = [x for x in dir(form) if str(type(form.__getattribute__(x))) in ["<class 'wtforms.fields.core.StringField'>","<class 'wtforms.fields.simple.TextAreaField'>"]]
             textdict = dict([(x, form.__getattribute__(x).data) for x in textfields])
             instruction, outputfields = controller.update_form_ttest(textdict)
-            with open(path, 'wb') as f:
-                pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL) 
+            with open(path, 'w') as f:
+                mc[ip] = controller.serialize()
+                json.dump(mc, f) 
             return render_template('smallform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames, title=title)
         elif form.nextt.data:
             skip :bool = controller.skipable
@@ -312,11 +320,11 @@ def smallform():
         
 @app.route('/reportform', methods=['POST'])
 def reportform():
-    path = 'app/controller.pickle' if 'Github' in os.getcwd() else '/var/www/ComeniusPrototype/ComeniusPrototype/app/controller.pickle'
-    with open(path, 'rb') as f:
-        mc:dict = pickle.load(f)
+    path = 'app/controller.json' if 'Github' in os.getcwd() else '/var/www/ComeniusPrototype/ComeniusPrototype/app/controller.json'
+    with open(path, 'r') as f:
+        mc:dict = json.load(f)
         ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
-        controller = mc[ip]
+        controller = Controller(jsondict=mc[ip])
     mes:dict = controller.mes
     varnames:list = []#[[a['independent']] + a['levels']] if a['assignment_type'] != 4 else [[a['independent']] + a['levels'],[a['independent2']] + a['levels2']]
     form = ReportForm()
@@ -332,8 +340,9 @@ def reportform():
             textfields = [x for x in dir(form) if str(type(form.__getattribute__(x))) == "<class 'wtforms.fields.simple.TextAreaField'>"]
             textdict = dict([(x, form.__getattribute__(x).data) for x in textfields])
             instruction, output = controller.update_form_report(textdict)
-            with open(path, 'wb') as f:
-                pickle.dump(mc, f, protocol=pickle.HIGHEST_PROTOCOL) 
+            with open(path, 'w') as f:
+                mc[ip] = controller.serialize()
+                json.dump(mc, f) 
             return render_template('reportform.html', form=form, instruction=instruction, display=output, title=title)
         elif form.nextt.data:
             skip :bool = controller.skipable

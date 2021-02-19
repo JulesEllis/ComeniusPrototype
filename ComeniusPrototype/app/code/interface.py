@@ -11,6 +11,7 @@ import numpy as np
 import os
 import spacy
 import logging
+import json
 from scipy import stats
 from app.code.enums import Process, Task
 from app.code.assignments import Assignments
@@ -21,27 +22,62 @@ from typing import Dict, List, Callable, Tuple
 
 #class OuterController:
 class Controller:
-    def __init__(self):
-        self.assignments: Assignments = Assignments()
-        self.languages = LanguageInterface()
-        self.mes = None
-        self.skipable: bool = False
-        self.prevable: bool = False
-        self.answerable: bool = False
-        self.answer_triggered: bool = False
-        self.formmode: bool = False
-        self.index: int = 0
-        self.assignment : Dict = None
-        self.solution : Dict = None
-        self.protocol : List = self.intro_protocol()
-        self.submit_field : int = Task.INTRO
-        self.analysis_type = Task.CHOICE
-        self.wipetext:bool = False
-        #self.nl_nlp = spacy.load('nl')
+    def __init__(self, jsondict:dict=None):
+        if jsondict == None:
+            self.assignments: Assignments = Assignments()
+            self.mes = None
+            self.skipable: bool = False
+            self.prevable: bool = False
+            self.answerable: bool = False
+            self.answer_triggered: bool = False
+            self.formmode: bool = False
+            self.index: int = 0
+            self.assignment : Dict = None
+            self.solution : Dict = None
+            self.protocol : List = self.intro_protocol()
+            self.submit_field : int = Task.INTRO
+            self.analysis_type = Task.CHOICE
+            self.wipetext:bool = False
+        else:
+            fdict:dict = {0:scan_indep,1:scan_indep_anova,2:scan_dep,3:scan_control,4:scan_hypothesis,5:scan_hypothesis_anova,6:scan_number,
+                        7:scan_p,8:scan_table_ttest,9:scan_table,10:scan_decision,11:scan_decision_anova,12:scan_interpretation,
+                        13:scan_interpretation_anova,14:scan_decision_rmanova,15:scan_dummy}
+            self.mes = jsondict['mes']
+            self.assignments = Assignments(self.mes)
+            self.skipable: bool = jsondict['skipable']
+            self.prevable: bool = jsondict['prevable']
+            self.answerable: bool = jsondict['answerable']
+            self.answer_triggered: bool = jsondict['answer_triggered']
+            self.formmode: bool = jsondict['formmode']
+            self.index: int = jsondict['index']
+            self.assignment : Dict = jsondict['assignment']
+            self.solution : Dict = jsondict['solution']
+            self.protocol : List = [(x[0], fdict[x[1]],x[2],Process(x[3]),x[4]) for x in jsondict['protocol']]
+            self.submit_field : int = Task(jsondict['submit_field'])
+            self.analysis_type = Task(jsondict['analysis_type'])
+            self.wipetext:bool = jsondict['wipetext']
+    
+    def serialize(self) -> dict:
+        fdict={scan_indep:0,scan_indep_anova:1,scan_dep:2,scan_control:3,scan_hypothesis:4,scan_hypothesis_anova:5,
+                scan_number:6,scan_p:7,scan_table_ttest:8,scan_decision:10,scan_decision_anova:11,scan_interpretation:12,
+                scan_interpretation_anova:13,scan_decision_rmanova:14,scan_dummy:15}
+        output = {"mes":self.mes,
+                  "skipable":self.skipable,
+                  "prevable":self.prevable,
+                  "answerable":self.answerable,
+                  "answer_triggered":self.answer_triggered,
+                  "formmode":self.formmode,
+                  "index":self.index,
+                  "assignment":self.assignment,
+                  "solution":self.solution,
+                  "protocol":[(x[0], fdict[x[1]],x[2],x[3].value,x[4]) for x in self.protocol],
+                  "submit_field":self.submit_field.value,
+                  "analysis_type":self.analysis_type.value,
+                  "wipetext":self.wipetext}
+        return output
     
     def reset(self):
         self.assignments: Assignments = Assignments()
-        self.languages = LanguageInterface()
         self.mes = None
         self.skipable: bool = False
         self.prevable: bool = False
@@ -261,10 +297,11 @@ class Controller:
         
         #Execute the correct response
         if process == Process.INTRO: #If intro protocol:
+            li = LanguageInterface()
             if textfields['selectlanguage'] == 'Nederlands':
-                self.mes = self.languages.get_messages(False)
+                self.mes = li.get_messages(False)
             else:
-                self.mes = self.languages.get_messages(True)
+                self.mes = li.get_messages(True)
             self.assignments.set_messages(self.mes)
             self.protocol = self.choice_protocol()
             self.submit_field = Task.CHOICE
@@ -330,7 +367,7 @@ class Controller:
             
             #Select report type
             self.index = 0
-            if report in ['Elementair rapport (oefenmodus)','Elementary rapport (practice mode)']:
+            if report in ['Elementair rapport (oefenmodus)','Elementary report (practice mode)']:
                 self.skipable = True
                 self.answerable = True
                 self.submit_field = Task.TEXT_FIELD
@@ -344,7 +381,7 @@ class Controller:
                     self.protocol = self.anova_protocol()
                 if self.analysis_type == Task.WITHIN_ANOVA:
                     self.protocol = self.rmanova_protocol()
-            if report in ['Elementair rapport (tentamenmodus)','Elementary rapport (examination mode)']:
+            if report in ['Elementair rapport (tentamenmodus)','Elementary report (examination mode)']:
                 self.submit_field = Task.FINISHED #Task.INTRO
                 self.skipable = False
                 self.formmode = True
@@ -424,14 +461,14 @@ class Controller:
             
     def intro_protocol(self) -> List[Tuple]:
         return [('Hoi, met dit programma kan je elementaire en beknopte rapporten oefenen. Klik op de knop hieronder om verder te gaan.', 
-                 scan_dummy, [], Process.INTRO, None)]
+                 scan_dummy, [], Process.INTRO, '')]
 
     def completion_protocol(self) -> List[Tuple]:
         return [(self.mes['Q_COMPLETION'], 
-                 scan_dummy, [], Process.FINISH, None)]
+                 scan_dummy, [], Process.FINISH, '')]
         
     def choice_protocol(self) -> List[Tuple]:
-        return [(self.mes['Q_CHOICE'],None,[], Process.CHOOSE_ANALYSIS, None)]
+        return [(self.mes['Q_CHOICE'],scan_dummy, [], Process.CHOOSE_ANALYSIS, '')]
    
     def ttest_protocol(self) -> List[Tuple]:
         output : List[Tuple] = [(self.mes['Q_IND'], scan_indep, [self.solution], Process.QUESTION,self.assignments.print_independent(self.assignment)),

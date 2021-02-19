@@ -21,8 +21,11 @@ def cap(term:str) -> str:
     return term[0].upper() + term[1:]
     
 class Assignments:
-    def __init__(self):
-        self.mes = None
+    def __init__(self, mes:dict=None):
+        if mes == None:
+            self.mes = None
+        else:
+            self.mes = mes
         
     #Checks the nature of the given assignment and returns the output of the right print function
     def print_assignment(self, assignment: Dict) -> str:
@@ -63,18 +66,18 @@ class Assignments:
         else:
             if self.mes['L_ENGLISH']:
                 if control:
-                    choices = [('nationality',['nationalities'],['Dutch','German'],[[],['Germans']]),
-                               ('birthplace',['birthplaces'],['Nijmegen','Amsterdam'],[[],[]])]
-                else:
                     choices = [('stimulus',['stimuli'],['square','round'],[[],[]]),
                                ('weather',[],['clear','rainy'],[[],[]])]
+                else:
+                    choices = [('nationality',['nationalities'],['Dutch','German'],[[],['Germans']]),
+                               ('birthplace',['birthplaces'],['Nijmegen','Amsterdam'],[[],[]])]
             else:
                 if control:
-                    choices = [('nationaliteit',['nationaliteiten'],['Nederlands','Duits'],[['Nederlanders'],['Duitsers']]),
-                               ('geboortestad',[],['Nijmegen','Amsterdam'],[[],[]])]
-                else:
                     choices = [('stimulusvorm',['stimulusvormen'],['vierkant','rond'],[[],[]]),
                                ('weer',[],['helder','regen'],[[],[]])]
+                else:
+                    choices = [('nationaliteit',['nationaliteiten'],['Nederlands','Duits'],[['Nederlanders'],['Duitsers']]),
+                               ('geboortestad',[],['Nijmegen','Amsterdam'],[[],[]])]
         return random.choice(choices)
     
     def get_dependent(self) -> Tuple:
