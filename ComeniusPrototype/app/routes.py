@@ -30,13 +30,16 @@ def index():
     form = BaseForm()
     if flask.request.method == 'GET':
         controller.reset()
+        instruction = controller.protocol[0][0]
+        if controller.mes != None:
+            title:str = controller.mes['M_TITLE']
+        
         #Save controller
         with open(path, 'w') as f:
             mc[ip] = controller.serialize()
             json.dump(mc, f)
-        instruction = controller.protocol[0][0]
-        if controller.mes != None:
-            title:str = controller.mes['M_TITLE']
+            
+        #Render page
         return render_template('index.html', display=instruction, form=form, skip=False, submit_field=8, varnames=varnames, title=title)
     elif flask.request.method == 'POST':        
         #Isolate text fields
@@ -53,6 +56,8 @@ def index():
                 a = controller.assignment
                 varnames:list = [[cap(a['independent'])] + [cap(x) for x in a['levels']]] if a['assignment_type'] != 4 else [[cap(a['independent'])] + [cap(x) for x in a['levels']],[cap(a['independent2'])] + [cap(x) for x in a['levels2']]]
             form_shape = controller.analysis_type.value
+            
+            #If the user chose a T-test in exam mode
             if controller.formmode and form_shape > 0 and form_shape < 3:
                 form = SmallForm()
                 form.__getattribute__('inputtext1').label = mes['Q_IND']
@@ -74,12 +79,15 @@ def index():
                 form.__getattribute__('answer').label.text = mes['B_ANSWER']
                 controller.formmode = False
                 instruction = controller.print_assignment()
-                #Store controller
+                #Save controller
                 with open(path, 'w') as f:        
                     mc[ip] = controller.serialize()
                     json.dump(mc, f)        
                 
+                #Render page
                 return render_template('smallform.html', form=form, instruction=instruction, displays=[[''] for i in range(12)], shape=form_shape, varnames=varnames, title=title)
+            
+            #If the user chose an ANOVA or RM-ANOVA in exam mode
             elif controller.formmode and form_shape > 2 and form_shape < 6:
                 form = BigForm()
                 form.__getattribute__('inputtext1').label = mes['Q_IND']
@@ -105,25 +113,32 @@ def index():
                 form.__getattribute__('answer').label.text = mes['B_ANSWER']
                 controller.formmode = False
                 instruction = controller.print_assignment()
+                
                 #Store controller
                 with open(path, 'w') as f:
                     mc[ip] = controller.serialize()
                     json.dump(mc, f)            
                 
+                #Render page
                 return render_template('bigform.html', form=form, instruction=instruction, displays=[[''] for i in range(7)], shape=form_shape, varnames=varnames, title=title)
+            
+            #If the user chose to make a short report
             elif form_shape == 7:
                 form = ReportForm()
                 form.__getattribute__('nextt').label.text = mes['B_NEXT']
                 form.__getattribute__('inputtext').label = mes['Q_SHORTREPORT']
                 controller.formmode = False
                 instruction = output_text
+                
                 #Store controller
                 with open(path, 'w') as f:
                     mc[ip] = controller.serialize()
                     json.dump(mc, f)    
                 
+                #Render page
                 return render_template('reportform.html', form=form, instruction=instruction, display='', title=title)
         
+        ## Other HTML pages ruled out: The user has chosen to do an elementary report in practice mode, or is at one of the starting pages
         #Detect which button triggered the current screen
         if form.skip.data:
             output_text : str = controller.update({'inputtext': 'skip'})
@@ -151,6 +166,8 @@ def index():
                 form.submit.label.text = 'Continue'
         else:
             form.submit.label.text = 'Feedback'
+            
+        #Determine which objects to render and what text to give them
         if not controller.submit_field == Task.INTRO:
             mes:dict = controller.mes
             form.__getattribute__('skip').label.text = mes['B_NEXT']
@@ -177,11 +194,14 @@ def index():
         prev :bool = controller.prevable
         answer :bool = controller.answerable
         answer_text :str = controller.protocol[controller.index][4] if controller.answer_triggered else ""
-        if answer_text != '': #Capitalize the first letter of each answer
+        
+        #Capitalize the first letter of each answer
+        if answer_text != '': 
             answer_text = answer_text[0].upper() + answer_text[1:]
+        
+        #Convert textbox to large textbox if appropriate
         submit_field :int = controller.submit_field.value
         if controller.protocol[controller.index][1] in [scan_decision, scan_decision_anova, scan_decision_rmanova, scan_interpretation, scan_interpretation_anova, scan_hypothesis_anova]: 
-            #Convert textbox to large textbox if appropriate
             submit_field = 10
         
         #Store controller
@@ -231,7 +251,7 @@ def bigform():
     form.__getattribute__('df4').label = mes['A_INTERACT']
     form.__getattribute__('df5').label = mes['A_TOTAL']
     
-    #Determine rendering parameters    
+    #Determine rendering parameters based on button input
     if flask.request.method == 'POST':
         if form.submit.data:
             form_shape = controller.analysis_type.value
@@ -260,6 +280,7 @@ def bigform():
         
 @app.route('/smallform', methods=['POST'])
 def smallform():
+    #Get controller and associated objects
     path = 'app/controller.json' if 'Github' in os.getcwd() else '/var/www/ComeniusPrototype/ComeniusPrototype/app/controller.json'
     with open(path, 'r') as f:
         mc:dict = json.load(f)
@@ -269,7 +290,6 @@ def smallform():
     a = controller.assignment
     form = SmallForm()
     title:str = controller.mes['M_TITLE']
-    print(mes['B_NEXT'])
     form.__getattribute__('nextt').label.text = mes['B_NEXT']
     form.__getattribute__('answer').label.text = mes['B_ANSWER']
     
@@ -291,7 +311,7 @@ def smallform():
     form.__getattribute__('std1').label = mes['A_MEAN']
     form.__getattribute__('std2').label = mes['A_STD']
     
-    #Deterimine rendering parameters
+    #Deterimine rendering parameters based on input button
     if flask.request.method == 'POST':
         if form.submit.data:
             form_shape = controller.analysis_type.value
@@ -320,6 +340,7 @@ def smallform():
         
 @app.route('/reportform', methods=['POST'])
 def reportform():
+    #Get controller
     path = 'app/controller.json' if 'Github' in os.getcwd() else '/var/www/ComeniusPrototype/ComeniusPrototype/app/controller.json'
     with open(path, 'r') as f:
         mc:dict = json.load(f)
@@ -334,7 +355,7 @@ def reportform():
     form.__getattribute__('nextt').label.text = mes['B_NEXT']
     form.__getattribute__('inputtext').label = mes['Q_SHORTREPORT']
     
-    #Determine rendering parameters
+    #Determine rendering parameters based on input button
     if flask.request.method == 'POST':
         if form.submit.data:
             textfields = [x for x in dir(form) if str(type(form.__getattribute__(x))) == "<class 'wtforms.fields.simple.TextAreaField'>"]

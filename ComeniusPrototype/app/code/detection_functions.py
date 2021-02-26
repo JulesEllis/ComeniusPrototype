@@ -479,8 +479,8 @@ def detect_primary_interaction(sent:Doc, solution:dict) -> List[str]:
     scorepoints = dict([(x,False) for x in criteria])
     tokens = [x.text for x in sent]
     output:list = []
-    var1levels:list[bool] = [solution['levels'][i] in tokens or any([y in tokens for y in solution['level_syns'][i]]) for i in range(len(solution['levels']))]
-    var2levels:list[bool] = [solution['levels2'][i] in tokens or any([y in tokens for y in solution['level2_syns'][i]]) for i in range(len(solution['levels2']))]
+    var1levels:list[bool] = [solution['levels'][i].lower() in tokens or any([y in tokens for y in solution['level_syns'][i]]) for i in range(len(solution['levels']))]
+    var2levels:list[bool] = [solution['levels2'][i].lower() in tokens or any([y in tokens for y in solution['level2_syns'][i]]) for i in range(len(solution['levels2']))]
     rejected = solution['p'][2] < 0.05
     
     # Fill scorepoints

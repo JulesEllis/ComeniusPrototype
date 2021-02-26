@@ -8,6 +8,7 @@ Created on Tue Jun 30 16:03:09 2020
 import math
 import random
 import numpy as np
+import os
 from scipy import stats
 from scipy.stats.distributions import chi2
 from typing import Dict, List, Tuple
@@ -19,13 +20,24 @@ def format_table(terms:list) -> str:
 
 def cap(term:str) -> str:
     return term[0].upper() + term[1:]
-    
+
+#Object to create different assignment
 class Assignments:
+    #Create object either from an existing dictionary of (Dutch or English) messages or a new object
     def __init__(self, mes:dict=None):
         if mes == None:
             self.mes = None
         else:
             self.mes = mes
+        
+        #Import variables
+        path = '/home/jelmer/Github/ComeniusPrototype/ComeniusPrototype/app/code/variables.csv' if 'Github' in os.getcwd() else '/var/www/ComeniusPrototype/ComeniusPrototype/app/code/variables.csv'
+        self.variables = []
+        with open(path, encoding='utf-8', errors='ignore') as file:
+            for line in file.readlines()[1:]:
+                parts = line.split(';')
+                self.variables.append({'name':parts[0],'synonyms':parts[4].split(','),'levels':parts[5].split(','),'levelsyns':[[parts[i]] for i in range(6,10)],
+                            'type':parts[1],'english':bool(int(parts[2])),'control':bool(int(parts[3])),'intro':parts[10],'intro2':parts[11][:-1]})
         
     #Checks the nature of the given assignment and returns the output of the right print function
     def print_assignment(self, assignment: Dict) -> str:
@@ -42,60 +54,31 @@ class Assignments:
         else:
             print('ERROR: ASSIGNMENT TYPE NOT RECOGNIZED')
             return None
-        
+    
+    #Sets the message dictionary
     def set_messages(self, mes:dict):
         self.mes = mes
     
-    def get_factor(self, within_subject:bool = False, control:bool = False, ttest:bool = False, multirm:bool = False) -> Tuple:
-        if within_subject:
-            nc = 2 if ttest else random.randint(2,4) if not multirm else 3 #nr of conditions
-            if self.mes['L_ENGLISH']:
-                choices = [('season',['seasons'],['winter', 'spring', 'summer', 'fall'][:nc],[['winters'],[],['summers'],[]][:nc]),
-                        ('age',['ages'],['child', 'teenager', 'adult', 'old'][:nc],[['children'],['teenagers'],['adults'],[]][:nc]),
-                        ('epoch',['epoch'],['precambrium', 'silurian', 'paleolithic', 'quaternary'][:nc],[[],[],[],[]][:nc])
-                        ]
-                if ttest:
-                    choices.append(('timeslot',['timeslots'],['day','night'],[['days'],['nights']]))
-            else:
-                choices = [('seizoen',['seizoenen'],['winter', 'lente', 'zomer', 'herfst'][:nc],[['winters'],[],['zomers'],[]][:nc]),
-                        ('leeftijd',['leeftijden'],['kind', 'jong', 'volwassen', 'oud'][:nc],[['kinderen'],[],['volwassenen'],['ouderen']][:nc]),
-                        ('tijdperk',['tijdperken'],['precambrian', 'siluur', 'paleolithic', 'quartair'][:nc],[[],[],[],[]][:nc])
-                        ]
-                if ttest:
-                    choices.append(('tijdstip',['tijdstippen'],['dag','nacht'],[['dagen'],['nachten']]))
-        else:
-            if self.mes['L_ENGLISH']:
-                if control:
-                    choices = [('stimulus',['stimuli'],['square','round'],[[],[]]),
-                               ('weather',[],['clear','rainy'],[[],[]])]
-                else:
-                    choices = [('nationality',['nationalities'],['Dutch','German'],[[],['Germans']]),
-                               ('birthplace',['birthplaces'],['Nijmegen','Amsterdam'],[[],[]])]
-            else:
-                if control:
-                    choices = [('stimulusvorm',['stimulusvormen'],['vierkant','rond'],[[],[]]),
-                               ('weer',[],['helder','regen'],[[],[]])]
-                else:
-                    choices = [('nationaliteit',['nationaliteiten'],['Nederlands','Duits'],[['Nederlanders'],['Duitsers']]),
-                               ('geboortestad',[],['Nijmegen','Amsterdam'],[[],[]])]
-        return random.choice(choices)
+    #Returns an independent variable with the given specifications
+    def get_factor(self, within_subject:bool = False, control:bool = False, multirm:bool = False, ttest:bool=False, second=False) -> Tuple:
+        t:str = 'BETWEEN' if not within_subject else 'WITHIN'
+        nc:int = 2 if ttest else random.randint(2,4) if not multirm else 3
+        var:tuple = random.choice([x for x in self.variables if x['type'] == t and x['english'] == self.mes['L_ENGLISH'] and x['control'] == control])
+        text:str = var['intro'] if not second else var['intro2']
+        return (var['name'], var['synonyms'], var['levels'][:nc], var['levelsyns'][:nc], text)
     
+    #Returns a dependent variable with the given specifications
     def get_dependent(self) -> Tuple:
-        if not self.mes['L_ENGLISH']:
-            choices:list = [('reactietijd',['reactietijden']),('bloeddruk',[]),('gewicht',['gewichten'])]
-        else:
-            choices:list = [('response time',['response times']),('blood pressure',[]),('weight',[])]
-        return random.choice(choices)
+        var:tuple = random.choice([x for x in self.variables if x['english'] == self.mes['L_ENGLISH'] and x['type'] == 'DEPENDENT'])
+        return (var['name'], var['synonyms'], var['intro'])
     
+    #Returns lists of covariates (names and synonyms) with the given specifications
     def get_covariates(self, n:int, intercept:bool=False) -> list:
-        if self.mes['L_ENGLISH']:
-            pos:list = ['Social skills', 'Depression', 'Appetite', 'Intelligence','Aggression','Perceived happiness']
-        else:
-            pos:list = ['Sociale vaardigheden', 'Depressieve gedachten', 'Eetlust', 'Intelligentie','Assertiviteit','Ervaren geluk']
-        shuffle(pos)
-        output = pos[:n] if not intercept else ['Intercept'] + pos[:n]
-        n_syns = n if not intercept else n+1
-        return output, [[] for i in range(n_syns)]
+        varss:list = [x for x in self.variables if x['english'] == self.mes['L_ENGLISH'] and x['type'] == 'COVARIATE']
+        shuffle(varss)
+        output = [x['name'] for x in varss[:n]] if not intercept else ['Intercept'] + [x['name'] for x in varss[:n]]
+        isyn:list = [] if not intercept else [[]]
+        return output, isyn + [x['synonyms'] for x in varss]
         
     #Creates the assignment's data as a tuple of floats
     #If the assignment is a within-subject T-test, n1 and n2 have the same number of samples
@@ -115,25 +98,22 @@ class Assignments:
         
         #Generate the datapoints as a dictionary of where the list of float entries is 
         #described by the variable name key
-        dependent, dep_syns = self.get_dependent()
+        dependent, dep_syns, depintro = self.get_dependent()
         if between_subject:
-            independent, ind_syns, levels, level_syns = self.get_factor(within_subject=False, control=control,ttest=True)
+            independent, ind_syns, levels, level_syns, intro = self.get_factor(within_subject=False, control=control,ttest=True)
         else:
-            independent, ind_syns, levels, level_syns = self.get_factor(within_subject=True, control=control,ttest=True)
+            independent, ind_syns, levels, level_syns, intro = self.get_factor(within_subject=True, control=control,ttest=True)
         
         #Create the assignment description
         report_type = self.mes['S_ELEM'] if elementary else self.mes['S_SHORT']
-        instruction: str = self.mes['I_CREATE']+report_type+self.mes['S_DATAHYP']
+        instruction: str = depintro + intro + '<br><br>'
+        instruction += self.mes['I_CREATE']+report_type+self.mes['S_DATAHYP']
         if hyp_type == 0:
-            instruction += dependent+self.mes['S_WITH'] + independent + ' ' + levels[0] + self.mes['S_UNEQUAL'] + levels[1] + '.<br><br>'
+            instruction += levels[0] + self.mes['S_UNEQUAL'] + levels[1] + '. '
         if hyp_type == 1:
-            instruction += dependent+self.mes['S_WITH'] + independent + ' ' + levels[0] + self.mes['S_BIGGER'] + levels[1] + '.<br><br>'
+            instruction += levels[0] + self.mes['S_BIGGER'] + levels[1] + '. '
         if hyp_type == 2:
-            instruction += dependent+self.mes['S_WITH'] + independent + " " + levels[0] + self.mes['S_SMALLER'] + levels[1] + ".<br><br>"
-        if between_subject:
-            instruction += self.mes['I_SUBJECTBETWEEN'] + independent + self.mes['S_GROUPS']+ levels[0] + self.mes['S_AND'] + levels[1] + '. '
-        else:
-            instruction += self.mes['I_SUBJECTWITHIN'] + independent + self.mes['S_BOTH'] + levels[0] + self.mes['S_BOTHAND'] + levels[1] + '. '
+            instruction += levels[0] + self.mes['S_SMALLER'] + levels[1] + '. '
         if control:
             if between_subject:
                 instruction += self.mes['I_RANDOMBETWEEN'] 
@@ -238,33 +218,37 @@ class Assignments:
                 solution['interpretation']: str = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat ' + solution['independent'] + ' geen invloed heeft op ' + solution['dependent'] + '. '+\
                 'De alternatieve verklaring is dat ' + solution['independent'] + ' ' + solution['dependent'] + ' wel beinvloedt, maar dat dit niet merkbaar is door een storende variabele.'
         return solution
-        
+    
+    #Create ANOVA assignment
     def create_anova(self, two_way: bool, control: bool, control2:bool=False, elementary:bool=True) -> Dict:
         output = {'two_way':two_way, 'control':control}
         output['instruction']: str = None
         output['assignment_type']: int = 4 if two_way else 3
         
-        output['independent'], output['ind_syns'], output['levels'], output['level_syns'] = self.get_factor(within_subject=False, control=control,ttest=False)
-        output['dependent'], output['dep_syns'] = self.get_dependent()
+        output['independent'], output['ind_syns'], output['levels'], output['level_syns'], intro = self.get_factor(within_subject=False, control=control,ttest=False)
+        output['dependent'], output['dep_syns'], depintro = self.get_dependent()
         if two_way:
-            output['independent2'], output['ind2_syns'], output['levels2'], output['level2_syns'] = self.get_factor(within_subject=False, control=control2,ttest=False)
+            output['independent2'], output['ind2_syns'], output['levels2'], output['level2_syns'], intro2 = self.get_factor(within_subject=False, control=control2, ttest=False, second=True)
             output['control2'] = control2
         
         #Decide the variable names
         report_type = self.mes['S_ELEM'] if elementary else self.mes['S_SHORT']
+        if two_way:
+            output['instruction']:str = depintro + intro + intro2 + '<br><br>' 
+        else: 
+            output['instruction']:str = depintro + intro + '<br><br>'
+        output['instruction'] += self.mes['I_CREATE']+report_type+self.mes['S_DATAHYP2']
         if not two_way:
-            output['instruction'] = self.mes['I_CREATE']+report_type+self.mes['S_VARSARE2']+output['independent']+self.mes['S_CLEVELS']+self.mes['S_AND'].join(output['levels'])+self.mes['S_CAND']+output['dependent']+'. '+self.mes['I_DECIMALS']
             if control:
                 output['instruction'] += self.mes['I_ONERANDOM']
         else:
-            output['instruction'] = self.mes['I_CREATE']+report_type+self.mes['S_VARSARE2']+output['independent']+self.mes['S_CLEVELS']+self.mes['S_AND'].join(output['levels'])+', '+output['independent2']+self.mes['S_WITHLEVELS'] +\
-                        self.mes['S_AND'].join(output['levels2'])+self.mes['S_CAND']+output['dependent']+'. '+self.mes['I_DECIMALS']
             if control and output['control2']:
                 output['instruction'] += self.mes['I_FULLRANDOM']
             elif control:
                 output['instruction'] += self.mes['I_RANDOMFACTOR']+output['independent']+'. '
             elif output['control2']:
                 output['instruction'] += self.mes['I_RANDOMFACTOR']+output['independent2']+'. '
+        output['instruction'] += self.mes['I_DECIMALS2']
         
         #Generate summary statistics
         n: int = random.randint(9,16)
@@ -280,6 +264,7 @@ class Assignments:
                   'ns': [n for i in range(4)]}
         return output
     
+    #Create standard answer for the given ANVOA assignment
     def solve_anova(self, assignment: Dict, solution: Dict) -> Dict:
         data: Dict = assignment['data']
         two_way: bool = assignment['two_way']
@@ -386,19 +371,20 @@ class Assignments:
                     'Eventuele alternatieve verklaringen zijn storende variabelen of omgekeerde causaliteit. '
         return solution
     
+    #Create an RMANVOA assignment for the given parameters
     def create_rmanova(self, control: bool, elementary:bool=True) -> Dict:
         #Determine variable shape and names
         output = {'control': control, 'two_way':False, 'assignment_type':5}
         n_conditions = random.randint(2,4)
         n_subjects = int(random.uniform(8,15))
         
-        output['independent'], output['ind_syns'], output['levels'], output['level_syns'] = self.get_factor(within_subject=True, control=control,ttest=False)
-        output['dependent'], output['dep_syns'] = self.get_dependent()
+        output['independent'], output['ind_syns'], output['levels'], output['level_syns'], intro = self.get_factor(within_subject=True, control=True,ttest=False)
+        output['dependent'], output['dep_syns'], depintro = self.get_dependent()
         
         report_type = self.mes['S_ELEM'] if elementary else self.mes['S_SHORT']
-        output['instruction']: str = self.mes['I_CREATE']+report_type+self.mes['S_VARSARE2']+output['dependent']+self.mes['S_AND']+output['independent']+ self.mes['S_WITHLEVELS']+self.mes['S_AND'].join(output['levels'])+'. '+self.mes['I_DECIMALS']
-        if control:
-            output['instruction'] += self.mes['I_ONERANDOM']
+        output['instruction']: str = intro + depintro + '<br><br>' + self.mes['I_CREATE']+report_type+self.mes['S_DATAHYP2']
+        output['instruction'] += self.mes['I_DECIMALS2']
+            
         true_means = [int(random.uniform(50,120)) for i in range(n_conditions)]
         true_stds = [int(random.uniform(5,20)) for i in range(n_conditions)]
         output['data'] = {
@@ -411,6 +397,7 @@ class Assignments:
         output['data']['n_conditions'] = n_conditions
         return output
     
+    #Create standard answer for the given RMANVOA assignment
     def solve_rmanova(self, assignment: Dict, solution: Dict) -> Dict: 
         data: Dict = assignment['data']
         n_conditions = len(data['means'])
@@ -463,6 +450,7 @@ class Assignments:
             'De alternatieve is dat ' + solution['independent'] + ' wordt veroorzaakt door ' + solution['dependent']
         return solution
     
+    #Create a multiple regression assignment for the given parameters
     def create_mregression(self, control: bool, elementary:bool=False):
         report_type = self.mes['S_ELEM'] if elementary else self.mes['S_SHORT']
         output = {'assignment_type':6}
@@ -480,12 +468,15 @@ class Assignments:
         output['var_pred'] = output['var_obs'] * r2
         output['levels'], output['level_syns'] = self.get_covariates(n_predictors, intercept=True)
         output['data']: dict={'predictoren':output['levels']}
-        output['dependent'], output['dep_syns'] = self.get_dependent()
+        output['dependent'], output['dep_syns'], depintro = self.get_dependent()
+        print(output['dependent'])
+        print(output['dep_syns'])
         #output['correlations'] = [random.random() for i in range(int(((n_predictors + 1) ** 2 - n_predictors - 1) * 0.5))]
         output['instruction'] = self.mes['I_CREATE']+report_type+self.mes['S_VARSARE2']+self.mes['S_AND'].join(output['data']['predictoren'][1:])+self.mes['S_PREDICTORS']+self.mes['S_AND']+\
             output['dependent']+self.mes['S_CRITERIUM']+'. '+self.mes['I_DECSHORT']
         return output
     
+    #Create a standard answer for the given multiple regression assignment
     def solve_mregression(self, assignment: Dict, solution:Dict) -> Dict:
         N = assignment['ns'][0]
         solution['assignment_type'] = assignment['assignment_type']
@@ -515,10 +506,11 @@ class Assignments:
         solution['null'] = 'H0: ' + ' == '.join(['beta(' + str(i) + ')' for i in range(1,4)]) + ' == 0'
         return solution
     
+    #Create an ANCOVA assignment for the given parameters
     def create_ancova(self, control: bool, elementary:bool=False):
         report_type = self.mes['S_ELEM'] if elementary else self.mes['S_SHORT']
         output = {'assignment_type':12}
-        output['independent'], output['ind_syns'], output['levels'], output['level_syns'] = self.get_factor(within_subject=False, control=control,ttest=False)
+        output['independent'], output['ind_syns'], output['levels'], output['level_syns'], intro = self.get_factor(within_subject=False, control=control,ttest=False)
         N = N = 50 + int(150 * random.random())
         output['ns'] = [N]
         output['n_predictors'] = 2
@@ -530,12 +522,13 @@ class Assignments:
         output['var_pred'] = output['var_obs'] * r2
         output['predictor_names'], output['predictor_syns'] = self.get_covariates(2, intercept=False)
         output['data']: dict={'predictoren':output['predictor_names']}
-        output['dependent'], output['dep_syns'] = self.get_dependent()
+        output['dependent'], output['dep_syns'], depintro = self.get_dependent()
         #output['correlations'] = [random.random() for i in range(int(((n_predictors + 1) ** 2 - n_predictors - 1) * 0.5))]
         output['instruction'] = self.mes['I_CREATE']+report_type+self.mes['S_VARSARE2']+output['independent']+self.mes['S_AND']+output['dependent']+\
             self.mes['I_METWITH']+' '+self.mes['S_AND'].join(output['data']['predictoren'])+self.mes['S_PREDICTORS']+'. '+self.mes['I_DECSHORT']
         return output
     
+    #Create a standard answer for the given ANCOVA assignment
     def solve_ancova(self, assignment: Dict, solution:Dict) -> Dict:
         N = assignment['ns'][0]
         solution['assignment_type'] = assignment['assignment_type']
@@ -568,6 +561,7 @@ class Assignments:
         solution['null'] = 'H0: ' + ' == '.join(['beta(' + str(i) + ')' for i in range(1,4)]) + ' == 0'
         return solution
     
+    #Create a MANOVA assignment for the given parameters
     def create_manova(self, control: bool, control2:bool=False, elementary:bool=False):
         output = {'assignment_type':12}
         report_type = self.mes['S_ELEM'] if elementary else self.mes['S_SHORT']
@@ -576,7 +570,7 @@ class Assignments:
         output['var_obs'] = (1 + chi2.ppf(p, df=10)) * 10 ** s
         output['var_pred'] = [output['var_obs'] * random.random() ** 2 for i in range(3)]
         
-        output['independent'], output['ind_syns'], output['levels'], output['level_syns'] = self.get_factor(within_subject=False, control=control,ttest=False)
+        output['independent'], output['ind_syns'], output['levels'], output['level_syns'], intro = self.get_factor(within_subject=False, control=control,ttest=False)
         output['control'] = control
         
         output['sumdependent'] = 'grootte'
@@ -593,6 +587,7 @@ class Assignments:
                 self.mes['S_AND'].join(dependents)+'. '+self.mes['I_DECSHORT']
         return output
     
+    #Create a standard answer for the given MANOVA assignment
     def solve_manova(self, assignment: Dict, solution:Dict) -> Dict:
         solution = {'df':{}, 'ss':{}, 'ms':{},'F':{},'p':{},'eta':{}}
         N = assignment['ns'][0]
@@ -633,6 +628,7 @@ class Assignments:
         solution['eta0'] = [solution['ss0'][i] / solution['ss'][i%3][2] for i in range(9)]
         return solution
     
+    #Create a multiple repeated-measures ANOVA assignment for the given parameters
     def create_multirm(self, control: bool, control2:bool=False, elementary:bool=False) -> dict:
         output = {'assignment_type':13}
         report_type = self.mes['S_ELEM'] if elementary else self.mes['S_SHORT']
@@ -642,17 +638,18 @@ class Assignments:
         output['var_obs'] = (1 + chi2.ppf(p, df=10)) * 10 ** s
         output['var_pred'] = output['var_obs'] * random.random() ** 2
         
-        output['independent'], output['ind_syns'], output['levels'], output['level_syns'] = self.get_factor(within_subject=True, control=control,ttest=False, multirm=True)
+        output['independent'], output['ind_syns'], output['levels'], output['level_syns'], intro1 = self.get_factor(within_subject=True, control=control,ttest=False, multirm=True)
         output['control'] = control
-        output['independent2'], output['ind2_syns'], output['levels2'], output['level2_syns'] = self.get_factor(within_subject=False, control=control2,ttest=False)
+        output['independent2'], output['ind2_syns'], output['levels2'], output['level2_syns'], intro2 = self.get_factor(within_subject=False, control=control2,ttest=False)
         output['control2'] = control2
         
-        output['dependent'], output['dep_syns'] = self.get_dependent()
+        output['dependent'], output['dep_syns'], depintro = self.get_dependent()
         output['instruction'] = self.mes['I_CREATE']+report_type+self.mes['I_WITHFACTORS']+\
             output['independent']+' ('+', '.join(output['levels'])+')'+self.mes['S_AND'] + output['independent2'] + ' ('+', '.join(output['levels2'])+')'\
             '. '+self.mes['I_INDEP']+output['dependent']+'. '+self.mes['I_DECSHORT']
         return output
     
+    #Create a standard answer for the given multiple repeated-measures ANOVA assignment
     def solve_multirm(self, assignment: Dict, solution:Dict) -> Dict:
         solution = {}
         N = sum(assignment['ns']); ntimes = len(assignment['levels']); nlev = len(assignment['levels2'])
@@ -749,6 +746,7 @@ class Assignments:
         solution['eta1'] = [solution['ss1'][i] / (solution['ss1'][i] + solution['ss1'][4+i%2]) for i in range(8)]
         return solution
 	
+    #Create a merged assignment/solution dictionary for the given assignment type
     def create_report(self, control: bool, choice: int=0):
         hyp_type = random.choice([0,1,2])
         if choice == 1:
@@ -808,9 +806,9 @@ class Assignments:
     
     def print_anova(self, assignment: Dict) -> str: 
         data: Dict = assignment['data']
-        data['varnames'] = [[assignment['independent']] + assignment['levels']]
+        data['varnames'] = [[cap(assignment['independent'])] + [cap(x) for x in assignment['levels']]]
         if assignment['assignment_type'] == 4:
-            data['varnames'].append([assignment['independent2']] + assignment['levels2'])
+            data['varnames'].append([cap(assignment['independent2'])] + [cap(x) for x in assignment['levels2']])
         #Print variables
         output_text = assignment['instruction'] + '<br><table style="width:30%">'
         if not assignment['two_way']:
@@ -843,7 +841,7 @@ class Assignments:
         output_text += '<tr><td>N</td><td>' + str(data['n_subjects']) + '</td></tr></table>'
         output_text += '<br>'+self.mes['A_OGSCORES']
         output_text += '<br><table style="width:45%">'
-        output_text += '<tr><td>Subject</td>' + ''.join(['<td>'+x+'</td>' for x in assignment['levels'][:n_conditions]]) + '<td>'+self.mes['A_BOOSTED']+'</td></tr>'
+        output_text += '<tr><td>Subject</td>' + ''.join(['<td>'+cap(x)+'</td>' for x in assignment['levels'][:n_conditions]]) + '<td>'+self.mes['A_BOOSTED']+'</td></tr>'
         for i in range(assignment['data']['n_subjects']):
             output_text += '<tr><td>'+str(i+1)+'</td>' + ''.join(['<td>'+str(x)+'</td>' for x in [data['scores'][j][i] for j in range(n_conditions)]]) + '<td>' + str(round(data['jackedmeans'][i],2)) + '</td></tr>'
         return output_text + '</table>'
@@ -922,7 +920,7 @@ class Assignments:
             output += '<p><table style="width:20%">'
             output += '<tr><td>Predictor</td><td>b</td><td>Beta</td><td>Standaarderror</td><td>T</td><td>p</td></tr>'
             for i in range(len(data['predictoren'])):
-                output += '<tr><td>'+data['predictoren'][i]+'</td><td>'+str(round(assignment['predictor_b'][i],2))+'</td><td>'+str(round(assignment['predictor_beta'][i],2))+'</td><td>'+str(round(assignment['predictor_se'][i],2))+'</td><td>'+str(round(assignment['predictor_t'][i],2))+'</td><td>'+str(round(assignment['predictor_p'][i],3))+'</td></tr>'
+                output += '<tr><td>'+cap(data['predictoren'][i])+'</td><td>'+str(round(assignment['predictor_b'][i],2))+'</td><td>'+str(round(assignment['predictor_beta'][i],2))+'</td><td>'+str(round(assignment['predictor_se'][i],2))+'</td><td>'+str(round(assignment['predictor_t'][i],2))+'</td><td>'+str(round(assignment['predictor_p'][i],3))+'</td></tr>'
             output += '</table></p>'
         if assignment['assignment_type'] == 11:
             nt = sum(assignment['ns']) #Total number of subjects
@@ -1019,8 +1017,4 @@ class Assignments:
     
     def print_dependent(self, assignment:dict) -> str:
         return assignment['dependent'] + ', kwantitatief'
-    
-    def print_struct(self, d: Dict):
-        for key, value in list(d.items()):
-            print(key + ': ' + str(value))
     

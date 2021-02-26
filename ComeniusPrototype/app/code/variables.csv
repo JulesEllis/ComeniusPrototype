@@ -1,0 +1,33 @@
+Name;Type;English;Control;Synonyms;Levels;L1synonyms;L2synonyms;L3synonyms;L4synonyms;Intro1;Intro2
+seizoen;WITHIN;0;1;seizoenen;winter,lente,zomer,herfst;;;;;De scores van de individuele subjecten voor elk seizoen worden met elkaar vergeleken. ;Hiernaast worden hun scores voor elk seizoen vergeleken. 
+season;WITHIN;1;1;seasons;winter,spring,summer,fall;;;;;The scores of the individual subjects are compared for each season. ;Besides this, their scores are compared for each season of the year. 
+age;WITHIN;1;1;ages;kind,jong,volwassen,oud;kinderen;jongeren;volwassenen;ouderen;De subjecten worden op verschillende leeftijden getest, en hun scores worden vergeleken. ;Hiernaast worden hun scores op verschillende leeftijden vergeleken. 
+leeftijd;WITHIN;0;1;leeftijden;child,teenager,adult,old;children;teenagers;adults;;The subjects are tested at different ages to compare their scores. ;Besides this, the scores they reached at different ages are compared. 
+epoch;WITHIN;1;1;epochs;precambrian,silurian,paleolithic,quaternary;;;;;The subjects are shown information about a number of prehistoric epochs. ;They are also shown information about a number of prehistoric epochs. 
+tijdperk;WITHIN;0;1;tijdperken;precambrian,siluur,paleolithic,quartair;;;;;De subjecten krijgen informatie te zien over een aantal tijdperken uit de prehistorie. ;Hiernaast krijgen ze informatie te zien over een aantal tijdperken uit de prehistorie. 
+stimulus;BETWEEN;1;1;stimuli;round,square;;;;;The subjects are shown two stimuli, one circular and one square. ;They are also shown two stimuli, one circular and one square. 
+stimulusvorm;BETWEEN;0;1;stimulusvormen;rond,vierkant;ronde;vierkante;;;De subjecten krijgen twee stimuli te zien, een vierkant en een cirkel. ;Ze krijgen tegelijkertijd twee stimuli te zien, een vierkant en een cirkel. 
+weather;BETWEEN;1;1;;sun,rain;;;;;The subjects are tested in different weather conditions. ;They are tested under two different weather conditions, sun and rain. 
+weer;BETWEEN;0;1;;zon,regen;;;;;De subjecten worden getest onder twee verschillende weersomstandigheden, zon en regen. ;Ze worden getest onder twee verschillende weersmonstandigheden, zon en regen. 
+nationaliteit;BETWEEN;0;0;nationaliteiten;Nederlands,Duits;nederlanders;duitsers;;;De subjecten worden ingedeeld in twee groepen op basis van hun nationaliteit, Nederlands of Duits. ;Ze worden ook gesorteerd op hun nationaliteit, Nederlands of Duits. 
+nationality;BETWEEN;1;0;nationalities;Dutch,German;;germans;;;The subjects are sorted into two groups based on their nationality, Dutch or German. ;They are also sorted by nationality, Dutch or German. 
+geboortestad;BETWEEN;0;0;geboortesteden;Nijmegen,Amsterdam;;;;;De subjecten worden ingedeeld in twee groepen op basis van hun geboortestad, Amsterdam of Nijmegen. ;Ze worden ook ingedeeld op basis van hun geboortestad, Amsterdam of Nijmegen. 
+birthplace;BETWEEN;1;0;birthplaces;Nijmegen,Amsterdam;;;;;The subjects are sorted into two groups based on their birthplace, Amsterdam or Nijmegen. ;They are also sorted by birthplace, Amsterdam or Nijmegen. 
+reactietijd;DEPENDENT;0;0;reactietijden;;;;;;De reactietijd van een aantal subjecten wordt gemeten. ;
+reaction time;DEPENDENT;1;0;reaction times;;;;;;The reaction time of a number of subjects is recorded. ;
+bloeddruk;DEPENDENT;0;0;;;;;;;De bloeddruk van een aantal subjecten wordt gemeten. ;
+blood pressure;DEPENDENT;1;0;;;;;;;The blood pressure time of a number of subjects is under different circumstances. ;
+gewicht;DEPENDENT;0;0;gewichten;;;;;;Het gewicht van een aantal subjecten wordt gemeten. ;
+weight;DEPENDENT;1;0;weights;;;;;;The body weight of a number of subjects is recorded under different circumstances. ;
+sociale vaardigheden;COVARIATE;0;0;;;;;;;;
+depressie;COVARIATE;0;0;;;;;;;;
+assertiviteit;COVARIATE;0;0;;;;;;;;
+eetlust;COVARIATE;0;0;;;;;;;;
+intelligentie;COVARIATE;0;0;;;;;;;;
+ervaren geluk;COVARIATE;0;0;;;;;;;;
+social skills;COVARIATE;1;0;;;;;;;;
+depression;COVARIATE;1;0;;;;;;;;
+aggression;COVARIATE;1;0;;;;;;;;
+appetite;COVARIATE;1;0;;;;;;;;
+perceived happiness;COVARIATE;1;0;;;;;;;;
+intelligence;COVARIATE;1;0;;;;;;;;

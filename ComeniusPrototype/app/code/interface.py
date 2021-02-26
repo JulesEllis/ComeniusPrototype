@@ -23,6 +23,7 @@ from typing import Dict, List, Callable, Tuple
 #class OuterController:
 class Controller:
     def __init__(self, jsondict:dict=None):
+        #Create a new controller object with standard values
         if jsondict == None:
             self.assignments: Assignments = Assignments()
             self.mes = None
@@ -38,10 +39,11 @@ class Controller:
             self.submit_field : int = Task.INTRO
             self.analysis_type = Task.CHOICE
             self.wipetext:bool = False
+        #Create a controller object from a JSON file
         else:
             fdict:dict = {0:scan_indep,1:scan_indep_anova,2:scan_dep,3:scan_control,4:scan_hypothesis,5:scan_hypothesis_anova,6:scan_number,
                         7:scan_p,8:scan_table_ttest,9:scan_table,10:scan_decision,11:scan_decision_anova,12:scan_interpretation,
-                        13:scan_interpretation_anova,14:scan_decision_rmanova,15:scan_dummy}
+                        13:scan_interpretation_anova,14:scan_decision_rmanova,15:scan_dummy, 16:scan_hypothesis_rmanova}
             self.mes = jsondict['mes']
             self.assignments = Assignments(self.mes)
             self.skipable: bool = jsondict['skipable']
@@ -57,10 +59,11 @@ class Controller:
             self.analysis_type = Task(jsondict['analysis_type'])
             self.wipetext:bool = jsondict['wipetext']
     
+    #Convert the current controller object to a dictionary with only string and integer values so it can be saved as JSON
     def serialize(self) -> dict:
         fdict={scan_indep:0,scan_indep_anova:1,scan_dep:2,scan_control:3,scan_hypothesis:4,scan_hypothesis_anova:5,
-                scan_number:6,scan_p:7,scan_table_ttest:8,scan_decision:10,scan_decision_anova:11,scan_interpretation:12,
-                scan_interpretation_anova:13,scan_decision_rmanova:14,scan_dummy:15}
+                scan_number:6,scan_p:7,scan_table_ttest:8,scan_table:9,scan_decision:10,scan_decision_anova:11,scan_interpretation:12,
+                scan_interpretation_anova:13,scan_decision_rmanova:14,scan_dummy:15, scan_hypothesis_rmanova:16}
         output = {"mes":self.mes,
                   "skipable":self.skipable,
                   "prevable":self.prevable,
@@ -76,6 +79,7 @@ class Controller:
                   "wipetext":self.wipetext}
         return output
     
+    #Reset controller attributes to their initial values (called when user reloads URL)
     def reset(self):
         self.assignments: Assignments = Assignments()
         self.mes = None
@@ -91,7 +95,8 @@ class Controller:
         self.submit_field : int = Task.INTRO
         self.analysis_type = Task.CHOICE
         self.wipetext:bool = False
-        
+    
+    #Print controller attributes
     def print_internal_state(self):
         print('skipable = ' + str(self.skipable))
         print('prevable = ' + str(self.prevable))
@@ -105,169 +110,7 @@ class Controller:
         print('analysis_type = ' + self.analysis_type.name)
         print('wipetext = ' + str(self.wipetext))
     
-    def update_form_ttest(self, textfields: Dict) -> [str, List[str]]:
-        output = [[] for i in range(12)]
-        instruction = self.assignments.print_ttest(self.assignment)
-        
-        output[0].append(scan_indep(textfields['inputtext1'], self.solution)[1])
-        output[1].append(scan_dep(textfields['inputtext2'], self.solution)[1])
-        output[2].append(scan_control(textfields['inputtext3'], self.solution)[1])
-        output[4].append(scan_hypothesis(textfields['inputtext4'], self.solution, num=1)[1])
-        
-        output[5].append(scan_number(textfields['inputtext5'], 'df', self.solution)[1])
-        output[6].append(scan_number(textfields['inputtext6'], 'raw_effect', self.solution)[1])
-        output[7].append(scan_number(textfields['inputtext7'], 'relative_effect', self.solution)[1])
-        output[8].append(scan_number(textfields['inputtext8'], 'T', self.solution)[1])
-        output[9].append(scan_number(textfields['inputtext9'], 'p', self.solution)[1])
-        nl_nlp = spacy.load('nl')
-        output[10].append(scan_decision(nl_nlp(textfields['inputtext10'].lower()), self.solution, anova=False)[1])
-        output[11].append(scan_interpretation(nl_nlp(textfields['inputtext11'].lower()), self.solution, anova=False)[1])
-        
-        output[3].append(scan_table_ttest(textfields, self.solution)[1])
-        return instruction, output
-    
-    def form_answers(self) -> [str, List[str]]:
-        output = [[] for i in range(12)]
-        instruction = self.assignments.print_ttest(self.assignment)
-        output[0].append('Antwoord: '+self.assignments.print_independent(self.assignment))
-        output[1].append('Antwoord: '+self.assignments.print_dependent(self.assignment))
-        output[2].append('Antwoord: '+['Passief-observerend','Experiment'][int(self.solution['control'])])
-        output[3].append('Antwoord: '+self.assignments.print_report({**self.assignment, **self.solution}, answer=True))
-        output[4].append('Antwoord: '+self.solution['null'])
-        output[5].append('Antwoord: '+str(self.solution['df'][0]))
-        output[6].append('Antwoord: '+str(round(self.solution['raw_effect'][0],2)))
-        output[7].append('Antwoord: '+str(round(self.solution['relative_effect'][0],2)))
-        output[8].append('Antwoord: '+str(round(self.solution['T'][0],2)))
-        output[9].append('Antwoord: '+str(round(self.solution['p'][0],2)))
-        output[10].append('Antwoord: '+self.solution['decision'])
-        output[11].append('Antwoord: '+self.solution['interpretation'])
-        return instruction, output
-    
-    def update_form_anova(self, textfields: Dict) -> [str, list]:
-        output = [[] for i in range(7)]
-        nl_nlp = spacy.load('nl')
-        if self.analysis_type == Task.ONEWAY_ANOVA:
-            instruction = self.assignments.print_anova(self.assignment)
-        elif self.analysis_type == Task.TWOWAY_ANOVA:
-            instruction = self.assignments.print_anova(self.assignment)
-        elif self.analysis_type == Task.WITHIN_ANOVA:
-            instruction = self.assignments.print_rmanova(self.assignment)
-        else:    
-            print('ERROR: INVALID TABLE SHAPE')
-            
-        if not self.assignment['two_way'] and not 'jackedmeans' in list(self.assignment['data'].keys()):
-            #One-way ANOVA
-            output[0].append(scan_indep_anova(textfields['inputtext1'], self.solution, num=1, between_subject=True)[1])
-            output[1].append(scan_dep(textfields['inputtext2'], self.solution)[1])
-            output[2].append(scan_control(textfields['inputtext3'], self.solution)[1])
-            output[3].append(scan_hypothesis(textfields['inputtext4'], self.solution, num=1)[1])
-            output[5].append(scan_decision(nl_nlp(textfields['inputtext5'].lower()), self.solution, anova=True)[1])
-            output[6].append(scan_interpretation(nl_nlp(textfields['inputtext6'].lower()), self.solution, anova=True, num=1)[1])
-            output[4].append(scan_table(textfields, self.solution)[1])
-        elif self.assignment['two_way']:
-            #Two-way ANOVA
-            output[0].append(scan_indep_anova(textfields['inputtext1'], self.solution, num=1, between_subject=True)[1])
-            output[0].append(scan_indep_anova(textfields['inputtext12'], self.solution, num=2, between_subject=True)[1])
-            output[1].append(scan_dep(textfields['inputtext2'], self.solution)[1])
-            output[2].append(scan_control(textfields['inputtext3'], self.solution)[1])
-            output[2].append(scan_control(textfields['inputtext32'], self.solution, num=2)[1])
-            output[3].append(scan_hypothesis(textfields['inputtext4'], self.solution, num=1)[1])
-            output[3].append(scan_hypothesis(textfields['inputtext42'], self.solution, num=2)[1])
-            output[3].append(scan_hypothesis_anova(textfields['inputtext43'], self.solution)[1])
-            output[5].append(scan_decision(nl_nlp(textfields['inputtext5'].lower()), self.solution, anova=True, num=1)[1])
-            output[5].append(scan_decision(nl_nlp(textfields['inputtext52'].lower()), self.solution, anova=True, num=2)[1])
-            output[5].append(scan_decision_anova(nl_nlp(textfields['inputtext53'].lower()), self.solution)[1])
-            output[6].append(scan_interpretation(nl_nlp(textfields['inputtext6'].lower()), self.solution, anova=True, num=1)[1])
-            output[6].append(scan_interpretation(nl_nlp(textfields['inputtext62'].lower()), self.solution, anova=True, num=2)[1])
-            output[6].append(scan_interpretation_anova(nl_nlp(textfields['inputtext63'].lower()), self.solution)[1])
-            output[4].append(scan_table(textfields, self.solution)[1])
-        elif 'jackedmeans' in list(self.assignment['data'].keys()):
-            #Within-subject ANOVA
-            output[0].append(scan_indep_anova(textfields['inputtext1'], self.solution, num=1, between_subject=True)[1])
-            output[1].append(scan_dep(textfields['inputtext2'], self.solution)[1])
-            output[2].append(scan_control(textfields['inputtext3'], self.solution)[1])
-            #output[2].append(scan_control(textfields['inputtext32'], self.solution, num=2)[1])
-            output[3].append(scan_hypothesis(textfields['inputtext4'], self.solution, num=1)[1])
-            output[3].append(scan_hypothesis_rmanova(textfields['inputtext42'], self.solution)[1])
-            output[5].append(scan_decision(nl_nlp(textfields['inputtext5'].lower()), self.solution, anova=True)[1])
-            output[5].append(scan_decision_rmanova(nl_nlp(textfields['inputtext52'].lower()), self.solution, num=2)[1])
-            output[6].append(scan_interpretation(nl_nlp(textfields['inputtext6'].lower()), self.solution, anova=True, num=1)[1])
-            output[4].append(scan_table(textfields, self.solution)[1])
-        return instruction, output
-    
-    def form_answers_anova(self) -> [str, list]:
-        output = [[] for i in range(7)]
-        if self.analysis_type == Task.ONEWAY_ANOVA:
-            instruction = self.assignments.print_anova(self.assignment)
-        elif self.analysis_type == Task.TWOWAY_ANOVA:
-            instruction = self.assignments.print_anova(self.assignment)
-        elif self.analysis_type == Task.WITHIN_ANOVA:
-            instruction = self.assignments.print_rmanova(self.assignment)
-        else:    
-            print('ERROR: INVALID TABLE SHAPE')
-        if not self.assignment['two_way'] and not 'jackedmeans' in list(self.assignment['data'].keys()):
-            #One-way ANOVA
-            output[0].append(self.mes['A_ANSWER']+self.assignments.print_independent(self.assignment))
-            output[1].append(self.mes['A_ANSWER']+self.assignments.print_dependent(self.assignment))
-            output[2].append(self.mes['A_ANSWER']+['Passief-observerend','Experiment'][int(self.solution['control'])])
-            output[3].append(self.mes['A_ANSWER']+self.solution['null'])
-            output[4].append(self.mes['A_ANSWER']+self.assignments.print_report({**self.assignment, **self.solution}, answer=True))
-            output[5].append(self.mes['A_ANSWER']+self.solution['decision'])
-            output[6].append(self.mes['A_ANSWER']+self.solution['interpretation'])
-        elif self.assignment['two_way']:
-            output[0].append(self.mes['A_ANSWER']+self.assignments.print_independent(self.assignment))
-            output[0].append(self.mes['A_ANSWER']+self.assignments.print_independent(self.assignment, num=2))
-            output[1].append(self.mes['A_ANSWER']+self.assignments.print_dependent(self.assignment))
-            output[2].append(self.mes['A_ANSWER']+['Passief-observerend','Experiment'][int(self.solution['control'])])
-            output[2].append(self.mes['A_ANSWER']+['Passief-observerend','Experiment'][int(self.solution['control2'])])
-            output[3].append(self.mes['A_ANSWER']+self.solution['null'])
-            output[3].append(self.mes['A_ANSWER']+self.solution['null2'])
-            output[3].append(self.mes['A_ANSWER']+self.solution['null3'])
-            output[4].append(self.mes['A_ANSWER']+self.assignments.print_report({**self.assignment, **self.solution}, answer=True))
-            output[5].append(self.mes['A_ANSWER']+self.solution['decision'])
-            output[5].append(self.mes['A_ANSWER']+self.solution['decision2'])
-            output[5].append(self.mes['A_ANSWER']+self.solution['decision3'])
-            output[6].append(self.mes['A_ANSWER']+self.solution['interpretation'])
-            output[6].append(self.mes['A_ANSWER']+self.solution['interpretation2'])
-            output[6].append(self.mes['A_ANSWER']+self.solution['interpretation3'])
-        elif 'jackedmeans' in list(self.assignment['data'].keys()):
-            output[0].append(self.mes['A_ANSWER']+self.assignments.print_independent(self.assignment))
-            output[1].append(self.mes['A_ANSWER']+self.assignments.print_dependent(self.assignment))
-            output[2].append(self.mes['A_ANSWER']+['Passief-observerend','Experiment'][int(self.solution['control'])])
-            output[3].append(self.mes['A_ANSWER']+self.solution['null'])
-            output[3].append(self.mes['A_ANSWER']+self.solution['null2'])
-            output[4].append(self.mes['A_ANSWER']+self.assignments.print_report({**self.assignment, **self.solution}, answer=True))
-            output[5].append(self.mes['A_ANSWER']+self.solution['decision'])
-            output[5].append(self.mes['A_ANSWER']+self.solution['decision2'])
-            output[6].append(self.mes['A_ANSWER']+self.solution['interpretation'])
-        return instruction, output
-    
-    def update_form_report(self, textfields: Dict) -> List[str]:
-        instruction = self.assignments.print_report(self.assignment)
-        text = textfields['inputtext']
-        feedback = None
-        if self.assignment['assignment_type'] == 1:
-            feedback = split_grade_ttest(text, self.solution, between_subject=True)
-        if self.assignment['assignment_type'] == 2:
-            feedback = split_grade_ttest(text, self.solution, between_subject=False)
-        if self.assignment['assignment_type'] == 3:
-            feedback = split_grade_anova(text, self.solution, two_way=False)
-        if self.assignment['assignment_type'] == 4:
-            feedback = split_grade_anova(text, self.solution, two_way=True)
-        if self.assignment['assignment_type'] == 5:
-            feedback = split_grade_rmanova(text, self.solution)
-        if self.assignment['assignment_type'] == 6:
-            feedback = split_grade_mregression(text, self.solution)
-        if self.assignment['assignment_type'] == 11:
-            feedback = split_grade_manova(text, self.solution)
-        if self.assignment['assignment_type'] == 12:
-            feedback = split_grade_ancova(text, self.solution)
-        if self.assignment['assignment_type'] == 13:
-            feedback = split_grade_multirm(text, self.solution)
-        if self.assignment['assignment_type'] == 14:
-            feedback = split_grade_multirm2(text, self.solution)
-        return instruction, feedback
-    
+    #Update function for the introductory screens and "practice mode"
     def update(self, textfields: Dict) -> str:
         #Retrieve values from form text fields
         if 'inputtext' in list(textfields.keys()):
@@ -296,23 +139,24 @@ class Controller:
             self.wipetext = not again
         
         #Execute the correct response
-        if process == Process.INTRO: #If intro protocol:
+        #Intro protocol:
+        if process == Process.INTRO: 
             li = LanguageInterface()
-            if textfields['selectlanguage'] == 'Nederlands':
-                self.mes = li.get_messages(False)
-            else:
-                self.mes = li.get_messages(True)
+            textfields['selectlanguage']
+            self.mes = li.get_messages(textfields['selectlanguage'] == 'English') #Retrieve the dictionary of messages in the right language
             self.assignments.set_messages(self.mes)
             self.protocol = self.choice_protocol()
             self.submit_field = Task.CHOICE
             self.formmode = False
             self.analysis_type = Task.INTRO
             return self.protocol[0][0]
+        #After completing assignment:
         elif process == Process.FINISH:
             self.protocol = self.choice_protocol()
             self.submit_field = Task.CHOICE
             self.formmode = False
             self.analysis_type = Task.FINISHED
+        #Choosing an analysis:
         elif process == Process.CHOOSE_ANALYSIS: #If choice protocol index 1 or return protocol index 2
             control: bool = random.choice([True,False])
             hyp_type: int = random.choice([0,1,2])
@@ -397,7 +241,8 @@ class Controller:
                 instruction = self.assignments.print_report(self.assignment)
                 return instruction
             return instruction + '<br>' + self.protocol[self.index][0]
-        elif process == Process.TABLE: #Main report protocols during table question
+        #Main report protocols (practice mode) during table question
+        elif process == Process.TABLE: 
             if input_text == 'prev' and self.prevable:
                 self.index -= 1
                 self.submit_field = Task.TEXT_FIELD
@@ -415,7 +260,8 @@ class Controller:
                 self.submit_field = Task.TEXT_FIELD
                 self.answer_triggered = False
                 return self.assignments.print_assignment(self.assignment) + '<br>' + output_text + self.protocol[self.index][0]
-        elif process == Process.LAST_QUESTION: #Main report protocols during last question
+        #Main report protocols (practice mode) during last question
+        elif process == Process.LAST_QUESTION: 
             if input_text == 'prev' and self.prevable:
                 self.index -= 1
                 self.answer_triggered = False
@@ -434,7 +280,8 @@ class Controller:
                     return self.protocol[self.index][0]
                 else:
                     return output_text + '<br>' + self.protocol[self.index][0]
-        elif process == Process.QUESTION: #Main report protocols before last question
+        #Main report protocols (practice mode) before last question
+        elif process == Process.QUESTION: 
             if input_text == 'prev' and self.prevable and self.index != 0:
                 if self.index == 1:
                     self.prevable = False
@@ -458,7 +305,178 @@ class Controller:
                     return self.assignments.print_assignment(self.assignment) + '<br>' + output_text + self.protocol[self.index][0]
         else:
             print('ERROR SWITCHING PROTOCOLS')
+    
+    #Apply scan functions to the input fields of the T-test form and return a list of feedback
+    def update_form_ttest(self, textfields: Dict) -> [str, List[str]]:
+        output:list = [[] for i in range(12)]
+        instruction:str = self.assignments.print_ttest(self.assignment)
+        
+        output[0].append(scan_indep(textfields['inputtext1'], self.solution)[1])
+        output[1].append(scan_dep(textfields['inputtext2'], self.solution)[1])
+        output[2].append(scan_control(textfields['inputtext3'], self.solution)[1])
+        output[4].append(scan_hypothesis(textfields['inputtext4'], self.solution, num=1)[1])
+        
+        output[5].append(scan_number(textfields['inputtext5'], 'df', self.solution)[1])
+        output[6].append(scan_number(textfields['inputtext6'], 'raw_effect', self.solution)[1])
+        output[7].append(scan_number(textfields['inputtext7'], 'relative_effect', self.solution)[1])
+        output[8].append(scan_number(textfields['inputtext8'], 'T', self.solution)[1])
+        output[9].append(scan_number(textfields['inputtext9'], 'p', self.solution)[1])
+        nl_nlp = spacy.load('nl')
+        output[10].append(scan_decision(nl_nlp(textfields['inputtext10'].lower()), self.solution, anova=False)[1])
+        output[11].append(scan_interpretation(nl_nlp(textfields['inputtext11'].lower()), self.solution, anova=False)[1])
+        
+        output[3].append(scan_table_ttest(textfields, self.solution)[1])
+        return instruction, output
+    
+    #Return the standard answers for the T-test assignments in a list
+    def form_answers(self) -> [str, List[str]]:
+        output:list = [[] for i in range(12)]
+        instruction:str = self.assignments.print_ttest(self.assignment)
+        output[0].append('Antwoord: '+self.assignments.print_independent(self.assignment))
+        output[1].append('Antwoord: '+self.assignments.print_dependent(self.assignment))
+        output[2].append('Antwoord: '+['Passief-observerend','Experiment'][int(self.solution['control'])])
+        output[3].append('Antwoord: '+self.assignments.print_report({**self.assignment, **self.solution}, answer=True))
+        output[4].append('Antwoord: '+self.solution['null'])
+        output[5].append('Antwoord: '+str(self.solution['df'][0]))
+        output[6].append('Antwoord: '+str(round(self.solution['raw_effect'][0],2)))
+        output[7].append('Antwoord: '+str(round(self.solution['relative_effect'][0],2)))
+        output[8].append('Antwoord: '+str(round(self.solution['T'][0],2)))
+        output[9].append('Antwoord: '+str(round(self.solution['p'][0],2)))
+        output[10].append('Antwoord: '+self.solution['decision'])
+        output[11].append('Antwoord: '+self.solution['interpretation'])
+        return instruction, output
+    
+    #Apply scan functions to the input fields of the ANOVA form and return a list of feedback points
+    def update_form_anova(self, textfields: Dict) -> [str, list]:
+        output:list = [[] for i in range(7)] #Empty list for every type of input field (independent variable, dependent variable, etc.)
+        nl_nlp = spacy.load('nl')
+        if self.analysis_type == Task.ONEWAY_ANOVA:
+            instruction = self.assignments.print_anova(self.assignment)
+        elif self.analysis_type == Task.TWOWAY_ANOVA:
+            instruction = self.assignments.print_anova(self.assignment)
+        elif self.analysis_type == Task.WITHIN_ANOVA:
+            instruction = self.assignments.print_rmanova(self.assignment)
+        else:    
+            print('ERROR: INVALID TABLE SHAPE')
             
+        if self.assignment['assignment_type'] == 3:
+            #One-way ANOVA
+            output[0].append(scan_indep_anova(textfields['inputtext1'], self.solution, num=1, between_subject=True)[1])
+            output[1].append(scan_dep(textfields['inputtext2'], self.solution)[1])
+            output[2].append(scan_control(textfields['inputtext3'], self.solution)[1])
+            output[3].append(scan_hypothesis(textfields['inputtext4'], self.solution, num=1)[1])
+            output[5].append(scan_decision(nl_nlp(textfields['inputtext5'].lower()), self.solution, anova=True)[1])
+            output[6].append(scan_interpretation(nl_nlp(textfields['inputtext6'].lower()), self.solution, anova=True, num=1)[1])
+            output[4].append(scan_table(textfields, self.solution)[1])
+        elif self.assignment['assignment_type'] == 4:
+            #Two-way ANOVA
+            output[0].append(scan_indep_anova(textfields['inputtext1'], self.solution, num=1, between_subject=True)[1])
+            output[0].append(scan_indep_anova(textfields['inputtext12'], self.solution, num=2, between_subject=True)[1])
+            output[1].append(scan_dep(textfields['inputtext2'], self.solution)[1])
+            output[2].append(scan_control(textfields['inputtext3'], self.solution)[1])
+            output[2].append(scan_control(textfields['inputtext32'], self.solution, num=2)[1])
+            output[3].append(scan_hypothesis(textfields['inputtext4'], self.solution, num=1)[1])
+            output[3].append(scan_hypothesis(textfields['inputtext42'], self.solution, num=2)[1])
+            output[3].append(scan_hypothesis_anova(textfields['inputtext43'], self.solution)[1])
+            output[5].append(scan_decision(nl_nlp(textfields['inputtext5'].lower()), self.solution, anova=True, num=1)[1])
+            output[5].append(scan_decision(nl_nlp(textfields['inputtext52'].lower()), self.solution, anova=True, num=2)[1])
+            output[5].append(scan_decision_anova(nl_nlp(textfields['inputtext53'].lower()), self.solution)[1])
+            output[6].append(scan_interpretation(nl_nlp(textfields['inputtext6'].lower()), self.solution, anova=True, num=1)[1])
+            output[6].append(scan_interpretation(nl_nlp(textfields['inputtext62'].lower()), self.solution, anova=True, num=2)[1])
+            output[6].append(scan_interpretation_anova(nl_nlp(textfields['inputtext63'].lower()), self.solution)[1])
+            output[4].append(scan_table(textfields, self.solution)[1])
+        elif self.assignment['assignment_type'] == 5:
+            #Within-subject ANOVA
+            output[0].append(scan_indep_anova(textfields['inputtext1'], self.solution, num=1, between_subject=True)[1])
+            output[1].append(scan_dep(textfields['inputtext2'], self.solution)[1])
+            output[2].append(scan_control(textfields['inputtext3'], self.solution)[1])
+            output[3].append(scan_hypothesis(textfields['inputtext4'], self.solution, num=1)[1])
+            output[3].append(scan_hypothesis_rmanova(textfields['inputtext42'], self.solution)[1])
+            output[5].append(scan_decision(nl_nlp(textfields['inputtext5'].lower()), self.solution, anova=True)[1])
+            output[5].append(scan_decision_rmanova(nl_nlp(textfields['inputtext52'].lower()), self.solution, num=2)[1])
+            output[6].append(scan_interpretation(nl_nlp(textfields['inputtext6'].lower()), self.solution, anova=True, num=1)[1])
+            output[4].append(scan_table(textfields, self.solution)[1])
+        return instruction, output
+    
+    #Return the standard answers for the ANOVA assignments in a list
+    def form_answers_anova(self) -> [str, list]:
+        output = [[] for i in range(7)]
+        
+        #Determine instruction
+        if self.analysis_type == Task.ONEWAY_ANOVA:
+            instruction = self.assignments.print_anova(self.assignment)
+        elif self.analysis_type == Task.TWOWAY_ANOVA:
+            instruction = self.assignments.print_anova(self.assignment)
+        elif self.analysis_type == Task.WITHIN_ANOVA:
+            instruction = self.assignments.print_rmanova(self.assignment)
+        else:    
+            print('ERROR: INVALID TABLE SHAPE')
+            
+        #Get answers for assignment type
+        if self.assignment['assignment_type'] == 3:
+            #One-way ANOVA
+            output[0].append(self.mes['A_ANSWER']+self.assignments.print_independent(self.assignment))
+            output[1].append(self.mes['A_ANSWER']+self.assignments.print_dependent(self.assignment))
+            output[2].append(self.mes['A_ANSWER']+['Passief-observerend','Experiment'][int(self.solution['control'])])
+            output[3].append(self.mes['A_ANSWER']+self.solution['null'])
+            output[4].append(self.mes['A_ANSWER']+self.assignments.print_report({**self.assignment, **self.solution}, answer=True))
+            output[5].append(self.mes['A_ANSWER']+self.solution['decision'])
+            output[6].append(self.mes['A_ANSWER']+self.solution['interpretation'])
+        elif self.assignment['assignment_type'] == 4:
+            output[0].append(self.mes['A_ANSWER']+self.assignments.print_independent(self.assignment))
+            output[0].append(self.mes['A_ANSWER']+self.assignments.print_independent(self.assignment, num=2))
+            output[1].append(self.mes['A_ANSWER']+self.assignments.print_dependent(self.assignment))
+            output[2].append(self.mes['A_ANSWER']+['Passief-observerend','Experiment'][int(self.solution['control'])])
+            output[2].append(self.mes['A_ANSWER']+['Passief-observerend','Experiment'][int(self.solution['control2'])])
+            output[3].append(self.mes['A_ANSWER']+self.solution['null'])
+            output[3].append(self.mes['A_ANSWER']+self.solution['null2'])
+            output[3].append(self.mes['A_ANSWER']+self.solution['null3'])
+            output[4].append(self.mes['A_ANSWER']+self.assignments.print_report({**self.assignment, **self.solution}, answer=True))
+            output[5].append(self.mes['A_ANSWER']+self.solution['decision'])
+            output[5].append(self.mes['A_ANSWER']+self.solution['decision2'])
+            output[5].append(self.mes['A_ANSWER']+self.solution['decision3'])
+            output[6].append(self.mes['A_ANSWER']+self.solution['interpretation'])
+            output[6].append(self.mes['A_ANSWER']+self.solution['interpretation2'])
+            output[6].append(self.mes['A_ANSWER']+self.solution['interpretation3'])
+        elif self.assignment['assignment_type'] == 5:
+            output[0].append(self.mes['A_ANSWER']+self.assignments.print_independent(self.assignment))
+            output[1].append(self.mes['A_ANSWER']+self.assignments.print_dependent(self.assignment))
+            output[2].append(self.mes['A_ANSWER']+['Passief-observerend','Experiment'][int(self.solution['control'])])
+            output[3].append(self.mes['A_ANSWER']+self.solution['null'])
+            output[3].append(self.mes['A_ANSWER']+self.solution['null2'])
+            output[4].append(self.mes['A_ANSWER']+self.assignments.print_report({**self.assignment, **self.solution}, answer=True))
+            output[5].append(self.mes['A_ANSWER']+self.solution['decision'])
+            output[5].append(self.mes['A_ANSWER']+self.solution['decision2'])
+            output[6].append(self.mes['A_ANSWER']+self.solution['interpretation'])
+        return instruction, output
+    
+    #Update function for the report screen, returns a list of feedback for each field
+    def update_form_report(self, textfields: Dict) -> List[str]:
+        instruction = self.assignments.print_report(self.assignment)
+        text = textfields['inputtext']
+        feedback = None
+        if self.assignment['assignment_type'] == 1:
+            feedback = split_grade_ttest(text, self.solution, between_subject=True)
+        if self.assignment['assignment_type'] == 2:
+            feedback = split_grade_ttest(text, self.solution, between_subject=False)
+        if self.assignment['assignment_type'] == 3:
+            feedback = split_grade_anova(text, self.solution, two_way=False)
+        if self.assignment['assignment_type'] == 4:
+            feedback = split_grade_anova(text, self.solution, two_way=True)
+        if self.assignment['assignment_type'] == 5:
+            feedback = split_grade_rmanova(text, self.solution)
+        if self.assignment['assignment_type'] == 6:
+            feedback = split_grade_mregression(text, self.solution)
+        if self.assignment['assignment_type'] == 11:
+            feedback = split_grade_manova(text, self.solution)
+        if self.assignment['assignment_type'] == 12:
+            feedback = split_grade_ancova(text, self.solution)
+        if self.assignment['assignment_type'] == 13:
+            feedback = split_grade_multirm(text, self.solution)
+        if self.assignment['assignment_type'] == 14:
+            feedback = split_grade_multirm2(text, self.solution)
+        return instruction, feedback
+    
     def intro_protocol(self) -> List[Tuple]:
         return [('Hoi, met dit programma kan je elementaire en beknopte rapporten oefenen. Klik op de knop hieronder om verder te gaan.', 
                  scan_dummy, [], Process.INTRO, '')]

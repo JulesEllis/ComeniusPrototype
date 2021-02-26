@@ -22,14 +22,13 @@ class Task(Enum):
     MULTIRM2 = 14
     FINISHED = 15
     
-#Variable indicating whether and how the given function from the protocol index should be called
+#Variable indicating whether and how the given function from the protocol index (e.g. scan_dependent) should be called
 #e.g. as bool, bool, or bool, str, or not at all
 class Process(Enum):
     INTRO = 0
     QUESTION = 1
     LAST_QUESTION = 2
-    YES_NO = 3
-    CHOOSE_ANALYSIS = 4
-    TABLE = 5
-    ANOTHER = 6
-    FINISH = 7
+    CHOOSE_ANALYSIS = 3
+    TABLE = 4
+    ANOTHER = 5
+    FINISH = 6

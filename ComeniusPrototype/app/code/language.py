@@ -14,9 +14,9 @@ class LanguageInterface:
         english_pairs = [('L_ENGLISH',True)]
         with open(path, encoding='utf-8', errors='ignore') as file:
             for line in file.readlines():
-                parts = line.split('","')
-                dutch_pairs.append((parts[0][1:], parts[1]))
-                english_pairs.append(((parts[0][1:], parts[2][:-2])))
+                parts = line.split(';')
+                dutch_pairs.append((parts[0], parts[1]))
+                english_pairs.append(((parts[0], parts[2][:-1])))
         self.dutch = dict(dutch_pairs)
         self.english = dict(english_pairs)
             
