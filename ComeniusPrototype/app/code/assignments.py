@@ -9,6 +9,7 @@ import math
 import random
 import numpy as np
 import os
+import copy
 from scipy import stats
 from scipy.stats.distributions import chi2
 from typing import Dict, List, Tuple
@@ -60,10 +61,16 @@ class Assignments:
         self.mes = mes
     
     #Returns an independent variable with the given specifications
-    def get_factor(self, within_subject:bool = False, control:bool = False, multirm:bool = False, ttest:bool=False, second=False) -> Tuple:
+    def get_factor(self, within_subject:bool = False, control:bool = False, multirm:bool = False, ttest:bool=False, second=False, avoid=[]) -> Tuple:
         t:str = 'BETWEEN' if not within_subject else 'WITHIN'
         nc:int = 2 if ttest else random.randint(2,4) if not multirm else 3
-        var:tuple = random.choice([x for x in self.variables if x['type'] == t and x['english'] == self.mes['L_ENGLISH'] and x['control'] == control])
+        varis = copy.deepcopy(self.variables) #Create a deep copy as to not permanently remove variables from the pool when taking a second factor
+        if avoid != []: #Remove first independent variable from pool
+            for x in avoid:
+                for y in varis:
+                    if y['name'] == x:
+                        varis.remove(y)
+        var:tuple = random.choice([x for x in varis if x['type'] == t and x['english'] == self.mes['L_ENGLISH'] and x['control'] == control])
         text:str = var['intro'] if not second else var['intro2']
         return (var['name'], var['synonyms'], var['levels'][:nc], var['levelsyns'][:nc], text)
     
@@ -228,7 +235,7 @@ class Assignments:
         output['independent'], output['ind_syns'], output['levels'], output['level_syns'], intro = self.get_factor(within_subject=False, control=control,ttest=False)
         output['dependent'], output['dep_syns'], depintro = self.get_dependent()
         if two_way:
-            output['independent2'], output['ind2_syns'], output['levels2'], output['level2_syns'], intro2 = self.get_factor(within_subject=False, control=control2, ttest=False, second=True)
+            output['independent2'], output['ind2_syns'], output['levels2'], output['level2_syns'], intro2 = self.get_factor(within_subject=False, control=control2, ttest=False, second=True, avoid=[output['independent']])
             output['control2'] = control2
         
         #Decide the variable names
@@ -311,7 +318,7 @@ class Assignments:
                 solution['interpretation']: str = 'Experiment, dus er is een verklaring mogelijk. Dit is dat '+solution['independent']+' '+solution['dependent'] +rejected[2] +' veroorzaakt.'
             else:
                 solution['interpretation']: str = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat '+solution['independent']+' '+solution['dependent'] + \
-                ' veroorzaakt. De alternatieve verklaring is dat ' + solution['dependent'] + ' ' + solution['independent'] + ' veroorzaakt.'
+                ' veroorzaakt. De alternatieve verklaring is dat ' + solution['independent'] + ' en ' + solution['dependent'] + ' beide worden veroorzaakt door een storende variabele.'
                 
         else: #Two-way statistics
             #Intermediary statistics order: Between, A, B, AB, Within, Total
@@ -356,15 +363,15 @@ class Assignments:
                 solution['interpretation']: str = 'Experiment, dus er is een verklaring mogelijk. Dit is dat '+solution['dependent']+' wordt '+n1+'veroorzaakt door '+solution['independent']
             else:
                 solution['interpretation']: str = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat '+solution['dependent']+' '+n1+'wordt veroorzaakt door '+solution['independent'] + '. '\
-                'De alternatieve is dat ' + solution['independent'] + ' wordt veroorzaakt door ' + solution['dependent']
+                'De alternatieve is dat ' + solution['independent'] + ' en ' + solution['dependent'] + ' beide worden veroorzaakt door een storende variabele.'
             n2 = '' if solution['p'][1] < 0.05 else 'niet '
             if assignment['control2']:
                 solution['interpretation2']: str = 'Experiment, dus er is een verklaring mogelijk. Dit is dat '+solution['dependent']+' wordt '+n2+'veroorzaakt door '+solution['independent2']
             else:
                 solution['interpretation2']: str = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat '+solution['dependent']+'  '+n2+'wordt veroorzaakt door '+solution['independent2'] + '. '\
-                'De alternatieve is dat ' + solution['independent2'] + ' wordt veroorzaakt door ' + solution['dependent']
+                'De alternatieve is dat ' + solution['independent2'] + ' en ' + solution['dependent'] + ' beide worden veroorzaakt door een storende variabele.'
             n3 = 'niet ' if solution['p'][2] < 0.05 else ''
-            if assignment['control'] and assignment['control2']:
+            if assignment['control'] or assignment['control2']:
                 solution['interpretation3']: str = 'Experiment, dus er is een verklaring mogelijk. Dit is dat '+solution['independent'] + ' '+n3+'dezelfde invloed heeft op '+solution['dependent']+' zowel bij de niveaus ' + ' en '.join(solution['levels2']) + ' van de factor ' + solution['independent2'] + '.'
             else:
                 solution['interpretation3']: str = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire is dat '+solution['independent'] + ' '+n3+'dezelfde invloed heeft op '+solution['dependent']+' zowel bij de niveaus ' + ' en '.join(solution['levels2']) + ' van de factor ' + solution['independent2'] + '. '\
@@ -1009,9 +1016,11 @@ class Assignments:
     
     def print_independent(self, assignment:dict, num:int=1) -> str:
         levels = assignment['levels'] if num < 2 else assignment['levels' + str(num)]
-        if assignment['assignment_type'] < 5:
+        if assignment['assignment_type'] < 3:
             return assignment['independent'] + ', kwalitatief, met niveaus ' + levels[0] + ' en ' + levels[1] + '.'
-        else:    
+        elif assignment['assignment_type'] < 5:
+            return assignment['independent'] + ', een between-subject factor, met niveaus ' + levels[0] + ' en ' + levels[1] + '.'
+        else:
             i_key:str = 'independent' if num < 2 else 'independent' + str(num)
             return assignment[i_key] + ', een within-subject factor met niveaus ' + ' en '.join(levels) + '.'
     

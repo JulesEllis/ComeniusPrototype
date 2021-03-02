@@ -43,7 +43,8 @@ def check_causality(independent:Doc, dependent:Doc, alternative:bool=False) -> b
     if not alternative:
         tuples = [('nsubj', 'obj'),('obj', 'ROOT'),('nsubj', 'nmod'),('obl', 'obj'),('ROOT', 'obj'),
               ('obj', 'nmod'), ('amod', 'obj'), ('obl','obl'),('nsubj','obl'),('obj','obj'),('nsubj','amod'),
-              ('obj','obl'),('nmod','obj'),('obl','ROOT'),('obl','nsubj'),('obl','csubj')]
+              ('obj','obl'),('nmod','obj'),('obl','ROOT'),('obl','nsubj'),('obl','csubj'),('advmod','obj'),
+              ('advmod','nmod'),('advmod','obj'),('advmod','obl')]
     else: #Add reverse causality and disturbing variable options
         tuples = [('obj','obj'),('obj','nsubj'), ('ROOT','obj'),('nmod','nsubj'),('obj','obl'),('obj','ROOT'),('amod','nsubj'),
                        ('nmod','obj'),('obj','amod'),('obl','nsubj'),('obl','obj'),('obj','nmod'),('ROOT','obl'),('nsubj','obl'),
@@ -312,28 +313,6 @@ def detect_decision_multirm(sent:Doc, solution:dict, variable:str, synonyms:list
     if not scorepoints['neg']:
         output.append(' -ten onrechte een negatie toegevoegd of weggelaten bij de beslissing van '+variable)
     return output
-
-def detect_effect(sent:Doc, solution:dict, variable:str, p:float, eta:float, num:int) -> List[str]:
-    output:List[str] = []
-    scorepoints:dict ={'effect_present': p > 0.05,
-        'strength_present': p > 0.05,
-        'right_strength': p > 0.05}
-    gold_strength: int = 2 if eta > 0.2 else 1 if eta > 0.1 else 0
-    effect = [x for x in sent if x.lemma_ in ['klein','zwak','matig','groot','sterk']]
-    if effect != []:
-        n_effects:int = len(effect)
-        e_root = effect[num-1] if num <= n_effects else effect[num-1 - (3 - n_effects)]
-        e_tree = descendants(e_root)
-        scorepoints['effect_present'] = e_root.head.text == 'effect' or 'effect' in [x.text for x in e_tree]
-        scorepoints['strength_present'] = True #any([x in [y.text for y in e_tree] for x in ['klein','matig','sterk']]) or e_root.head.text in ['klein','matig','sterk']
-        scorepoints['right_strength'] = e_root.text in ['sterk','groot'] if gold_strength == 2 else e_root.text in ['matig'] if gold_strength == 1 else e_root.text in ['klein','zwak']
-    if not scorepoints['effect_present'] and scorepoints['strength_present']:
-        output.append(' -de effectgrootte van '+variable+' wordt niet genoemd')
-    if not scorepoints['strength_present']:
-        output.append(' -de sterkte van het effect '+variable+' wordt niet genoemd')
-    elif scorepoints['effect_present'] and not scorepoints['right_strength']:
-        output.append(' -de sterkte van het effect '+variable+' wordt niet juist genoemd')
-    return output
     
 def detect_true_scores(sent:Doc, solution:dict, num=2) -> List[str]:
     #Define variables
@@ -415,6 +394,28 @@ def detect_strength(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]:
         output.append(' -de sterkte van het effect '+appendix+'wordt niet juist genoemd')
     return output
 
+def detect_effect(sent:Doc, solution:dict, variable:str, p:float, eta:float, num:int) -> List[str]:
+    output:List[str] = []
+    scorepoints:dict ={'effect_present': p > 0.05,
+        'strength_present': p > 0.05,
+        'right_strength': p > 0.05}
+    gold_strength: int = 2 if eta > 0.2 else 1 if eta > 0.1 else 0
+    effect = [x for x in sent if x.lemma_ in ['klein','zwak','matig','groot','sterk']]
+    if effect != []:
+        n_effects:int = len(effect)
+        e_root = effect[num-1] if num <= n_effects else effect[num-1 - (3 - n_effects)]
+        e_tree = descendants(e_root)
+        scorepoints['effect_present'] = e_root.head.text == 'effect' or 'effect' in [x.text for x in e_tree]
+        scorepoints['strength_present'] = True #any([x in [y.text for y in e_tree] for x in ['klein','matig','sterk']]) or e_root.head.text in ['klein','matig','sterk']
+        scorepoints['right_strength'] = e_root.text in ['sterk','groot'] if gold_strength == 2 else e_root.text in ['matig'] if gold_strength == 1 else e_root.text in ['klein','zwak']
+    if not scorepoints['effect_present'] and scorepoints['strength_present']:
+        output.append(' -de effectgrootte van '+variable+' wordt niet genoemd')
+    if not scorepoints['strength_present']:
+        output.append(' -de sterkte van het effect '+variable+' wordt niet genoemd')
+    elif scorepoints['effect_present'] and not scorepoints['right_strength']:
+        output.append(' -de sterkte van het effect '+variable+' wordt niet juist genoemd')
+    return output
+
 def detect_unk(sent:Doc, solution:dict, num:int=1):
     #Define variables
     criteria:list=['two']#['unk','two']
@@ -431,8 +432,6 @@ def detect_unk(sent:Doc, solution:dict, num:int=1):
     #Add strings
     if not scorepoints['two']:
         output.append(' -niet juist genoemd hoeveel mogelijke interpretaties er zijn')
-    #if not scorepoints['unk']:
-    #    output.append(' -niet gesteld dat de oorzaak van het effect onbekend is')
     return output
     
 def detect_primary(sent:Doc, solution:dict, num:int=1) -> List[str]:
@@ -493,19 +492,15 @@ def detect_primary_interaction(sent:Doc, solution:dict) -> List[str]:
     scorepoints['same'] = 'dezelfde' in tokens or 'gelijk' in tokens or 'gelijke' in tokens or 'hetzelfde' in tokens
     scorepoints['negation'] = bool(negation_counter(tokens) % 2) == rejected
     if scorepoints['dep']:
-        if scorepoints['indy1']:
-            scorepoints['indy2'] = True
-            if check_causality(indy1node[0], dep_node[0]):
-                scorepoints['interaction'] = True
-                scorepoints['level_present'] = any(var2levels)
-                scorepoints['both_levels'] = all(var2levels)
-        if scorepoints['indy2']:
-            scorepoints['indy1'] = True
-            if check_causality(indy2node[0], dep_node[0]):
-                scorepoints['interaction'] = True
-                scorepoints['level_present'] = any(var1levels) or scorepoints['level_present']
-                scorepoints['both_levels'] = all(var1levels) or scorepoints['both_levels']
-        
+        if check_causality(indy1node[0], dep_node[0]) and any(var2levels):
+            scorepoints['interaction'] = True
+            scorepoints['level_present'] = any(var2levels)
+            scorepoints['both_levels'] = all(var2levels)
+        elif check_causality(indy2node[0], dep_node[0]) and any(var1levels):
+            scorepoints['interaction'] = True
+            scorepoints['level_present'] = any(var1levels) or scorepoints['level_present']
+            scorepoints['both_levels'] = all(var1levels) or scorepoints['both_levels']
+                
     #Add strings
     if not scorepoints['negation']:
         output.append(' -ten onrechte een negatie toegevoegd of weggelaten bij de primaire verklaring')
@@ -519,7 +514,7 @@ def detect_primary_interaction(sent:Doc, solution:dict) -> List[str]:
         output.append(' -niet gesteld of de invloed van een van de factoren op de afhanklijke variabele hetzelfde is bij beide niveaus van de andere factor')
     if scorepoints['dep'] and not scorepoints['interaction']:
         output.append(' -het causale verband tussen de afhankelijke en onafhankelijke variabele is niet juist aangegeven bij de primaire verklaring')
-    if scorepoints['interaction'] and not scorepoints['both_levels']:
+    elif scorepoints['interaction'] and not scorepoints['both_levels']:
         output.append(' -beide niveaus van een van de onafhankelijke variabelen worden nog niet genoemd')
     elif scorepoints['interaction'] and not scorepoints['level_present']:
         output.append(' -de niveaus van een van de onafhankelijke variabelen worden nog niet genoemd')

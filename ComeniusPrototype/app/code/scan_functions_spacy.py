@@ -39,7 +39,8 @@ def check_causality(independent:Doc, dependent:Doc, alternative:bool=False) -> b
     if not alternative:
         tuples = [('nsubj', 'obj'),('obj', 'ROOT'),('nsubj', 'nmod'),('obl', 'obj'),('ROOT', 'obj'),
               ('obj', 'nmod'), ('amod', 'obj'), ('obl','obl'),('nsubj','obl'),('obj','obj'),('nsubj','amod'),
-              ('obj','obl'),('nmod','obj'),('obl','ROOT'),('obl','nsubj'),('obl','csubj')]
+              ('obj','obl'),('nmod','obj'),('obl','ROOT'),('obl','nsubj'),('obl','csubj'),('advmod','obj'),
+              ('advmod','nmod'),('advmod','obj')]
     else: #Add reverse causality and disturbing variable options
         tuples = [('obj','obj'),('obj','nsubj'), ('ROOT','obj'),('nmod','nsubj'),('obj','obl'),('obj','ROOT'),('amod','nsubj'),
                        ('nmod','obj'),('obj','amod'),('obl','nsubj'),('obl','obj'),('obj','nmod'),('ROOT','obl'),('nsubj','obl'),
@@ -56,7 +57,7 @@ def scan_decision(doc:Doc, solution:dict, anova:bool, num:int=1, prefix=True, el
     else:
         output.extend(detect_significance(doc, solution, num))
     output.extend(detect_comparison(doc, solution, anova, num))
-    if not (solution['p'][num - 1] > 0.05 or math.isnan(solution['p'][num - 1])):
+    if solution['p'][num - 1] < 0.05:
         output.extend(detect_strength(doc, solution, anova, num))
     correct:bool = len(output) == 1 if prefix else output == []
     if correct:
@@ -265,9 +266,9 @@ def split_grade_ttest(text: str, solution:dict, between_subject:bool) -> str:
     output:str = ''
     output += '<br>'+'<br>'.join(detect_name(doc,solution))
     output += '<br>' + scan_design(doc, solution, prefix=False)[1]
-    if True: #solution['p'][0] < 0.05:
-        output += '<br>'+'<br>'.join(detect_report_stat(doc, 'T', solution['T'][0], aliases=['T(' + solution['independent'] + ')']))
-        output += '<br>'+'<br>'.join(detect_report_stat(doc, 'p', solution['p'][0]))
+    #if solution['p'][0] < 0.05:
+    output += '<br>'+'<br>'.join(detect_report_stat(doc, 'T', solution['T'][0], aliases=['T(' + solution['independent'] + ')']))
+    output += '<br>'+'<br>'.join(detect_report_stat(doc, 'p', solution['p'][0]))
     output += '<br>' + scan_decision(doc, solution, anova=False, prefix=False, elementair=False)[1]
     if output.replace('<br>','') == '':
         return 'Mooi, dit beknopt rapport bevat alle juiste details!'
@@ -346,9 +347,9 @@ def split_grade_ancova(text:str, solution:dict) -> str:
     multivar_sent = [x for x in doc.sents if 'voorspellende waarde' in x.text]
     if multivar_sent != []:
         output += '<br>'+'<br>'.join(detect_decision_ancova(doc, solution))
+        output += '<br>'+'<br>'.join(detect_effect(doc,solution, variable='multivariate', p=solution['p'][2], eta=solution['eta'][2], num=1))
     else:
         output += '<br> -niet genoemd of het model een significant voorspellende waarde heeft'
-    output += '<br>'+'<br>'.join(detect_effect(doc,solution, variable='multivariate', p=solution['p'][2], eta=solution['eta'][2], num=1))
     output += '<br>'+'<br>'.join(detect_report_stat(doc, 'F', solution['F'][3]))
     output += '<br>'+'<br>'.join(detect_p(doc, solution['p'][3]))
     output += '<br>'+'<br>'.join(detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta'][3], aliases=['eta2','eta']))

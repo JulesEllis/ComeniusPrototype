@@ -311,10 +311,10 @@ class Controller:
         output:list = [[] for i in range(12)]
         instruction:str = self.assignments.print_ttest(self.assignment)
         
-        output[0].append(scan_indep(textfields['inputtext1'], self.solution)[1])
-        output[1].append(scan_dep(textfields['inputtext2'], self.solution)[1])
-        output[2].append(scan_control(textfields['inputtext3'], self.solution)[1])
-        output[4].append(scan_hypothesis(textfields['inputtext4'], self.solution, num=1)[1])
+        output[0].append(scan_indep(textfields['inputtext1'].lower(), self.solution)[1])
+        output[1].append(scan_dep(textfields['inputtext2'].lower(), self.solution)[1])
+        output[2].append(scan_control(textfields['inputtext3'].lower(), self.solution)[1])
+        output[4].append(scan_hypothesis(textfields['inputtext4'].lower(), self.solution, num=1)[1])
         
         output[5].append(scan_number(textfields['inputtext5'], 'df', self.solution)[1])
         output[6].append(scan_number(textfields['inputtext6'], 'raw_effect', self.solution)[1])
@@ -350,6 +350,8 @@ class Controller:
     def update_form_anova(self, textfields: Dict) -> [str, list]:
         output:list = [[] for i in range(7)] #Empty list for every type of input field (independent variable, dependent variable, etc.)
         nl_nlp = spacy.load('nl')
+        
+        
         if self.analysis_type == Task.ONEWAY_ANOVA:
             instruction = self.assignments.print_anova(self.assignment)
         elif self.analysis_type == Task.TWOWAY_ANOVA:
@@ -361,23 +363,23 @@ class Controller:
             
         if self.assignment['assignment_type'] == 3:
             #One-way ANOVA
-            output[0].append(scan_indep_anova(textfields['inputtext1'], self.solution, num=1, between_subject=True)[1])
-            output[1].append(scan_dep(textfields['inputtext2'], self.solution)[1])
-            output[2].append(scan_control(textfields['inputtext3'], self.solution)[1])
-            output[3].append(scan_hypothesis(textfields['inputtext4'], self.solution, num=1)[1])
+            output[0].append(scan_indep_anova(textfields['inputtext1'].lower(), self.solution, num=1, between_subject=True)[1])
+            output[1].append(scan_dep(textfields['inputtext2'].lower(), self.solution)[1])
+            output[2].append(scan_control(textfields['inputtext3'].lower(), self.solution)[1])
+            output[3].append(scan_hypothesis(textfields['inputtext4'].lower(), self.solution, num=1)[1])
             output[5].append(scan_decision(nl_nlp(textfields['inputtext5'].lower()), self.solution, anova=True)[1])
             output[6].append(scan_interpretation(nl_nlp(textfields['inputtext6'].lower()), self.solution, anova=True, num=1)[1])
             output[4].append(scan_table(textfields, self.solution)[1])
         elif self.assignment['assignment_type'] == 4:
             #Two-way ANOVA
-            output[0].append(scan_indep_anova(textfields['inputtext1'], self.solution, num=1, between_subject=True)[1])
-            output[0].append(scan_indep_anova(textfields['inputtext12'], self.solution, num=2, between_subject=True)[1])
-            output[1].append(scan_dep(textfields['inputtext2'], self.solution)[1])
-            output[2].append(scan_control(textfields['inputtext3'], self.solution)[1])
-            output[2].append(scan_control(textfields['inputtext32'], self.solution, num=2)[1])
-            output[3].append(scan_hypothesis(textfields['inputtext4'], self.solution, num=1)[1])
-            output[3].append(scan_hypothesis(textfields['inputtext42'], self.solution, num=2)[1])
-            output[3].append(scan_hypothesis_anova(textfields['inputtext43'], self.solution)[1])
+            output[0].append(scan_indep_anova(textfields['inputtext1'].lower(), self.solution, num=1, between_subject=True)[1])
+            output[0].append(scan_indep_anova(textfields['inputtext12'].lower(), self.solution, num=2, between_subject=True)[1])
+            output[1].append(scan_dep(textfields['inputtext2'].lower(), self.solution)[1])
+            output[2].append(scan_control(textfields['inputtext3'].lower(), self.solution)[1])
+            output[2].append(scan_control(textfields['inputtext32'].lower(), self.solution, num=2)[1])
+            output[3].append(scan_hypothesis(textfields['inputtext4'].lower(), self.solution, num=1)[1])
+            output[3].append(scan_hypothesis(textfields['inputtext42'].lower(), self.solution, num=2)[1])
+            output[3].append(scan_hypothesis_anova(textfields['inputtext43'].lower(), self.solution)[1])
             output[5].append(scan_decision(nl_nlp(textfields['inputtext5'].lower()), self.solution, anova=True, num=1)[1])
             output[5].append(scan_decision(nl_nlp(textfields['inputtext52'].lower()), self.solution, anova=True, num=2)[1])
             output[5].append(scan_decision_anova(nl_nlp(textfields['inputtext53'].lower()), self.solution)[1])
@@ -387,11 +389,11 @@ class Controller:
             output[4].append(scan_table(textfields, self.solution)[1])
         elif self.assignment['assignment_type'] == 5:
             #Within-subject ANOVA
-            output[0].append(scan_indep_anova(textfields['inputtext1'], self.solution, num=1, between_subject=True)[1])
-            output[1].append(scan_dep(textfields['inputtext2'], self.solution)[1])
-            output[2].append(scan_control(textfields['inputtext3'], self.solution)[1])
-            output[3].append(scan_hypothesis(textfields['inputtext4'], self.solution, num=1)[1])
-            output[3].append(scan_hypothesis_rmanova(textfields['inputtext42'], self.solution)[1])
+            output[0].append(scan_indep_anova(textfields['inputtext1'].lower(), self.solution, num=1, between_subject=True)[1])
+            output[1].append(scan_dep(textfields['inputtext2'].lower(), self.solution)[1])
+            output[2].append(scan_control(textfields['inputtext3'].lower(), self.solution)[1])
+            output[3].append(scan_hypothesis(textfields['inputtext4'].lower(), self.solution, num=1)[1])
+            output[3].append(scan_hypothesis_rmanova(textfields['inputtext42'].lower(), self.solution)[1])
             output[5].append(scan_decision(nl_nlp(textfields['inputtext5'].lower()), self.solution, anova=True)[1])
             output[5].append(scan_decision_rmanova(nl_nlp(textfields['inputtext52'].lower()), self.solution, num=2)[1])
             output[6].append(scan_interpretation(nl_nlp(textfields['inputtext6'].lower()), self.solution, anova=True, num=1)[1])
