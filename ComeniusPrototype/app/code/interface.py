@@ -25,20 +25,7 @@ class Controller:
     def __init__(self, jsondict:dict=None):
         #Create a new controller object with standard values
         if jsondict == None:
-            self.assignments: Assignments = Assignments()
-            self.mes = None
-            self.skipable: bool = False
-            self.prevable: bool = False
-            self.answerable: bool = False
-            self.answer_triggered: bool = False
-            self.formmode: bool = False
-            self.index: int = 0
-            self.assignment : Dict = None
-            self.solution : Dict = None
-            self.protocol : List = self.intro_protocol()
-            self.submit_field : int = Task.INTRO
-            self.analysis_type = Task.CHOICE
-            self.wipetext:bool = False
+            self.reset()
         #Create a controller object from a JSON file
         else:
             fdict:dict = {0:scan_indep,1:scan_indep_anova,2:scan_dep,3:scan_control,4:scan_hypothesis,5:scan_hypothesis_anova,6:scan_number,
@@ -350,8 +337,6 @@ class Controller:
     def update_form_anova(self, textfields: Dict) -> [str, list]:
         output:list = [[] for i in range(7)] #Empty list for every type of input field (independent variable, dependent variable, etc.)
         nl_nlp = spacy.load('nl')
-        
-        
         if self.analysis_type == Task.ONEWAY_ANOVA:
             instruction = self.assignments.print_anova(self.assignment)
         elif self.analysis_type == Task.TWOWAY_ANOVA:
@@ -475,10 +460,18 @@ class Controller:
             feedback = split_grade_ancova(text, self.solution)
         if self.assignment['assignment_type'] == 13:
             feedback = split_grade_multirm(text, self.solution)
-        if self.assignment['assignment_type'] == 14:
+        if self.assignment['assignment_type'] == 14: #Will be scrapped
             feedback = split_grade_multirm2(text, self.solution)
         return instruction, feedback
     
+    """
+    Protocols for practice mode: Every state within the protocol is written below as a tuple with five values. These represent respectivel:
+    1. The question to be presented to the user, as a string. 
+    2. The function which will be used to process the answer to that question
+    3. The arguments for that function, apart from the input text itself
+    4. An enum value representing the type of state and how the program should respond (INTRO, FINISH, QUESTION, TABLE or LAST_QUESTION)
+    5. The standard answer for the question
+    """
     def intro_protocol(self) -> List[Tuple]:
         return [('Hoi, met dit programma kan je elementaire en beknopte rapporten oefenen. Klik op de knop hieronder om verder te gaan.', 
                  scan_dummy, [], Process.INTRO, '')]
@@ -547,12 +540,3 @@ class Controller:
     def print_assignment(self):
         return self.assignments.print_assignment(self.assignment)
             
-#    instance = None
-#    def __new__(cls): # __new__ always a classmethod
-#        if not OuterController.instance:
-#            OuterController.instance = OuterController.Controller()
-#        return OuterController.instance
-#    def __getattr__(self, name):
-#        return getattr(self.instance, name)
-#    def __setattr__(self, name):
-#        return setattr(self.instance, name)

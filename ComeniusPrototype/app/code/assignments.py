@@ -37,7 +37,8 @@ class Assignments:
         with open(path, encoding='utf-8', errors='ignore') as file:
             for line in file.readlines()[1:]:
                 parts = line.split(';')
-                self.variables.append({'name':parts[0],'synonyms':parts[4].split(','),'levels':parts[5].split(','),'levelsyns':[[parts[i]] for i in range(6,10)],
+                self.variables.append({'name':parts[0],'synonyms':[] if parts[4] == '' else parts[4].split(','),'levels':parts[5].split(','),
+                                       'levelsyns':[parts[i].split(',') if parts[i] != '' else [] for i in range(6,10)],
                             'type':parts[1],'english':bool(int(parts[2])),'control':bool(int(parts[3])),'intro':parts[10],'intro2':parts[11][:-1]})
         
     #Checks the nature of the given assignment and returns the output of the right print function
@@ -72,11 +73,15 @@ class Assignments:
                         varis.remove(y)
         var:tuple = random.choice([x for x in varis if x['type'] == t and x['english'] == self.mes['L_ENGLISH'] and x['control'] == control])
         text:str = var['intro'] if not second else var['intro2']
+        if var['synonyms'] == '':
+            var['synonyms'] = []
         return (var['name'], var['synonyms'], var['levels'][:nc], var['levelsyns'][:nc], text)
     
     #Returns a dependent variable with the given specifications
     def get_dependent(self) -> Tuple:
         var:tuple = random.choice([x for x in self.variables if x['english'] == self.mes['L_ENGLISH'] and x['type'] == 'DEPENDENT'])
+        if var['synonyms'] == '':
+            var['synonyms'] = []
         return (var['name'], var['synonyms'], var['intro'])
     
     #Returns lists of covariates (names and synonyms) with the given specifications
@@ -476,8 +481,6 @@ class Assignments:
         output['levels'], output['level_syns'] = self.get_covariates(n_predictors, intercept=True)
         output['data']: dict={'predictoren':output['levels']}
         output['dependent'], output['dep_syns'], depintro = self.get_dependent()
-        print(output['dependent'])
-        print(output['dep_syns'])
         #output['correlations'] = [random.random() for i in range(int(((n_predictors + 1) ** 2 - n_predictors - 1) * 0.5))]
         output['instruction'] = self.mes['I_CREATE']+report_type+self.mes['S_VARSARE2']+self.mes['S_AND'].join(output['data']['predictoren'][1:])+self.mes['S_PREDICTORS']+self.mes['S_AND']+\
             output['dependent']+self.mes['S_CRITERIUM']+'. '+self.mes['I_DECSHORT']
@@ -537,6 +540,7 @@ class Assignments:
     
     #Create a standard answer for the given ANCOVA assignment
     def solve_ancova(self, assignment: Dict, solution:Dict) -> Dict:
+        print(solution)
         N = assignment['ns'][0]
         solution['assignment_type'] = assignment['assignment_type']
     
@@ -563,12 +567,14 @@ class Assignments:
         solution['predictor_beta'] = [np.mean([random.uniform(60,120)])] + [abs(random.gauss(0,0.5)) for i in range(n_predictors)]
         solution['predictor_b'] = [x * np.sqrt(assignment['var_pred']) for x in solution['predictor_beta']]
         solution['predictor_se'] = [solution['predictor_b'][i]/solution['predictor_t'][i] for i in range(n_predictors+1)]
+        for i in range(n_predictors): #Set predictor p-values to predictor p-values
+            solution['p'][i] = solution['predictor_p'][i]
         
         #Verbal answers
         solution['null'] = 'H0: ' + ' == '.join(['beta(' + str(i) + ')' for i in range(1,4)]) + ' == 0'
         return solution
-    
-    #Create a MANOVA assignment for the given parameters
+
+    #Create an MANOVA assignment for the given parameters
     def create_manova(self, control: bool, control2:bool=False, elementary:bool=False):
         output = {'assignment_type':12}
         report_type = self.mes['S_ELEM'] if elementary else self.mes['S_SHORT']
@@ -579,8 +585,6 @@ class Assignments:
         
         output['independent'], output['ind_syns'], output['levels'], output['level_syns'], intro = self.get_factor(within_subject=False, control=control,ttest=False)
         output['control'] = control
-        
-        output['sumdependent'] = 'grootte'
         output['dependent'] = 'gewicht'
         output['dependent2'] = 'lengte'
         output['dependent3'] = 'breedte'
@@ -590,49 +594,49 @@ class Assignments:
         
         output['instruction'] = self.mes['I_CREATE']+report_type+self.mes['I_WITHINDEP']+\
             output['independent']+' ('+', '.join(output['levels'])+')'\
-            '. '+self.mes['I_DIMENSIONS']+output['sumdependent']+', '+ self.mes['S_NAMELY']+' '+\
-                self.mes['S_AND'].join(dependents)+'. '+self.mes['I_DECSHORT']
+            '. '+self.mes['I_MULTIVAR']+self.mes['S_AND'].join(dependents)+'. '+self.mes['I_DECSHORT']
         return output
     
     #Create a standard answer for the given MANOVA assignment
     def solve_manova(self, assignment: Dict, solution:Dict) -> Dict:
-        solution = {'df':{}, 'ss':{}, 'ms':{},'F':{},'p':{},'eta':{}}
+        solution = {}
         N = assignment['ns'][0]
         for key, value in list(assignment.items()):
             solution[key] = value
-        for j in range(3):    
+        for j in range(3):
             ssreg = (N-1) * assignment['var_pred'][j]
             pred_ss = random.random() * 0.5 * ssreg
             sstotal = (N-1) * assignment['var_obs']
-            solution['df'][j]: List[float] = [len(assignment['levels']) - 1, N - len(assignment['levels']), N - 1]
-            solution['ss'][j]: List[float] = [pred_ss, sstotal-pred_ss, sstotal]
-            solution['ms'][j]: List[float] = [solution['ss'][j][i]/solution['df'][j][i] for i in range(2)]
-            solution['F'][j]: List[float] = [solution['ms'][j][0] / solution['ms'][j][1]]
-            solution['p'][j]: List[float] = [1 - stats.f.cdf(abs(solution['F'][j][0]),solution['df'][j][0],solution['df'][j][1])]
-            solution['eta'][j]: List[float] = [solution['ss'][j][0] / solution['ss'][j][2]] #+solution['ss'][j][2])]
-        solution['F_multivar'] = np.mean([solution['F'][i][0] for i in range(3)])
-        solution['p_multivar'] = np.mean([solution['p'][i][0] for i in range(3)])
-        solution['eta_multivar'] = np.mean([solution['eta'][i][0] for i in range(3)])
+            solution['df'+str(j)]: List[float] = [len(assignment['levels']) - 1, N - len(assignment['levels']), N - 1]
+            solution['ss'+str(j)]: List[float] = [pred_ss, sstotal-pred_ss, sstotal]
+            solution['ms'+str(j)]: List[float] = [solution['ss'+str(j)][i]/solution['df'+str(j)][i] for i in range(2)]
+            solution['F'+str(j)]: List[float] = [solution['ms'+str(j)][0] / solution['ms'+str(j)][1]]
+            solution['p'+str(j)]: List[float] = [1 - stats.f.cdf(abs(solution['F'+str(j)][0]),solution['df'+str(j)][0],solution['df'+str(j)][1])]
+            solution['eta'+str(j)]: List[float] = [solution['ss'+str(j)][0] / solution['ss'+str(j)][2]] #+solution['ss'][j][2])]
+        solution['F_multivar'] = np.mean([solution['F'+str(j)][0] for i in range(3)])
+        solution['p_multivar'] = np.mean([solution['p'+str(j)][0] for i in range(3)])
+        solution['eta_multivar'] = np.mean([solution['eta'+str(j)][0] for i in range(3)])
         
         #Fill table 1 vars
         #eigenvalues = []
         v0 = random.random()*120; solution['value'] = [random.random(),random.random(),v0,v0]+[random.random(),random.random(),random.random()*2.5,random.random()*2.5]
-        f0 = random.random()*500; solution['F1'] = [f0 for i in range(4)] + [solution['F_multivar'] for i in range(4)]
-        solution['p1'] = [0.0 for i in range(4)] + [solution['p_multivar'] for i in range(4)]
-        intr2 = 0.9*random.random()*0.10; solution['eta1'] = [intr2 for i in range(4)] + [solution['eta_multivar'] for i in range(4)]
+        f0 = random.random()*500; solution['F_t1'] = [f0 for i in range(4)] + [solution['F_multivar'] for i in range(4)]
+        solution['p_t1'] = [0.0 for i in range(4)] + [solution['p_multivar'] for i in range(4)]
+        intr2 = 0.9*random.random()*0.10; solution['eta_t1'] = [intr2 for i in range(4)] + [solution['eta_multivar'] for i in range(4)]
         solution['hdf'] = [len(assignment['levels']) - 1 for i in range(8) for i in range(8)]
         solution['edf'] = [N - len(assignment['levels']) for i in range(8) for i in range(8)]
         
         #Fill table 2 vars
         intercepts = [30000 + 2000 * random.random() for i in range(3)]
-        solution['ss0'] = [solution['ss'][i][0] for i in range(3)]+intercepts+[solution['ss'][i][0] for i in range(3)]+\
-                           [solution['ss'][i][1] for i in range(3)]+[solution['ss'][i][2]+intercepts[i] for i in range(3)]+[solution['ss'][i][2] for i in range(3)]
+        solution['ss_t2'] = [solution['ss'+str(i)][0] for i in range(3)]+intercepts+[solution['ss'+str(i)][0] for i in range(3)]+\
+                           [solution['ss'+str(i)][1] for i in range(3)]+[solution['ss'+str(i)][2]+intercepts[i] for i in range(3)]+\
+                           [solution['ss'+str(i)][2] for i in range(3)]
         nt = sum(assignment['ns']); nl = len(assignment['levels']) #Total subjects #Number of levels per factor
         dfs = [nl-1,nl-1,nl-1,1,1,1,nl-1,nl-1,nl-1,nt-nl,nt-nl,nt-nl,nt,nt,nt,nt-1,nt-1,nt-1]
-        solution['ms0'] = [solution['ss0'][i] / dfs[i] for i in range(12)]
-        solution['F0'] = [solution['ms0'][i] / solution['ms'][i%3][1] for i in range(9)]
-        solution['p0'] = [1-stats.f.cdf(solution['F0'][i],dfs[i],nt-nl-1) for i in range(9)]
-        solution['eta0'] = [solution['ss0'][i] / solution['ss'][i%3][2] for i in range(9)]
+        solution['ms_t2'] = [solution['ss_t2'][i] / dfs[i] for i in range(12)]
+        solution['F_t2'] = [solution['ms_t2'][i] / solution['ms'+str(i%3)][1] for i in range(9)]
+        solution['p_t2'] = [1-stats.f.cdf(solution['F_t2'][i],dfs[i],nt-nl-1) for i in range(9)]
+        solution['eta_t2'] = [solution['ss_t2'][i] / solution['ss'+str(i%3)][2] for i in range(9)]
         return solution
     
     #Create a multiple repeated-measures ANOVA assignment for the given parameters
@@ -645,9 +649,9 @@ class Assignments:
         output['var_obs'] = (1 + chi2.ppf(p, df=10)) * 10 ** s
         output['var_pred'] = output['var_obs'] * random.random() ** 2
         
-        output['independent'], output['ind_syns'], output['levels'], output['level_syns'], intro1 = self.get_factor(within_subject=True, control=control,ttest=False, multirm=True)
+        output['independent'], output['ind_syns'], output['levels'], output['level_syns'], intro1 = self.get_factor(within_subject=True, control=True,ttest=False, multirm=True)
         output['control'] = control
-        output['independent2'], output['ind2_syns'], output['levels2'], output['level2_syns'], intro2 = self.get_factor(within_subject=False, control=control2,ttest=False)
+        output['independent2'], output['ind2_syns'], output['levels2'], output['level2_syns'], intro2 = self.get_factor(within_subject=False, control=control2, ttest=False, second=True, multirm=True)
         output['control2'] = control2
         
         output['dependent'], output['dep_syns'], depintro = self.get_dependent()
@@ -694,26 +698,6 @@ class Assignments:
         
     def create_multirm2(self, control: bool, control2:bool=False, elementary:bool=False):
         output = {'assignment_type':13}
-        report_type = 'elementair' if elementary else 'beknopt'
-        p = random.random() * 0.05 if random.choice([True, False]) else random.random() * 0.95 + 0.05
-        s = 3 * random.random()
-        output['ns'] = [int(random.random() * 65) + 10, int(random.random() * 65) + 10]
-        output['var_obs'] = [(1 + chi2.ppf(p, df=10)) * 10 ** s for i in range(2)]
-        output['var_pred'] = [output['var_obs'][i] * random.random() ** 2 for i in range(2)]
-        
-        output['independent'], output['ind_syns'], output['levels'], output['level_syns'] = self.get_factor(within_subject=True, control=control,ttest=True)
-        output['control'] = control
-        output['independent2'], output['ind2_syns'], output['levels2'], output['level2_syns'] = self.get_factor(within_subject=True, control=control,ttest=True)
-        output['control2'] = control2
-        if output['independent2'] in ['bloedtype']:
-            output['control2'] = False
-        
-        output['dependent'], output['dep_syns'] = self.get_dependent();
-        output['dependent2'] = 'tevredenheid';output['dep2_syns'] = []
-        output['instruction'] = self.mes['I_CREATE']+report_type+self.mes['I_WITHFACTORS']+\
-            output['independent']+' ('+', '.join(output['levels'])+')'+self.mes['S_AND'] + output['independent2'] + ' ('+', '.join(output['levels2'])+')'\
-            '. De afhankelijke variabelen zijn '+output['dependent']+' en '+output['dependent2']+'. Voer je antwoorden alsjeblieft tot op 2'\
-            ' decimalen in. '
         return output
     
     def solve_multirm2(self, assignment: Dict, solution:Dict) -> Dict:
@@ -936,36 +920,36 @@ class Assignments:
             output += self.print_analysis(assignment)
             output += '<p>'+self.mes['A_MULTIVAR']+'<table style="width:20%">'
             output += format_table(['Effect','','Value','F','Hypothesis df','Error df','p','Partial eta<sup>2</sup>'])
-            output += format_table(['Intercept',"Pillai's trace",assignment['value'][0],assignment['F1'][0],hdf[0],edf[0],assignment['p1'][0],assignment['eta1'][0]])
-            output += format_table(['',"Wilks' lambda",assignment['value'][1],assignment['F1'][1],hdf[1],edf[1],assignment['p1'][1],assignment['eta1'][1]])
-            output += format_table(['',"Hotelling's trace",assignment['value'][2],assignment['F1'][2],hdf[2],edf[2],assignment['p1'][2],assignment['eta1'][2]])
-            output += format_table(['',"Roy's largest root",assignment['value'][3],assignment['F1'][3],hdf[3],edf[3],assignment['p1'][3],assignment['eta1'][3]])
-            output += format_table([cap(assignment['independent']),"Pillai's trace",assignment['value'][4],assignment['F1'][4],hdf[4],edf[4],assignment['p1'][4],assignment['eta1'][4]])
-            output += format_table(['',"Wilks' lambda",assignment['value'][5],assignment['F1'][5],hdf[5],edf[5],assignment['p1'][5],assignment['eta1'][5]])
-            output += format_table(['',"Hotelling's trace",assignment['value'][6],assignment['F1'][6],hdf[6],edf[6],assignment['p1'][6],assignment['eta1'][6]])
-            output += format_table(['',"Roy's largest root",assignment['value'][7],assignment['F1'][7],hdf[7],edf[7],assignment['p1'][7],assignment['eta1'][7]])
+            output += format_table(['Intercept',"Pillai's trace",assignment['value'][0],assignment['F_t1'][0],hdf[0],edf[0],assignment['p_t1'][0],assignment['eta_t1'][0]])
+            output += format_table(['',"Wilks' lambda",assignment['value'][1],assignment['F_t1'][1],hdf[1],edf[1],assignment['p_t1'][1],assignment['eta_t1'][1]])
+            output += format_table(['',"Hotelling's trace",assignment['value'][2],assignment['F_t1'][2],hdf[2],edf[2],assignment['p_t1'][2],assignment['eta_t1'][2]])
+            output += format_table(['',"Roy's largest root",assignment['value'][3],assignment['F_t1'][3],hdf[3],edf[3],assignment['p_t1'][3],assignment['eta_t1'][3]])
+            output += format_table([cap(assignment['independent']),"Pillai's trace",assignment['value'][4],assignment['F_t1'][4],hdf[4],edf[4],assignment['p_t1'][4],assignment['eta_t1'][4]])
+            output += format_table(['',"Wilks' lambda",assignment['value'][5],assignment['F_t1'][5],hdf[5],edf[5],assignment['p_t1'][5],assignment['eta_t1'][5]])
+            output += format_table(['',"Hotelling's trace",assignment['value'][6],assignment['F_t1'][6],hdf[6],edf[6],assignment['p_t1'][6],assignment['eta_t1'][6]])
+            output += format_table(['',"Roy's largest root",assignment['value'][7],assignment['F_t1'][7],hdf[7],edf[7],assignment['p_t1'][7],assignment['eta_t1'][7]])
             output += '</table></p>'
             
             output += '<p>'+self.mes['A_WITHIN']+'<table style="width:50%">'
             output += format_table(['Bron','Variable','SS','df','MS','F','p','Partial eta<sup>2</sup>'])
-            output += format_table(['Corrected model',cap(assignment['dependent']),assignment['ss0'][0],nl-1,assignment['ms0'][0],assignment['F0'][0],assignment['p0'][0],assignment['eta0'][0]])
-            output += format_table(['',cap(assignment['dependent2']),assignment['ss0'][1],nl-1,assignment['ms0'][1],assignment['F0'][1],assignment['p0'][1],assignment['eta0'][1]])
-            output += format_table(['',cap(assignment['dependent3']),assignment['ss0'][2],nl-1,assignment['ms0'][2],assignment['F0'][2],assignment['p0'][2],assignment['eta0'][2]])
-            output += format_table(['Intercept',cap(assignment['dependent']),assignment['ss0'][3],1,assignment['ms0'][3],assignment['F0'][3],assignment['p0'][3],assignment['eta0'][3]])
-            output += format_table(['',cap(assignment['dependent2']),assignment['ss0'][4],1,assignment['ms0'][4],assignment['F0'][4],assignment['p0'][4],assignment['eta0'][4]])
-            output += format_table(['',cap(assignment['dependent3']),assignment['ss0'][5],1,assignment['ms0'][5],assignment['F0'][5],assignment['p0'][5],assignment['eta0'][5]])
-            output += format_table([cap(assignment['independent']),cap(assignment['dependent']),assignment['ss0'][6],nl-1,assignment['ms0'][6],assignment['F0'][6],assignment['p0'][6],assignment['eta0'][6]])
-            output += format_table(['',cap(assignment['dependent2']),assignment['ss0'][7],nl-1,assignment['ms0'][7],assignment['F0'][7],assignment['p0'][7],assignment['eta0'][7]])
-            output += format_table(['',cap(assignment['dependent3']),assignment['ss0'][8],nl-1,assignment['ms0'][8],assignment['F0'][8],assignment['p0'][8],assignment['eta0'][8]])
-            output += format_table(['Error',cap(assignment['dependent']),assignment['ss0'][9],nt-nl,assignment['ms0'][9],'','',''])
-            output += format_table(['',cap(assignment['dependent2']),assignment['ss0'][10],nt-nl,assignment['ms0'][10],'','',''])
-            output += format_table(['',cap(assignment['dependent3']),assignment['ss0'][11],nt-nl,assignment['ms0'][11],'','',''])
-            output += format_table(['Total',cap(assignment['dependent']),assignment['ss0'][12],nt,'','','',''])
-            output += format_table(['',cap(assignment['dependent2']),assignment['ss0'][13],nt,'','','',''])
-            output += format_table(['',cap(assignment['dependent3']),assignment['ss0'][14],nt,'','','',''])
-            output += format_table(['Corrected total',cap(assignment['dependent']),assignment['ss0'][15],nt-1,'','','',''])
-            output += format_table(['',cap(assignment['dependent2']),assignment['ss0'][16],nt-1,'','','',''])
-            output += format_table(['',cap(assignment['dependent3']),assignment['ss0'][17],nt-1,'','','',''])
+            output += format_table(['Corrected model',cap(assignment['dependent']),assignment['ss_t2'][0],nl-1,assignment['ms_t2'][0],assignment['F_t2'][0],assignment['p_t2'][0],assignment['eta_t2'][0]])
+            output += format_table(['',cap(assignment['dependent2']),assignment['ss_t2'][1],nl-1,assignment['ms_t2'][1],assignment['F_t2'][1],assignment['p_t2'][1],assignment['eta_t2'][1]])
+            output += format_table(['',cap(assignment['dependent3']),assignment['ss_t2'][2],nl-1,assignment['ms_t2'][2],assignment['F_t2'][2],assignment['p_t2'][2],assignment['eta_t2'][2]])
+            output += format_table(['Intercept',cap(assignment['dependent']),assignment['ss_t2'][3],1,assignment['ms_t2'][3],assignment['F_t2'][3],assignment['p_t2'][3],assignment['eta_t2'][3]])
+            output += format_table(['',cap(assignment['dependent2']),assignment['ss_t2'][4],1,assignment['ms_t2'][4],assignment['F_t2'][4],assignment['p_t2'][4],assignment['eta_t2'][4]])
+            output += format_table(['',cap(assignment['dependent3']),assignment['ss_t2'][5],1,assignment['ms_t2'][5],assignment['F_t2'][5],assignment['p_t2'][5],assignment['eta_t2'][5]])
+            output += format_table([cap(assignment['independent']),cap(assignment['dependent']),assignment['ss_t2'][6],nl-1,assignment['ms_t2'][6],assignment['F_t2'][6],assignment['p_t2'][6],assignment['eta_t2'][6]])
+            output += format_table(['',cap(assignment['dependent2']),assignment['ss_t2'][7],nl-1,assignment['ms_t2'][7],assignment['F_t2'][7],assignment['p_t2'][7],assignment['eta_t2'][7]])
+            output += format_table(['',cap(assignment['dependent3']),assignment['ss_t2'][8],nl-1,assignment['ms_t2'][8],assignment['F_t2'][8],assignment['p_t2'][8],assignment['eta_t2'][8]])
+            output += format_table(['Error',cap(assignment['dependent']),assignment['ss_t2'][9],nt-nl,assignment['ms_t2'][9],'','',''])
+            output += format_table(['',cap(assignment['dependent2']),assignment['ss_t2'][10],nt-nl,assignment['ms_t2'][10],'','',''])
+            output += format_table(['',cap(assignment['dependent3']),assignment['ss_t2'][11],nt-nl,assignment['ms_t2'][11],'','',''])
+            output += format_table(['Total',cap(assignment['dependent']),assignment['ss_t2'][12],nt,'','','',''])
+            output += format_table(['',cap(assignment['dependent2']),assignment['ss_t2'][13],nt,'','','',''])
+            output += format_table(['',cap(assignment['dependent3']),assignment['ss_t2'][14],nt,'','','',''])
+            output += format_table(['Corrected total',cap(assignment['dependent']),assignment['ss_t2'][15],nt-1,'','','',''])
+            output += format_table(['',cap(assignment['dependent2']),assignment['ss_t2'][16],nt-1,'','','',''])
+            output += format_table(['',cap(assignment['dependent3']),assignment['ss_t2'][17],nt-1,'','','',''])
             output += '</table></p>'
         if assignment['assignment_type'] == 12:
             output += self.print_analysis(assignment)

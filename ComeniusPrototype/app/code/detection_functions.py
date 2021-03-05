@@ -105,8 +105,12 @@ def detect_significance(doc:Doc, solution:dict, num:int=1) -> List[str]:
     if h0_output == []:
         return []
     
-    difference = [sent for sent in doc.sents if any([y in [x.text for x in sent] for y in ['verschil','effect']]) 
+    if hasattr(doc, 'sents'):
+        difference = [sent for sent in doc.sents if any([y in sent.text for y in ['verschil','effect']]) 
             and not any([y in [x.text for x in sent] for y in ['matig','klein','sterk']])]
+    else:
+        difference = [doc]
+    
     if difference != []:
         d_root = difference[num - 1] if num <= len(difference) else difference[num-1 - (3 - len(difference))]
         scorepoints['effect'] = True
@@ -228,7 +232,10 @@ def detect_interaction(doc:Doc, solution:dict, anova:bool) -> List[str]:
     output:List[str] = []
     
     #Controleer input
-    i_sents = [sent for sent in doc.sents if any([x in tokens for x in ['interactie','populatie','populatiegemiddelde','populatiegemiddelden']])]
+    if hasattr(doc, 'sents'):
+        i_sents = [sent for sent in doc.sents if any([x in tokens for x in ['interactie','populatie','populatiegemiddelde','populatiegemiddelden']])]
+    else:
+        i_sents = [doc]
     if i_sents != []:
         int_descendants = i_sents[0]    
         tokens = [x.text for x in int_descendants]
@@ -298,7 +305,7 @@ def detect_decision_manova(sent:Doc, solution:dict, variable:str, synonyms:list,
         output.append(' -ten onrechte een negatie toegevoegd of weggelaten bij de beslissing van '+variable)
     return output
 
-def detect_decision_multirm(sent:Doc, solution:dict, variable:str, synonyms:list, p:float, eta:float, num:int) -> List[str]:
+def detect_decision_multirm(sent:Doc, solution:dict, variable:str, synonyms:list, p:float, eta:float) -> List[str]:
     rejected:bool = p < 0.05
     tokens:list = [x.text for x in sent]
     scorepoints:dict = {'sign_effect': 'significant' in sent.text,
@@ -394,7 +401,7 @@ def detect_strength(sent:Doc, solution:dict, anova:bool, num:int) -> List[str]:
         output.append(' -de sterkte van het effect '+appendix+'wordt niet juist genoemd')
     return output
 
-def detect_effect(sent:Doc, solution:dict, variable:str, p:float, eta:float, num:int) -> List[str]:
+def detect_effect(sent:Doc, solution:dict, variable:str, p:float, eta:float) -> List[str]:
     output:List[str] = []
     scorepoints:dict ={'effect_present': p > 0.05,
         'strength_present': p > 0.05,
@@ -402,12 +409,12 @@ def detect_effect(sent:Doc, solution:dict, variable:str, p:float, eta:float, num
     gold_strength: int = 2 if eta > 0.2 else 1 if eta > 0.1 else 0
     effect = [x for x in sent if x.lemma_ in ['klein','zwak','matig','groot','sterk']]
     if effect != []:
-        n_effects:int = len(effect)
-        e_root = effect[num-1] if num <= n_effects else effect[num-1 - (3 - n_effects)]
+        e_root = effect[0]
         e_tree = descendants(e_root)
-        scorepoints['effect_present'] = e_root.head.text == 'effect' or 'effect' in [x.text for x in e_tree]
+        scorepoints['effect_present'] = 'effect' in sent.text
         scorepoints['strength_present'] = True #any([x in [y.text for y in e_tree] for x in ['klein','matig','sterk']]) or e_root.head.text in ['klein','matig','sterk']
-        scorepoints['right_strength'] = e_root.text in ['sterk','groot'] if gold_strength == 2 else e_root.text in ['matig'] if gold_strength == 1 else e_root.text in ['klein','zwak']
+        scorepoints['right_strength'] = e_root.text in ['sterk','groot'] if gold_strength == 2 else e_root.text in ['matig'] \
+                        if gold_strength == 1 else e_root.text in ['klein','zwak']
     if not scorepoints['effect_present'] and scorepoints['strength_present']:
         output.append(' -de effectgrootte van '+variable+' wordt niet genoemd')
     if not scorepoints['strength_present']:
