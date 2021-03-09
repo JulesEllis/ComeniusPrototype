@@ -41,8 +41,8 @@ I_SUBJECTWITHIN;De proefpersonen doen allemaal mee aan een experiment, met als ;
 I_RANDOMBETWEEN;De personen van elke groep zijn willekeurig geselecteerd. ;The persons of all groups were selected randomly. 
 I_RANDOMWITHIN;De volgorde van de toetsen was gerandomiseerd. ;The order of the tests was randomized. 
 I_DECIMALS;"Voer je antwoorden alsjeblieft tot op 2 decimalen in, en gebruik dezelfde vergelijking van de gemiddelden in je antwoord als in de vraagstelling staat (e.g. """"groter"""" of """"kleiner""""). ";Enter your answers with two decimals, and use the same comparison of means in your answer as you can read in the question (e.g. “smaller”). 
-A_ONEINT;Experiment, dus er is slechts een verklaring mogelijk. Dit is namelijk dat ;Experiment, so only one explanation is possible. The primary explanation is that 
-A_MULTINT;Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat ;No experiment, so multiple explanations are possible
+A_ONEINT;Experiment, dus er is slechts een verklaring mogelijk. Dit is namelijk dat ;Experiment, so only one explanation is possible, namely that 
+A_MULTINT;Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat ;No experiment, so multiple explanations are possible. The primary explanation is that 
 A_ALTINT;De alternatieve verklaring is dat ;The alternative explanation is that 
 I_FULLRANDOM;De deelnemers zijn willekeurig gekozen voor beide factoren. ;The participants are sorted randomly for both factors
 I_RANDOMFACTOR;De deelnemers zijn willekeurig verdeeld bij de factor ;The participants are sorted randomly for factor 
@@ -166,22 +166,22 @@ S_BOTH; zowel ; both
 S_BOTHAND; als ; and 
 S_RANDOM; zijn willekeurig geselecteerd. ;have been selected randomly
 S_STRONG;sterk;strong
-S_MEDIUM;matig;average
+S_MEDIUM;matig;moderate
 S_SMALL;klein;small
 S_REJECTED;verworpen;rejected
 S_KEPT;behouden;maintained
-S_EFFECTIS;Het effect is ;The effect is
-S_AVGIS;het populatiegemiddelde van ;the population average of
-S_IS; is;is
-S_THAN; dan dat van;than that of
-S_INFLUENCES; invloed heeft op ;influences
+S_EFFECTIS;Het effect is ;The effect is 
+S_AVGIS;het populatiegemiddelde van;the population average of
+S_IS; is ; is 
+S_THAN; vergeleken met dat van; compared to that of 
+S_INFLUENCES; invloed heeft op ; influences 
 S_DISTURBANCE; wel beinvloedt, maar dat dit niet merkbaar is door een storende variabele.;the former influences the latter, but this is not noticeable because of an interfering variable
 S_VARSARE;de variabelen zijn;the variables are
 S_WITHLEVELS; met niveaus ; with levels 
 S_NULL;H0;H0
-S_AVGSARE;, de populatiegemiddelden van ;, the population averages of
-S_AREAVG;zijn gemiddeld;are on average
-S_NOT;niet;not
+S_AVGSARE;, de populatiegemiddelden van ;, the population means of 
+S_AREAVG; zijn gemiddeld ; are on average 
+S_NOT;niet ;not 
 S_DISTURBANCE2;Eventuele alternatieve verklaringen zijn storende variabelen of omgekeerde causaliteit. ;Eventual alternative explanations are interfering variables or reversed causality
 S_FACTOR;van factor;of factor
 S_PREDICTORS; als predictoren; as predictors
@@ -271,3 +271,20 @@ I_METWITH;, met;, with
 S_DATAHYP2; rapport van onderstaande data. ;report of the data below. 
 I_DECIMALS2;Voer je antwoorden alsjeblieft tot op 2 decimalen in. ;Enter your answers with two decimals. 
 I_MULTIVAR;De afhankelijke variabelen zijn ;The dependent variables are 
+S_NINFLUENCES; geen invloed heeft op ; does not influence 
+A_NOTICEABLE;, maar dat dit niet merkbaar is door een storende variabele. ;, but that this is cancelled out by an interfering variable. 
+A_BOTHINT; beide worden veroorzaakt door een storende variabele.; are both caused by an interfering variable. 
+S_UNQ;ongelijk;unequal
+S_EQ;gelijk;equal
+S_THEREIS;, er is ;, there is 
+S_BOOLINT1;wel;real
+S_BOOLINT2;geen;no
+S_INPOP; in de populatie. ; in the population. 
+S_INBETWEEN; interactie tussen ; interaction between 
+A_NONE; geen; no
+A_ALTIS;De alternatieve is dat ;The alternative hypothesis is that 
+A_FORLEVELS; bij de niveaus ; for the levels 
+A_SAMEINF; dezelfde invloed heeft op ; similarly influences 
+A_NOTSAMEINF; niet dezelfde invloed heeft op ; influences in different ways 
+A_OFFACTOR; van de factor ; of the factor 
+A_BMEANS;, de opgevoerde gemiddelden van de personen in de populatie zijn ;, the boosted means of people in the population are 

@@ -1,8 +1,8 @@
 Name;Type;English;Control;Synonyms;Levels;L1synonyms;L2synonyms;L3synonyms;L4synonyms;Intro1;Intro2
 seizoen;WITHIN;0;1;seizoenen;winter,lente,zomer,herfst;;;;;De scores van de individuele subjecten voor elk seizoen worden met elkaar vergeleken. ;Hiernaast worden hun scores voor elk seizoen vergeleken. 
 season;WITHIN;1;1;seasons;winter,spring,summer,fall;;;;;The scores of the individual subjects are compared for each season. ;Besides this, their scores are compared for each season of the year. 
-age;WITHIN;0;1;leeftijden;kind,jong,volwassen,oud;kinderen;jongeren;volwassenen;ouderen;De subjecten worden op verschillende leeftijden getest, en hun scores worden vergeleken. ;Hiernaast worden hun scores op verschillende leeftijden vergeleken. 
-leeftijd;WITHIN;1;1;ages;child,teenager,adult,old;children;teenagers;adults;;The subjects are tested at different ages to compare their scores. ;Besides this, the scores they reached at different ages are compared. 
+leeftijd;WITHIN;0;1;leeftijden;kind,jong,volwassen,oud;kinderen;jongeren;volwassenen;ouderen;De subjecten worden op verschillende leeftijden getest, en hun scores worden vergeleken. ;Hiernaast worden hun scores op verschillende leeftijden vergeleken. 
+age;WITHIN;1;1;ages;child,teenager,adult,old;children;teenagers;adults;;The subjects are tested at different ages to compare their scores. ;Besides this, the scores they reached at different ages are compared. 
 epoch;WITHIN;1;1;epochs;precambrian,silurian,paleolithic,quaternary;;;;;The subjects are shown information about a number of prehistoric epochs. ;They are also shown information about a number of prehistoric epochs. 
 tijdperk;WITHIN;0;1;tijdperken;precambrian,siluur,paleolithic,quartair;;;;;De subjecten krijgen informatie te zien over een aantal tijdperken uit de prehistorie. ;Hiernaast krijgen ze informatie te zien over een aantal tijdperken uit de prehistorie. 
 stimulus;BETWEEN;1;1;stimuli;round,square;;;;;The subjects are shown two stimuli, one circular and one square. ;They are also shown two stimuli, one circular and one square. 

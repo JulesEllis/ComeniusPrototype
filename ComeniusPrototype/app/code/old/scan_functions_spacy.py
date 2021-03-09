@@ -5,20 +5,7 @@ FUNCTIONS FOR SCANNING CAUSAL INTERPRETATION AND DECISION
 
 THESE TAKE THE INPUT TEXT IN DOC INSTEAD OF STRING
 """
-import math
-import random
-import numpy as np
-import nltk
-import spacy
-import re
-from copy import copy
-from spacy.tokens.token import Token
-from spacy.tokens.doc import Doc
-from spacy import displacy
-from nltk import CFG, Tree
-from scipy import stats
-from typing import Dict, List, Tuple
-from app.code.detection_functions import *
+
 
 def negation_counter(tokens: List[str]) -> int:
     count: int = 0

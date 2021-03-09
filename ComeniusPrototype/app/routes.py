@@ -3,8 +3,6 @@ from app import app
 from app.forms import BaseForm, BigForm, SmallForm, ReportForm
 from app.code.interface import Controller #OuterController
 from app.code.enums import Task, Process
-from app.code.scan_functions_spacy import *
-from app.code.scan_functions import scan_hypothesis_anova
 from app.code.assignments import cap
 import flask
 import os
@@ -201,8 +199,6 @@ def index():
         
         #Convert textbox to large textbox if appropriate
         submit_field :int = controller.submit_field.value
-        if controller.protocol[controller.index][1] in [scan_decision, scan_decision_anova, scan_decision_rmanova, scan_interpretation, scan_interpretation_anova, scan_hypothesis_anova]: 
-            submit_field = 10
         
         #Store controller
         with open(path, 'w') as f:

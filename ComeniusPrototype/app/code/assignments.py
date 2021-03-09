@@ -167,12 +167,12 @@ class Assignments:
         solution['levels'] = assignment['levels']
         solution['level_syns'] = assignment['level_syns']
         solution['dependent'] = assignment['dependent']
-        solution['dependent_measure']: str = 'kwantitatief'
-        solution['independent_measure']: str = 'kwalitatief'
+        solution['dependent_measure']: str = 'quantitative' if self.mes['L_ENGLISH'] else 'kwantitatief'
+        solution['independent_measure']: str = 'qualitative' if self.mes['L_ENGLISH'] else 'kwalitatief'
         solution['dep_syns'] = assignment['dep_syns']
         
         #Determine null hypothesis and control measure
-        sign: List[str] = ['==','<=','>='][assignment['hypothesis']]
+        sign: List[str] = ['=','<=','>='][assignment['hypothesis']]
         solution['null']: str = 'h0: mu(' + names[0] + ') ' + sign + ' mu(' + names[1] + ')'
         solution['control']: str = assignment['control']#'experiment' if assignment['control'] else 'geen experiment'
         
@@ -208,27 +208,31 @@ class Assignments:
             
         #Determine textual conclusions
         #Decision
-        sterkte:str='sterk' if solution['relative_effect'][0] > 0.8 else 'matig' if solution['relative_effect'][0] > 0.5 else 'klein'
+        sterkte:str=self.mes['S_STRONG'] if solution['relative_effect'][0] > 0.8 else self.mes['S_MEDIUM'] if solution['relative_effect'][0] > 0.5 else self.mes['S_SMALL']
         if solution['p'][0] < 0.05:
-            decision: Tuple[str] = ('verworpen','', 'Het effect is ' + sterkte + '. ')
+            decision: Tuple[str] = (self.mes['S_REJECTED'],'', self.mes['S_EFFECTIS'] + sterkte + '. ')
         else:
-            decision: Tuple[str] = ('behouden','niet ', '')
-        comparison: str = ['ongelijk','groter','kleiner'][assignment['hypothesis']]
-        solution['decision']: str = 'H0 ' + decision[0] + ', het populatiegemiddelde van ' + names[0] + ' is ' + decision[1] + comparison + ' dan dat van ' + names[1] + '. ' + decision[2]
+            decision: Tuple[str] = (self.mes['S_KEPT'],self.mes['S_NOT'], '')
+        #Comparison
+        if self.mes['L_ENGLISH']:
+            comparison: str = ['unequal','larger','smaller'][assignment['hypothesis']]
+        else:
+            comparison: str = ['ongelijk','groter','kleiner'][assignment['hypothesis']]
+        solution['decision']: str = 'H0 ' + decision[0] + ', '+self.mes['S_AVGIS']+' ' + names[0] + ' is ' + decision[1] + comparison + self.mes['S_THAN'] + names[1] + '. ' + decision[2]
         
         #Causal interpretation
         if solution['p'][0] < 0.05:
             if assignment['control']:
-                solution['interpretation']: str = 'Experiment, dus er is slechts een verklaring mogelijk. Dit is namelijk dat ' + solution['independent'] + ' invloed heeft op ' + solution['dependent'] + '.'
+                solution['interpretation']: str = self.mes['A_ONEINT'] + solution['independent'] + self.mes['S_INFLUENCES'] + solution['dependent'] + '.'
             else:
-                solution['interpretation']: str = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat ' + solution['independent'] + ' invloed heeft op ' + solution['dependent'] + '. '+\
-                'De alternatieve verklaring is dat ' + solution['dependent'] + ' ' + solution['independent'] + ' beinvloedt. '
+                solution['interpretation']: str = self.mes['A_MULTINT'] + solution['independent'] + self.mes['S_INFLUENCES'] + solution['dependent'] + '. '+\
+                self.mes['A_ALTINT'] + solution['dependent'] + self.mes['S_INFLUENCES'] + solution['independent'] + '. '
         else:
             if assignment['control']: 
-                solution['interpretation']: str = 'Experiment, dus er is slechts een verklaring mogelijk. Dit is namelijk dat ' + solution['independent'] + ' geen invloed heeft op ' + solution['dependent'] + '.'
+                solution['interpretation']: str = self.mes['A_ONEINT'] + solution['independent'] + self.mes['S_NINFLUENCES'] + solution['dependent'] + '.'
             else:
-                solution['interpretation']: str = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat ' + solution['independent'] + ' geen invloed heeft op ' + solution['dependent'] + '. '+\
-                'De alternatieve verklaring is dat ' + solution['independent'] + ' ' + solution['dependent'] + ' wel beinvloedt, maar dat dit niet merkbaar is door een storende variabele.'
+                solution['interpretation']: str = self.mes['A_MULTINT'] + solution['independent'] + self.mes['S_NINFLUENCES'] + solution['dependent'] + '. '+\
+                self.mes['A_ALTINT'] + solution['independent'] + self.mes['S_INFLUENCES'] + solution['dependent'] + self.mes['A_NOTICEABLE']
         return solution
     
     #Create ANOVA assignment
@@ -287,9 +291,9 @@ class Assignments:
         solution['level_syns'] = assignment['level_syns']
         solution['dependent'] = assignment['dependent']
         solution['dep_syns'] = assignment['dep_syns']
-        solution['dependent_measure']: str = 'kwantitatief'
         solution['dependent_n_measure']: int = 1 #Aantal metingen per persoon
-        solution['independent_measure']: str = 'kwalitatief'
+        solution['dependent_measure']: str = 'quantitative' if self.mes['L_ENGLISH'] else 'kwantitatief'
+        solution['independent_measure']: str = 'qualitative' if self.mes['L_ENGLISH'] else 'kwalitatief'
         solution['control']: bool = assignment['control']
         if two_way:
             solution['control2']: bool = assignment['control2']
@@ -313,17 +317,20 @@ class Assignments:
             solution['r2']: List[float] = [solution['ss'][0]/solution['ss'][2]]
             
             #Verbal parts of the report
-            rejected: Tuple[str] = ('verworpen','ongelijk',' ') if solution['p'][0] < 0.05 else ('behouden', 'gelijk', ' niet ')
-            solution['null']: str = 'h0: ' + ' == '.join(['mu(' + l + ')' for l in solution['levels']])
-            sterkte:str = 'sterk' if solution['r2'][0] > 0.2 else 'matig' if solution['r2'][0] > 0.1 else 'klein'
-            solution['decision']: str = 'h0 ' + rejected[0] + ', de populatiegemiddelden van ' + solution['levels'][0] +' en '+solution['levels'][1]+' zijn gemiddeld ' + rejected[1] + '. '
-            if solution['p'][0]:
-                solution['decision'] += 'Het effect is '+sterkte+'.'
-            if assignment['control']:
-                solution['interpretation']: str = 'Experiment, dus er is een verklaring mogelijk. Dit is dat '+solution['independent']+' '+solution['dependent'] +rejected[2] +' veroorzaakt.'
+            if self.mes['L_ENGLISH']:
+                rejected: Tuple[str] = ('rejected','unequal',' ') if solution['p'][0] < 0.05 else ('maintained', 'equal', ' not ')
             else:
-                solution['interpretation']: str = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat '+solution['independent']+' '+solution['dependent'] + \
-                ' veroorzaakt. De alternatieve verklaring is dat ' + solution['independent'] + ' en ' + solution['dependent'] + ' beide worden veroorzaakt door een storende variabele.'
+                rejected: Tuple[str] = ('verworpen','ongelijk',' ') if solution['p'][0] < 0.05 else ('behouden', 'gelijk', ' niet ')
+            solution['null']: str = 'H0: ' + ' = '.join(['mu(' + l + ')' for l in solution['levels']])
+            sterkte:str=self.mes['S_STRONG'] if solution['r2'][0] > 0.2 else self.mes['S_MEDIUM'] if solution['r2'][0] > 0.1 else self.mes['S_SMALL']
+            solution['decision']: str = 'H0 ' + rejected[0] + self.mes['S_AVGSARE'] + solution['levels'][0] +self.mes['S_AND']+solution['levels'][1]+self.mes['S_AREAVG']+rejected[1]+'. '
+            if solution['p'][0] < 0.05:
+                solution['decision'] += self.mes['S_EFFECTIS']+sterkte+'.'
+            if assignment['control']:
+                solution['interpretation']: str = self.mes['A_ONEINT']+solution['independent']+self.mes['S_INFLUENCES']+solution['dependent'] +rejected[2] +'. '
+            else:
+                solution['interpretation']: str = self.mes['A_MULTINT']+solution['independent']+self.mes['S_INFLUENCES']+solution['dependent'] + \
+                '. '+self.mes['A_ALTINT'] + solution['independent'] + self.mes['S_AND'] + solution['dependent'] + self.mes['A_BOTHINT']
                 
         else: #Two-way statistics
             #Intermediary statistics order: Between, A, B, AB, Within, Total
@@ -346,41 +353,45 @@ class Assignments:
             solution['r2']: List[float] = [solution['ss'][1] / solution['ss'][5], solution['ss'][2] / solution['ss'][5], solution['ss'][3] / solution['ss'][5]]
             
             #Verbal parts of the report
-            rejected: Tuple[str] = ('verworpen','ongelijk') if solution['p'][0] < 0.05 else ('behouden', 'gelijk')
-            rejected2: Tuple[str] = ('verworpen','ongelijk') if solution['p'][1] < 0.05 else ('behouden', 'gelijk')
-            rejected3: Tuple[str] = ('verworpen','wel') if solution['p'][2] < 0.05 else ('behouden', 'geen')
-            sterkte:str = 'sterk' if solution['r2'][0] > 0.2 else 'matig' if solution['r2'][0] > 0.1 else 'klein'
-            sterkte2:str = 'sterk' if solution['r2'][1] > 0.2 else 'matig' if solution['r2'][1] > 0.1 else 'klein'
-            sterkte3:str = 'sterk' if solution['r2'][2] > 0.2 else 'matig' if solution['r2'][2] > 0.1 else 'klein'
+            total:str = 'total' if self.mes['L_ENGLISH'] else 'totaal'
+            rejected: Tuple[str] = (self.mes['S_REJECTED'],self.mes['S_UNQ']) if solution['p'][0] < 0.05 else (self.mes['S_KEPT'],self.mes['S_EQ'])
+            rejected2: Tuple[str] = (self.mes['S_REJECTED'],self.mes['S_UNQ']) if solution['p'][1] < 0.05 else (self.mes['S_KEPT'],self.mes['S_EQ'])
+            rejected3: Tuple[str] = (self.mes['S_REJECTED'],self.mes['S_BOOLINT1']) if solution['p'][2] < 0.05 else (self.mes['S_KEPT'],self.mes['S_BOOLINT2'])
+            sterkte:str = self.mes['S_STRONG'] if solution['r2'][0] > 0.2 else self.mes['S_MEDIUM'] if solution['r2'][0] > 0.1 else self.mes['S_SMALL']
+            sterkte2:str = self.mes['S_STRONG'] if solution['r2'][1] > 0.2 else self.mes['S_MEDIUM'] if solution['r2'][1] > 0.1 else self.mes['S_SMALL']
+            sterkte3:str = self.mes['S_STRONG'] if solution['r2'][2] > 0.2 else self.mes['S_MEDIUM'] if solution['r2'][2] > 0.1 else self.mes['S_SMALL']
             solution['control2'] = assignment['control2']
-            solution['null']: str = 'h0: mu(' + solution['levels'][0] + ') == mu(' + solution['levels'][1] + ')'
-            solution['null2']: str =  'h0: mu(' + solution['levels2'][0] + ') == mu(' + solution['levels2'][1] + ')'
+            solution['null']: str = 'H0: mu(' + solution['levels'][0] + ') = mu(' + solution['levels'][1] + ')'
+            solution['null2']: str =  'H0: mu(' + solution['levels2'][0] + ') = mu(' + solution['levels2'][1] + ')'
             levels = solution['levels']; levels2 = solution['levels2']
-            solution['null3']: str = 'h0(' + solution['independent'] + ' x ' + solution['independent2'] + '): mu('+levels[0] + ' & ' + levels2[0]+') = mu('+levels[0]+') + mu('+levels2[0]+') - mu(totaal) [...] en mu('+levels[-1] + ' & ' + levels2[-1]+') = mu('+levels[-1]+') + mu('+levels2[-1]+') - mu(totaal)'
-            solution['decision']: str = 'h0 ' + rejected[0] + ', de populatiegemiddelden van ' + solution['levels'][0] +' en '+solution['levels'][1]+' zijn gemiddeld ' + rejected[1] + '. '
-            solution['decision2']: str = 'h0 ' + rejected2[0] + ', de populatiegemiddelden van ' + solution['levels2'][0] +' en '+solution['levels2'][1]+' zijn gemiddeld ' + rejected2[1] + '. '
-            solution['decision3']: str = 'h0 ' + rejected3[0] + ', er is ' + rejected3[1] + ' interactie tussen ' + solution['independent'] +' en '+solution['independent2'] + ' in de populatie. '
-            if solution['p'][0] < 0.05: solution['decision'] += 'Het effect is ' + sterkte + '.'
-            if solution['p'][1] < 0.05: solution['decision2'] += 'Het effect is ' + sterkte2 + '.'
-            if solution['p'][2] < 0.05: solution['decision3'] += 'Het effect is ' + sterkte3 + '.'
-            n1 = '' if solution['p'][0] < 0.05 else 'niet '
+            solution['null3']: str = 'H0(' + solution['independent'] + ' x ' + solution['independent2'] + '): mu('+levels[0] + ' & ' + levels2[0]+') = mu('+levels[0]+') + mu('+levels2[0]+') - mu('+total+') [...]'\
+                    +self.mes['S_AND']+'mu('+levels[-1] + ' & ' + levels2[-1]+') = mu('+levels[-1]+') + mu('+levels2[-1]+') - mu('+total+')'
+            solution['decision']: str = 'H0 ' + rejected[0]+self.mes['S_AVGSARE'] + solution['levels'][0]+self.mes['S_AND']+solution['levels'][1]+self.mes['S_AREAVG']+rejected[1] + '. '
+            solution['decision2']: str = 'H0 ' + rejected2[0]+self.mes['S_AVGSARE'] + solution['levels2'][0]+self.mes['S_AND']+solution['levels2'][1]+self.mes['S_AREAVG']+rejected2[1] + '. '
+            solution['decision3']: str = 'H0 ' + rejected3[0]+self.mes['S_THEREIS'] + rejected3[1] + self.mes['S_INBETWEEN'] + solution['independent'] +self.mes['S_AND']+solution['independent2'] + self.mes['S_INPOP']
+            if solution['p'][0] < 0.05: solution['decision'] += self.mes['S_EFFECTIS'] + sterkte + '.'
+            if solution['p'][1] < 0.05: solution['decision2'] += self.mes['S_EFFECTIS'] + sterkte2 + '.'
+            if solution['p'][2] < 0.05: solution['decision3'] += self.mes['S_EFFECTIS'] + sterkte3 + '.'
+            n1 = self.mes['S_INFLUENCES'] if solution['p'][0] < 0.05 else self.mes['S_NINFLUENCES']
             if assignment['control']:
-                solution['interpretation']: str = 'Experiment, dus er is een verklaring mogelijk. Dit is dat '+solution['dependent']+' wordt '+n1+'veroorzaakt door '+solution['independent']
+                solution['interpretation']: str = self.mes['A_ONEINT']+solution['independent']+n1+solution['dependent']+'.'
             else:
-                solution['interpretation']: str = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat '+solution['dependent']+' '+n1+'wordt veroorzaakt door '+solution['independent'] + '. '\
-                'De alternatieve is dat ' + solution['independent'] + ' en ' + solution['dependent'] + ' beide worden veroorzaakt door een storende variabele.'
-            n2 = '' if solution['p'][1] < 0.05 else 'niet '
+                solution['interpretation']: str = self.mes['A_MULTINT']+solution['independent']+n1+solution['dependent']+ '. '+\
+                    self.mes['A_ALTIS'] + solution['independent'] + self.mes['S_AND'] + solution['dependent'] + self.mes['A_BOTHINT']
+                    
+            n2 = self.mes['S_INFLUENCES'] if solution['p'][0] < 0.05 else self.mes['NINFLUENCES']
             if assignment['control2']:
-                solution['interpretation2']: str = 'Experiment, dus er is een verklaring mogelijk. Dit is dat '+solution['dependent']+' wordt '+n2+'veroorzaakt door '+solution['independent2']
+                solution['interpretation2']: str = self.mes['A_ONEINT']+solution['independent']+n2+solution['dependent']+'.'
             else:
-                solution['interpretation2']: str = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat '+solution['dependent']+'  '+n2+'wordt veroorzaakt door '+solution['independent2'] + '. '\
-                'De alternatieve is dat ' + solution['independent2'] + ' en ' + solution['dependent'] + ' beide worden veroorzaakt door een storende variabele.'
-            n3 = 'niet ' if solution['p'][2] < 0.05 else ''
+                solution['interpretation2']: str = self.mes['A_MULTINT']+solution['independent2']+n1+solution['dependent'] + '. '+\
+                    self.mes['A_ALTIS'] + solution['independent2'] + self.mes['S_AND'] + solution['dependent'] + self.mes['A_BOTHINT']
+                    
+            n3 = self.mes['A_NOTSAMEINF'] if solution['p'][2] < 0.05 else self.mes['A_SAMEINF']
             if assignment['control'] or assignment['control2']:
-                solution['interpretation3']: str = 'Experiment, dus er is een verklaring mogelijk. Dit is dat '+solution['independent'] + ' '+n3+'dezelfde invloed heeft op '+solution['dependent']+' zowel bij de niveaus ' + ' en '.join(solution['levels2']) + ' van de factor ' + solution['independent2'] + '.'
+                solution['interpretation3']: str = self.mes['A_ONEINT']+solution['independent']+n3+solution['dependent']+self.mes['A_FORLEVELS']+self.mes['S_AND'].join(solution['levels2']) + self.mes['A_OFFACTOR'] + solution['independent2'] + '.'
             else:
-                solution['interpretation3']: str = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire is dat '+solution['independent'] + ' '+n3+'dezelfde invloed heeft op '+solution['dependent']+' zowel bij de niveaus ' + ' en '.join(solution['levels2']) + ' van de factor ' + solution['independent2'] + '. '\
-                    'Eventuele alternatieve verklaringen zijn storende variabelen of omgekeerde causaliteit. '
+                solution['interpretation3']: str = self.mes['A_MULTINT']+solution['independent']+n3+solution['dependent']+self.mes['A_FORLEVELS']+self.mes['S_AND'].join(solution['levels2']) + self.mes['A_OFFACTOR'] + solution['independent2'] + '. '+\
+                    self.mes['S_DISTURBANCE2']
         return solution
     
     #Create an RMANVOA assignment for the given parameters
@@ -442,24 +453,29 @@ class Assignments:
         solution['r2']: List[float] = [solution['ss'][0] / solution['ss'][3], solution['ss'][1] / solution['ss'][3]]
         
         #Textual parts of the report
-        solution['null']: str = 'h0: ' + ' == '.join(['mu(' + x + ')' for x in assignment['levels']])
-        solution['null2']: str = 'h0: De personen hebben gelijke ware scores op de opgevoerde meting in de populatie.'
-        rejected: Tuple[str] = ('verworpen','ongelijk') if solution['p'][0] < 0.05 else ('behouden', 'gelijk')
-        solution['decision']: str = 'h0 ' + rejected[0] + ', de populatiegemiddelden van '+solution['dependent']+' ' + ' en '.join(assignment['levels']) + ' zijn gemiddeld ' + rejected[1] + '. '
-        if solution['p'][0]:
-            sterkte:str = 'sterk' if solution['r2'][0] > 0.2 else 'matig' if solution['r2'][0] > 0.1 else 'klein'
-            solution['decision'] += 'Het effect is '+sterkte+'.'
-        rejected2: Tuple[str] = ('verworpen','ongelijk') if solution['p'][1] < 0.05 else ('behouden', 'gelijk')
-        solution['decision2']: str = 'h0 ' + rejected2[0] + ', de opgevoerde gemiddelden van de personen in de populatie zijn ' + rejected2[1] + '. '
-        sterkte2:str = 'sterk' if solution['r2'][1] > 0.2 else 'matig' if solution['r2'][1] > 0.1 else 'klein'
-        if solution['p'][1] < 0.05:
-            solution['decision2'] += 'Het effect is ' + sterkte2 + '. '        
-        n1 = '' if solution['p'][0] < 0.05 else 'niet '
-        if assignment['control']:
-            solution['interpretation']: str = 'Experiment, dus er is een verklaring mogelijk. De primaire verklaring is dat '+solution['dependent']+' '+n1+' wordt veroorzaakt door '+solution['independent']
+        solution['null']: str = 'H0: ' + ' = '.join(['mu(' + x + ')' for x in assignment['levels']])
+        if self.mes['L_ENGLISH']:
+            solution['null2']: str = 'H0: The boosted means have the same population mean.'
         else:
-            solution['interpretation']: str = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat '+solution['dependent']+' wordt '+n1+'veroorzaakt door '+solution['independent'] + '. '\
-            'De alternatieve is dat ' + solution['independent'] + ' wordt veroorzaakt door ' + solution['dependent']
+            solution['null2']: str = 'H0: De personen hebben gelijke ware scores op de opgevoerde meting in de populatie.'
+        rejected: Tuple[str] = (self.mes['S_REJECTED'],self.mes['S_UNQ']) if solution['p'][0] < 0.05 else (self.mes['S_KEPT'],self.mes['S_EQ'])
+        solution['decision']: str = 'H0 ' + rejected[0] + self.mes['S_AVGSARE']+solution['dependent']+self.mes['A_FORLEVELS']+ self.mes['S_AND'].join(assignment['levels']) + self.mes['S_AREAVG'] + rejected[1] + '. '
+        if solution['p'][0]:
+            sterkte:str = self.mes['S_STRONG'] if solution['r2'][0] > 0.2 else self.mes['S_MEDIUM'] if solution['r2'][0] > 0.1 else self.mes['S_SMALL']
+            solution['decision'] += self.mes['S_EFFECTIS']+sterkte+'.'
+        
+        rejected2: Tuple[str] = (self.mes['S_REJECTED'],self.mes['S_UNQ']) if solution['p'][1] < 0.05 else (self.mes['S_KEPT'],self.mes['S_EQ'])
+        solution['decision2']: str = 'H0 ' + rejected2[0] + self.mes['A_BMEANS'] + rejected2[1] + '. '
+        if solution['p'][1] < 0.05:
+            sterkte2:str = self.mes['S_STRONG'] if solution['r2'][1] > 0.2 else self.mes['S_MEDIUM'] if solution['r2'][1] > 0.1 else self.mes['S_SMALL']
+            solution['decision2'] += self.mes['S_EFFECTIS']+sterkte2+'. '    
+            
+        n1 = self.mes['S_INFLUENCES'] if solution['p'][0] < 0.05 else self.mes['NINFLUENCES']
+        if assignment['control']:
+            solution['interpretation']: str = self.mes['A_ONEINT']+solution['independent']+n1+solution['dependent']
+        else:
+            solution['interpretation']: str = self.mes['A_MULTINT']+solution['independent']+n1+solution['dependent'] + '. '+\
+                self.mes['A_ALTINT'] + solution['dependent'] + self.mes['S_INFLUENCES'] + solution['dependent']
         return solution
     
     #Create a multiple regression assignment for the given parameters
@@ -513,7 +529,7 @@ class Assignments:
         solution['predictor_se'] = [solution['predictor_b'][i]/solution['predictor_t'][i] for i in range(n_predictors+1)]
         
         #Verbal answers
-        solution['null'] = 'H0: ' + ' == '.join(['beta(' + str(i) + ')' for i in range(1,4)]) + ' == 0'
+        solution['null'] = 'H0: ' + ' = '.join(['beta(' + str(i) + ')' for i in range(1,4)]) + ' = 0'
         return solution
     
     #Create an ANCOVA assignment for the given parameters
@@ -571,7 +587,7 @@ class Assignments:
             solution['p'][i] = solution['predictor_p'][i]
         
         #Verbal answers
-        solution['null'] = 'H0: ' + ' == '.join(['beta(' + str(i) + ')' for i in range(1,4)]) + ' == 0'
+        solution['null'] = 'H0: ' + ' = '.join(['beta(' + str(i) + ')' for i in range(1,4)]) + ' = 0'
         return solution
 
     #Create an MANOVA assignment for the given parameters
@@ -1000,14 +1016,32 @@ class Assignments:
     
     def print_independent(self, assignment:dict, num:int=1) -> str:
         levels = assignment['levels'] if num < 2 else assignment['levels' + str(num)]
-        if assignment['assignment_type'] < 3:
-            return assignment['independent'] + ', kwalitatief, met niveaus ' + levels[0] + ' en ' + levels[1] + '.'
-        elif assignment['assignment_type'] < 5:
-            return assignment['independent'] + ', een between-subject factor, met niveaus ' + levels[0] + ' en ' + levels[1] + '.'
+        if self.mes['L_ENGLISH']:
+            if assignment['assignment_type'] < 3:
+                return assignment['independent'] + ', qualitative, with levels ' + levels[0] + ' and ' + levels[1] + '.'
+            elif assignment['assignment_type'] < 5:
+                return assignment['independent'] + ', a between-subject factor, with levels ' + levels[0] + ' and ' + levels[1] + '.'
+            else:
+                i_key:str = 'independent' if num < 2 else 'independent' + str(num)
+                return assignment[i_key] + ', a within-subject factor with levels ' + ' and '.join(levels) + '.'
         else:
-            i_key:str = 'independent' if num < 2 else 'independent' + str(num)
-            return assignment[i_key] + ', een within-subject factor met niveaus ' + ' en '.join(levels) + '.'
+            if assignment['assignment_type'] < 3:
+                return assignment['independent'] + ', kwalitatief, met niveaus ' + levels[0] + ' en ' + levels[1] + '.'
+            elif assignment['assignment_type'] < 5:
+                return assignment['independent'] + ', een between-subject factor, met niveaus ' + levels[0] + ' en ' + levels[1] + '.'
+            else:
+                i_key:str = 'independent' if num < 2 else 'independent' + str(num)
+                return assignment[i_key] + ', een within-subject factor met niveaus ' + ' en '.join(levels) + '.'
     
     def print_dependent(self, assignment:dict) -> str:
-        return assignment['dependent'] + ', kwantitatief'
-    
+        if self.mes['L_ENGLISH']:
+            return assignment['dependent'] + ', quantitative'
+        else:    
+            return assignment['dependent'] + ', kwantitatief'
+        
+    def print_control(self, assignment:dict, num:int=1) -> str:
+        control:bool = assignment['control'] if num == 1 else assignment['control2']
+        if self.mes['L_ENGLISH']:
+            return 'Experiment' if control else 'Passive-observational'
+        else:
+            return 'Experiment' if control else 'Passive-observerend'
