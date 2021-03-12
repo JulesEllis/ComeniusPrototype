@@ -379,9 +379,9 @@ class Assignments:
                 solution['interpretation']: str = self.mes['A_MULTINT']+solution['independent']+n1+solution['dependent']+ '. '+\
                     self.mes['A_ALTIS'] + solution['independent'] + self.mes['S_AND'] + solution['dependent'] + self.mes['A_BOTHINT']
                     
-            n2 = self.mes['S_INFLUENCES'] if solution['p'][0] < 0.05 else self.mes['NINFLUENCES']
+            n2 = self.mes['S_INFLUENCES'] if solution['p'][1] < 0.05 else self.mes['S_NINFLUENCES']
             if assignment['control2']:
-                solution['interpretation2']: str = self.mes['A_ONEINT']+solution['independent']+n2+solution['dependent']+'.'
+                solution['interpretation2']: str = self.mes['A_ONEINT']+solution['independent2']+n2+solution['dependent']+'.'
             else:
                 solution['interpretation2']: str = self.mes['A_MULTINT']+solution['independent2']+n1+solution['dependent'] + '. '+\
                     self.mes['A_ALTIS'] + solution['independent2'] + self.mes['S_AND'] + solution['dependent'] + self.mes['A_BOTHINT']
@@ -435,6 +435,7 @@ class Assignments:
         solution['independent_measure']: str = 'kwalitatief'
         solution['control']: bool = assignment['control']
         solution['assignment_type'] = assignment['assignment_type']
+        solution['n_subjects'] = data['n_subjects']
         
         #Numerical parts of the report
         #Order of rows: Kwartaal, Persoon, Interactie, Totaal
@@ -454,10 +455,7 @@ class Assignments:
         
         #Textual parts of the report
         solution['null']: str = 'H0: ' + ' = '.join(['mu(' + x + ')' for x in assignment['levels']])
-        if self.mes['L_ENGLISH']:
-            solution['null2']: str = 'H0: The boosted means have the same population mean.'
-        else:
-            solution['null2']: str = 'H0: De personen hebben gelijke ware scores op de opgevoerde meting in de populatie.'
+        solution['null2']: str = 'H0: tau(subject 1) = tau(subject 2) [...] = tau(subject '+str(data['n_subjects'])+')'
         rejected: Tuple[str] = (self.mes['S_REJECTED'],self.mes['S_UNQ']) if solution['p'][0] < 0.05 else (self.mes['S_KEPT'],self.mes['S_EQ'])
         solution['decision']: str = 'H0 ' + rejected[0] + self.mes['S_AVGSARE']+solution['dependent']+self.mes['A_FORLEVELS']+ self.mes['S_AND'].join(assignment['levels']) + self.mes['S_AREAVG'] + rejected[1] + '. '
         if solution['p'][0]:
