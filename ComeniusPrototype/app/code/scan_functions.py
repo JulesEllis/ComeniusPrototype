@@ -1267,8 +1267,8 @@ class ScanFunctions:
             scorepoints['right_negation'] = True
         scorepoints['jacked'] = 'opgevoerde' in [x.text for x in sent]
             
-        mean = any([x in sent.text for x in avgs])
-        mean_2 = any([x in sent.text for x in popavgs])
+        mean = [x in sent.text for x in avgs]
+        mean_2 = [x in sent.text for x in popavgs]
         scorepoints['mean_present'] = any(mean) or any(mean_2)
         scorepoints['pop_present'] = any(mean_2) or pop in [x.text for x in sent] or any([x in tokens for x in ['significant','significante']])
         scorepoints['contrasign'] = not ((any(mean_2) or pop in tokens) and any([x in tokens for x in ['significant','significante']]))
