@@ -71,18 +71,35 @@ class Assignments:
                 for y in varis:
                     if y['name'] == x:
                         varis.remove(y)
+                        
         var:tuple = random.choice([x for x in varis if x['type'] == t and x['english'] == self.mes['L_ENGLISH'] and x['control'] == control])
+        #Get wordnet synonyms
+        from nltk.corpus import wordnet as wn
+        lan:str = 'eng' if self.mes['L_ENGLISH'] else 'nld'
+        wn_syns = []
+        for syn in wn.synsets(var['name'], lang=lan): 
+            for l in syn.lemmas(lang=lan): 
+                wn_syns.append(l.name())
         text:str = var['intro'] if not second else var['intro2']
         if var['synonyms'] == '':
             var['synonyms'] = []
-        return (var['name'], var['synonyms'], var['levels'][:nc], var['levelsyns'][:nc], text)
+        return (var['name'], var['synonyms']+wn_syns, var['levels'][:nc], var['levelsyns'][:nc], text)
     
     #Returns a dependent variable with the given specifications
     def get_dependent(self) -> Tuple:
         var:tuple = random.choice([x for x in self.variables if x['english'] == self.mes['L_ENGLISH'] and x['type'] == 'DEPENDENT'])
+        
+        #Get wordnet synonyms
+        from nltk.corpus import wordnet as wn
+        lan:str = 'eng' if self.mes['L_ENGLISH'] else 'nld'
+        wn_syns = []
+        for syn in wn.synsets(var['name'], lang=lan): 
+            for l in syn.lemmas(lang=lan): 
+                wn_syns.append(l.name())
+        
         if var['synonyms'] == '':
             var['synonyms'] = []
-        return (var['name'], var['synonyms'], var['intro'])
+        return (var['name'], var['synonyms']+wn_syns, var['intro'])
     
     #Returns lists of covariates (names and synonyms) with the given specifications
     def get_covariates(self, n:int, intercept:bool=False) -> list:
@@ -90,7 +107,19 @@ class Assignments:
         shuffle(varss)
         output = [x['name'] for x in varss[:n]] if not intercept else ['Intercept'] + [x['name'] for x in varss[:n]]
         isyn:list = [] if not intercept else [[]]
-        return output, isyn + [x['synonyms'] for x in varss]
+        
+        #Get wordnet synonyms
+        from nltk.corpus import wordnet as wn
+        covar_syns = []
+        for i in range(n):
+            if output[i] != 'Intercept':
+                wn_syns = []
+                lan:str = 'eng' if self.mes['L_ENGLISH'] else 'nld'
+                for syn in wn.synsets(output[i], lang=lan): 
+                    for l in syn.lemmas(lang=lan): 
+                        wn_syns.append(l.name())
+                covar_syns.append(wn_syns)
+        return output, isyn + [varss[i]['synonyms'] + covar_syns[i] for i in range(len(varss))]
         
     #Creates the assignment's data as a tuple of floats
     #If the assignment is a within-subject T-test, n1 and n2 have the same number of samples

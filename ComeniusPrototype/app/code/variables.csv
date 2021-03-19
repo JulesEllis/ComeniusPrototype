@@ -16,7 +16,7 @@ birthplace;BETWEEN;1;0;birthplaces;Nijmegen,Amsterdam;;;;;The subjects are sorte
 reactietijd;DEPENDENT;0;0;reactietijden;;;;;;De reactietijd van een aantal subjecten wordt gemeten. ;
 reaction time;DEPENDENT;1;0;reaction times;;;;;;The reaction time of a number of subjects is recorded. ;
 bloeddruk;DEPENDENT;0;0;;;;;;;De bloeddruk van een aantal subjecten wordt gemeten. ;
-blood pressure;DEPENDENT;1;0;;;;;;;The blood pressure time of a number of subjects is under different circumstances. ;
+pressure;DEPENDENT;1;0;;;;;;;The blood pressure time of a number of subjects is under different circumstances. ;
 gewicht;DEPENDENT;0;0;gewichten;;;;;;Het gewicht van een aantal subjecten wordt gemeten. ;
 weight;DEPENDENT;1;0;weights;;;;;;The body weight of a number of subjects is recorded under different circumstances. ;
 sociale vaardigheden;COVARIATE;0;0;;;;;;;;

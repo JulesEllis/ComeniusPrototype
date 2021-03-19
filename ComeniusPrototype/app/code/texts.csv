@@ -40,11 +40,11 @@ I_SUBJECTBETWEEN;De proefpersonen doen een experiment, waarin ze worden ingedeel
 I_SUBJECTWITHIN;De proefpersonen doen allemaal mee aan een experiment, met als ;The subjects all take part in an experiment, with 
 I_RANDOMBETWEEN;De personen van elke groep zijn willekeurig geselecteerd. ;The persons of all groups were selected randomly. 
 I_RANDOMWITHIN;De volgorde van de toetsen was gerandomiseerd. ;The order of the tests was randomized. 
-I_DECIMALS;"Voer je antwoorden alsjeblieft tot op 2 decimalen in, en gebruik dezelfde vergelijking van de gemiddelden in je antwoord als in de vraagstelling staat (e.g. """"groter"""" of """"kleiner""""). ";Enter your answers with two decimals, and use the same comparison of means in your answer as you can read in the question (e.g. “smaller”). 
+I_DECIMALS;"Voer je antwoorden alsjeblieft tot op 2 decimalen in, en gebruik dezelfde vergelijking van de gemiddelden in je antwoord als in de vraagstelling staat (e.g. ""groter"" of ""kleiner""). ";Enter your answers with two decimals, and use the same comparison of means in your answer as you can read in the question (e.g. “smaller”). 
 A_ONEINT;Experiment, dus er is slechts een verklaring mogelijk. Dit is namelijk dat ;Experiment, so only one explanation is possible, namely that 
 A_MULTINT;Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat ;No experiment, so multiple explanations are possible. The primary explanation is that 
 A_ALTINT;De alternatieve verklaring is dat ;The alternative explanation is that 
-I_FULLRANDOM;De deelnemers zijn willekeurig gekozen voor beide factoren. ;The participants are sorted randomly for both factors
+I_FULLRANDOM;De deelnemers zijn willekeurig gekozen voor beide factoren. ;The participants are sorted randomly for both factors. 
 I_RANDOMFACTOR;De deelnemers zijn willekeurig verdeeld bij de factor ;The participants are sorted randomly for factor 
 A_TRUESCORES;H0: De personen hebben gelijke ware scores op de opgevoerde meting in de populatie.;H0: The persons have the same true scores for the stepped-up measurement in the population
 A_JACKEDMEANS;de opgevoerde gemiddelden van de personen in de populatie zijn ;The stepped-up measurements in the population are
@@ -53,7 +53,7 @@ I_CONTAINSFACTORS;Dit onderzoek bevat de factoren ;This experiment contains the 
 I_DEP;De afhankelijke variabele is;The dependent variable is 
 A_EXPERIMENTAL;Experimenteel;Experimental
 A_PASSIVE;Passief-observerend;Passive observation
-F_CORRECT;Mooi, deze beschrijving klopt.;Nice, the description is correct
+F_CORRECT;Mooi, deze beschrijving klopt.;Nice, the description is correct. 
 F_INCOMPLETE;Er ontbreekt nog wat aan je antwoord, namelijk:;Something is missing in your answer, namely:
 F_IND; -de juiste onafhankelijke variabele wordt niet juist genoemd; -the right independent variable is not mentioned correctly
 F_MEASURE; -het juiste meetniveau; -the right level of measurement
@@ -86,9 +86,9 @@ F_POP; -er wordt niet aangegeven dat het om de populatie gaat; -not stated that 
 F_ALLSTD; -alle juiste standaardeviaties; -all correct standard deviations
 F_SOMESTD; -één juiste standaardeviatie; -some correct standard deviations
 F_MANEXP; -niet genoemd hoeveel mogelijke verklaringen er zijn; -not stated how many possible explanations there are
-F_PRIMEXP; -de primaire verklaring wordt niet genoemd; -not named the primary explanation
-F_ALTEXP; -de alternatieve verklaring wordt niet genoemd; -not named the alternative explanation
-F_MANINT; -niet genoemd hoeveel mogelijke interpretaties er zijn; -not named the number of possible interpretations
+F_PRIMEXP; -de primaire verklaring wordt niet genoemd; -not stated the primary explanation
+F_ALTEXP; -de alternatieve verklaring wordt niet genoemd; -not stated the alternative explanation
+F_MANINT; -niet genoemd hoeveel mogelijke interpretaties er zijn; -not stated the number of possible interpretations
 F_MANPRIM; -de primaire verklaring wordt niet genoemd; -the primary explanation
 F_MANALT; -de mogelijkheid van alternatieve verklaringen wordt niet genoemd; -the possibility of alternative explanations
 F_INDROLE; -de rol van de onafhankelijke variabele wordt niet juist genoemd; -the role of the independent variable
@@ -98,7 +98,7 @@ F_WHATFACTOR2; -niet genoemd wat voor factor de tweede onafhankelijke variabele 
 F_DEP1; -eerste afhankelijke variabele niet juist genoemd; -the first dependent variable
 F_DEP2; -tweede afhankelijke variabele niet juist genoemd; -the second dependent variable
 F_DEP3; -derde afhankelijke variabele niet juist genoemd; -the third dependent variable
-F_ALLDEPS; -niet alle aparte afhankelijke variabelen juist genoemd; -not named all the dependent variables
+F_ALLDEPS; -niet alle aparte afhankelijke variabelen juist genoemd; -not stated all the dependent variables
 F_NOMULTIVAR; -de multivariate beslissing wordt niet genoemd; -the multivariate decision
 F_NOMULTIVARWS; -de multivariate within-subject beslissing wordt niet genoemd; -the multivariate within-subject decision
 F_NOMULTIVARINT; -de interactiebeslissing wordt niet genoemd; -the interaction decision
@@ -112,8 +112,8 @@ F_NOSUBJ; -hypothese van de subjecten niet genoemd; -the hypothesis of the subje
 F_INTHYP; -de interactiehypothese wordt niet genoemd; -the interaction hypothesis
 F_EFFECTSIGN; -niet genoemd of het effect significant is; -whether the effect is significant
 F_NEGEFFECT; -ten onrechte een negatie toegevoegd of weggelaten bij de beschrijving van het effect; -incorrectly left out or added a negation while describing the effect
-F_DECISION; -niet genoemd dat de beslissing ; -not named that the decision 
-F_INDEPLEVELS; -de niveaus van de onafhankelijke variabele ; -the levels of the independent variable
+F_DECISION; -niet genoemd dat de beslissing ; -not stated that the decision 
+F_INDEPLEVELS; -de niveaus van de onafhankelijke variabele ; -the levels of the independent variable 
 F_INDEPLEVEL; -enkele niveaus van de onafhankelijke variabele ; -some levels of the independent variable
 F_PROPVARNONULL; -niet genoemd of het proportie verklaarde variantie significant groter dan nul is; -not stated whether the proportion of variance is larger than zero
 F_PROPVARNEG; -ten onrechte een negatie toegevoegd of weggelaten bij de beslissing over het proportie verklaarde variantie; -incorrectly left out or added a negation while describing the proportion of variance
@@ -126,7 +126,7 @@ F_INTNEG; -ten onrechte een negatie toegevoegd of weggelaten ; -incorrectly left
 F_INTPOP; -niet gesteld dat de interactiebeslissing over de populatie gaat; -not stated that the interaction decision concerns the population
 F_INDINT; -de onafhankelijke variabelen ontbreken bij de interactiebeslissing; -the independent variables are missing from the interaction decision
 F_IND1INT; -een van de onafhankelijke variabelen ontbreekt bij de interactiebeslissing; -one independent variable is missing from the interaction decision
-F_BOTHPOP; -zowel “populatie” en “significant” genoemd, haal een van de twee weg ; -named both “population” and “interaction”, please remove one 
+F_BOTHPOP; -zowel “populatie” en “significant” genoemd, haal een van de twee weg ; -stated both “population” and “interaction”, please remove one 
 F_PRED; -significant voorspellende waarde niet genoemd in de hoofdbeslissing; -the significant predictive value in the main decision
 F_2COV; -beide covariaten niet genoemd in de hoofdbeslissing; -both covariates in the main decision
 F_1COV; -een van de covariaten niet genoemd in de hoofdbeslissing; -one covariate in the main decision
@@ -146,9 +146,9 @@ F_NOALT; -de alternatieve verlaring wordt niet genoemd; -the alternative explana
 F_WRONGCAUSATION; -de relatie tussen de onafhankelijke en afhankelijke variabele is niet geldig hier omdat dit een alternatieve verklaring is; -the relationship between the independent and dependent variables is incorrect here since this concerns an alternative explanation
 F_NODISTURBANCE; -niet gesteld dat storende variabelen een mogelijkheid zijn voor de alternatieve verklaring; -not stated that one possibility for the alternative explanation is interfering variables
 F_NOREVERSECAUSE; -niet gesteld dat ongekeerde causaliteit een mogelijkheid is voor de alternatieve verklaring; -not stated that one possibility for the alternative explanation is reversed causality
-F_RIGHTP; -de juiste p-waarde van ; -the right p-value of
+F_RIGHTP; -de juiste p-waarde van ; -the right p-value of 
 F_ANALYSIS; -naam van de analyse niet juist genoemd; -the name of the analysis isn’t stated correctly
-F_STRENGTH; -de sterkte van het effect ; -the effect strength
+F_STRENGTH; -de sterkte van het effect ; -the effect strength 
 S_SHORTONLY; kan je alleen een beknopt rapport maken.; can only be used to make a summary report
 S_VAR1; voor de eerste onafhankelijke variabele.;for the first independent variable
 S_VAR2; voor de tweede onafhankelijke variabele.;for the second independent variable
@@ -192,22 +192,22 @@ S_COMP1; bij de eerste vergelijking; for the first equation
 S_COMP2; bij de laatste vergelijking; for the last equation
 S_THE;de;The effect is
 S_FROMABOVE; van boven; from top
-S_NONAME; wordt niet genoemd;is missing
+S_NONAME; wordt niet genoemd; is missing
 S_PREDICTOR; predictor;predictor
 S_INDES; in het design; in the design
 S_INTERACT;bij de interactie ;for the interaction 
 S_WITHINFACTOR;bij de within-subject factor ;for the within-subject factor 
 S_BETWEENFACTOR;bij de between-subject factor ;for the between-subject factor 
 S_SWITCHEROO; wordt verworpen als deze wordt behouden of andersom; is rejected when it should be retained or the other way around
-S_DOUBLEPOP;zowel “populatie” en “significant” genoemd, haal een van de twee weg;named both “population” and “significant”, please remove one of the two
+S_DOUBLEPOP;zowel “populatie” en “significant” genoemd, haal een van de twee weg;mentioned both “population” and “significant”, please remove one of the two
 S_LEVELS;niveaus;levels
-S_BADCOMPARED;in de populatie niet of niet juist met elkaar vergeleken;not compared correctly in the population
+S_BADCOMPARED; in de populatie niet of niet juist met elkaar vergeleken; not compared correctly in the population
 S_POPAVGS;om populatiegemiddelden gaat;concerns the population averages
 S_OVERPOP;over de populatie gaat;concerns the population
 S_NONAMES; worden niet genoemd; are missing
 S_LEFTOUT;weggelaten;missing
 S_SIGNEFFECT; of het effect significant is;whether the effect is significant
-S_NORIGHTNAME; wordt niet juist genoemd;isn’t named correctly
+S_NORIGHTNAME; wordt niet juist genoemd;isn’t stated correctly
 S_MAINDEC;van de hoofdbeslissing;of the main decision
 S_INTDEC; bij de interactiebeslissing;for the interaction decision
 S_SUBDEC; bij het vergelijken van de niveaus in de beslissing van de subjecten;for the comparison of the levels in the decision of subjects
@@ -291,12 +291,12 @@ A_BMEANS;, de opgevoerde gemiddelden van de personen in de populatie zijn ;, the
 F_TAU1; -het teken voor het opgevoerde gemiddelde van het eerste subject wordt niet genoemd; -the symbol for the stepped-up mean of the first subject is missing
 F_TAU2; -het teken voor het opgevoerde gemiddelde van het tweede subject wordt niet genoemd; -the symbol for the stepped-up mean of the second subject is missing
 F_TAUN; -het teken voor het opgevoerde gemiddelde van het laatste subject wordt niet genoemd; -the symbol for the stepped-up mean of the last subject is missing
-F_CCORRECT;Mooi, dit cijfer klopt.;Nice, the number is correct.
+F_CCORRECT;Mooi, dit cijfer klopt.;Nice, the number is correct. 
 F_CSCORRECT;Mooi, deze cijfers kloppen.;Nice, the numbers are correct. 
-F_HYPCORRECT;Mooi, deze hypothese klopt.;Nice, the hypothesis is correct.
+F_HYPCORRECT;Mooi, deze hypothese klopt.;Nice, the hypothesis is correct. 
 F_DECCORRECT;Mooi, deze beslissing klopt.;Nice, the decision is correct. 
-F_INTCORRECT;Mooi, deze interpretatie klopt.;Nice, the interpretation is correct.
-F_PCORRECT;Mooi, deze waarde van p klopt.;Nice, this p-value is correct.
+F_INTCORRECT;Mooi, deze interpretatie klopt.;Nice, the interpretation is correct. 
+F_PCORRECT;Mooi, deze waarde van p klopt.;Nice, this p-value is correct. 
 F_NOPHERE; -de juiste p-waarde; -the right value of p
 F_WRONGCOMP1; -de populatiegemiddelden worden niet juist met elkaar vergeleken bij de eerste vergelijking; -the population averages are not compared correctly for the first equation
 F_WRONGCOMP2; -de populatiegemiddelden worden niet juist met elkaar vergeleken bij de laatste vergelijking; -the population averages are not compared correctly for the last equation
@@ -304,7 +304,7 @@ F_TABLECORRECT;Mooi, deze tabel klopt.;Nice, this table is correct.
 F_ONEAVG; -één juiste gemiddelde, namelijk de ; -one correct mean, namely the 
 F_ONESTD; -één juiste standaardeviatie, namelijk de ; -one correct standard deviation, namely the 
 F_ONEN; -één juiste waarde van N, namelijk de ; -one correct value of N, namely the 
-F_ALLN; -alle juiste gemiddelden; -all correct means
+F_ALLAVG; -alle juiste gemiddelden; -all correct means
 F_ALLSTD; -alle juiste standaarddeviaties; -all correct standard deviations
 F_ALLN; -alle juiste waarden van N; -all correct values of N
 F_ONEPLUS; -ten minste één waarde van ; -at least one value of 
@@ -332,5 +332,4 @@ S_NANDEC;niet genoemd bij de beslissing van ;not names for the decision of
 F_NONEG; -ten onrechte een negatie toegevoegd bij de beschrijving van ; -incorrectly left out or added a negation while describing 
 F_INTINT; -niet gesteld dat de interactiebeslissing over interactie gaat; -not stated that the interaction decision concerns interaction
 F_INTNEGG; -ten onrechte een negatie toegevoegd of weggelaten bij de interactiebeslissing; -incorrectly left out or added a negation for the interaction decision
-S_POPMEANS;om de populatiegemiddelden gaat;concerns the population averages
 F_JUSTLEVELS; -niveaus ; -levels 

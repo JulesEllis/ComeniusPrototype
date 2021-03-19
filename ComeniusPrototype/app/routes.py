@@ -263,6 +263,10 @@ def bigform():
             prev:bool = controller.prevable
             display = controller.protocol[0][0]
             form = BaseForm()
+            if not controller.mes['L_ENGLISH']:
+                form.submit.label.text = 'Doorgaan'
+            else:
+                form.submit.label.text = 'Continue'
             field = controller.submit_field.value
             return render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=field, varnames=varnames, title=title)
         elif form.answer.data:
@@ -323,6 +327,10 @@ def smallform():
             prev :bool = controller.prevable
             display = controller.protocol[0][0]
             form = BaseForm()
+            if not controller.mes['L_ENGLISH']:
+                form.submit.label.text = 'Doorgaan'
+            else:
+                form.submit.label.text = 'Continue'
             field = controller.submit_field.value
             return render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=field, varnames=varnames, title=title)
         elif form.answer.data:
@@ -366,6 +374,10 @@ def reportform():
             prev :bool = controller.prevable
             display = controller.protocol[0][0]
             form = BaseForm()
+            if not controller.mes['L_ENGLISH']:
+                form.submit.label.text = 'Doorgaan'
+            else:
+                form.submit.label.text = 'Continue'
             form.inputtext.data = ""
             field = controller.submit_field.value
             return render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=field, varnames=varnames, title=title)
