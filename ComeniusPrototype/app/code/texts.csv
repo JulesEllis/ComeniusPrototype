@@ -50,7 +50,7 @@ A_TRUESCORES;H0: De personen hebben gelijke ware scores op de opgevoerde meting 
 A_JACKEDMEANS;de opgevoerde gemiddelden van de personen in de populatie zijn ;The stepped-up measurements in the population are
 I_DIMENSIONS;De afhankelijke variabelen zijn dimensies van de variabele ;The dependent variables are dimensions of the variable 
 I_CONTAINSFACTORS;Dit onderzoek bevat de factoren ;This experiment contains the factors 
-I_DEP;De afhankelijke variabele is;The dependent variable is 
+I_DEP;De afhankelijke variabele is ;The dependent variable is 
 A_EXPERIMENTAL;Experimenteel;Experimental
 A_PASSIVE;Passief-observerend;Passive observation
 F_CORRECT;Mooi, deze beschrijving klopt.;Nice, the description is correct. 
@@ -69,9 +69,9 @@ F_EX; -ten onrechte gesteld dat het onderzoek een experiment is; -falsely stated
 F_PAS; -ten onrechte gesteld dat het onderzoek passief-observerend is; -falsely stated that the study is not passive observation
 F_NPAS; -ten onrechte gesteld dat het onderzoek niet passief-observerend is; -falsely stated that the study is passive observation
 F_X; -de uitspraak of het onderzoek een experiment is of niet; -the statement whether or not the study is an experiment
-F_ALLVALS; -Alle juiste waarden van ; -all the right values of 
-F_ONEVAL; -Een juiste waarde van ; -a right value of 
-F_RIGHTVAL; -De juiste waarde van ; -the right value of 
+F_ALLVALS; -alle juiste waarden van ; -all the right values of 
+F_ONEVAL; -een juiste waarde van ; -a right value of 
+F_RIGHTVAL; -de juiste waarde van ; -the right value of 
 F_H0SIGN; -het “H0:” teken niet genoemd; -the “H0:” sign is missing
 F_COMPARISON; -het juiste vergelijkingsteken; -the right comparison sign
 F_ORDER; -de symbolen staan niet in de juiste volgorde; -the symbols are not in the right order

@@ -23,28 +23,11 @@ from scipy import stats
 from typing import Dict, List, Callable, Tuple
 from nltk.corpus import wordnet as wn
 
-def check_causality(independent:Doc, dependent:Doc, alternative:bool=False) -> bool:
-    #print(independent.dep_ + '-' + dependent.dep_)
-    if not self.mes['L_ENGLISH']: #Dutch
-        if not alternative:
-            tuples = [('nsubj', 'obj'),('obj', 'ROOT'),('nsubj', 'nmod'),('obl', 'obj'),('ROOT', 'obj'),
-                  ('obj', 'nmod'), ('amod', 'obj'), ('obl','obl'),('nsubj','obl'),('obj','obj'),('nsubj','amod'),
-                  ('obj','obl'),('nmod','obj'),('obl','ROOT'),('obl','nsubj'),('obl','csubj'),('advmod','obj'),
-                  ('advmod','nmod'),('advmod','obj'),('advmod','obl')]
-        else: #Add reverse causality and disturbing variable options
-            tuples = [('obj','obj'),('obj','nsubj'), ('ROOT','obj'),('nmod','nsubj'),('obj','obl'),('obj','ROOT'),('amod','nsubj'),
-                           ('nmod','obj'),('obj','amod'),('obl','nsubj'),('obl','obj'),('obj','nmod'),('ROOT','obl'),('nsubj','obl'),
-                           ('obl','obl'), ('csubj','obl')]
-    else:
-        if not alternative:
-            tuples = [('nsubj','dobj'),('nsubj','ROOT'),('pobj','nsubjpass'),('nsubj','pobj')]
-        else:
-            tuples = [('dobj','nsubj'),('ROOT','nsubj'),('nsubjpass','pobj'),('pobj','nsubj')]
-    
-    for t in tuples:
-        if independent.dep_ == t[0] and dependent.dep_ == t[1]:
-            return True
-    return False
+class Variable:
+    def __init__(self, name:str, synonyms:list, node:str):
+        self.name = name
+        self.synonyms = []
+        self.node = node
 
 
 #nlp = spacy.load('nl')

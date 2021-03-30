@@ -39,8 +39,8 @@ class Controller:
             self.answer_triggered: bool = jsondict['answer_triggered']
             self.formmode: bool = jsondict['formmode']
             self.index: int = jsondict['index']
-            self.assignment : Dict = jsondict['assignment']
-            self.solution : Dict = jsondict['solution']
+            self.assignment : Dict = self.assignments.deserialize(jsondict['assignment'])
+            self.solution : Dict = self.assignments.deserialize(jsondict['solution'])
             self.protocol : List = [(x[0], fdict[x[1]],x[2],Process(x[3]),x[4]) for x in jsondict['protocol']]
             self.submit_field : int = Task(jsondict['submit_field'])
             self.analysis_type = Task(jsondict['analysis_type'])
@@ -58,8 +58,8 @@ class Controller:
                   "answer_triggered":self.answer_triggered,
                   "formmode":self.formmode,
                   "index":self.index,
-                  "assignment":self.assignment,
-                  "solution":self.solution,
+                  "assignment":self.assignments.serialize(self.assignment),
+                  "solution":self.assignments.serialize(self.solution),
                   "protocol":[(x[0], fdict[x[1]],x[2],x[3].value,x[4]) for x in self.protocol],
                   "submit_field":self.submit_field.value,
                   "analysis_type":self.analysis_type.value,
@@ -156,6 +156,8 @@ class Controller:
                 self.assignment = self.assignments.create_ttest(True, hyp_type, control)
                 self.solution = self.assignments.solve_ttest(self.assignment, {})
                 instruction = self.assignments.print_ttest(self.assignment)
+                print(self.assignment)
+                print(self.solution)
                 self.analysis_type = Task.TTEST_BETWEEN
             if analysis in ['T-toets voor gekoppelde paren','T-test for paired samples']:
                 self.assignment = self.assignments.create_ttest(False, hyp_type, control)
