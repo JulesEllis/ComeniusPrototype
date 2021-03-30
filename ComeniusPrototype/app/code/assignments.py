@@ -191,7 +191,7 @@ class Assignments:
         
         #Generate the datapoints as a dictionary of where the list of float entries is 
         #described by the variable name key
-        dependent, dep_syns, depintro = self.get_dependent()
+        dependent, depintro = self.get_dependent()
         if between_subject:
             independent, intro = self.get_factor(within_subject=False, control=control,ttest=True)
         else:
