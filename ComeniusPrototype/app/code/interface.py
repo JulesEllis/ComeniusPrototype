@@ -41,7 +41,12 @@ class Controller:
             self.index: int = jsondict['index']
             self.assignment : Dict = self.assignments.deserialize(jsondict['assignment'])
             self.solution : Dict = self.assignments.deserialize(jsondict['solution'])
-            self.protocol : List = [(x[0], fdict[x[1]],x[2],Process(x[3]),x[4]) for x in jsondict['protocol']]
+            self.protocol : List = []
+            for question, function, args, phase, answer in jsondict['protocol']:
+                args = [x if not type(x) == dict else self.solution if 'p' in x.keys() else self.assignment 
+                                        if 'assignment_type' in x.keys() else x for x in args]
+                self.protocol.append((question, fdict[function],args,Process(phase),answer))
+            [(x[0], fdict[x[1]],x[2],Process(x[3]),x[4]) for x in jsondict['protocol']]
             self.submit_field : int = Task(jsondict['submit_field'])
             self.analysis_type = Task(jsondict['analysis_type'])
             self.wipetext:bool = jsondict['wipetext']
@@ -51,6 +56,13 @@ class Controller:
         fdict={self.sfs.scan_indep:0,self.sfs.scan_indep_anova:1,self.sfs.scan_dep:2,self.sfs.scan_control:3,self.sfs.scan_hypothesis:4,self.sfs.scan_hypothesis_anova:5,
                 self.sfs.scan_number:6,self.sfs.scan_p:7,self.sfs.scan_table_ttest:8,self.sfs.scan_table:9,self.sfs.scan_decision:10,self.sfs.scan_decision_anova:11,self.sfs.scan_interpretation:12,
                 self.sfs.scan_interpretation_anova:13,self.sfs.scan_decision_rmanova:14,self.sfs.scan_dummy:15, self.sfs.scan_hypothesis_rmanova:16}
+        assignment = self.assignments.serialize(self.assignment)
+        solution = self.assignments.serialize(self.solution)
+        protocol : List = []
+        for question, function, args, phase, answer in self.protocol:
+            args = [x if not type(x) == dict else solution if 'p' in x.keys() else assignment 
+                                    if 'assignment_type' in x.keys() else x for x in args]
+            protocol.append((question, fdict[function],args,phase.value,answer))
         output = {"mes":self.mes,
                   "skipable":self.skipable,
                   "prevable":self.prevable,
@@ -58,9 +70,9 @@ class Controller:
                   "answer_triggered":self.answer_triggered,
                   "formmode":self.formmode,
                   "index":self.index,
-                  "assignment":self.assignments.serialize(self.assignment),
-                  "solution":self.assignments.serialize(self.solution),
-                  "protocol":[(x[0], fdict[x[1]],x[2],x[3].value,x[4]) for x in self.protocol],
+                  "assignment":assignment,
+                  "solution":solution,
+                  "protocol":protocol,
                   "submit_field":self.submit_field.value,
                   "analysis_type":self.analysis_type.value,
                   "wipetext":self.wipetext}
@@ -156,8 +168,6 @@ class Controller:
                 self.assignment = self.assignments.create_ttest(True, hyp_type, control)
                 self.solution = self.assignments.solve_ttest(self.assignment, {})
                 instruction = self.assignments.print_ttest(self.assignment)
-                print(self.assignment)
-                print(self.solution)
                 self.analysis_type = Task.TTEST_BETWEEN
             if analysis in ['T-toets voor gekoppelde paren','T-test for paired samples']:
                 self.assignment = self.assignments.create_ttest(False, hyp_type, control)

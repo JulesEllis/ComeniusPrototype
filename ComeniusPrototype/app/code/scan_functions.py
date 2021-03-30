@@ -74,7 +74,7 @@ class ScanFunctions:
                        'domain': any(x in text for x in ['between','between-subject', 'between-subjectfactor']) if between_subject 
                        else any(x in text for x in ['within','within-subject', 'within-subjectfactor']), 
                        'name': any([x in text for x in solution[n_key].get_all_syns()]), 
-                       'levels': all([any([x in text for x in y]) for y in solution[n_key].get_all_level_syns()])
+                       'levels': [any([x in text for x in y]) for y in solution[n_key].get_all_level_syns()]
                        }
         #Determine the response of the chatbot
         if False in list(scorepoints.values()):

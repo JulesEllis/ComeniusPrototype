@@ -41,7 +41,7 @@ class Variable:
         return [self.name] + self.synonyms
     
     def get_all_level_syns(self) -> list:
-        return [[self.levels[i]] + self.level_syns[i] for i in range(self.levels)]
+        return [[self.levels[i]] + self.level_syns[i] for i in range(self.nlevels)]
     
     def get_varnames(self) -> list:
         return [cap(self.name)] + [cap(x) for x in self.levels]
@@ -86,7 +86,7 @@ class Assignments:
             if not 'dependent' in x:
                 output[x] = y
             else:
-                output[x] = [y.name,y.synonyms,y.node,y.levels,y.level_syns]        
+                output[x] = [y.name,y.synonyms,y.node,y.levels,y.level_syns]
         return output
     
     #Checks the nature of the given assignment and returns the output of the right print function
@@ -229,7 +229,7 @@ class Assignments:
     #Calculate internally all of the numbers and string values the student has to present
     def solve_ttest(self, assignment: Dict, solution: Dict) -> Dict:
         numbers: List = [assignment['A'], assignment['B']]
-        names: List[str] = assignment['levels']
+        names: List[str] = assignment['independent'].levels
         between_subject: bool = assignment['between_subject']
         solution['hypothesis'] = assignment['hypothesis']
         solution['assignment_type'] = assignment['assignment_type']
@@ -241,8 +241,8 @@ class Assignments:
         #Determine variable names and types
         solution['independent'] = assignment['independent']
         solution['dependent'] = assignment['dependent']
-        solution['dependent_measure']: str = 'quantitative' if self.mes['L_ENGLISH'] else 'kwantitatief'
-        solution['independent_measure']: str = 'qualitative' if self.mes['L_ENGLISH'] else 'kwalitatief'
+        solution['dep_measure']: str = 'quantitative' if self.mes['L_ENGLISH'] else 'kwantitatief'
+        solution['ind_measure']: str = 'qualitative' if self.mes['L_ENGLISH'] else 'kwalitatief'
         
         #Determine null hypothesis and control measure
         sign: List[str] = ['=','<=','>='][assignment['hypothesis']]
@@ -296,16 +296,16 @@ class Assignments:
         #Causal interpretation
         if solution['p'][0] < 0.05:
             if assignment['control']:
-                solution['interpretation']: str = self.mes['A_ONEINT'] + solution['independent'] + self.mes['S_INFLUENCES'] + solution['dependent'] + '.'
+                solution['interpretation']: str = self.mes['A_ONEINT'] + solution['independent'].name + self.mes['S_INFLUENCES'] + solution['dependent'].name + '.'
             else:
-                solution['interpretation']: str = self.mes['A_MULTINT'] + solution['independent'] + self.mes['S_INFLUENCES'] + solution['dependent'] + '. '+\
-                self.mes['A_ALTINT'] + solution['dependent'] + self.mes['S_INFLUENCES'] + solution['independent'] + '. '
+                solution['interpretation']: str = self.mes['A_MULTINT'] + solution['independent'].name + self.mes['S_INFLUENCES'] + solution['dependent'].name + '. '+\
+                self.mes['A_ALTINT'] + solution['dependent'].name + self.mes['S_INFLUENCES'] + solution['independent'].name + '. '
         else:
             if assignment['control']: 
-                solution['interpretation']: str = self.mes['A_ONEINT'] + solution['independent'] + self.mes['S_NINFLUENCES'] + solution['dependent'] + '.'
+                solution['interpretation']: str = self.mes['A_ONEINT'] + solution['independent'].name + self.mes['S_NINFLUENCES'] + solution['dependent'].name + '.'
             else:
-                solution['interpretation']: str = self.mes['A_MULTINT'] + solution['independent'] + self.mes['S_NINFLUENCES'] + solution['dependent'] + '. '+\
-                self.mes['A_ALTINT'] + solution['independent'] + self.mes['S_INFLUENCES'] + solution['dependent'] + self.mes['A_NOTICEABLE']
+                solution['interpretation']: str = self.mes['A_MULTINT'] + solution['independent'].name + self.mes['S_NINFLUENCES'] + solution['dependent'].name + '. '+\
+                self.mes['A_ALTINT'] + solution['independent'].name + self.mes['S_INFLUENCES'] + solution['dependent'].name + self.mes['A_NOTICEABLE']
         return solution
     
     #Create ANOVA assignment
@@ -334,9 +334,9 @@ class Assignments:
             if control and output['control2']:
                 output['instruction'] += self.mes['I_FULLRANDOM']
             elif control:
-                output['instruction'] += self.mes['I_RANDOMFACTOR']+output['independent']+'. '
+                output['instruction'] += self.mes['I_RANDOMFACTOR']+output['independent'].name+'. '
             elif output['control2']:
-                output['instruction'] += self.mes['I_RANDOMFACTOR']+output['independent2']+'. '
+                output['instruction'] += self.mes['I_RANDOMFACTOR']+output['independent2'].name+'. '
         output['instruction'] += self.mes['I_DECIMALS2']
         
         #Generate summary statistics
@@ -360,16 +360,13 @@ class Assignments:
         solution['assignment_type'] = assignment['assignment_type']
         solution['independent'] = assignment['independent']
         solution['dependent'] = assignment['dependent']
-        solution['dependent_n_measure']: int = 1 #Aantal metingen per persoon
-        solution['dependent_measure']: str = 'quantitative' if self.mes['L_ENGLISH'] else 'kwantitatief'
-        solution['independent_measure']: str = 'qualitative' if self.mes['L_ENGLISH'] else 'kwalitatief'
+        solution['dep_n_measure']: int = 1 #Aantal metingen per persoon
+        solution['dep_measure']: str = 'quantitative' if self.mes['L_ENGLISH'] else 'kwantitatief'
+        solution['ind_measure']: str = 'qualitative' if self.mes['L_ENGLISH'] else 'kwalitatief'
         solution['control']: bool = assignment['control']
         if two_way:
             solution['control2']: bool = assignment['control2']
             solution['independent2'] = assignment['independent2']
-            solution['ind2_syns'] = assignment['ind2_syns']
-            solution['levels2'] = assignment['levels2']
-            solution['level2_syns'] = assignment['level2_syns']
         
         #One-way statistics
         #mean: float = np.mean(data['means'])
@@ -390,22 +387,25 @@ class Assignments:
                 rejected: Tuple[str] = ('rejected','unequal',' ') if solution['p'][0] < 0.05 else ('maintained', 'equal', ' not ')
             else:
                 rejected: Tuple[str] = ('verworpen','ongelijk',' ') if solution['p'][0] < 0.05 else ('behouden', 'gelijk', ' niet ')
-            solution['null']: str = 'H0: ' + ' = '.join(['mu(' + l + ')' for l in solution['levels']])
+            levels = assignment['independent'].levels
+            solution['null']: str = 'H0: ' + ' = '.join(['mu(' + l + ')' for l in solution['independent'].levels])
             sterkte:str=self.mes['S_STRONG'] if solution['r2'][0] > 0.2 else self.mes['S_MEDIUM'] if solution['r2'][0] > 0.1 else self.mes['S_SMALL']
-            solution['decision']: str = 'H0 ' + rejected[0] + self.mes['S_AVGSARE'] + solution['levels'][0] +self.mes['S_AND']+solution['levels'][1]+self.mes['S_AREAVG']+rejected[1]+'. '
+            solution['decision']: str = 'H0 ' + rejected[0] + self.mes['S_AVGSARE'] + levels[0] +self.mes['S_AND']+levels[1]+self.mes['S_AREAVG']+rejected[1]+'. '
             if solution['p'][0] < 0.05:
                 solution['decision'] += self.mes['S_EFFECTIS']+sterkte+'.'
             if assignment['control']:
-                solution['interpretation']: str = self.mes['A_ONEINT']+solution['independent']+self.mes['S_INFLUENCES']+solution['dependent'] +rejected[2] +'. '
+                solution['interpretation']: str = self.mes['A_ONEINT']+solution['independent'].name+self.mes['S_INFLUENCES']+solution['dependent'].name +rejected[2] +'. '
             else:
-                solution['interpretation']: str = self.mes['A_MULTINT']+solution['independent']+self.mes['S_INFLUENCES']+solution['dependent'] + \
-                '. '+self.mes['A_ALTINT'] + solution['independent'] + self.mes['S_AND'] + solution['dependent'] + self.mes['A_BOTHINT']
+                solution['interpretation']: str = self.mes['A_MULTINT']+solution['independent'].name+self.mes['S_INFLUENCES']+solution['dependent'].name + \
+                '. '+self.mes['A_ALTINT'] + solution['independent'].name + self.mes['S_AND'] + solution['dependent'].name + self.mes['A_BOTHINT']
                 
         else: #Two-way statistics
             #Intermediary statistics order: Between, A, B, AB, Within, Total
             #Degrees of freedom
-            l1: int = len(solution['levels'])
-            l2: int = len(solution['levels2'])
+            l1: int = assignment['independent'].nlevels
+            l2: int = assignment['independent2'].nlevels
+            levels = assignment['independent'].levels
+            levels2 = assignment['independent2'].levels
             lt: int = l1 * l2
             N: int = sum(data['ns'])
             solution['df']: List[int] = [lt - 1, l1 - 1, l2 - 1, (l1-1) * (l2-1), sum(data['ns']) - lt, sum(data['ns']) - 1]
@@ -430,36 +430,35 @@ class Assignments:
             sterkte2:str = self.mes['S_STRONG'] if solution['r2'][1] > 0.2 else self.mes['S_MEDIUM'] if solution['r2'][1] > 0.1 else self.mes['S_SMALL']
             sterkte3:str = self.mes['S_STRONG'] if solution['r2'][2] > 0.2 else self.mes['S_MEDIUM'] if solution['r2'][2] > 0.1 else self.mes['S_SMALL']
             solution['control2'] = assignment['control2']
-            solution['null']: str = 'H0: mu(' + solution['levels'][0] + ') = mu(' + solution['levels'][1] + ')'
-            solution['null2']: str =  'H0: mu(' + solution['levels2'][0] + ') = mu(' + solution['levels2'][1] + ')'
-            levels = solution['levels']; levels2 = solution['levels2']
-            solution['null3']: str = 'H0(' + solution['independent'] + ' x ' + solution['independent2'] + '): mu('+levels[0] + ' & ' + levels2[0]+') = mu('+levels[0]+') + mu('+levels2[0]+') - mu('+total+') [...]'\
+            solution['null']: str = 'H0: mu(' + levels[0] + ') = mu(' + levels[1] + ')'
+            solution['null2']: str =  'H0: mu(' + levels2[0] + ') = mu(' + levels2[1] + ')'
+            solution['null3']: str = 'H0(' + solution['independent'].name + ' x ' + solution['independent2'].name + '): mu('+levels[0] + ' & ' + levels2[0]+') = mu('+levels[0]+') + mu('+levels2[0]+') - mu('+total+') [...]'\
                     +self.mes['S_AND']+'mu('+levels[-1] + ' & ' + levels2[-1]+') = mu('+levels[-1]+') + mu('+levels2[-1]+') - mu('+total+')'
-            solution['decision']: str = 'H0 ' + rejected[0]+self.mes['S_AVGSARE'] + solution['levels'][0]+self.mes['S_AND']+solution['levels'][1]+self.mes['S_AREAVG']+rejected[1] + '. '
-            solution['decision2']: str = 'H0 ' + rejected2[0]+self.mes['S_AVGSARE'] + solution['levels2'][0]+self.mes['S_AND']+solution['levels2'][1]+self.mes['S_AREAVG']+rejected2[1] + '. '
-            solution['decision3']: str = 'H0 ' + rejected3[0]+self.mes['S_THEREIS'] + rejected3[1] + self.mes['S_INBETWEEN'] + solution['independent'] +self.mes['S_AND']+solution['independent2'] + self.mes['S_INPOP']
+            solution['decision']: str = 'H0 ' + rejected[0]+self.mes['S_AVGSARE'] + levels[0]+self.mes['S_AND']+levels[1]+self.mes['S_AREAVG']+rejected[1] + '. '
+            solution['decision2']: str = 'H0 ' + rejected2[0]+self.mes['S_AVGSARE'] + levels2[0]+self.mes['S_AND']+levels2[1]+self.mes['S_AREAVG']+rejected2[1] + '. '
+            solution['decision3']: str = 'H0 ' + rejected3[0]+self.mes['S_THEREIS'] + rejected3[1] + self.mes['S_INBETWEEN'] + solution['independent'].name +self.mes['S_AND']+solution['independent2'].name + self.mes['S_INPOP']
             if solution['p'][0] < 0.05: solution['decision'] += self.mes['S_EFFECTIS'] + sterkte + '.'
             if solution['p'][1] < 0.05: solution['decision2'] += self.mes['S_EFFECTIS'] + sterkte2 + '.'
             if solution['p'][2] < 0.05: solution['decision3'] += self.mes['S_EFFECTIS'] + sterkte3 + '.'
             n1 = self.mes['S_INFLUENCES'] if solution['p'][0] < 0.05 else self.mes['S_NINFLUENCES']
             if assignment['control']:
-                solution['interpretation']: str = self.mes['A_ONEINT']+solution['independent']+n1+solution['dependent']+'.'
+                solution['interpretation']: str = self.mes['A_ONEINT']+solution['independent'].name+n1+solution['dependent'].name+'.'
             else:
-                solution['interpretation']: str = self.mes['A_MULTINT']+solution['independent']+n1+solution['dependent']+ '. '+\
-                    self.mes['A_ALTIS'] + solution['independent'] + self.mes['S_AND'] + solution['dependent'] + self.mes['A_BOTHINT']
+                solution['interpretation']: str = self.mes['A_MULTINT']+solution['independent'].name+n1+solution['dependent'].name+ '. '+\
+                    self.mes['A_ALTIS'] + solution['independent'].name + self.mes['S_AND'] + solution['dependent'].name + self.mes['A_BOTHINT']
                     
             n2 = self.mes['S_INFLUENCES'] if solution['p'][1] < 0.05 else self.mes['S_NINFLUENCES']
             if assignment['control2']:
-                solution['interpretation2']: str = self.mes['A_ONEINT']+solution['independent2']+n2+solution['dependent']+'.'
+                solution['interpretation2']: str = self.mes['A_ONEINT']+solution['independent2'].name+n2+solution['dependent'].name+'.'
             else:
-                solution['interpretation2']: str = self.mes['A_MULTINT']+solution['independent2']+n1+solution['dependent'] + '. '+\
-                    self.mes['A_ALTIS'] + solution['independent2'] + self.mes['S_AND'] + solution['dependent'] + self.mes['A_BOTHINT']
+                solution['interpretation2']: str = self.mes['A_MULTINT']+solution['independent2'].name+n1+solution['dependent'].name + '. '+\
+                    self.mes['A_ALTIS'] + solution['independent2'].name + self.mes['S_AND'] + solution['dependent'].name + self.mes['A_BOTHINT']
                     
             n3 = self.mes['A_NOTSAMEINF'] if solution['p'][2] < 0.05 else self.mes['A_SAMEINF']
             if assignment['control'] or assignment['control2']:
-                solution['interpretation3']: str = self.mes['A_ONEINT']+solution['independent']+n3+solution['dependent']+self.mes['A_FORLEVELS']+self.mes['S_AND'].join(solution['levels2']) + self.mes['A_OFFACTOR'] + solution['independent2'] + '.'
+                solution['interpretation3']: str = self.mes['A_ONEINT']+solution['independent'].name+n3+solution['dependent'].name+self.mes['A_FORLEVELS']+self.mes['S_AND'].join(levels2) + self.mes['A_OFFACTOR'] + solution['independent2'].name + '.'
             else:
-                solution['interpretation3']: str = self.mes['A_MULTINT']+solution['independent']+n3+solution['dependent']+self.mes['A_FORLEVELS']+self.mes['S_AND'].join(solution['levels2']) + self.mes['A_OFFACTOR'] + solution['independent2'] + '. '+\
+                solution['interpretation3']: str = self.mes['A_MULTINT']+solution['independent'].name+n3+solution['dependent'].name+self.mes['A_FORLEVELS']+self.mes['S_AND'].join(levels2) + self.mes['A_OFFACTOR'] + solution['independent2'].name + '. '+\
                     self.mes['S_DISTURBANCE2']
         return solution
     
@@ -495,9 +494,9 @@ class Assignments:
         n_conditions = len(data['means'])
         solution['independent'] = assignment['independent']
         solution['dependent'] = assignment['dependent']
-        solution['dependent_measure']: str = 'kwantitatief'
-        solution['dependent_n_measure']: int = n_conditions #Aantal metingen per persoon
-        solution['independent_measure']: str = 'kwalitatief'
+        solution['dep_measure']: str = 'kwantitatief'
+        solution['dep_n_measure']: int = n_conditions #Aantal metingen per persoon
+        solution['ind_measure']: str = 'kwalitatief'
         solution['control']: bool = assignment['control']
         solution['assignment_type'] = assignment['assignment_type']
         solution['n_subjects'] = data['n_subjects']
@@ -519,10 +518,10 @@ class Assignments:
         solution['r2']: List[float] = [solution['ss'][0] / solution['ss'][3], solution['ss'][1] / solution['ss'][3]]
         
         #Textual parts of the report
-        solution['null']: str = 'H0: ' + ' = '.join(['mu(' + x + ')' for x in assignment['levels']])
+        solution['null']: str = 'H0: ' + ' = '.join(['mu(' + x + ')' for x in assignment['independent'].levels])
         solution['null2']: str = 'H0: tau(subject 1) = tau(subject 2) [...] = tau(subject '+str(data['n_subjects'])+')'
         rejected: Tuple[str] = (self.mes['S_REJECTED'],self.mes['S_UNQ']) if solution['p'][0] < 0.05 else (self.mes['S_KEPT'],self.mes['S_EQ'])
-        solution['decision']: str = 'H0 ' + rejected[0] + self.mes['S_AVGSARE']+solution['dependent']+self.mes['A_FORLEVELS']+ self.mes['S_AND'].join(assignment['levels']) + self.mes['S_AREAVG'] + rejected[1] + '. '
+        solution['decision']: str = 'H0 ' + rejected[0] + self.mes['S_AVGSARE']+solution['dependent'].name+self.mes['A_FORLEVELS']+ self.mes['S_AND'].join(assignment['independent'].levels) + self.mes['S_AREAVG'] + rejected[1] + '. '
         if solution['p'][0]:
             sterkte:str = self.mes['S_STRONG'] if solution['r2'][0] > 0.2 else self.mes['S_MEDIUM'] if solution['r2'][0] > 0.1 else self.mes['S_SMALL']
             solution['decision'] += self.mes['S_EFFECTIS']+sterkte+'.'
@@ -535,10 +534,10 @@ class Assignments:
             
         n1 = self.mes['S_INFLUENCES'] if solution['p'][0] < 0.05 else self.mes['S_NINFLUENCES']
         if assignment['control']:
-            solution['interpretation']: str = self.mes['A_ONEINT']+solution['independent']+n1+solution['dependent']
+            solution['interpretation']: str = self.mes['A_ONEINT']+solution['independent'].name+n1+solution['dependent'].name
         else:
-            solution['interpretation']: str = self.mes['A_MULTINT']+solution['independent']+n1+solution['dependent'] + '. '+\
-                self.mes['A_ALTINT'] + solution['dependent'] + self.mes['S_INFLUENCES'] + solution['dependent']
+            solution['interpretation']: str = self.mes['A_MULTINT']+solution['independent'].name+n1+solution['dependent'].name + '. '+\
+                self.mes['A_ALTINT'] + solution['dependent'].name + self.mes['S_INFLUENCES'] + solution['dependent'].name
         return solution
     
     #Create a multiple regression assignment for the given parameters
@@ -617,7 +616,6 @@ class Assignments:
     
     #Create a standard answer for the given ANCOVA assignment
     def solve_ancova(self, assignment: Dict, solution:Dict) -> Dict:
-        print(solution)
         N = assignment['ns'][0]
         solution['assignment_type'] = assignment['assignment_type']
     
@@ -785,7 +783,7 @@ class Assignments:
     
     def solve_multirm2(self, assignment: Dict, solution:Dict) -> Dict:
         solution = {}
-        N = sum(assignment['ns']); ntimes = len(assignment['levels']); nlevels = len(assignment['levels2'])
+        N = sum(assignment['ns']); ntimes = len(assignment['independent'].levels); nlevels = len(assignment['independent2'].levels)
         for key, value in list(assignment.items()):
             solution[key] = value
         
@@ -880,9 +878,9 @@ class Assignments:
     
     def print_anova(self, assignment: Dict) -> str: 
         data: Dict = assignment['data']
-        data['varnames'] = [cap(x) for x in assignment['independent'].get_varnames()]
+        data['varnames'] = [assignment['independent'].get_varnames()]
         if assignment['assignment_type'] == 4:
-            data['varnames'].append([cap(x) for x in assignment['independent2'].get_varnames()])
+            data['varnames'].append(assignment['independent2'].get_varnames())
         #Print variables
         output_text = assignment['instruction'] + '<br><table style="width:30%">'
         if not assignment['two_way']:
@@ -979,7 +977,7 @@ class Assignments:
                 output += self.print_rmanova(assignment)
             output += '<p><table style="width:20%">'
             output += '<tr><td>Bron</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td></tr>'
-            output += format_table([cap(assignment['independent'])]+[assignment[x][0] for x in names if len(assignment[x]) > 0])
+            output += format_table([cap(assignment['independent'].name)]+[assignment[x][0] for x in names if len(assignment[x]) > 0])
             output += format_table(['Persoon']+[assignment[x][1] for x in names if len(assignment[x]) > 1])
             output += format_table(['Interactie']+[assignment[x][0] for x in names if len(assignment[x]) > 2])
             output += format_table(['Totaal']+[assignment[x][3] for x in names if len(assignment[x]) > 3])
