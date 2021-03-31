@@ -753,7 +753,7 @@ class ScanFunctions:
                     output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][i], aliases=['r2','r',markers[0]], num=i+1))
                 #Find right decision
                 varss = [solution['independent'],solution['independent2'],'interactie']
-                levels = [solution['levels'],solution['levels2'],['interactie']]
+                levels = [solution['independent'].levels,solution['independent2'].levels,['interactie']]
                 if self.mes['L_ENGLISH']:
                     comparisons = ['unequal','equal','different','same'] if i < 2 else ['']
                 else:
@@ -1056,8 +1056,7 @@ class ScanFunctions:
         scorepoints = dict([(x,False) for x in criteria])
         output:List[str] = []
         tokens = [y.text for y in sent]
-        levels=[x.lower() for x in solution['levels' + str(num) if num > 1 else 'levels']]
-        level_syns = solution['level_syns'] if num == 1 else solution['level' + str(num) + '_syns']
+        level_syns = solution['independent'].get_all_level_syns() if num == 1 else solution['independent2'].get_all_level_syns()
         
         #Controleer input
         gold_comp = comp1[0] if anova else comp1[solution['hypothesis']]
@@ -1080,7 +1079,7 @@ class ScanFunctions:
         mean_2 = [x in sent.text for x in avgs2]
         scorepoints['mean_present'] = any(mean) or any(mean_2)
         scorepoints['pop_present'] = any(mean_2) or pop in tokens or any([x in tokens for x in ['significant','significante']])
-        level_bools:list[bool] = [levels[i] in tokens or any([y in tokens for y in level_syns[i]]) for i in range(2)]#len(levels))]
+        level_bools:list[bool] = [any([y in tokens for y in level_syns[i]]) for i in range(2)]#len(levels))]
         scorepoints['level_present'] = any(level_bools) #or scorepoints['level_present']
         scorepoints['both_present'] = all(level_bools)# or scorepoints['both_present']
         scorepoints['contrasign'] = not ((any(mean_2) or pop in tokens) and any([x in tokens for x in ['significant','significante']]))
@@ -1427,8 +1426,8 @@ class ScanFunctions:
         scorepoints = dict([(x,False) for x in criteria])
         tokens = [x.text for x in sent]
         output:list = []
-        var1levels:list[bool] = [solution['levels'][i].lower() in tokens or any([y in tokens for y in solution['level_syns'][i]]) for i in range(len(solution['levels']))]
-        var2levels:list[bool] = [solution['levels2'][i].lower() in tokens or any([y in tokens for y in solution['level2_syns'][i]]) for i in range(len(solution['levels2']))]
+        var1levels:list[bool] = [any([y in tokens for y in solution['independent'].get_all_syns()[i]]) for i in solution['independent'].nlevels]
+        var2levels:list[bool] = [any([y in tokens for y in solution['independent2'].get_all_syns()[i]]) for i in solution['independent2'].nlevels]
         rejected = solution['p'][2] < 0.05
         
         # Fill scorepoints

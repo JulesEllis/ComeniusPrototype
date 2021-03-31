@@ -57,7 +57,7 @@ def index():
                 elif a['assignment_type'] == 6:
                     varnames:list=[]
                 else:
-                    varnames:list = a['independent'].get_varnames()
+                    varnames:list = [a['independent'].get_varnames()]
             form_shape = controller.analysis_type.value
             
             #If the user chose a T-test in exam mode
@@ -159,7 +159,7 @@ def index():
             elif a['assignment_type'] == 6:
                 varnames:list=[]
             else:
-                varnames:list = a['independent'].get_varnames()
+                varnames:list = [a['independent'].get_varnames()]
         
         #Remove text from field after new question
         if controller.wipetext:
@@ -241,7 +241,7 @@ def bigform():
     elif a['assignment_type'] == 6:
         varnames:list=[]
     else:
-        varnames:list = a['independent'].get_varnames()    
+        varnames:list = [a['independent'].get_varnames()]
     form.__getattribute__('inputtext1').label = mes['Q_IND']
     form.__getattribute__('inputtext12').label = mes['Q_IND2']
     form.__getattribute__('inputtext2').label = mes['Q_DEP']
@@ -309,7 +309,12 @@ def smallform():
     form.__getattribute__('answer').label.text = mes['B_ANSWER']
     
     #Enter text labels
-    varnames:list = [[cap(a['independent'])] + [cap(x) for x in a['levels']]] if a['assignment_type'] != 4 else [[cap(a['independent'])] + [cap(x) for x in a['levels']],[cap(a['independent2'])] + [cap(x) for x in a['levels2']]]
+    if a['assignment_type'] == 4:
+        varnames:list = [a['independent'].get_varnames(),a['independent2'].get_varnames()]
+    elif a['assignment_type'] == 6:
+        varnames:list=[]
+    else:
+        varnames:list = [a['independent'].get_varnames()]
     form.__getattribute__('inputtext1').label = mes['Q_IND']
     form.__getattribute__('inputtext2').label = mes['Q_DEP']
     form.__getattribute__('inputtext3').label = mes['Q_MEASURE']
