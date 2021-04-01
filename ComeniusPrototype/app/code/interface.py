@@ -170,7 +170,7 @@ class Controller:
                 instruction = self.assignments.print_ttest(self.assignment)
                 self.analysis_type = Task.TTEST_BETWEEN
             if analysis in ['T-toets voor gekoppelde paren','T-test for paired samples']:
-                self.assignment = self.assignments.create_ttest(False, hyp_type, control)
+                self.assignment = self.assignments.create_ttest(False, hyp_type, True) #Override random control
                 self.solution = self.assignments.solve_ttest(self.assignment, {})
                 instruction = self.assignments.print_ttest(self.assignment)
                 self.analysis_type = Task.TTEST_WITHIN

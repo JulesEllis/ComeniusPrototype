@@ -825,7 +825,7 @@ class Assignments:
             assignment = self.create_ttest(True, hyp_type, control, False)
             output = {**assignment, **self.solve_ttest(assignment, {})}
         if choice == 2:
-            assignment = self.create_ttest(False, hyp_type, control, False)
+            assignment = self.create_ttest(False, hyp_type, True, False)
             output = {**assignment, **self.solve_ttest(assignment, {})}
         if choice == 3:
             assignment = self.create_anova(False, control, False)

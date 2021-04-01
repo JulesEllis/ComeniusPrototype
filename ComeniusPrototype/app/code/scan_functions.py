@@ -630,9 +630,9 @@ class ScanFunctions:
             scorepoints['ind'] = True
             indep_span = indeps[0]
             scorepoints['indcorrect'] = factor_roles[0] in indep_span.text or 'factor' in indep_span.text
-            if solution['assignment_type'] == 13:
+            if solution['assignment_type'] == 2 or solution['assignment_type'] == 13:
                 scorepoints['factor1'] = 'within-subject' in indep_span.text or 'within' in indep_span.text
-        if solution['assignment_type'] == 2 or solution['assignment_type'] == 13:    
+        if solution['assignment_type'] == 13:    
             indeps2 = [x for x in doc.sents if any([y in x.text for y in solution['independent2'].get_all_syns()])]
             if indeps2 != []:
                 scorepoints['ind2'] = True
@@ -722,7 +722,7 @@ class ScanFunctions:
         output += '<br>'+'<br>'.join(self.detect_name(doc,solution))
         output += '<br>' + self.scan_design(doc, solution, prefix=False)[1]
         #if solution['p'][0] < 0.05:
-        output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'T', solution['T'][0], aliases=['T(' + solution['independent'] + ')']))
+        output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'T', solution['T'][0], aliases=['T(' + solution['independent'].name + ')']))
         output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'][0]))
         output += '<br>' + self.scan_decision(doc, solution, anova=False, prefix=False, elementair=False)[1]
         if output.replace('<br>','') == '':
