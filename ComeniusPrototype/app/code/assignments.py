@@ -38,10 +38,10 @@ class Variable:
         self.level_syns = level_syns
         
     def get_all_syns(self) -> list:
-        return [self.name] + self.synonyms
+        return [x.lower() for x in [self.name] + self.synonyms]
     
     def get_all_level_syns(self) -> list:
-        return [[self.levels[i]] + self.level_syns[i] for i in range(self.nlevels)]
+        return [[x.lower() for x in [self.levels[i]] + self.level_syns[i]] for i in range(self.nlevels)]
     
     def get_varnames(self) -> list:
         return [cap(self.name)] + [cap(x) for x in self.levels]
@@ -317,7 +317,7 @@ class Assignments:
         output['independent'], intro = self.get_factor(within_subject=False, control=control,ttest=False)
         output['dependent'], depintro = self.get_dependent()
         if two_way:
-            output['independent2'], intro2 = self.get_factor(within_subject=False, control=control2, ttest=False, second=True, avoid=[output['independent']])
+            output['independent2'], intro2 = self.get_factor(within_subject=False, control=control2, ttest=False, second=True, avoid=[output['independent'].name])
             output['control2'] = control2
         
         #Decide the variable names

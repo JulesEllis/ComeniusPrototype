@@ -25,7 +25,7 @@ assertiviteit;COVARIATE;0;0;;assertiviteit;;;;;;;
 eetlust;COVARIATE;0;0;;eetlust;;;;;;;
 intelligentie;COVARIATE;0;0;;intelligentie;;;;;;;
 ervaren geluk;COVARIATE;0;0;;geluk;;;;;;;
-social skills;COVARIATE;1;0;;social skills;;;;;;;
+social skills;COVARIATE;1;0;;skills;;;;;;;
 depression;COVARIATE;1;0;;depression;;;;;;;
 aggression;COVARIATE;1;0;;aggression;;;;;;;
 appetite;COVARIATE;1;0;;appetite;;;;;;;

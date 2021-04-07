@@ -1,0 +1,24 @@
+0 - (184):Totaal aantal opgaven
+1 - (59): -hypothese niet genoemd
+2 - (54): -ten onrechte een negatie toegevoegd of weggelaten bij het vergelijken van de niveaus 
+3 - (44): -de onafhankelijke variabele wordt niet genoemd bij de alternatieve verklaring
+4 - (30): -niet duidelijk genoemd hoe het effect wordt veroorzaakt bij de alternatieve verklaring
+5 - (30): -de afhankelijke variabele wordt niet genoemd bij de alternatieve verklaring
+6 - (29): -enkele niveaus van de onafhankelijke variabele weggelaten
+7 - (27): -de afhankelijke variabele wordt niet genoemd bij de primaire verklaring
+8 - (27): -de onafhankelijke variabele wordt niet genoemd bij de primaire verklaring
+9 - (18): -niet juist genoemd hoeveel mogelijke interpretaties er zijn
+10 - (17): -ten onrechte gesteld dat de hypothese wordt verworpen als deze wordt behouden of andersom
+11 - (17): -ten onrechte gesteld dat de hypothese van factor 1 wordt verworpen als deze wordt behouden of andersom
+12 - (17): -de niveaus van de onafhankelijke variabele worden niet genoemd
+13 - (16): -de primaire verklaring wordt niet genoemd
+14 - (12): -ten onrechte een negatie toegevoegd of weggelaten  bij de primaire verklaring
+15 - (12): -de alternatieve verklaring wordt niet genoemd
+16 - (9): -er wordt niet gesproken over de oorzaak van het effect
+17 - (8): -niveaus  in de populatie niet of niet juist met elkaar vergeleken
+18 - (3): -niet genoemd dat de beslissing  om populatiegemiddelden gaat
+19 - (3): -niet genoemd dat de beslissing  over de populatie gaat
+20 - (3): -de relatie tussen de onafhankelijke en afhankelijke variabele is niet geldig hier omdat dit een alternatieve verklaring is
+21 - (3): -niet genoemd hoeveel mogelijke verklaringen er zijn
+22 - (1): -het causale verband tussen de afhankelijke en onafhankelijke variabele is niet juist aangegeven bij de primaire verklaring
+23 - (1): -zowel “populatie” en “significant” genoemd, haal een van de twee weg 

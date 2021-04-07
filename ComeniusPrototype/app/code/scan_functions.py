@@ -529,11 +529,11 @@ class ScanFunctions:
         output = [self.mes['F_INCOMPLETE']] if prefix else []
         control: bool = solution['control'] if num < 2 else solution['control'+str(num)]
         if self.mes['L_ENGLISH']:
-            primary_checks:list = ['primary','first'] if not control else [solution['dependent'].name]
+            primary_checks:list = ['primary','first'] if not control else solution['dependent'].get_all_syns()
             second_check:str = 'alternative'
             unk_checks:list = ['possible','interpretation','interpretations','']
         else:
-            primary_checks:list = ['primaire','eerste'] if not control else [solution['dependent'].name]
+            primary_checks:list = ['primaire','eerste'] if not control else solution['dependent'].get_all_syns()
             second_check:str = 'alternatieve'
             unk_checks:list = ['mogelijk','mogelijke','verklaring','verklaringen']
         
@@ -564,11 +564,11 @@ class ScanFunctions:
         output = [self.mes['F_INCOMPLETE']] if prefix else []
         control:bool = solution['control'] or solution['control2']
         if self.mes['L_ENGLISH']:
-            primary_checks:list = ['primary','first'] if not control else [solution['dependent'].name]
+            primary_checks:list = ['primary','first'] if not control else solution['dependent'].get_all_syns()
             second_check:str = 'alternative'
             unk_checks:list = ['possible','interpretation','interpretations','']
         else:
-            primary_checks:list = ['primaire','eerste'] if not control else [solution['dependent'].name]
+            primary_checks:list = ['primaire','eerste'] if not control else solution['dependent'].get_all_syns()
             second_check:str = 'alternatieve'
             unk_checks:list = ['mogelijk','mogelijke','verklaring','verklaringen']
             
@@ -677,11 +677,11 @@ class ScanFunctions:
                        'mes':all([any([y in text for y in solution[x].get_all_syns()]) for x in ['dependent','dependent2','dependent3']]),
                        'dep1':False,
                        'dep2':False,
-                       'dep3':False
+                       'dep3':False 
                        }
         factor_roles:list = ['independent','dependent'] if self.mes['L_ENGLISH'] else ['onafhankelijke', 'afhankelijke']
-        scorepoints['indcorrect'] = any([True if solution['independent'].name in sent.text and ('factor' in sent.text \
-                                        or factor_roles[0] in sent.text) else False for sent in doc.sents])
+        scorepoints['indcorrect'] = any([True if any([x in doc.text for x in solution['independent'].get_all_syns()]) and ('factor' in sent.text \
+                                        or factor_roles[0] in doc.text) else False for sent in doc.sents])
         deps = [x for x in doc if x.text == solution['dependent'].name.lower()]
         if deps != []:
             dep_span = descendants(deps[0].head)
@@ -1055,7 +1055,6 @@ class ScanFunctions:
         criteria = ['right_comparison', 'right_negation', 'mean_present', 'pop_present', 'level_present', 'both_present','contrasign']
         scorepoints = dict([(x,False) for x in criteria])
         output:List[str] = []
-        tokens = [y.text for y in sent]
         level_syns = solution['independent'].get_all_level_syns() if num == 1 else solution['independent2'].get_all_level_syns()
         
         #Controleer input
@@ -1078,11 +1077,11 @@ class ScanFunctions:
         mean = [x in sent.text for x in avgs1]
         mean_2 = [x in sent.text for x in avgs2]
         scorepoints['mean_present'] = any(mean) or any(mean_2)
-        scorepoints['pop_present'] = any(mean_2) or pop in tokens or any([x in tokens for x in ['significant','significante']])
-        level_bools:list[bool] = [any([y in tokens for y in level_syns[i]]) for i in range(2)]#len(levels))]
+        scorepoints['pop_present'] = any(mean_2) or pop in sent.text or any([x in sent.text for x in ['significant','significante']])
+        level_bools:list[bool] = [any([y in sent.text for y in level_syns[i]]) for i in range(2)]#len(levels))]
         scorepoints['level_present'] = any(level_bools) #or scorepoints['level_present']
         scorepoints['both_present'] = all(level_bools)# or scorepoints['both_present']
-        scorepoints['contrasign'] = not ((any(mean_2) or pop in tokens) and any([x in tokens for x in ['significant','significante']]))
+        scorepoints['contrasign'] = not ((any(mean_2) or pop in sent.text) and any([x in sent.text for x in ['significant','significante']]))
         
         #Add strings:
         appendix:str = '' if num < 2 else self.mes['S_FORFAC'] + str(num) if num < 3 else self.mes['S_WITHINT']
@@ -1159,8 +1158,8 @@ class ScanFunctions:
             int_descendants = i_sents[0]    
             tokens = [x.text for x in int_descendants]
             scorepoints['interactie'] = True
-            scorepoints['indy1'] = solution['independent'].lower() in [x.text for x in int_descendants]
-            scorepoints['indy2'] = solution['independent2'].lower() in [x.text for x in int_descendants]
+            scorepoints['indy1'] = any([x in doc.text for x in solution['independent'].get_all_syns()])
+            scorepoints['indy2'] = any([x in doc.text for x in solution['independent2'].get_all_syns()])
             scorepoints['pop_present'] = pop in [x.text for x in int_descendants] or any([x in tokens for x in ['significant','significante']])
             scorepoints['right_negation'] = bool(negation_counter(tokens) % 2) != rejected    
             scorepoints['contrasign'] = not ((pop in tokens) and any([x in tokens for x in ['significant','significante']]))
@@ -1212,7 +1211,7 @@ class ScanFunctions:
         suffix = ' bij de beslissing van ' if self.mes['L_ENGLISH'] else ' for the decision of '
         scorepoints:dict = {'sign_effect': 'significant' in sent.text,
             'indep': any([x in sent.text for x in solution['independent'].get_all_syns()]),
-            'dep': variable in sent.text or any([x in sent.text for x in synonyms]) or 'multivariate' in variable,
+            'dep': any([x in sent.text for x in solution['dependent'].get_all_syns()]) or 'multivariate' in variable,
             'neg': bool(negation_counter(tokens) % 2) != rejected}
         
         output:List[str] = []
@@ -1426,8 +1425,8 @@ class ScanFunctions:
         scorepoints = dict([(x,False) for x in criteria])
         tokens = [x.text for x in sent]
         output:list = []
-        var1levels:list[bool] = [any([y in tokens for y in solution['independent'].get_all_syns()[i]]) for i in solution['independent'].nlevels]
-        var2levels:list[bool] = [any([y in tokens for y in solution['independent2'].get_all_syns()[i]]) for i in solution['independent2'].nlevels]
+        var1levels:list[bool] = [any([y in tokens for y in solution['independent'].get_all_level_syns()[i]]) for i in range(solution['independent'].nlevels)]
+        var2levels:list[bool] = [any([y in tokens for y in solution['independent2'].get_all_level_syns()[i]]) for i in range(solution['independent2'].nlevels)]
         rejected = solution['p'][2] < 0.05
         
         # Fill scorepoints
@@ -1446,6 +1445,8 @@ class ScanFunctions:
         else:
             scorepoints['negation'] = True
         if scorepoints['dep']:
+            print(any(var1levels))
+            print(any(var2levels))
             if self.check_causality(indy1node[0], dep_node[0]) and any(var2levels):
                 scorepoints['interaction'] = True
                 scorepoints['level_present'] = any(var2levels)
@@ -1464,9 +1465,9 @@ class ScanFunctions:
             output.append(self.mes['F_NOIND2']+suffix)
         if not scorepoints['dep']:
             output.append(self.mes['F_NODEP']+suffix)
-        if not scorepoints['same']:
-            output.append(self.mes['F_SAMEEFFECT'])
-        if scorepoints['dep'] and not scorepoints['interaction']:
+        if scorepoints['dep'] and ((not scorepoints['interaction'] and not (any(var1levels) or any(var2levels))) or not scorepoints['same']):
+            output.append(self.mes['F_SAMEEFFECT']+suffix)
+        elif scorepoints['dep'] and not scorepoints['interaction']:
             output.append(self.mes['F_CAUSEVARS']+suffix)
         elif scorepoints['interaction'] and not scorepoints['both_levels']:
             output.append(self.mes['F_NOLEVELS'])
@@ -1517,13 +1518,12 @@ class ScanFunctions:
         return output
     
     def detect_alternative_interaction(self, sent:Doc, solution:dict) -> List[str]:
-        markers = ['interfering','variables','variable','reverse','causality'] if self.mes['L_ENGLISH'] \
-                            else ['storende','variabelen','variabele','omgekeerde','causaliteit']
+        markers = ['interfer','variabl','reverse','causality'] if self.mes['L_ENGLISH'] \
+                            else ['storend','variabel','variabele','omgekeerde','causaliteit']
         output:list = []
-        tokens = [x.text for x in sent]
-        if not (markers[0] in tokens and markers[1] in sent.text) or (markers[0] in sent.text and markers[2] in sent.text):
+        if not (markers[0] in sent.text and markers[1] in sent.text):
             output.append(self.mes['F_NODISTURBANCE'])
-        if not (markers[3] in sent.text and markers[4] in sent.text):
+        if not (markers[2] in sent.text and markers[3] in sent.text):
             output.append(self.mes['F_NOREVERSECAUSE'])
         return output
     
@@ -1561,13 +1561,14 @@ class ScanFunctions:
     def detect_name(self, doc:Doc, solution:Dict) -> List[str]:
         names:list = []
         if solution['assignment_type'] == 1:
-            names = [('t','-','toets','voor','onafhankelijke','variabelen'),('between','-','subject','t','-','test'),('t','-','toets','voor','onafhankelijke','subjecten')]
+            names = [('t','-','toets','voor','onafhankelijke','variabelen'),('between','-','subject','t','-','test'),('t','-','toets','voor','onafhankelijke','subjecten'),
+                     ('t','-','test','for','independent','samples')]
         if solution['assignment_type'] == 2:
-            names = [('t','-','toets','voor','gekoppelde','paren'),('within','-','subject','t','-','test')]
+            names = [('t','-','toets','voor','gekoppelde','paren'),('within','-','subject','t','-','test'),('t','-','test','for','paired','samples')]
         if solution['assignment_type'] == 3:
-            names = [('one','-','way','anova'), ('1-factor','anova')]
+            names = [('one','-','way','anova'), ('1-factor','anova'),('1','-','way','anova')]
         if solution['assignment_type'] == 4:
-            names = [('two','-','way','anova'), ('2-factor','anova')]
+            names = [('two','-','way','anova'), ('2-factor','anova'),('2','-','way','anova')]
         if solution['assignment_type'] == 5:
             names = [('repeated','-','measures','anova'), ('repeated','-','measures','-','anova')]
         if solution['assignment_type'] == 6:
@@ -1588,7 +1589,6 @@ class ScanFunctions:
     HELP FUNCTIONS
     """
     def check_causality(self, independent:Doc, dependent:Doc, alternative:bool=False) -> bool:
-        #print(independent.dep_ + '-' + dependent.dep_)
         if not self.mes['L_ENGLISH']: #Dutch
             if not alternative:
                 tuples = [('nsubj', 'obj'),('obj', 'ROOT'),('nsubj', 'nmod'),('obl', 'obj'),('ROOT', 'obj'),
@@ -1598,7 +1598,7 @@ class ScanFunctions:
             else: #Add reverse causality and disturbing variable options
                 tuples = [('obj','obj'),('obj','nsubj'), ('ROOT','obj'),('nmod','nsubj'),('obj','obl'),('obj','ROOT'),('amod','nsubj'),
                                ('nmod','obj'),('obj','amod'),('obl','nsubj'),('obl','obj'),('obj','nmod'),('ROOT','obl'),('nsubj','obl'),
-                               ('obl','obl'), ('csubj','obl')]
+                               ('obl','obl'), ('csubj','obl'),('nsubj','conj')]
         else: #English
             if not alternative:
                 tuples = [('nsubj','dobj'),('nsubj','ROOT'),('pobj','nsubjpass'),('nsubj','pobj'),('ROOT','obl'), ('amod','ROOT'),
@@ -1606,7 +1606,6 @@ class ScanFunctions:
             else:
                 tuples = [('dobj','nsubj'),('ROOT','nsubj'),('nsubjpass','pobj'),('pobj','nsubj'),('obl','ROOT'), ('ROOT','amod'),
                           ('ROOT','compound'),('compound','obl')]
-        
         for t in tuples:
             if independent.dep_ == t[0] and dependent.dep_ == t[1]:
                 return True
