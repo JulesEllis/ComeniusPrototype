@@ -80,6 +80,7 @@ def index():
                 form.__getattribute__('std2').label = mes['A_STD']
                 form.__getattribute__('nextt').label.text = mes['B_NEXT']
                 form.__getattribute__('answer').label.text = mes['B_ANSWER']
+                form.__getattribute__('explain').label.text = mes['B_EXPLAIN']
                 controller.formmode = False
                 instruction = controller.print_assignment()
                 #Save controller
@@ -114,6 +115,7 @@ def index():
                 form.__getattribute__('df5').label = mes['A_TOTAL']
                 form.__getattribute__('nextt').label.text = mes['B_NEXT']
                 form.__getattribute__('answer').label.text = mes['B_ANSWER']
+                form.__getattribute__('explain').label.text = mes['B_EXPLAIN']
                 controller.formmode = False
                 instruction = controller.print_assignment()
                 
@@ -147,7 +149,7 @@ def index():
             output_text : str = controller.update({'inputtext': 'skip'})
         if form.prev.data:
             output_text : str = controller.update({'inputtext': 'prev'})
-        if form.answer.data:
+        if form.answer.data or form.explain.data:
             controller.answer_triggered = not controller.answer_triggered
             output_text : str = controller.assignments.print_assignment(controller.assignment) + '<br>' + controller.protocol[controller.index][0]
         
@@ -181,6 +183,7 @@ def index():
             form.__getattribute__('skip').label.text = mes['B_NEXT']
             form.__getattribute__('prev').label.text = mes['B_PREV']
             form.__getattribute__('answer').label.text = mes['B_ANSWER']
+            form.__getattribute__('explain').label.text = mes['B_EXPLAIN']
         if controller.submit_field == Task.CHOICE: #Determine dropdown language options
             mes:dict = controller.mes
             form.__getattribute__('selectanalysis').choices = [mes['M_ANALYSIS' + str(i+1)] for i in range(9)]
@@ -234,6 +237,7 @@ def bigform():
     title:str = mes['M_TITLE']
     form.__getattribute__('nextt').label.text = mes['B_NEXT']
     form.__getattribute__('answer').label.text = mes['B_ANSWER']
+    form.__getattribute__('explain').label.text = mes['B_EXPLAIN']
     
     #Fill text positions that will be shown in the form
     if a['assignment_type'] == 4:
@@ -307,6 +311,7 @@ def smallform():
     title:str = controller.mes['M_TITLE']
     form.__getattribute__('nextt').label.text = mes['B_NEXT']
     form.__getattribute__('answer').label.text = mes['B_ANSWER']
+    form.__getattribute__('explain').label.text = mes['B_EXPLAIN']
     
     #Enter text labels
     if a['assignment_type'] == 4:

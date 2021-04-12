@@ -14,6 +14,7 @@ class BaseForm(FlaskForm):
     skip = SubmitField('Volgende')
     prev = SubmitField('Vorige')
     answer = SubmitField('Antwoord')
+    explain = SubmitField('Leg uit')
     
     mean1 = StringField('')
     std1 = StringField('')

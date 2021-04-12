@@ -610,7 +610,7 @@ class ScanFunctions:
                     output.append(' -predictor ' + x + self.mes['S_NONAME'])
         for i in range(len(varnames)):
             if solution['predictor_p'][i] < 0.05:
-                output.extend(self.detect_p(doc, solution['predictor_p'][i], label=varnames[i]))
+                output.extend(self.detect_p(doc, solution['predictor_p'][i], label=varnames[i-1]))
         correct:bool = len(output) == 1 if prefix else output == []
         if correct:
             return False, self.mes['F_INTCORRECT'] if prefix else ''
@@ -619,6 +619,7 @@ class ScanFunctions:
     
     def scan_design(self, doc:Doc, solution:dict, prefix:bool=True) -> [bool, List[str]]:
         criteria = ['ind', 'indcorrect','ind2','ind2correct','dep','depcorrect','factor1','factor2']
+        marker_ind = 'independent' if self.mes['L_ENGLISH'] else 'onafhankelijke'
         scorepoints = dict([(x,False) for x in criteria])
         if solution['assignment_type'] != 13:
             scorepoints['factor1'] = True;scorepoints['factor2'] = True
@@ -646,7 +647,7 @@ class ScanFunctions:
         if deps != []:
             scorepoints['dep'] = True
             dep_span = deps[0]
-            scorepoints['depcorrect'] = factor_roles[1] in dep_span.text and not 'onafhankelijke' in dep_span.text 
+            scorepoints['depcorrect'] = factor_roles[1] in dep_span.text and not marker_ind in dep_span.text 
         
         #Add feedback text
         if not scorepoints['ind']:
@@ -722,7 +723,7 @@ class ScanFunctions:
         output += '<br>'+'<br>'.join(self.detect_name(doc,solution))
         output += '<br>' + self.scan_design(doc, solution, prefix=False)[1]
         #if solution['p'][0] < 0.05:
-        output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'T', solution['T'][0], aliases=['T(' + solution['independent'].name + ')']))
+        output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'T', solution['T'][0], aliases=[')' + solution['independent'].name + ')']))
         output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'][0]))
         output += '<br>' + self.scan_decision(doc, solution, anova=False, prefix=False, elementair=False)[1]
         if output.replace('<br>','') == '':
@@ -741,16 +742,16 @@ class ScanFunctions:
         if not two_way:
             if solution['p'][0] < 0.05:
                 output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'F', solution['F'][0], aliases=['F(' + solution['independent'].name + ')']))
-                output += '<br>'+'<br>'.join(self.detect_p(doc, solution['p'][0]))
-                output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][0], aliases=['r2','r',markers[0]]))
+                output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'][0]))
+                output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][0], aliases=['r2','r^2','r',markers[0]]))
             output += '<br>' + self.scan_decision(doc, solution, anova=True, prefix=False, elementair=False)[1]
         else:
             for i in range(3):
                 if solution['p'][i] < 0.05:
                     f_aliases = ['F(' + solution['independent' + str(i+1)].name + ')'] if i > 0 and i < 2 else []
                     output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'F', solution['F'][i], aliases=f_aliases, num=i+1))
-                    output += '<br>'+'<br>'.join(self.detect_p(doc, solution['p'][i], num=i+1))
-                    output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][i], aliases=['r2','r',markers[0]], num=i+1))
+                    output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'][i], num=i+1))
+                    output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][i], aliases=['r2','r^2','r',markers[0]], num=i+1))
                 #Find right decision
                 varss = [solution['independent'],solution['independent2'],'interactie']
                 levels = [solution['independent'].levels,solution['independent2'].levels,['interactie']]
@@ -782,8 +783,8 @@ class ScanFunctions:
         output += '<br>' + self.scan_design(doc, solution, prefix=False)[1]
         if solution['p'][0] < 0.05:
             output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'F', solution['F'][0], aliases=['F(' + solution['independent'].name + ')']))
-            output += '<br>'+'<br>'.join(self.detect_p(doc, solution['p'][0]))
-            output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][0], aliases=['r2','r','kwadraat']))
+            output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'][0]))
+            output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][0], aliases=['r2','r^2','r','kwadraat']))
         output += '<br>' + self.scan_decision(doc, solution, anova=True, num=1, prefix=False, elementair=False)[1]
         output += '<br>' + self.scan_decision_rmanova(doc, solution, num=2, prefix=False, elementair=False)[1]
         if output.replace('<br>','') == '':
@@ -798,8 +799,8 @@ class ScanFunctions:
         output += '<br>'+'<br>'.join(self.detect_name(doc,solution))
         output += '<br>'+'<br>'.join(self.detect_comparison_mreg(doc, solution))
         output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'F', solution['F'][0]))
-        output += '<br>'+'<br>'.join(self.detect_p(doc, solution['p'][0]))
-        output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][0], aliases=['r2','r','kwadraat']))
+        output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'][0]))
+        output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][0], aliases=['r2','r^2','r','kwadraat']))
         output += '<br>'+'<br>'.join(self.detect_criterium(doc,solution))
         output += '<br>'+self.scan_predictors(doc, solution, prefix=False)[1]
         if output.replace('<br>','') == '':
@@ -825,7 +826,7 @@ class ScanFunctions:
         else:
             output += '<br>'+self.mes['F_NOPRED']
         output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'F', solution['F'][3]))
-        output += '<br>'+'<br>'.join(self.detect_p(doc, solution['p'][3]))
+        output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'][3]))
         output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta'][3], aliases=['eta2','eta']))
         
         #print(str(solution['F'][3]) + ' - '+ str(solution['p'][3]) + ' - '+ str(solution['eta'][3]))
@@ -834,7 +835,7 @@ class ScanFunctions:
             output += '<br>'+'<br>'.join(self.detect_decision_multirm(between_sent[0], solution, solution['independent'].name, ['between-subject'], solution['p'][2],solution['eta'][2]))
             if(solution['p'][2] < 0.05):
                 output += '<br>'+'<br>'.join(self.detect_effect(between_sent[0],solution, variable=solution['independent'].name, p=solution['p'][2], eta=solution['eta'][2]))
-                output += '<br>'+'<br>'.join(self.detect_p(doc, solution['p'][2], label=solution['independent'].name))
+                output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'][2], label=solution['independent'].name))
         else:
             output += '<br>'+self.mes['F_NOBTFAC']
         if output.replace('<br>','') == '':
@@ -863,10 +864,10 @@ class ScanFunctions:
                     output += '<br>'+self.mes['F_NODEC']+ solution[var_key].name + self.mes['S_LACKING1']
             if solution['p'+str(i)][0] < 0.05 and solution['p_multivar'] < 0.05:
                 output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'F', solution['F'+str(i)][0], appendix=markers[2]+solution[var_key].name+' '))
-                output += '<br>'+'<br>'.join(self.detect_p(doc, solution['p'+str(i)][0], label=solution[var_key].name))
+                output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'+str(i)][0], label=solution[var_key].name))
                 output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta'+str(i)][0], aliases=['eta','eta2',markers[0]],appendix=markers[2]+solution[var_key].name+' '))
         output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'F', solution['F_multivar'], appendix=markers[3]))
-        output += '<br>'+'<br>'.join(self.detect_p(doc, solution['p_multivar'], label=markers[2]))
+        output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p_multivar'], label=markers[2]))
         output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta_multivar'], aliases=['eta','eta2',markers[0]], appendix=markers[3]))
         decision_sent = [x for x in doc.sents if ('multivariate' in x.text or 'multivariaat' in x.text) \
                              and ('significant' in x.text or 'effect' in x.text)]
@@ -902,7 +903,7 @@ class ScanFunctions:
             output += '<br>'+self.mes['F_NOMULTIVARWS']
         if solution['p0'][0] < 0.05:
             output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'F', solution['F0'][0], appendix=self.mes['S_WITHINFACTOR']))
-            output += '<br>'+'<br>'.join(self.detect_p(doc, solution['p0'][0], label=self.mes['S_WITHINFACTOR']))
+            output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p0'][0], label=self.mes['S_WITHINFACTOR']))
             output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta0'][0], aliases=['eta','eta2',markers[0]],appendix=self.mes['S_WITHINFACTOR']))
             if solution['p1'][0] < 0.05:
                 output += '<br>'+'<br>'.join(self.detect_p(doc, solution['p1'][0], label=self.mes['S_CONTRAST']+levels[0]+self.mes['S_AND']+levels[1]+' '))
@@ -919,7 +920,7 @@ class ScanFunctions:
             output += '<br>'+self.mes['F_NOMULTIVARINT']
         if solution['p0'][1] < 0.05:
             output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'F', solution['F0'][1], appendix=self.mes['S_INTERACT']))
-            output += '<br>'+'<br>'.join(self.detect_p(doc, solution['p0'][1], label=self.mes['S_INTERACT']))
+            output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p0'][1], label=self.mes['S_INTERACT']))
             output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta0'][1], aliases=['eta','eta2',markers[0]],appendix=self.mes['S_INTERACT']))
             if solution['p1'][2] < 0.05:
                 output += '<br>'+'<br>'.join(self.detect_p(doc, solution['p1'][2], label=self.mes['S_CONTRAST']+levels[0]+self.mes['S_AND']+levels[1]+' '+self.mes['S_INTERACT']))
@@ -937,7 +938,7 @@ class ScanFunctions:
             output += '<br>'+self.mes['F_NOMULTIVARBS']
         if solution['p'][1] < 0.05:
             output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'F', solution['F'][1], appendix=self.mes['S_BETWEENFACTOR']))
-            output += '<br>'+'<br>'.join(self.detect_p(doc, solution['p'][1], label=self.mes['S_BETWEENFACTOR']))
+            output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'][1], label=self.mes['S_BETWEENFACTOR']))
             output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta'][1], aliases=['eta','eta2',markers[0]],appendix=self.mes['S_BETWEENFACTOR']))
         if output.replace('<br>','') == '':
             return self.mes['F_NICEREP']
@@ -1038,7 +1039,8 @@ class ScanFunctions:
     
     def detect_criterium(self, doc:Doc, solution:dict, prefix:bool=True):
         output = []
-        if not 'criterium' in doc.text and not 'afhankelijke' in doc.text:
+        if (not 'criterium' in doc.text and not 'afhankelijke' in doc.text and not 'dependent' in doc.text) or \
+                        not solution['dependent'].name in doc.text:
             output.append(self.mes['F_DEP'])
         return output
     
@@ -1104,7 +1106,9 @@ class ScanFunctions:
     def detect_comparison_mreg(self, sent:Doc, solution:dict) -> List[str]:
         #Define variables
         criteria = ['bigger', 'neg', 'sign', 'propvar', 'zero_present', 'conj']
-        comp_markers = ['proportion','declared','variance'] if self.mes['L_ENGLISH'] else ['proportie','verklaarde','variantie']
+        comp_markers = [['proportion','declared','variance'],['proportion','explained','variance'],['R2'],['R^2'],['R','squared'],['R-squared']] \
+                        if self.mes['L_ENGLISH'] \
+                        else [['proportie','verklaarde','variantie']]
         markers = [['larger','bigger'],['zero','null','0']] if self.mes['L_ENGLISH'] else [['groter'],['nul','0']]
         scorepoints = dict([(x,False) for x in criteria])
         output:List[str] = []
@@ -1113,16 +1117,15 @@ class ScanFunctions:
         
         #Controleer input
         scorepoints['neg'] = bool(negation_counter(tokens) % 2) != rejected
-        scorepoints['sign'] = 'significant' in [x.text for x in sent]
-        scorepoints['propvar'] = all([y in sent.text for y in comp_markers])
+        scorepoints['sign'] = 'significant' in sent.text
+        scorepoints['propvar'] = any(all([y in sent.text for y in comp_markers[i]]) for i in range(len(comp_markers)))
         bigger_present = [x for x in sent if x.text in markers[0]]
         if bigger_present != []:
             scorepoints['bigger'] = True
-            comptree:List = descendants(bigger_present[0])
-            zero = [x for x in comptree if x.text in markers[1]]
+            zero = [x for x in sent if x.text in markers[1]]
             if zero != []:
                 scorepoints['zero_present'] = True
-                scorepoints['conj'] = zero[0].dep_ == 'obl'
+                scorepoints['conj'] = zero[0].dep_ in ['obl','nummod','attr','pobj']
         
         #Add strings:
         if not scorepoints['bigger']:
@@ -1445,8 +1448,6 @@ class ScanFunctions:
         else:
             scorepoints['negation'] = True
         if scorepoints['dep']:
-            print(any(var1levels))
-            print(any(var2levels))
             if self.check_causality(indy1node[0], dep_node[0]) and any(var2levels):
                 scorepoints['interaction'] = True
                 scorepoints['level_present'] = any(var2levels)
@@ -1529,14 +1530,36 @@ class ScanFunctions:
     
     def detect_report_stat(self, doc:Doc, stat:str, value:float, aliases:list=[], num:int=1, margin=0.01, appendix=None) -> List[str]:
         tokens:list[str] = [x.text for x in doc]
-        for i in range(len(tokens) - 2):
-            t3:str = tokens[i+2]
-            if t3.replace('.','').replace('-','').isdigit():
-                t1:str = tokens[i]
-                t2:str = tokens[i+1]
-                if t1 == stat.lower() or t1 in aliases:
-                    if t2 in ['==','='] and float(t3) < value + margin and float(t3) > value - margin:
-                        return []
+        for i in range(len(tokens)):
+            if i < len(tokens) - 2:
+                t3:str = tokens[i+2]
+                if t3.replace('.','').replace('-','').isdigit():
+                    t1:str = tokens[i]
+                    t2:str = tokens[i+1]
+                    stat_present = t1 == stat.lower() or t1 in aliases if stat not in ['F','T'] else t1 == stat.lower() or t1 in aliases or ')' in t1
+                    if stat_present:
+                        if t2 in ['==','='] and float(t3) < value + margin and float(t3) > value - margin:
+                            return []
+            if '=' in tokens[i]:
+                if tokens[i][0] == '=' and i > 0:
+                    t3:str = tokens[i][1:]; t1 = tokens[i-1]
+                    if i > 0 and t3.replace('.','').replace('-','').isdigit():
+                        stat_present = t1 == stat.lower() or t1 in aliases if stat not in ['F','T'] else t1 == stat.lower() or t1 in aliases or ')' in t1
+                        if float(t3) < value + margin and float(t3) > value - margin and stat_present:
+                            return []
+                elif tokens[i][-1] == '=' and i < len(tokens):
+                    t3:str = tokens[i+1]; t1 = tokens[i][:-1]
+                    if t3.replace('.','').replace('-','').isdigit():    
+                        stat_present = t1 == stat.lower() or t1 in aliases if stat not in ['F','T'] else t1 == stat.lower() or t1 in aliases or ')' in t1
+                        if float(t3) < value + margin and float(t3) > value - margin and stat_present:
+                            return []
+                else:
+                    split = tokens[i].split('=')
+                    t1 = split[0]; t3 = split[1]
+                    if t3.replace('.','').replace('-','').isdigit():
+                        stat_present = t1 == stat.lower() or t1 in aliases if stat not in ['F','T'] else t1 == stat.lower() or t1 in aliases or ')' in t1
+                        if float(t3) < value + margin and float(t3) > value - margin and stat_present:
+                            return []
         if appendix == None:
             appendix:str = '' if num < 2 else self.mes['S_FORFAC'] + str(num) if num < 3 else self.mes['S_WITHINT']
         return [self.mes['F_RIGHTVAL']+stat+' '+appendix+' '+self.mes['S_NONAME']]

@@ -928,6 +928,7 @@ class Assignments:
             data:dict = assignment['data']
         names = ['df','ss','ms','F','p','r2'];names2 = ['df','ss','ms','F','p','eta']
         if assignment['assignment_type'] in [1,2]:
+            markers = ['Differential scores'] if self.mes['L_ENGLISH'] else ['Verschilscores']
             if not answer:
                 output += self.print_ttest(assignment)
             if assignment['assignment_type'] == 1:
@@ -940,7 +941,7 @@ class Assignments:
             else:
                 output += '<p><table style="width:20%">'
                 output += '<tr><td>'+cap(assignment['independent'].name)+'</td><td>Gemiddelde</td><td>Standaarddeviatie</td><td>N</td></tr>'
-                output += format_table(['Verschilscores']+[assignment['means'][0],assignment['stds'][0],assignment['ns'][0]])
+                output += format_table(markers+[assignment['means'][0],assignment['stds'][0],assignment['ns'][0]])
                 output += '</table></p>'
             if not answer:
                 output += '<p><table style="width:20%">'
@@ -954,8 +955,9 @@ class Assignments:
         if assignment['assignment_type'] == 3:
             if not answer:
                 output += self.print_anova(assignment)
+            markers = ['Source'] if self.mes['L_ENGLISH'] else ['Bron']
             output += '<p><table style="width:20%">'
-            output += '<tr><td>Bron</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td></tr>'
+            output += '<tr><td>'+markers[0]+'</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td></tr>'
             output += format_table(['Between']+[assignment[x][0] for x in names if len(assignment[x]) > 0])
             output += format_table(['Within']+[assignment[x][1] for x in names if len(assignment[x]) > 1])
             output += format_table(['Totaal']+[assignment[x][2] for x in names if len(assignment[x]) > 2])
@@ -963,36 +965,38 @@ class Assignments:
         if assignment['assignment_type'] == 4:
             if not answer:
                 output += self.print_anova(assignment)
+            markers = ['Source','Interaction','Total'] if self.mes['L_ENGLISH'] else ['Bron','Interactie','Totaal']
             output += '<p><table style="width:20%">'
-            output += '<tr><td>Bron</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td></tr>'
+            output += '<tr><td>'+markers[0]+'</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td></tr>'
             output += format_table(['Between']+[assignment[x][0] for x in names[:3]])
             output += format_table([cap(assignment['independent'].name)]+[assignment[x][1] for x in names[:3]]+[assignment[x][0] for x in names[3:]])
             output += format_table([cap(assignment['independent2'].name)]+[assignment[x][2] for x in names[:3]]+[assignment[x][1] for x in names[3:]])
-            output += format_table(['Interaction']+[assignment[x][3] for x in names[:3]]+[assignment[x][2] for x in names[3:]])
+            output += format_table([markers[1]]+[assignment[x][3] for x in names[:3]]+[assignment[x][2] for x in names[3:]])
             output += format_table(['Within']+[assignment[x][4] for x in names[:3]])
-            output += format_table(['Totaal']+[assignment[x][5] for x in names[:2]])
+            output += format_table([markers[2]]+[assignment[x][5] for x in names[:2]])
             output += '</table></p>'
         if assignment['assignment_type'] == 5:
             if not answer:
                 output += self.print_rmanova(assignment)
+            markers = ['Source','Interaction','Total'] if self.mes['L_ENGLISH'] else ['Bron','Interactie','Totaal']
             output += '<p><table style="width:20%">'
-            output += '<tr><td>Bron</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td></tr>'
+            output += '<tr><td>'+markers[0]+'</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td></tr>'
             output += format_table([cap(assignment['independent'].name)]+[assignment[x][0] for x in names if len(assignment[x]) > 0])
-            output += format_table(['Persoon']+[assignment[x][1] for x in names if len(assignment[x]) > 1])
-            output += format_table(['Interactie']+[assignment[x][0] for x in names if len(assignment[x]) > 2])
-            output += format_table(['Totaal']+[assignment[x][3] for x in names if len(assignment[x]) > 3])
+            output += format_table(['Subject']+[assignment[x][1] for x in names if len(assignment[x]) > 1])
+            output += format_table([markers[1]]+[assignment[x][0] for x in names if len(assignment[x]) > 2])
+            output += format_table([markers[2]]+[assignment[x][3] for x in names if len(assignment[x]) > 3])
             output += '</table></p>'
         if assignment['assignment_type'] == 6:
             output += self.print_analysis(assignment)
             output += '<p><table style="width:20%">'
-            output += '<tr><td>Bron</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td></tr>'
-            output += format_table(['Regressie']+[assignment[x][0] for x in names])
-            output += format_table(['Residu']+[assignment[x][1] for x in names[:3]])
-            output += format_table(['Totaal']+[assignment[x][2] for x in names[:2]])+'</tr>'
+            output += '<tr><td>Source</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td></tr>'
+            output += format_table(['Regression']+[assignment[x][0] for x in names])
+            output += format_table(['Residue']+[assignment[x][1] for x in names[:3]])
+            output += format_table(['Total']+[assignment[x][2] for x in names[:2]])+'</tr>'
             output += '</table></p>'
             
             output += '<p><table style="width:20%">'
-            output += '<tr><td>Predictor</td><td>b</td><td>Beta</td><td>Standaarderror</td><td>T</td><td>p</td></tr>'
+            output += '<tr><td>Predictor</td><td>b</td><td>Beta</td><td>Standard error</td><td>T</td><td>p</td></tr>'
             for i in range(len(data['predictoren'])):
                 output += '<tr><td>'+cap(data['predictoren'][i])+'</td><td>'+str(round(assignment['predictor_b'][i],2))+'</td><td>'+str(round(assignment['predictor_beta'][i],2))+'</td><td>'+str(round(assignment['predictor_se'][i],2))+'</td><td>'+str(round(assignment['predictor_t'][i],2))+'</td><td>'+str(round(assignment['predictor_p'][i],3))+'</td></tr>'
             output += '</table></p>'

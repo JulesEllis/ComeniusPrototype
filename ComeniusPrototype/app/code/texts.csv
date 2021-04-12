@@ -185,7 +185,7 @@ S_NOT;niet ;not
 S_DISTURBANCE2;Eventuele alternatieve verklaringen zijn storende variabelen of omgekeerde causaliteit. ;Eventual alternative explanations are interfering variables or reversed causality
 S_FACTOR;van factor;of factor
 S_PREDICTORS; als predictoren; as predictors
-S_CRITERIUM; als criterium; as criterum
+S_CRITERIUM; als criterium; as criterium
 S_NAMELY;namelijk;namely
 S_LACKING; ontbreken; are missing
 S_COMP1; bij de eerste vergelijking; for the first equation
@@ -333,3 +333,4 @@ F_NONEG; -ten onrechte een negatie toegevoegd bij de beschrijving van ; -incorre
 F_INTINT; -niet gesteld dat de interactiebeslissing over interactie gaat; -not stated that the interaction decision concerns interaction
 F_INTNEGG; -ten onrechte een negatie toegevoegd of weggelaten bij de interactiebeslissing; -incorrectly left out or added a negation for the interaction decision
 F_JUSTLEVELS; -niveaus ; -levels 
+B_EXPLAIN;Leg uit;Explain
