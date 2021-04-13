@@ -110,7 +110,7 @@ F_NOHYP; -hypothese niet genoemd; -the hypothesis
 F_NOFACTOR; -hypothese van factor ; -the hypothesis of factor
 F_NOSUBJ; -hypothese van de subjecten niet genoemd; -the hypothesis of the subjects
 F_INTHYP; -de interactiehypothese wordt niet genoemd; -the interaction hypothesis
-F_EFFECTSIGN; -niet genoemd of het effect significant is; -whether the effect is significant
+F_EFFECTSIGN; -niet genoemd of het effect significant is; -not stated whether the effect is significant
 F_NEGEFFECT; -ten onrechte een negatie toegevoegd of weggelaten bij de beschrijving van het effect; -incorrectly left out or added a negation while describing the effect
 F_DECISION; -niet genoemd dat de beslissing ; -not stated that the decision 
 F_INDEPLEVELS; -de niveaus van de onafhankelijke variabele ; -the levels of the independent variable 
@@ -206,7 +206,7 @@ S_POPAVGS;om populatiegemiddelden gaat;concerns the population averages
 S_OVERPOP;over de populatie gaat;concerns the population
 S_NONAMES; worden niet genoemd; are missing
 S_LEFTOUT;weggelaten;missing
-S_SIGNEFFECT; of het effect significant is;whether the effect is significant
+S_SIGNEFFECT; of het effect significant is; whether the effect is significant
 S_NORIGHTNAME; wordt niet juist genoemd;isn’t stated correctly
 S_MAINDEC;van de hoofdbeslissing;of the main decision
 S_INTDEC; bij de interactiebeslissing;for the interaction decision
@@ -328,7 +328,7 @@ F_NOIND2; -de tweede onafhankelijke variabele wordt niet genoemd; -the second in
 F_NOSIZE; -de effectgrootte van ; -the effect size of 
 S_FORFAC2;bij factor ;for factor 
 S_SUBS;bij de subjecten;for the subjects
-S_NANDEC;niet genoemd bij de beslissing van ;not names for the decision of 
+S_NANDEC;niet genoemd bij de beslissing van ;not named for the decision of 
 F_NONEG; -ten onrechte een negatie toegevoegd bij de beschrijving van ; -incorrectly left out or added a negation while describing 
 F_INTINT; -niet gesteld dat de interactiebeslissing over interactie gaat; -not stated that the interaction decision concerns interaction
 F_INTNEGG; -ten onrechte een negatie toegevoegd of weggelaten bij de interactiebeslissing; -incorrectly left out or added a negation for the interaction decision

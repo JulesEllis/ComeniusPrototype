@@ -673,28 +673,17 @@ class ScanFunctions:
         
     def scan_design_manova(self, doc:Doc, solution:dict, prefix:bool=True):
         text = doc.text
+        words = [x.text for x in doc]
+        factor_roles:list = ['independent','dependent'] if self.mes['L_ENGLISH'] else ['onafhankelijke', 'afhankelijke']
         scorepoints = {'indcorrect':False,
                        #'levels1':all([x in text for x in solution['levels']]),
                        'mes':all([any([y in text for y in solution[x].get_all_syns()]) for x in ['dependent','dependent2','dependent3']]),
-                       'dep1':False,
-                       'dep2':False,
-                       'dep3':False 
+                       'dep1':any(x in text for x in solution['dependent'].get_all_syns()),#distance(words, [factor_roles[1]], solution['dependent'].get_all_syns()) < distance(words, [factor_roles[0], 'factor'], solution['dependent'].get_all_syns()),
+                       'dep2':any(x in text for x in solution['dependent2'].get_all_syns()),#distance(words, [factor_roles[1]], solution['dependent2'].get_all_syns()) < distance(words, [factor_roles[0], 'factor'], solution['dependent2'].get_all_syns()),
+                       'dep3':any(x in text for x in solution['dependent3'].get_all_syns()),#distance(words, [factor_roles[1]], solution['dependent3'].get_all_syns()) < distance(words, [factor_roles[0], 'factor'], solution['dependent3'].get_all_syns()) 
                        }
-        factor_roles:list = ['independent','dependent'] if self.mes['L_ENGLISH'] else ['onafhankelijke', 'afhankelijke']
         scorepoints['indcorrect'] = any([True if any([x in doc.text for x in solution['independent'].get_all_syns()]) and ('factor' in sent.text \
                                         or factor_roles[0] in doc.text) else False for sent in doc.sents])
-        deps = [x for x in doc if x.text == solution['dependent'].name.lower()]
-        if deps != []:
-            dep_span = descendants(deps[0].head)
-            scorepoints['dep1'] = factor_roles[1] in [x.text for x in dep_span] #and not 'onafhankelijke' in [x.text for x in dep_span]
-        deps2 = [x for x in doc if x.text == solution['dependent2'].name.lower()]
-        if deps2 != []:
-            dep2_span = descendants(deps2[0].head)
-            scorepoints['dep2'] = factor_roles[1] in [x.text for x in dep2_span] #and not 'onafhankelijke' in [x.text for x in dep2_span] 
-        deps3 = [x for x in doc if x.text == solution['dependent3'].name.lower()]
-        if deps3 != []:
-            dep3_span = descendants(deps3[0].head)
-            scorepoints['dep3'] = factor_roles[1] in [x.text for x in dep3_span] #and not 'onafhankelijke' in [x.text for x in dep3_span] 
         
         output:List[str] = []
         if not scorepoints['dep1']:
@@ -846,8 +835,8 @@ class ScanFunctions:
     def split_grade_manova(self, text:str, solution:dict) -> str:
         nl_nlp = spacy.load('nl')
         doc = nl_nlp(text.lower())
-        markers = ['eta-squared','for ','the multivariate decision ','for the multivariate decision ','multivariate'] if self.mes['L_ENGLISH'] \
-                    else ['eta-kwadraat','bij ','de multivariate beslissing','bij de multivariate beslissing ','multivariaat']
+        markers = ['eta-squared','for ','the multivariate decision ','for the multivariate decision ','multivariate','for the decision of '] if self.mes['L_ENGLISH'] \
+                    else ['eta-kwadraat','bij ','de multivariate beslissing','bij de multivariate beslissing ','multivariaat','voor de beslissing van ']
         
         output:str = ''
         output += '<br>'+'<br>'.join(self.detect_name(doc,solution))
@@ -857,23 +846,23 @@ class ScanFunctions:
             if solution['p_multivar'] < 0.05 and solution['p_multivar'] < 0.05:
                 decision_sent = [x for x in doc.sents if solution[var_key].name in x.text and ('significant' in x.text or 'effect' in x.text)]
                 if decision_sent != []:
-                    output += '<br>'+'<br>'.join(self.detect_decision_manova(decision_sent[0],solution, variable=solution[var_key].name, synonyms=[], p=solution['p'+str(i)][0], eta=solution['eta'+str(i)][0], num=1))
+                    output += '<br>'+'<br>'.join(self.detect_decision_manova(decision_sent[0],solution, variable=solution[var_key].name, synonyms=[], p=solution['p'+str(i)][0], eta=solution['eta'+str(i)][0], num=i+1))
                     if solution['p'+str(i)][0] < 0.05:
-                        output += '<br>'+'<br>'.join(self.detect_effect(decision_sent[0],solution, variable=solution[var_key].name, p=solution['p'+str(i)][0], eta=solution['eta'+str(i)][0]))
+                        output += '<br>'+'<br>'.join(self.detect_effect(decision_sent[0],solution, variable=markers[1]+solution[var_key].name, p=solution['p'+str(i)][0], eta=solution['eta'+str(i)][0]))
                 else:
                     output += '<br>'+self.mes['F_NODEC']+ solution[var_key].name + self.mes['S_LACKING1']
             if solution['p'+str(i)][0] < 0.05 and solution['p_multivar'] < 0.05:
-                output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'F', solution['F'+str(i)][0], appendix=markers[2]+solution[var_key].name+' '))
-                output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'+str(i)][0], label=solution[var_key].name))
-                output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta'+str(i)][0], aliases=['eta','eta2',markers[0]],appendix=markers[2]+solution[var_key].name+' '))
+                output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'F', solution['F'+str(i)][0], appendix=markers[5]+solution[var_key].name+' '))
+                output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'+str(i)][0], appendix=markers[5]+solution[var_key].name+' '))
+                output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta'+str(i)][0], aliases=['eta','eta2',markers[0]],appendix=markers[5]+solution[var_key].name+' '))
         output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'F', solution['F_multivar'], appendix=markers[3]))
-        output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p_multivar'], label=markers[2]))
-        output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta_multivar'], aliases=['eta','eta2',markers[0]], appendix=markers[3]))
+        output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p_multivar'], appendix=markers[3]))
+        #output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta_multivar'], aliases=['eta','eta2',markers[0]], appendix=markers[3]))
         decision_sent = [x for x in doc.sents if ('multivariate' in x.text or 'multivariaat' in x.text) \
                              and ('significant' in x.text or 'effect' in x.text)]
         if decision_sent != []:
-            output += '<br>'+'<br>'.join(self.detect_decision_manova(decision_sent[0],solution,variable=markers[4],synonyms=['multivariate'], p=solution['p_multivar'], eta=solution['eta_multivar'], num=0))
-            output += '<br>'+'<br>'.join(self.detect_effect(decision_sent[0],solution, variable=markers[4], p=solution['p_multivar'], eta=solution['eta_multivar']))
+            output += '<br>'+'<br>'.join(self.detect_decision_manova(decision_sent[0],solution,variable=markers[2],synonyms=['multivariate'], p=solution['p_multivar'], eta=solution['eta_multivar'], num=0))
+            output += '<br>'+'<br>'.join(self.detect_effect(decision_sent[0],solution, variable=markers[3], p=solution['p_multivar'], eta=solution['eta_multivar']))
         else:
             output += '<br>' + self.mes['F_NOMULTIVAR']
         if output.replace('<br>','') == '':
@@ -903,12 +892,12 @@ class ScanFunctions:
             output += '<br>'+self.mes['F_NOMULTIVARWS']
         if solution['p0'][0] < 0.05:
             output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'F', solution['F0'][0], appendix=self.mes['S_WITHINFACTOR']))
-            output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p0'][0], label=self.mes['S_WITHINFACTOR']))
+            output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p0'][0], appendix=self.mes['S_WITHINFACTOR']))
             output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta0'][0], aliases=['eta','eta2',markers[0]],appendix=self.mes['S_WITHINFACTOR']))
             if solution['p1'][0] < 0.05:
-                output += '<br>'+'<br>'.join(self.detect_p(doc, solution['p1'][0], label=self.mes['S_CONTRAST']+levels[0]+self.mes['S_AND']+levels[1]+' '))
+                output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p1'][0], appendix=self.mes['S_CONTRAST']+levels[0]+self.mes['S_AND']+levels[1]+' '))
             if solution['p1'][1] < 0.05:
-                output += '<br>'+'<br>'.join(self.detect_p(doc, solution['p1'][1], label=self.mes['S_CONTRAST']+levels[1]+self.mes['S_AND']+levels[2]+' '))
+                output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p1'][1], appendix=self.mes['S_CONTRAST']+levels[1]+self.mes['S_AND']+levels[2]+' '))
         
         #Multivar interaction
         decision_sent2 = [x for x in doc.sents if (markers[1] in x.text) and ('significant' in x.text or 'effect' in x.text)]
@@ -920,12 +909,12 @@ class ScanFunctions:
             output += '<br>'+self.mes['F_NOMULTIVARINT']
         if solution['p0'][1] < 0.05:
             output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'F', solution['F0'][1], appendix=self.mes['S_INTERACT']))
-            output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p0'][1], label=self.mes['S_INTERACT']))
+            output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p0'][1], appendix=self.mes['S_INTERACT']))
             output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta0'][1], aliases=['eta','eta2',markers[0]],appendix=self.mes['S_INTERACT']))
             if solution['p1'][2] < 0.05:
-                output += '<br>'+'<br>'.join(self.detect_p(doc, solution['p1'][2], label=self.mes['S_CONTRAST']+levels[0]+self.mes['S_AND']+levels[1]+' '+self.mes['S_INTERACT']))
+                output += '<br>'+'<br>'.join(self.detect_p(doc, 'p', solution['p1'][2], appendix=self.mes['S_CONTRAST']+levels[0]+self.mes['S_AND']+levels[1]+' '+self.mes['S_INTERACT']))
             if solution['p1'][3] < 0.05:
-                output += '<br>'+'<br>'.join(self.detect_p(doc, solution['p1'][3], label=self.mes['S_CONTRAST']+levels[1]+self.mes['S_AND']+levels[2]+' '+self.mes['S_INTERACT']))
+                output += '<br>'+'<br>'.join(self.detect_p(doc, 'p', solution['p1'][3], appendix=self.mes['S_CONTRAST']+levels[1]+self.mes['S_AND']+levels[2]+' '+self.mes['S_INTERACT']))
         
         #Between-subject
         decision_sent3 = [x for x in doc.sents if (solution['independent2'].name in x.text or 'between-subject' in x.text) and ('significant' in x.text or 'effect' in x.text) and markers[1] not in x.text]
@@ -933,12 +922,12 @@ class ScanFunctions:
             num += 1
             user_given_name:str = solution['independent2'].name if solution['independent2'].name in decision_sent3[0].text else 'between-subject'
             output += '<br>'+'<br>'.join(self.detect_decision_multirm(decision_sent3[0],solution,variable=user_given_name,synonyms=['multivariate between-subject'], p=solution['p'][1], eta=solution['eta'][1]))
-            output += '<br>'+'<br>'.join(self.detect_effect(decision_sent3[0],solution, variable=solution['independent2'].name, p=solution['p'][1], eta=solution['eta'][1]))
+            output += '<br>'+'<br>'.join(self.detect_effect(decision_sent3[0], solution, variable=solution['independent2'].name, p=solution['p'][1], eta=solution['eta'][1]))
         else:
             output += '<br>'+self.mes['F_NOMULTIVARBS']
         if solution['p'][1] < 0.05:
             output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'F', solution['F'][1], appendix=self.mes['S_BETWEENFACTOR']))
-            output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'][1], label=self.mes['S_BETWEENFACTOR']))
+            output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'][1], appendix=self.mes['S_BETWEENFACTOR']))
             output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta'][1], aliases=['eta','eta2',markers[0]],appendix=self.mes['S_BETWEENFACTOR']))
         if output.replace('<br>','') == '':
             return self.mes['F_NICEREP']
@@ -1210,20 +1199,21 @@ class ScanFunctions:
     
     def detect_decision_manova(self, sent:Doc, solution:dict, variable:str, synonyms:list, p:float, eta:float, num:int) -> List[str]:
         rejected:bool = p < 0.05
+        dep_key = 'dependent' if num < 2 else 'dependent' + str(num)
         tokens:list = [x.text for x in sent]
-        suffix = ' bij de beslissing van ' if self.mes['L_ENGLISH'] else ' for the decision of '
+        suffix = ' bij de beslissing van ' if not self.mes['L_ENGLISH'] else ' for the decision of '
         scorepoints:dict = {'sign_effect': 'significant' in sent.text,
             'indep': any([x in sent.text for x in solution['independent'].get_all_syns()]),
-            'dep': any([x in sent.text for x in solution['dependent'].get_all_syns()]) or 'multivariate' in variable,
+            'dep': any([x in sent.text for x in solution[dep_key].get_all_syns()]) or 'multivariate' in variable,
             'neg': bool(negation_counter(tokens) % 2) != rejected}
         
         output:List[str] = []
         if not scorepoints['sign_effect']:
             output.append(' -'+self.mes['S_NANDEC']+variable+self.mes['S_SIGNEFFECT'])
         if not scorepoints['indep']:
-            output.append(self.mes['S_NOIND']+suffix+variable)
+            output.append(self.mes['F_NOIND']+suffix+variable)
         if not scorepoints['dep']:
-            output.append(self.mes['S_NODEC']+suffix+variable)
+            output.append(self.mes['F_NODEP']+suffix+variable)
         if not scorepoints['neg']:
             output.append(self.mes['F_NONEG']+variable)
         return output
@@ -1339,23 +1329,21 @@ class ScanFunctions:
             'strength_present': p > 0.05,
             'right_strength': p > 0.05}
         gold_strength: int = 2 if eta > 0.2 else 1 if eta > 0.1 else 0
+        print(str(gold_strength) + variable)
         sizes = ['medium','moderate','small','strong','large','tiny'] if self.mes['L_ENGLISH'] else ['klein','zwak','matig','groot','sterk']
         large = ['strong','large'] if self.mes['L_ENGLISH'] else ['sterk','groot']
         med = ['medium','moderate'] if self.mes['L_ENGLISH'] else ['matig']
         small = ['small','weak'] if self.mes['L_ENGLISH'] else ['klein','zwak']
-        effect = [x for x in sent if x.lemma_ in sizes]
-        if effect != []:
-            e_root = effect[0]
-            scorepoints['effect_present'] = 'effect' in sent.text
-            scorepoints['strength_present'] = True #any([x in [y.text for y in e_tree] for x in ['klein','matig','sterk']]) or e_root.head.text in ['klein','matig','sterk']
-            scorepoints['right_strength'] = e_root.text in large if gold_strength == 2 else e_root.text in med \
-                            if gold_strength == 1 else e_root.text in small
+        effect = [x.text for x in sent if x.text in sizes]
+        scorepoints['effect_present'] = 'effect' in sent.text
+        scorepoints['strength_present'] = any([x in sent.text for x in sizes])
+        scorepoints['right_strength'] = any([x in large if gold_strength == 2 else x in med if gold_strength == 1 else x in small for x in effect])
         if not scorepoints['effect_present'] and scorepoints['strength_present']:
             output.append(self.mes['F_NOSIZE']+variable+self.mes['S_NONAME'])
         if not scorepoints['strength_present']:
             output.append(self.mes['F_STRENGTH']+variable+self.mes['S_NONAME'])
         elif scorepoints['effect_present'] and not scorepoints['right_strength']:
-            output.append(self.mes['F_STRENGTH']+variable+self.mes['S_NONAMES'])
+            output.append(self.mes['F_STRENGTH']+variable+self.mes['S_NONAME'])
         return output
     
     def detect_unk(self, sent:Doc, solution:dict, num:int=1):
@@ -1634,6 +1622,16 @@ class ScanFunctions:
                 return True
         return False
 
+def distance(words:list, w1:list, w2:list) -> int:
+    if not any([x in words for x in w1]):
+        return 999
+    if not any([x in words for x in w2]):
+        return 999
+    else:
+        index1 = words.index([x for x in words if x in w1][0])
+        index2 = words.index([x for x in words if x in w2][0])
+        return abs(index1 - index2)
+    
 def negation_counter(tokens: List[str]) -> int:
     count: int = 0
     for token in tokens:
