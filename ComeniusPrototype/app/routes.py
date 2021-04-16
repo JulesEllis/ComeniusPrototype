@@ -7,6 +7,7 @@ from app.code.assignments import cap
 import flask
 import os
 import json
+import hashlib
 
 @app.route('/')
 @app.route('/index', methods=['GET','POST'])
@@ -16,11 +17,12 @@ def index():
     with open(path, 'r') as f:
         mc:dict = json.load(f)
         ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
-        if not ip in list(mc.keys()):
-            mc[ip] = Controller()
-            controller = mc[ip]
+        ipcode = hashlib.md5(ip.encode('utf-8')).hexdigest()
+        if not ipcode in list(mc.keys()):
+            mc[ipcode] = Controller()
+            controller = mc[ipcode]
         else:
-            controller = Controller(jsondict=mc[ip])
+            controller = Controller(jsondict=mc[ipcode])
         
     #Assign local variables
     varnames = [['dummy1'],['dummy2']]
@@ -34,7 +36,7 @@ def index():
         
         #Save controller
         with open(path, 'w') as f:
-            mc[ip] = controller.serialize()
+            mc[ipcode] = controller.serialize()
             json.dump(mc, f)
             
         #Render page
@@ -85,7 +87,7 @@ def index():
                 instruction = controller.print_assignment()
                 #Save controller
                 with open(path, 'w') as f:        
-                    mc[ip] = controller.serialize()
+                    mc[ipcode] = controller.serialize()
                     json.dump(mc, f)        
                 
                 #Render page
@@ -121,7 +123,7 @@ def index():
                 
                 #Store controller
                 with open(path, 'w') as f:
-                    mc[ip] = controller.serialize()
+                    mc[ipcode] = controller.serialize()
                     json.dump(mc, f)            
                 
                 #Render page
@@ -137,7 +139,7 @@ def index():
                 
                 #Store controller
                 with open(path, 'w') as f:
-                    mc[ip] = controller.serialize()
+                    mc[ipcode] = controller.serialize()
                     json.dump(mc, f)    
                 
                 #Render page
@@ -215,7 +217,7 @@ def index():
         
         #Store controller
         with open(path, 'w') as f:
-            mc[ip] = controller.serialize()
+            mc[ipcode] = controller.serialize()
             json.dump(mc, f)    
         
         #Render page
@@ -230,7 +232,8 @@ def bigform():
     with open(path, 'r') as f:
         mc:dict = json.load(f)
         ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
-        controller = Controller(jsondict=mc[ip])
+        ipcode = hashlib.md5(ip.encode('utf-8')).hexdigest()
+        controller = Controller(jsondict=mc[ipcode])
     mes:dict = controller.mes
     a = controller.assignment
     form = BigForm()
@@ -274,7 +277,7 @@ def bigform():
             textdict = dict([(x, form.__getattribute__(x).data) for x in textfields])
             instruction, outputfields = controller.update_form_anova(textdict)
             with open(path, 'w') as f:
-                mc[ip] = controller.serialize()
+                mc[ipcode] = controller.serialize()
                 json.dump(mc, f) 
             return render_template('bigform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames, title=title)
         elif form.nextt.data:
@@ -304,7 +307,8 @@ def smallform():
     with open(path, 'r') as f:
         mc:dict = json.load(f)
         ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
-        controller = Controller(jsondict=mc[ip])
+        ipcode = hashlib.md5(ip.encode('utf-8')).hexdigest()
+        controller = Controller(jsondict=mc[ipcode])
     mes:dict = controller.mes
     a = controller.assignment
     form = SmallForm()
@@ -344,7 +348,7 @@ def smallform():
             textdict = dict([(x, form.__getattribute__(x).data) for x in textfields])
             instruction, outputfields = controller.update_form_ttest(textdict)
             with open(path, 'w') as f:
-                mc[ip] = controller.serialize()
+                mc[ipcode] = controller.serialize()
                 json.dump(mc, f) 
             return render_template('smallform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames, title=title)
         elif form.nextt.data:
@@ -374,9 +378,10 @@ def reportform():
     with open(path, 'r') as f:
         mc:dict = json.load(f)
         ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
-        controller = Controller(jsondict=mc[ip])
+        ipcode = hashlib.md5(ip.encode('utf-8')).hexdigest()
+        controller = Controller(jsondict=mc[ipcode])
     mes:dict = controller.mes
-    varnames:list = []#[[a['independent']] + a['levels']] if a['assignment_type'] != 4 else [[a['independent']] + a['levels'],[a['independent2']] + a['levels2']]
+    varnames:list = []
     form = ReportForm()
     
     #Fill text fields
@@ -391,7 +396,7 @@ def reportform():
             textdict = dict([(x, form.__getattribute__(x).data) for x in textfields])
             instruction, output = controller.update_form_report(textdict)
             with open(path, 'w') as f:
-                mc[ip] = controller.serialize()
+                mc[ipcode] = controller.serialize()
                 json.dump(mc, f) 
             return render_template('reportform.html', form=form, instruction=instruction, display=output, title=title)
         elif form.nextt.data:

@@ -264,7 +264,7 @@ S_CLEVELS;, met niveaus ;, with levels
 S_VARSARE2; rapport van de onderstaande data. De variabelen zijn ; report of the data below. The variables are 
 I_ONERANDOM;De deelnemers zijn willekeurig verdeeld over de niveaus. ;The subjects have been divided randomly between the levels. 
 I_WITHFACTORS; rapport van de onderstaande data. Dit onderzoek bevat de factoren ; report of the data below. This study contains the factors 
-I_DECSHORT;Voer je antwoorden alsjeblieft tot op twee decimalen in, en zet de grootte van een effect in dezelfde zin als de bijbehorende conclusie. ;Please round your answers to two decimals, and put the effect size in the same sentence as the decision it refers to. 
+I_DECSHORT;Voer je antwoorden alsjeblieft tot op twee decimalen in, en zet de grootte van een effect in dezelfde zin als de bijbehorende conclusie. ;Please round your answers to two decimals, and put the effect sizes in the same sentence as the decisions they refers to. 
 I_INDEP;De onafhankelijke variabele is ;The independent variable is 
 I_WITHINDEP; rapport van de onderstaande data. De onafhankelijke variabele is ; report of the data below. The independent variable is 
 I_METWITH;, met;, with
@@ -314,7 +314,7 @@ F_NICEDES;Mooi, dit design klopt.;Nice, this design is correct.
 F_IND2ROLE; -de rol van de tweede onafhankelijke variabele wordt niet juist genoemd; -the role of the second independent variable
 F_IND2; -de tweede onafhankelijke variabele wordt niet juist genoemd; -the second independent variable is not mentioned correctly
 F_NODEC; -de beslissing van ; -the decision for 
-S_LACKING1; wordt niet genoemd; is missing
+S_LACKING1; ontbreekt; is missing
 F_NOPRED; -niet genoemd of het model een significant voorspellende waarde heeft; -not stated whether the model has significant predictive value
 F_NOBTFAC; -de beslissing van de between-subjectfactor wordt niet genoemd; -the decision of the between-subject factor is not stated
 S_CONTRAST;van het contrast tussen ;of the contrast between 
@@ -334,3 +334,5 @@ F_INTINT; -niet gesteld dat de interactiebeslissing over interactie gaat; -not s
 F_INTNEGG; -ten onrechte een negatie toegevoegd of weggelaten bij de interactiebeslissing; -incorrectly left out or added a negation for the interaction decision
 F_JUSTLEVELS; -niveaus ; -levels 
 B_EXPLAIN;Leg uit;Explain
+F_NOWRONGS; -een verkeerde effectsterkte gegeven bij ; -given the wrong effect strength for 
+S_REPSHORT; rapport. ;report. 

@@ -488,8 +488,9 @@ class ScanFunctions:
         else:
             output.extend(self.detect_significance(doc, solution, num))
         output.extend(self.detect_comparison(doc, solution, anova, num))
-        if solution['p'][num - 1] < 0.05:
-            output.extend(self.detect_strength(doc, solution, anova, num))
+        vartag = 'independent' if num == 1 else 'independent2'
+        if solution['p'][num - 1] < 0.05: #self, sent:Doc, solution:dict, variable:str, p:float, eta:float) -> List[str]
+            output.extend(self.detect_effect(doc, solution, solution[vartag].name, solution['p'][num-1], solution['r2'][num-1]))
         correct:bool = len(output) == 1 if prefix else output == []
         if correct:
             return False, self.mes['F_DECCORRECT'] if prefix else ''
@@ -503,22 +504,24 @@ class ScanFunctions:
         else:
             output.extend(self.detect_significance(doc, solution, num))
         output.extend(self.detect_interaction(doc, solution, True))
-        output.extend(self.detect_strength(doc, solution, True, num))
+        vartag = 'the interaction' if self.mes['L_ENGLISH'] else 'de interactie'
+        output.extend(self.detect_effect(doc, solution, vartag, solution['p'][num-1], solution['eta'][num-1]))
         correct:bool = len(output) == 1 if prefix else output == []
         if correct:
             return False, self.mes['F_DECCORRECT'] if prefix else ''
         else:
             return True, '<br>'.join(output)
         
-    def scan_decision_rmanova(self, doc:Doc, solution:dict, num:int=1, prefix=True, elementair=True) -> [bool, List[str]]:
+    def scan_decision_rmanova(self, doc:Doc, solution:dict, num:int=2, prefix=True, elementair=True) -> [bool, List[str]]:
         output = [self.mes['F_INCOMPLETE']] if prefix else []
         if elementair:
             output.extend(self.detect_h0(doc, solution, num))
         else:
             output.extend(self.detect_significance(doc, solution, num))
         output.extend(self.detect_true_scores(doc, solution, 2))
-        if solution['p'][1] < 0.05:
-            output.extend(self.detect_strength(doc, solution, True, num))
+        vartag = 'the subjects' if self.mes['L_ENGLISH'] else 'de subjecten'
+        if solution['p'][1] < 0.05: 
+            output.extend(self.detect_effect(doc, solution, vartag, solution['p'][num-1], solution['eta'][num-1]))
         correct:bool = len(output) == 1 if prefix else output == []
         if correct:
             return False, self.mes['F_DECCORRECT'] if prefix else ''
@@ -609,8 +612,12 @@ class ScanFunctions:
                 if not x in tokens:
                     output.append(' -predictor ' + x + self.mes['S_NONAME'])
         for i in range(len(varnames)):
+            if varnames[0] == 'Intercept':
+                index = i - 1
+            else:
+                index = i
             if solution['predictor_p'][i] < 0.05:
-                output.extend(self.detect_p(doc, solution['predictor_p'][i], label=varnames[i-1]))
+                output.extend(self.detect_p(doc, solution['predictor_p'][i], label=varnames[index]))
         correct:bool = len(output) == 1 if prefix else output == []
         if correct:
             return False, self.mes['F_INTCORRECT'] if prefix else ''
@@ -647,7 +654,7 @@ class ScanFunctions:
         if deps != []:
             scorepoints['dep'] = True
             dep_span = deps[0]
-            scorepoints['depcorrect'] = factor_roles[1] in dep_span.text and not marker_ind in dep_span.text 
+            scorepoints['depcorrect'] = factor_roles[1] in dep_span.text and not marker_ind in dep_span.text
         
         #Add feedback text
         if not scorepoints['ind']:
@@ -673,7 +680,6 @@ class ScanFunctions:
         
     def scan_design_manova(self, doc:Doc, solution:dict, prefix:bool=True):
         text = doc.text
-        words = [x.text for x in doc]
         factor_roles:list = ['independent','dependent'] if self.mes['L_ENGLISH'] else ['onafhankelijke', 'afhankelijke']
         scorepoints = {'indcorrect':False,
                        #'levels1':all([x in text for x in solution['levels']]),
@@ -774,8 +780,17 @@ class ScanFunctions:
             output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'F', solution['F'][0], aliases=['F(' + solution['independent'].name + ')']))
             output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'][0]))
             output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][0], aliases=['r2','r^2','r','kwadraat']))
-        output += '<br>' + self.scan_decision(doc, solution, anova=True, num=1, prefix=False, elementair=False)[1]
-        output += '<br>' + self.scan_decision_rmanova(doc, solution, num=2, prefix=False, elementair=False)[1]
+        markers = ['h0','significant','subjecten','de subjecten','opgevoerde'] if not self.mes['L_ENGLISH'] else ['h0','significant','subjects','the subjects','stepped-up']
+        d1_sents = [sent for sent in doc.sents if markers[0] in sent.text or markers[1] in sent.text]
+        if d1_sents != []:
+            output += '<br>' + self.scan_decision(d1_sents[0], solution, anova=True, num=1, prefix=False, elementair=False)[1]
+        else:
+            output += '<br>'+self.mes['F_NODEC'] + solution['independent'].name + self.mes['S_NONAME']
+        d2_sents = [sent for sent in doc.sents if (markers[0] in sent.text or markers[1] in sent.text) and (markers[2] in sent.text or markers[4] in sent.text)]
+        if d2_sents != []:
+            output += '<br>' + self.scan_decision_rmanova(d2_sents[0], solution, num=2, prefix=False, elementair=False)[1]
+        else:
+            output += '<br>'+self.mes['F_NODEC'] + markers[3] + self.mes['S_NONAME']
         if output.replace('<br>','') == '':
             return self.mes['F_NICEREP']
         else:
@@ -818,13 +833,12 @@ class ScanFunctions:
         output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'][3]))
         output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta'][3], aliases=['eta2','eta']))
         
-        #print(str(solution['F'][3]) + ' - '+ str(solution['p'][3]) + ' - '+ str(solution['eta'][3]))
-        between_sent = [x for x in doc.sents if (any([y in x for y in solution['independent'].get_all_syns()]) or 'between-subject' in x.text) and ('significant' in x.text or 'effect' in x.text) and not markers[1] in x.text]
+        between_sent = [x for x in doc.sents if (any([y in x.text for y in solution['independent'].get_all_syns()]) or 'between-subject' in x.text) and ('significant' in x.text or 'effect' in x.text) and not markers[1] in x.text]
         if between_sent != []:
             output += '<br>'+'<br>'.join(self.detect_decision_multirm(between_sent[0], solution, solution['independent'].name, ['between-subject'], solution['p'][2],solution['eta'][2]))
             if(solution['p'][2] < 0.05):
                 output += '<br>'+'<br>'.join(self.detect_effect(between_sent[0],solution, variable=solution['independent'].name, p=solution['p'][2], eta=solution['eta'][2]))
-                output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'][2], label=solution['independent'].name))
+                output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'][2], appendix=solution['independent'].name))
         else:
             output += '<br>'+self.mes['F_NOBTFAC']
         if output.replace('<br>','') == '':
@@ -839,7 +853,7 @@ class ScanFunctions:
                     else ['eta-kwadraat','bij ','de multivariate beslissing','bij de multivariate beslissing ','multivariaat','voor de beslissing van ']
         
         output:str = ''
-        output += '<br>'+'<br>'.join(self.detect_name(doc,solution))
+        output += '<br>'+'<br>'.join(self.detect_name(doc,solution))variable
         output += '<br>' + self.scan_design_manova(doc, solution, prefix=False)[1]
         for i in range(3):
             var_key = 'dependent' if i < 1 else 'dependent' + str(i+1)
@@ -1017,7 +1031,7 @@ class ScanFunctions:
             if not scorepoints['neg']:
                 output.append(self.mes['F_NEGEFFECT'])
         else:
-            appendix:str = self.mes['F_FORFAC'] + str(num) if num < 3 else self.mes['S_WITHINT']
+            appendix:str = ' '+self.mes['S_SUBJECTS'] if solution['assignment_type'] == 5 and num == 2 else self.mes['S_FORFAC'] + str(num) if num < 3 else self.mes['S_WITHINT']
             if not scorepoints['effect']:
                 output.append(self.mes['F_EFFECTSIGN']+appendix)
             if not scorepoints['sign'] and scorepoints['effect']:
@@ -1073,9 +1087,10 @@ class ScanFunctions:
         scorepoints['level_present'] = any(level_bools) #or scorepoints['level_present']
         scorepoints['both_present'] = all(level_bools)# or scorepoints['both_present']
         scorepoints['contrasign'] = not ((any(mean_2) or pop in sent.text) and any([x in sent.text for x in ['significant','significante']]))
+        subjtext = 'of the subjects' if self.mes['L_ENGLISH'] else 'van de subjecten'
         
         #Add strings:
-        appendix:str = '' if num < 2 else self.mes['S_FORFAC'] + str(num) if num < 3 else self.mes['S_WITHINT']
+        appendix:str = '' if num < 2 else self.mes['S_FORFAC'] + str(num) if num < 3 else subjtext if solution['assignment_type']==5 and num==2 else self.mes['S_WITHINT']
         if not scorepoints['contrasign']:
             output.append(self.mes['F_BOTHPOP'] + appendix)
         if not scorepoints['right_comparison']:
@@ -1174,8 +1189,9 @@ class ScanFunctions:
     def detect_decision_ancova(self, sent:Doc, solution:dict) -> List[str]:
         rejected:bool = solution['p'][3] < 0.05
         suffix = ' in de hoofdbeslissing' if self.mes['L_ENGLISH'] else ' for the main decision'
+        marker = 'significant predictive value' if self.mes['L_ENGLISH'] else 'significant voorspellende waarde'
         tokens:list = [x.text for x in sent]
-        scorepoints:dict = {'sign_val': 'significant voorspellende waarde' in sent.text,
+        scorepoints:dict = {'sign_val': marker in sent.text,
             'indep': any([x in sent.text for x in solution['independent'].get_all_syns()]),
             'cov1': solution['predictor_names'][0] in sent.text or any([x in sent.text for x in solution['predictor_syns'][0]]),
             'cov2': solution['predictor_names'][1] in sent.text or any([x in sent.text for x in solution['predictor_syns'][1]]),
@@ -1253,12 +1269,13 @@ class ScanFunctions:
         if comparisons != []:
             comproot = comparisons[num-1] if len(comparisons) >= num else comparisons[0]
             #comptree:List = descendants(comproot)
-            not_present = bool(negation_counter(tokens) % 2)
+            #not_present = bool(negation_counter(tokens) % 2)
             scorepoints['right_comparison'] = comproot.text in equal+diff
-            if comproot.text in diff:
-                scorepoints['right_negation'] = not_present != rejected
-            elif comproot.text in equal:
-                scorepoints['right_negation'] = not_present == rejected
+            scorepoints['right_negation'] = bool(comproot.text in diff) == rejected
+            #if comproot.text in diff:
+            #    scorepoints['right_negation'] = not_present != rejected
+            #elif comproot.text in equal:
+            #    scorepoints['right_negation'] = not_present == rejected
         else:
             scorepoints['right_negation'] = True
         scorepoints['jacked'] = any([x in sent.text for x in stepmark])
@@ -1270,66 +1287,30 @@ class ScanFunctions:
         scorepoints['contrasign'] = not ((any(mean_2) or pop in tokens) and any([x in tokens for x in ['significant','significante']]))
         
         #Add strings
+        suffix = ' for the decision of subjects' if self.mes['L_ENGLISH'] else ' voor de beslissing van de subjecten'
         if not scorepoints['right_comparison']:
-            output.append(self.mes['F_POPLEVELS'])
+            output.append(self.mes['F_POPLEVELS']+suffix)
         if not scorepoints['right_negation']:
-            output.append(self.mes['F_INTNEG']+self.mes['S_SUBDEC'])
+            output.append(self.mes['F_INTNEG']+suffix)
         if not scorepoints['mean_present']:
-            output.append(self.mes['F_DECAVGS'])
+            output.append(self.mes['F_DECAVGS']+suffix)
         if not scorepoints['pop_present']:
-            output.append(self.mes['F_DECPOP'])
+            output.append(self.mes['F_DECPOP']+suffix)
         if not scorepoints['jacked']:
-            output.append(self.mes['F_JACKEDMEANS'])
+            output.append(self.mes['F_JACKEDMEANS']+suffix)
         if not scorepoints['contrasign']:
-            output.append(self.mes['F_BOTHPOP'])
-        return output
-        
-    def detect_strength(self, sent:Doc, solution:dict, anova:bool, num:int) -> List[str]:
-        #Define variables
-        sizes = ['medium','moderate','small','strong','large','tiny'] if self.mes['L_ENGLISH'] else ['klein','zwak','matig','groot','sterk']
-        large = ['strong','large'] if self.mes['L_ENGLISH'] else ['sterk','groot']
-        med = ['medium','moderate'] if self.mes['L_ENGLISH'] else ['matig']
-        small = ['small','weak'] if self.mes['L_ENGLISH'] else ['klein','zwak']
-        criteria:list = ['effect_present', 'strength_present', 'right_strength']
-        scorepoints = dict([(x,False) for x in criteria])
-        output:List[str] = []
-        
-        #Controleer input
-        if solution['assignment_type'] in [1,2]: #T-test
-            sterkte = solution['relative_effect'][0]
-            gold_strength: int = 2 if sterkte > 0.8 else 1 if sterkte > 0.5 else 0
-        else:#One-way ANOVA
-            if solution['assignment_type'] == 3: #One-way ANOVA
-                sterkte: float = solution['r2'][0]
-            else: #Two-way and within-subject ANOVA
-                sterkte: float = solution['r2'][num-1]
-            gold_strength: int = 2 if sterkte > 0.2 else 1 if sterkte > 0.1 else 0
-        effect = [x for x in sent if x.lemma_ in sizes]
-        if effect != []:
-            n_effects:int = len(effect)
-            e_root = effect[num-1] if num <= n_effects else effect[num-1 - (3 - n_effects)]
-            e_tree = descendants(e_root)
-            scorepoints['effect_present'] = e_root.head.text == 'effect' or 'effect' in [x.text for x in e_tree]
-            scorepoints['strength_present'] = True #any([x in [y.text for y in e_tree] for x in ['klein','matig','sterk']]) or e_root.head.text in ['klein','matig','sterk']
-            scorepoints['right_strength'] = e_root.text in large if gold_strength == 2 else e_root.text in med if gold_strength == 1 else e_root.text in small
-        
-        #Add strings
-        appendix:str = '' if num < 2 else self.mes['S_FORFAC2'] + str(num)+' ' if num == 2 and solution['assignment_type'] != 5 else self.mes['S_SUBS'] if num < 3 else self.mes['S_INTERACT']
-        if not scorepoints['effect_present'] and scorepoints['strength_present']:
-            output.append(self.mes['F_NOSIZE']+appendix+self.mes['S_NONAME'])
-        if not scorepoints['strength_present']:
-            output.append(self.mes['F_STRENGTH']+appendix+self.mes['S_NONAME'])
-        elif scorepoints['effect_present'] and not scorepoints['right_strength']:
-            output.append(self.mes['F_STRENGTH']+appendix+self.mes['S_NONAMES'])
+            output.append(self.mes['F_BOTHPOP']+suffix)
         return output
     
     def detect_effect(self, sent:Doc, solution:dict, variable:str, p:float, eta:float) -> List[str]:
         output:List[str] = []
-        scorepoints:dict ={'effect_present': p > 0.05,
-            'strength_present': p > 0.05,
-            'right_strength': p > 0.05}
+        if p > 0.05:
+            return output
+        scorepoints:dict ={'effect_present': False,
+            'strength_present': False,
+            'right_strength': False,
+            'no_wrongs': False}
         gold_strength: int = 2 if eta > 0.2 else 1 if eta > 0.1 else 0
-        print(str(gold_strength) + variable)
         sizes = ['medium','moderate','small','strong','large','tiny'] if self.mes['L_ENGLISH'] else ['klein','zwak','matig','groot','sterk']
         large = ['strong','large'] if self.mes['L_ENGLISH'] else ['sterk','groot']
         med = ['medium','moderate'] if self.mes['L_ENGLISH'] else ['matig']
@@ -1338,12 +1319,17 @@ class ScanFunctions:
         scorepoints['effect_present'] = 'effect' in sent.text
         scorepoints['strength_present'] = any([x in sent.text for x in sizes])
         scorepoints['right_strength'] = any([x in large if gold_strength == 2 else x in med if gold_strength == 1 else x in small for x in effect])
+        scorepoints['no_wrongs'] = not any([x in large or x in med for x in effect]) if gold_strength == 0 else \
+                                   not any([x in large or x in small for x in effect]) if gold_strength == 1 else \
+                                   not any([x in med or x in small for x in effect])
         if not scorepoints['effect_present'] and scorepoints['strength_present']:
             output.append(self.mes['F_NOSIZE']+variable+self.mes['S_NONAME'])
         if not scorepoints['strength_present']:
             output.append(self.mes['F_STRENGTH']+variable+self.mes['S_NONAME'])
         elif scorepoints['effect_present'] and not scorepoints['right_strength']:
             output.append(self.mes['F_STRENGTH']+variable+self.mes['S_NONAME'])
+        elif scorepoints['effect_present'] and not scorepoints['no_wrongs']:
+            output.append(self.mes['F_STRENGTH']+variable)
         return output
     
     def detect_unk(self, sent:Doc, solution:dict, num:int=1):
@@ -1466,7 +1452,6 @@ class ScanFunctions:
     
     def detect_alternative(self, sent:Doc, solution:dict, num:int=1) -> List[str]:
         #Define variables
-        #print([(x.text,x.dep_) for x in sent])
         criteria = ['alt','ind','dep','cause','relation_type']
         scorepoints = dict([(x,False) for x in criteria])
         i_key: str = 'independent' + str(num) if num > 1 else 'independent'
@@ -1581,7 +1566,7 @@ class ScanFunctions:
         if solution['assignment_type'] == 4:
             names = [('two','-','way','anova'), ('2-factor','anova'),('2','-','way','anova')]
         if solution['assignment_type'] == 5:
-            names = [('repeated','-','measures','anova'), ('repeated','-','measures','-','anova')]
+            names = [('repeated','-','measures','anova'), ('repeated','-','measures','-','anova'),('rmanova')]
         if solution['assignment_type'] == 6:
             names = [('regressieanalyse'),('multiple','-','regression'),('multipele', 'regressie')]
         if solution['assignment_type'] == 11:
@@ -1649,8 +1634,12 @@ def descendants(node) -> List[Token]:
         output += descendants(child)
     return output
 
-def lef(a:str,b:str) -> float:
-    return edit_distance(a,b,transposition=True)
+def lef(synonyms:list,texts:list) -> float:
+    for t in texts:
+        for s in synonyms:
+            if edit_distance(t,s,transposition=True) < 2:
+                return True
+    return False
 
 def sim(gold_numbers :List, numbers :List, margin:float) -> True: #Return true if there is a similar number to num in the given list/float/integer in the solution
     return [gold_numbers[i] - margin < numbers[i] and numbers[i] < gold_numbers[i] + margin for i in range(len(gold_numbers))]

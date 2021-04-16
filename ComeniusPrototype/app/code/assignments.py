@@ -22,6 +22,9 @@ def format_table(terms:list) -> str:
 def cap(term:str) -> str:
     return term[0].upper() + term[1:]
 
+def uncap(term:str):
+    return term[0].lower() + term[1:]
+
 #Variable, dependent or independent
 class Variable:
     def __init__(self, name:str, synonyms:list, node:str):
@@ -127,7 +130,9 @@ class Assignments:
         wn_syns = []
         for syn in wn.synsets(var['name'], lang=lan): 
             for l in syn.lemmas(lang=lan): 
-                wn_syns.append(l.name())
+                name = l.name()
+                if not name in var['name'] and not '_' in name:
+                    wn_syns.append(l.name())
         text:str = var['intro'] if not second else var['intro2']
         if var['synonyms'] == '':
             var['synonyms'] = []
@@ -610,7 +615,7 @@ class Assignments:
         output['data']: dict={'predictoren':output['predictor_names']}
         output['dependent'], depintro = self.get_dependent()
         #output['correlations'] = [random.random() for i in range(int(((n_predictors + 1) ** 2 - n_predictors - 1) * 0.5))]
-        output['instruction'] = self.mes['I_CREATE']+report_type+self.mes['S_VARSARE2']+output['independent'].name+self.mes['S_AND']+output['dependent'].name+\
+        output['instruction'] = self.mes['I_CREATE']+report_type+self.mes['S_REPSHORT']+self.mes['I_INDEP']+output['independent'].name+self.mes['S_AND']+' '+uncap(self.mes['I_DEP'])+output['dependent'].name+\
             self.mes['I_METWITH']+' '+self.mes['S_AND'].join(output['data']['predictoren'])+self.mes['S_PREDICTORS']+'. '+self.mes['I_DECSHORT']
         return output
     
