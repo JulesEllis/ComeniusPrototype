@@ -853,7 +853,7 @@ class ScanFunctions:
                     else ['eta-kwadraat','bij ','de multivariate beslissing','bij de multivariate beslissing ','multivariaat','voor de beslissing van ']
         
         output:str = ''
-        output += '<br>'+'<br>'.join(self.detect_name(doc,solution))variable
+        output += '<br>'+'<br>'.join(self.detect_name(doc,solution))
         output += '<br>' + self.scan_design_manova(doc, solution, prefix=False)[1]
         for i in range(3):
             var_key = 'dependent' if i < 1 else 'dependent' + str(i+1)
