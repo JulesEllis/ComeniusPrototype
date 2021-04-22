@@ -1123,3 +1123,63 @@ class Assignments:
             return 'Experiment' if control else 'Passive-observational'
         else:
             return 'Experiment' if control else 'Passive-observerend'
+    
+    """
+    Functions to generate the standard answers for the short reports
+    """
+    def answer_name(self,assignment):
+        atype = assignment['assignment_type']
+        analyses = ['M_BLANK','M_ANALYSIS1','M_ANALYSIS2','M_ANALYSIS3','M_ANALYSIS4','M_ANALYSIS5','M_ANALYSIS6','M_BLANK','M_BLANK','M_BLANK','M_BLANK',\
+                    'M_ANALYSIS7','M_ANALYSIS8','M_ANALYSIS9','M_ANALYSIS10','M_BLANK']
+        return self.mes[analyses[atype]] + '. '
+    
+    def answer_design(self,assignment) -> str:
+        output = ''
+        if self.mes['L_ENGLISH']:
+            if assignment['assignment_type'] in [4, 12, 13]:
+                output += 'The independent variables are '+assignment['independent'].name+' ('+', '.join(assignment['independent'].levels)+') and '+\
+                    assignment['independent2'].name + ' ('+', '.join(assignment['independent2'].levels)+'). '
+            elif assignment['assignment_type'] not in [6]:
+                output:str = 'The independent variable is '+assignment['independent'].name+' with levels '+' and '.join(assignment['independent'].levels)+'. '
+            if not assignment['assignment_type'] in [11]:
+                output +='The dependent variable is '+assignment['dependent'].name+'. '
+            else:
+                output +='The dependent variables are '+assignment['dependent'].name+', '+assignment['dependent2'].name+' and '+assignment['dependent3'].name+'. '
+            if assignment['assignment_type'] in [6]:
+                output +='The covariates are '+' and '.join(assignment['levels'][1:])+'. '
+            if assignment['assignment_type'] in [12]:
+                output +='The predictors are '+' and '.join(assignment['predictor_names'])+'. '
+        else:
+            if assignment['assignment_type'] in [4, 12, 13]:
+                output += 'De onafhankelijke variabelen zijn '+assignment['independent'].name+' ('+', '.join(assignment['independent'].levels)+') en '+\
+                    assignment['independent2'].name + ' ('+', '.join(assignment['independent2'].levels)+'). '
+            elif assignment['assignment_type'] not in [6]:
+                output:str = 'De onafhankelijke variabele is '+assignment['independent'].name+' met niveaus '+' en '.join(assignment['independent'].levels)+'. '
+            if not assignment['assignment_type'] in [11]:
+                output +='De afhankelijke variabele is '+assignment['dependent'].name+'. '
+            else:
+                output +='De afhankelijke variabelen zijn '+assignment['dependent'].name+', '+assignment['dependent2'].name+' en '+assignment['dependent3'].name+'. '
+            if assignment['assignment_type'] in [6]:
+                output +='De covariaten zijn '+' en '.join(assignment['levels'][1:])+'. '
+            if assignment['assignment_type'] in [12]:
+                output +='De predictoren zijn '+' en '.join(assignment['predictor_names'])+'. '
+        return output
+    
+    def answer_decision(self,assignment, variable:str, F:float, p:float, eta:float) -> str:
+        output = ''
+        if self.mes['L_ENGLISH']:
+            if p < 0.05:
+                output += 'The effect for '+variable+' is not significant. '
+                
+        else:
+            if p < 0.05:
+                output += 'Het effect van '+variable+' is niet significant. '
+        if assignment['assignment_type'] in []:
+            output += '(F = '+str(F)+', p = '+str(p)+'eta<sup>2</sup> = '+str(eta)+'). '
+        else:
+            output += '(F = '+str(F)+', p = '+str(p)+'R<sup>2</sup> = '+str(eta)+'). '
+        return output
+        
+    
+    def answer_report(self,assignment) -> str:
+        return self.answer_name(assignment) + self.answer_design(assignment)

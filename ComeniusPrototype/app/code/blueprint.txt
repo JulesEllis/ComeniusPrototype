@@ -1,0 +1,38 @@
+T-toets (onafhankelijke steekproeven of gekoppelde paren)
+-naam, design, T, p, beslissing + effectgrootte
+
+1-way ANOVA
+-naam, design, F, p, R^2, beslissing + effectgrootte
+
+2-way ANOVA
+-naam, design, 
+-F, p en R^2 voor elke factor + interactie
+-beslissing + effectgrootte voor elke factor + interactie
+
+Repeated-measures ANOVA
+-naam, design, F, p, R^2
+-beslissing van de niveaus + effectgrootte
+-beslissing van de subjecten + effectgrootte
+
+Regressie
+-naam, design, beslissing + effectgrootte, F, p, R^2
+-eventuele p's van de predictoren
+
+MANOVA
+-naam, design, F, p
+-F, p en R^2 voor elke afhankelijke variabele
+-Beslissing voor elke afhankelijke variabele
+-Algemene beslissing + effectgrootte
+
+ANCOVA
+-naam, design, beslissing
+-eventuele effectgrootten van de predictoren
+-eventuele p's van de predictoren
+
+Multipele repeated-measures ANOVA
+-naam + design
+-multivariate within-subject beslissing + F, p, eta^2
+--within-subject contrasten + p
+-multivariate interactiebeslissing + F, p, eta^2
+--interactiecontrasten + p
+-between-subject beslissing + F, p, eta^2

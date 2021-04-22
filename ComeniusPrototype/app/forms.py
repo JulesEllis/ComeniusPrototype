@@ -125,6 +125,7 @@ class ReportForm(FlaskForm):
     inputtext = TextAreaField('', validators=[DataRequired()])
     submit = SubmitField('Feedback')
     nextt = SubmitField('Volgende')
+    answer = SubmitField('Antwoord')
     
     
     

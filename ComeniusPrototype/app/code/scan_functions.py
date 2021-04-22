@@ -44,9 +44,9 @@ class ScanFunctions:
     
     def scan_indep(self, text :str, solution :Dict) -> [bool, str]:
         #Determine which of the necessary elements are present in the answer
-        #text: List[str] = nltk.word_tokenize(text.lower())
+        texts: List[str] = nltk.word_tokenize(text)
         altmarkers = ['qualitative'] if self.mes['L_ENGLISH'] else ['kwalitatieve','kwalitatief']
-        scorepoints: Dict[str, bool] = {'var': any([x in text for x in solution['independent'].get_all_syns()]), 
+        scorepoints: Dict[str, bool] = {'var': lef(solution['independent'].get_all_syns(),texts),#any([x in text for x in solution['independent'].get_all_syns()]), 
                          'measure': any([x in text for x in altmarkers]), 
                          'level1': any([x in text for x in solution['independent'].get_all_level_syns()[0]]), 
                          'level2': any([x in text for x in solution['independent'].get_all_level_syns()[1]])}
@@ -68,12 +68,12 @@ class ScanFunctions:
         
     def scan_indep_anova(self, text: str, solution: Dict, num: int=1, between_subject=True) -> [bool, str]:
         #Determine which of the necessary elements are present in the answer
-        #text: List[str] = nltk.word_tokenize(text.lower())
+        texts: List[str] = nltk.word_tokenize(text.lower())
         n_key: str = 'independent' if num == 1 else 'independent' + str(num)
         scorepoints: Dict = {'factor': any(x in text for x in ['factor', 'between-subjectfactor','within-subjectfactor']), 
                        'domain': any(x in text for x in ['between','between-subject', 'between-subjectfactor']) if between_subject 
                        else any(x in text for x in ['within','within-subject', 'within-subjectfactor']), 
-                       'name': any([x in text for x in solution[n_key].get_all_syns()]), 
+                       'name': lef(solution[n_key].get_all_syns(),texts), 
                        'levels': [any([x in text for x in y]) for y in solution[n_key].get_all_level_syns()]
                        }
         #Determine the response of the chatbot
@@ -95,9 +95,9 @@ class ScanFunctions:
     
     def scan_dep(self, text: str, solution: Dict) -> [bool, str]:
         #Determine which of the necessary elements are present in the answer
-        text: List[str] = nltk.word_tokenize(text.lower())
+        texts: List[str] = nltk.word_tokenize(text.lower())
         altmarkers = ['quantitative'] if self.mes['L_ENGLISH'] else ['kwantitatieve','kwantitatief']
-        scorepoints: Dict[str, bool] = {'var': any([x in text for x in solution['dependent'].get_all_syns()]), 
+        scorepoints: Dict[str, bool] = {'var': lef(solution['dependent'].get_all_syns(),texts),#any([x in text for x in solution['dependent'].get_all_syns()]), 
                                      'measure': any([x in text for x in altmarkers])}
         
         #Determine the response of the chatbot
@@ -266,7 +266,7 @@ class ScanFunctions:
         i_key: str = 'independent' if num < 2 else 'independent' + str(num)
         sign:str = ['==','<=','>='][solution['hypothesis']] if 'hypothesis' in list(solution.keys()) else '=='
         tokens: List[str] = text.lower().replace('.','').split() #nltk.word_tokenize(text.lower())
-        mus: List[bool] = [any(['mu('+x+')' in text for x in y]) for y in solution[i_key].get_all_level_syns()]
+        mus: List[bool] = [lef(['mu('+y+')' for y in x],tokens) for x in solution[i_key].get_all_level_syns()]#[any(['mu('+x+')' in text for x in y]) for y in solution[i_key].get_all_level_syns()]
         scorepoints: Dict[str, bool] = {'H0': 'h0:' in tokens,
                        'sign': sign in tokens, 
                        'order': True}
@@ -489,7 +489,7 @@ class ScanFunctions:
             output.extend(self.detect_significance(doc, solution, num))
         output.extend(self.detect_comparison(doc, solution, anova, num))
         vartag = 'independent' if num == 1 else 'independent2'
-        if solution['p'][num - 1] < 0.05: #self, sent:Doc, solution:dict, variable:str, p:float, eta:float) -> List[str]
+        if solution['p'][num - 1] < 0.05 and solution['assignment_type'] > 2: #self, sent:Doc, solution:dict, variable:str, p:float, eta:float) -> List[str]
             output.extend(self.detect_effect(doc, solution, solution[vartag].name, solution['p'][num-1], solution['r2'][num-1]))
         correct:bool = len(output) == 1 if prefix else output == []
         if correct:
@@ -575,19 +575,19 @@ class ScanFunctions:
             second_check:str = 'alternatieve'
             unk_checks:list = ['mogelijk','mogelijke','verklaring','verklaringen']
             
-        unk_sents = [x for x in doc.sents if any([y in [z.text for z in x] for y in unk_checks])]
+        unk_sents = [x for x in doc.sents if lef(unk_checks,[y for y in x])]
         if unk_sents != []:
             output.extend(self.detect_unk(unk_sents[0], solution))
         else:
             output.append(self.mes['F_MANEXP'])
-        primair_sents = [x for x in doc.sents if any([z in [y.text for y in x] for z in primary_checks])]
+        primair_sents = [x for x in doc.sents if lef(primary_checks,[y for y in x])]
         if primair_sents != []:
             output.extend(self.detect_primary_interaction(primair_sents[0], solution))
         else:
             output.append(self.mes['F_PRIMEXP'])
         # EXPLICIETE ALTERNATIEVE VERKLARINGEN HOEVEN NIET BIJ INTERACTIE, STATISMogelijke alternatieve verklaringen zijn storende variabelen en omgekeerde causaliteitTIEK VOOR DE PSYCHOLOGIE 3 PAGINA 80
         if not control:
-            alt_sents = [x for x in doc.sents if second_check in [y.text for y in x]]
+            alt_sents = [x for x in doc.sents if lef(second_check,[y for y in x])]
             if alt_sents != []:
                 output.extend(self.detect_alternative_interaction(alt_sents[0], solution))
             else:
@@ -633,15 +633,15 @@ class ScanFunctions:
         output:List[str] = []
         factor_roles:list = ['independent','dependent'] if self.mes['L_ENGLISH'] else ['onafhankelijke', 'afhankelijke']
         
-        indeps = [x for x in doc.sents if any([y in x.text for y in solution['independent'].get_all_syns()])]#if x.text == solution['independent']]
+        indeps = [x for x in doc.sents if lef(solution['independent'].get_all_syns(),[y.text for y in x])]#if x.text == solution['independent']]
         if indeps != []:
             scorepoints['ind'] = True
             indep_span = indeps[0]
             scorepoints['indcorrect'] = factor_roles[0] in indep_span.text or 'factor' in indep_span.text
             if solution['assignment_type'] == 2 or solution['assignment_type'] == 13:
                 scorepoints['factor1'] = 'within-subject' in indep_span.text or 'within' in indep_span.text
-        if solution['assignment_type'] == 13:    
-            indeps2 = [x for x in doc.sents if any([y in x.text for y in solution['independent2'].get_all_syns()])]
+        if solution['assignment_type'] == 13 or solution['assignment_type'] == 4:    
+            indeps2 = [x for x in doc.sents if lef(solution['independent2'].get_all_syns(),[y.text for y in x])]
             if indeps2 != []:
                 scorepoints['ind2'] = True
                 indep2_span = indeps2[0]
@@ -650,7 +650,7 @@ class ScanFunctions:
                     scorepoints['factor2'] = 'between-subject' in indep2_span.text or 'between' in indep2_span.text
         else:
             scorepoints['ind2'] = True;scorepoints['ind2correct'] = True
-        deps = [x for x in doc.sents if any([y in x.text for y in solution['dependent'].get_all_syns()])]
+        deps = [x for x in doc.sents if lef(solution['dependent'].get_all_syns(),[y.text for y in x])]
         if deps != []:
             scorepoints['dep'] = True
             dep_span = deps[0]
@@ -684,11 +684,12 @@ class ScanFunctions:
         scorepoints = {'indcorrect':False,
                        #'levels1':all([x in text for x in solution['levels']]),
                        'mes':all([any([y in text for y in solution[x].get_all_syns()]) for x in ['dependent','dependent2','dependent3']]),
-                       'dep1':any(x in text for x in solution['dependent'].get_all_syns()),#distance(words, [factor_roles[1]], solution['dependent'].get_all_syns()) < distance(words, [factor_roles[0], 'factor'], solution['dependent'].get_all_syns()),
-                       'dep2':any(x in text for x in solution['dependent2'].get_all_syns()),#distance(words, [factor_roles[1]], solution['dependent2'].get_all_syns()) < distance(words, [factor_roles[0], 'factor'], solution['dependent2'].get_all_syns()),
-                       'dep3':any(x in text for x in solution['dependent3'].get_all_syns()),#distance(words, [factor_roles[1]], solution['dependent3'].get_all_syns()) < distance(words, [factor_roles[0], 'factor'], solution['dependent3'].get_all_syns()) 
+                       'dep1':lef(solution['dependent'].get_all_syns(),[x.text for x in doc]),#distance(words, [factor_roles[1]], solution['dependent'].get_all_syns()) < distance(words, [factor_roles[0], 'factor'], solution['dependent'].get_all_syns()),
+                       'dep2':lef(solution['dependent2'].get_all_syns(),[x.text for x in doc]),#distance(words, [factor_roles[1]], solution['dependent2'].get_all_syns()) < distance(words, [factor_roles[0], 'factor'], solution['dependent2'].get_all_syns()),
+                       'dep3':lef(solution['dependent3'].get_all_syns(),[x.text for x in doc]),#distance(words, [factor_roles[1]], solution['dependent3'].get_all_syns()) < distance(words, [factor_roles[0], 'factor'], solution['dependent3'].get_all_syns()) 
                        }
-        scorepoints['indcorrect'] = any([True if any([x in doc.text for x in solution['independent'].get_all_syns()]) and ('factor' in sent.text \
+        scorepoints['indcorrect'] = [x for x in doc.sents if lef(solution['independent'].get_all_syns(),[y.text for y in x])]
+        any([True if lef(solution['independent'].get_all_syns(),[x.text for x in doc]) and ('factor' in sent.text \
                                         or factor_roles[0] in doc.text) else False for sent in doc.sents])
         
         output:List[str] = []
@@ -833,7 +834,7 @@ class ScanFunctions:
         output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'][3]))
         output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta'][3], aliases=['eta2','eta']))
         
-        between_sent = [x for x in doc.sents if (any([y in x.text for y in solution['independent'].get_all_syns()]) or 'between-subject' in x.text) and ('significant' in x.text or 'effect' in x.text) and not markers[1] in x.text]
+        between_sent = [x for x in doc.sents if (lef(solution['independent'].get_all_syns(),[y.text for y in x]) or 'between-subject' in x.text) and ('significant' in x.text or 'effect' in x.text) and not markers[1] in x.text]
         if between_sent != []:
             output += '<br>'+'<br>'.join(self.detect_decision_multirm(between_sent[0], solution, solution['independent'].name, ['between-subject'], solution['p'][2],solution['eta'][2]))
             if(solution['p'][2] < 0.05):
@@ -858,7 +859,7 @@ class ScanFunctions:
         for i in range(3):
             var_key = 'dependent' if i < 1 else 'dependent' + str(i+1)
             if solution['p_multivar'] < 0.05 and solution['p_multivar'] < 0.05:
-                decision_sent = [x for x in doc.sents if solution[var_key].name in x.text and ('significant' in x.text or 'effect' in x.text)]
+                decision_sent = [x for x in doc.sents if lef(solution[var_key].get_all_syns(),[y.text for y in x]) and ('significant' in x.text or 'effect' in x.text)]
                 if decision_sent != []:
                     output += '<br>'+'<br>'.join(self.detect_decision_manova(decision_sent[0],solution, variable=solution[var_key].name, synonyms=[], p=solution['p'+str(i)][0], eta=solution['eta'+str(i)][0], num=i+1))
                     if solution['p'+str(i)][0] < 0.05:
@@ -887,7 +888,7 @@ class ScanFunctions:
     def split_grade_multirm(self, text:str, solution:dict) -> str:
         nl_nlp = spacy.load('nl')
         doc = nl_nlp(text.lower())
-        markers = ['eta-squared','interactions'] if self.mes['L_ENGLISH'] else ['eta-kwadraat','interactie']
+        markers = ['eta-squared','interaction'] if self.mes['L_ENGLISH'] else ['eta-kwadraat','interactie']
         
         output:str = '';num:int = 0
         output += '<br>'+'<br>'.join(self.detect_name(doc,solution))
@@ -895,7 +896,7 @@ class ScanFunctions:
         levels = solution['independent'].levels
         
         #Multivar within subject
-        decision_sent = [x for x in doc.sents if (solution['independent'].name in x.text or 'within-subject' in x.text) \
+        decision_sent = [x for x in doc.sents if (lef(solution['independent'].get_all_syns(),[y.text for y in x]) or 'within-subject' in x.text) \
                              and ('significant' in x.text or 'effect' in x.text) and markers[1] not in x.text]
         if decision_sent != []: 
             num += 1
@@ -931,7 +932,8 @@ class ScanFunctions:
                 output += '<br>'+'<br>'.join(self.detect_p(doc, 'p', solution['p1'][3], appendix=self.mes['S_CONTRAST']+levels[1]+self.mes['S_AND']+levels[2]+' '+self.mes['S_INTERACT']))
         
         #Between-subject
-        decision_sent3 = [x for x in doc.sents if (solution['independent2'].name in x.text or 'between-subject' in x.text) and ('significant' in x.text or 'effect' in x.text) and markers[1] not in x.text]
+        decision_sent3 = [x for x in doc.sents if (lef(solution['independent2'].get_all_syns(),[y.text for y in x]) or 'between-subject' in x.text) and ('significant' in x.text or 'effect' in x.text) and markers[1] not in x.text]
+        print(decision_sent3)
         if decision_sent3 != []:
             num += 1
             user_given_name:str = solution['independent2'].name if solution['independent2'].name in decision_sent3[0].text else 'between-subject'
@@ -1043,7 +1045,7 @@ class ScanFunctions:
     def detect_criterium(self, doc:Doc, solution:dict, prefix:bool=True):
         output = []
         if (not 'criterium' in doc.text and not 'afhankelijke' in doc.text and not 'dependent' in doc.text) or \
-                        not solution['dependent'].name in doc.text:
+                        not lef(solution['independent'].get_all_syns(),[x.text for x in doc]):
             output.append(self.mes['F_DEP'])
         return output
     
@@ -1083,7 +1085,7 @@ class ScanFunctions:
         mean_2 = [x in sent.text for x in avgs2]
         scorepoints['mean_present'] = any(mean) or any(mean_2)
         scorepoints['pop_present'] = any(mean_2) or pop in sent.text or any([x in sent.text for x in ['significant','significante']])
-        level_bools:list[bool] = [any([y in sent.text for y in level_syns[i]]) for i in range(2)]#len(levels))]
+        level_bools:list[bool] = [lef(level_syns[i],[x.text for x in sent]) for i in range(2)]#len(levels))]
         scorepoints['level_present'] = any(level_bools) #or scorepoints['level_present']
         scorepoints['both_present'] = all(level_bools)# or scorepoints['both_present']
         scorepoints['contrasign'] = not ((any(mean_2) or pop in sent.text) and any([x in sent.text for x in ['significant','significante']]))
@@ -1165,8 +1167,8 @@ class ScanFunctions:
             int_descendants = i_sents[0]    
             tokens = [x.text for x in int_descendants]
             scorepoints['interactie'] = True
-            scorepoints['indy1'] = any([x in doc.text for x in solution['independent'].get_all_syns()])
-            scorepoints['indy2'] = any([x in doc.text for x in solution['independent2'].get_all_syns()])
+            scorepoints['indy1'] = lef(solution['independent'].get_all_syns(),[x.text for x in doc])
+            scorepoints['indy2'] = lef(solution['independent2'].get_all_syns(),[x.text for x in doc])
             scorepoints['pop_present'] = pop in [x.text for x in int_descendants] or any([x in tokens for x in ['significant','significante']])
             scorepoints['right_negation'] = bool(negation_counter(tokens) % 2) != rejected    
             scorepoints['contrasign'] = not ((pop in tokens) and any([x in tokens for x in ['significant','significante']]))
@@ -1192,7 +1194,7 @@ class ScanFunctions:
         marker = 'significant predictive value' if self.mes['L_ENGLISH'] else 'significant voorspellende waarde'
         tokens:list = [x.text for x in sent]
         scorepoints:dict = {'sign_val': marker in sent.text,
-            'indep': any([x in sent.text for x in solution['independent'].get_all_syns()]),
+            'indep': lef(solution['independent'].get_all_syns(),[x.text for x in sent]),
             'cov1': solution['predictor_names'][0] in sent.text or any([x in sent.text for x in solution['predictor_syns'][0]]),
             'cov2': solution['predictor_names'][1] in sent.text or any([x in sent.text for x in solution['predictor_syns'][1]]),
             'dep': any([x in sent.text for x in solution['dependent'].get_all_syns()]),
@@ -1219,8 +1221,8 @@ class ScanFunctions:
         tokens:list = [x.text for x in sent]
         suffix = ' bij de beslissing van ' if not self.mes['L_ENGLISH'] else ' for the decision of '
         scorepoints:dict = {'sign_effect': 'significant' in sent.text,
-            'indep': any([x in sent.text for x in solution['independent'].get_all_syns()]),
-            'dep': any([x in sent.text for x in solution[dep_key].get_all_syns()]) or 'multivariate' in variable,
+            'indep': lef(solution['independent'].get_all_syns(),[x.text for x in sent]),
+            'dep': lef(solution[dep_key].get_all_syns(),[x.text for x in sent]) or 'multivariate' in variable,
             'neg': bool(negation_counter(tokens) % 2) != rejected}
         
         output:List[str] = []
@@ -1372,8 +1374,8 @@ class ScanFunctions:
             causeverbs:list = [x for x in sent if x.text in ['veroorzaakt', 'heeft', 'beinvloedt', 'beinvloed','verantwoordelijk', 'oorzaak', 'invloed']] 
         if any(causeverbs): #effect_children = descendants(causeverbs[0])
             scorepoints['cause'] = True
-        depnode = [x for x in sent if x.text == solution['dependent'].node]
-        indynode = [x for x in sent if x.text == solution[i_key].node]
+        depnode = [x for x in sent if edit_distance(x.text,solution['dependent'].node) < 2]
+        indynode = [x for x in sent if edit_distance(x.text,solution[i_key].node) < 2]
         scorepoints['ind'] = indynode != [] #any([x in sent.text for x in solution[i_key]]) #indynode != []
         scorepoints['dep'] = depnode != []#any([x in sent.text for x in solution['dependent']]) #depnode != []
         if scorepoints['ind'] and scorepoints['dep']:
@@ -1407,9 +1409,9 @@ class ScanFunctions:
         rejected = solution['p'][2] < 0.05
         
         # Fill scorepoints
-        dep_node = [x for x in sent if x.text == solution['dependent'].node]
-        indy1node = [x for x in sent if x.text == solution['independent'].node]
-        indy2node = [x for x in sent if x.text == solution['independent2'].node]
+        dep_node = [x for x in sent if edit_distance(x.text,solution['dependent'].node) < 2]
+        indy1node = [x for x in sent if edit_distance(x.text,solution['independent'].node) < 2]
+        indy2node = [x for x in sent if edit_distance(x.text,solution['independent2'].node) < 2]
         scorepoints['indy1'] = indy1node != []
         scorepoints['indy2'] = indy2node != []
         scorepoints['dep'] = dep_node != []
@@ -1469,8 +1471,8 @@ class ScanFunctions:
             causeverbs:list = [x for x in sent if x.text in ['veroorzaakt', 'heeft', 'beinvloedt', 'beinvloed','verantwoordelijk', 'oorzaak', 'invloed']] 
         if any(causeverbs):
             scorepoints['cause'] = True
-        depnode = [x for x in sent if x.text == solution['dependent'].node]
-        indynode = [x for x in sent if x.text == solution[i_key].node]
+        depnode = [x for x in sent if edit_distance(x.text,solution['dependent'].node) < 2]
+        indynode = [x for x in sent if edit_distance(x.text,solution[i_key].node) < 2]
         scorepoints['ind'] = indynode != []
         scorepoints['dep'] = depnode != []
         if scorepoints['ind'] and scorepoints['dep']:        
@@ -1575,7 +1577,8 @@ class ScanFunctions:
             names = [('ancova')]
         if solution['assignment_type'] == 13:
             names = [('multipele','repeated-measures','anova'),('multipele','rmanova'),('multivariate','repeated-measures-anova'),
-                     ('multivariate','repeated-measures','anova'),('multivariate','variantieanalyse'),('multivariate','rmanova')]
+                     ('multivariate','repeated-measures','anova'),('multivariate','variantieanalyse'),('multivariate','rmanova'),
+                     ('multiple','rmanova'),('multiple','repeated-measures','anova')]
         if any([all([x in doc.text for x in y]) for y in names]):
             return ['']
         else:
@@ -1609,9 +1612,9 @@ class ScanFunctions:
 
 def distance(words:list, w1:list, w2:list) -> int:
     if not any([x in words for x in w1]):
-        return 999
+        return 9999
     if not any([x in words for x in w2]):
-        return 999
+        return 9999
     else:
         index1 = words.index([x for x in words if x in w1][0])
         index2 = words.index([x for x in words if x in w2][0])
@@ -1635,9 +1638,10 @@ def descendants(node) -> List[Token]:
     return output
 
 def lef(synonyms:list,texts:list) -> float:
+    fusedtext = ' '.join(texts)
     for t in texts:
         for s in synonyms:
-            if edit_distance(t,s,transposition=True) < 2:
+            if edit_distance(t,s) < 2 or s in fusedtext:
                 return True
     return False
 

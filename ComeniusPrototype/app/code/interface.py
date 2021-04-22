@@ -497,8 +497,6 @@ class Controller:
             feedback = self.sfs.split_grade_ancova(text, self.solution)
         if self.assignment['assignment_type'] == 13:
             feedback = self.sfs.split_grade_multirm(text, self.solution)
-        if self.assignment['assignment_type'] == 14: #Will be scrapped
-            feedback = self.sfs.split_grade_multirm2(text, self.solution)
         return instruction, feedback
     
     """

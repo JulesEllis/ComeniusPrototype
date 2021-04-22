@@ -82,7 +82,6 @@ def index():
                 form.__getattribute__('std2').label = mes['A_STD']
                 form.__getattribute__('nextt').label.text = mes['B_NEXT']
                 form.__getattribute__('answer').label.text = mes['B_ANSWER']
-                form.__getattribute__('explain').label.text = mes['B_EXPLAIN']
                 controller.formmode = False
                 instruction = controller.print_assignment()
                 #Save controller
@@ -117,7 +116,6 @@ def index():
                 form.__getattribute__('df5').label = mes['A_TOTAL']
                 form.__getattribute__('nextt').label.text = mes['B_NEXT']
                 form.__getattribute__('answer').label.text = mes['B_ANSWER']
-                form.__getattribute__('explain').label.text = mes['B_EXPLAIN']
                 controller.formmode = False
                 instruction = controller.print_assignment()
                 
@@ -133,6 +131,7 @@ def index():
             elif form_shape == 7:
                 form = ReportForm()
                 form.__getattribute__('nextt').label.text = mes['B_NEXT']
+                form.__getattribute__('answer').label.text = mes['B_ANSWER']
                 form.__getattribute__('inputtext').label = mes['Q_SHORTREPORT']
                 controller.formmode = False
                 instruction = output_text
@@ -240,7 +239,6 @@ def bigform():
     title:str = mes['M_TITLE']
     form.__getattribute__('nextt').label.text = mes['B_NEXT']
     form.__getattribute__('answer').label.text = mes['B_ANSWER']
-    form.__getattribute__('explain').label.text = mes['B_EXPLAIN']
     
     #Fill text positions that will be shown in the form
     if a['assignment_type'] == 4:
@@ -315,7 +313,6 @@ def smallform():
     title:str = controller.mes['M_TITLE']
     form.__getattribute__('nextt').label.text = mes['B_NEXT']
     form.__getattribute__('answer').label.text = mes['B_ANSWER']
-    form.__getattribute__('explain').label.text = mes['B_EXPLAIN']
     
     #Enter text labels
     if a['assignment_type'] == 4:
@@ -388,6 +385,7 @@ def reportform():
     title:str = controller.mes['M_TITLE']
     form.__getattribute__('nextt').label.text = mes['B_NEXT']
     form.__getattribute__('inputtext').label = mes['Q_SHORTREPORT']
+    form.__getattribute__('answer').label.text = mes['B_ANSWER']
     
     #Determine rendering parameters based on input button
     if flask.request.method == 'POST':
@@ -411,7 +409,28 @@ def reportform():
             form.inputtext.data = ""
             field = controller.submit_field.value
             return render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=field, varnames=varnames, title=title)
+        elif form.answer.data:
+            instruction = controller.assignments.print_report(controller.assignment)
+            output = controller.assignments.answer_report(controller.assignment) #controller.asssignment['answer']
+            return render_template('reportform.html', form=form, instruction=instruction, display=output, title=title)
         else:
             print('ERROR: INVALID METHOD')
     else:
         print('ERROR: INVALID METHOD')
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
