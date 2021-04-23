@@ -763,7 +763,7 @@ class ScanFunctions:
                     else:
                         output += '<br>' + self.scan_decision_anova(decision_sent[0], solution, num=i+1, prefix=False, elementair=False)[1]
                 else:
-                    varss = [solution['independent'],solution['independent2'],markers[1]]
+                    varss = [solution['independent'].name,solution['independent2'].name,markers[1]]
                     output += '<br>'+self.mes['F_NODEC']+ varss[i] + self.mes['S_LACKING1']
                 
         if output.replace('<br>','') == '':
@@ -812,40 +812,6 @@ class ScanFunctions:
             return self.mes['F_NICEREP']
         else:
             return self.mes['F_INCOMPLETE'] + re.sub(r'<br>(<br>)+', '<br>', output)
-    
-    def split_grade_ancova(self, text:str, solution:dict) -> str:
-        nl_nlp = spacy.load('nl')
-        doc = nl_nlp(text.lower())
-        markers = ['predictive value','predictive'] if self.mes['L_ENGLISH'] else ['voorspellende waarde','voorspellend']
-        
-        output:str = ''
-        output += '<br>'+'<br>'.join(self.detect_name(doc,solution))
-        output += '<br>' + self.scan_design(doc, solution, prefix=False)[1]
-        output += '<br>' + self.scan_predictors(doc, solution, prefix=False)[1]
-        
-        multivar_sent = [x for x in doc.sents if markers[0] in x.text]
-        if multivar_sent != []:
-            output += '<br>'+'<br>'.join(self.detect_decision_ancova(multivar_sent[0], solution))
-            if(solution['p'][3] < 0.05):
-                output += '<br>'+'<br>'.join(self.detect_effect(multivar_sent[0],solution, variable='multivariate', p=solution['p'][3], eta=solution['eta'][3]))
-        else:
-            output += '<br>'+self.mes['F_NOPRED']
-        output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'F', solution['F'][3]))
-        output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'][3]))
-        output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta'][3], aliases=['eta2','eta']))
-        
-        between_sent = [x for x in doc.sents if (lef(solution['independent'].get_all_syns(),[y.text for y in x]) or 'between-subject' in x.text) and ('significant' in x.text or 'effect' in x.text) and not markers[1] in x.text]
-        if between_sent != []:
-            output += '<br>'+'<br>'.join(self.detect_decision_multirm(between_sent[0], solution, solution['independent'].name, ['between-subject'], solution['p'][2],solution['eta'][2]))
-            if(solution['p'][2] < 0.05):
-                output += '<br>'+'<br>'.join(self.detect_effect(between_sent[0],solution, variable=solution['independent'].name, p=solution['p'][2], eta=solution['eta'][2]))
-                output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'][2], appendix=solution['independent'].name))
-        else:
-            output += '<br>'+self.mes['F_NOBTFAC']
-        if output.replace('<br>','') == '':
-            return self.mes['F_NICEREP']
-        else:
-            return self.mes['F_INCOMPLETE'] + re.sub(r'<br>(<br>)+', '<br>', output)
      
     def split_grade_manova(self, text:str, solution:dict) -> str:
         nl_nlp = spacy.load('nl')
@@ -880,6 +846,40 @@ class ScanFunctions:
             output += '<br>'+'<br>'.join(self.detect_effect(decision_sent[0],solution, variable=markers[3], p=solution['p_multivar'], eta=solution['eta_multivar']))
         else:
             output += '<br>' + self.mes['F_NOMULTIVAR']
+        if output.replace('<br>','') == '':
+            return self.mes['F_NICEREP']
+        else:
+            return self.mes['F_INCOMPLETE'] + re.sub(r'<br>(<br>)+', '<br>', output)
+    
+    def split_grade_ancova(self, text:str, solution:dict) -> str:
+        nl_nlp = spacy.load('nl')
+        doc = nl_nlp(text.lower())
+        markers = ['predictive value','predictive'] if self.mes['L_ENGLISH'] else ['voorspellende waarde','voorspellend']
+        
+        output:str = ''
+        output += '<br>'+'<br>'.join(self.detect_name(doc,solution))
+        output += '<br>' + self.scan_design(doc, solution, prefix=False)[1]
+        output += '<br>' + self.scan_predictors(doc, solution, prefix=False)[1]
+        
+        multivar_sent = [x for x in doc.sents if markers[0] in x.text]
+        if multivar_sent != []:
+            output += '<br>'+'<br>'.join(self.detect_decision_ancova(multivar_sent[0], solution))
+            if(solution['p'][3] < 0.05):
+                output += '<br>'+'<br>'.join(self.detect_effect(multivar_sent[0],solution, variable='multivariate', p=solution['p'][3], eta=solution['eta'][3]))
+        else:
+            output += '<br>'+self.mes['F_NOPRED']
+        output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'F', solution['F'][3]))
+        output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'][3]))
+        output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta'][3], aliases=['eta2','eta']))
+        
+        between_sent = [x for x in doc.sents if (lef(solution['independent'].get_all_syns(),[y.text for y in x]) or 'between-subject' in x.text) and ('significant' in x.text or 'effect' in x.text) and not markers[1] in x.text]
+        if between_sent != []:
+            output += '<br>'+'<br>'.join(self.detect_decision_multirm(between_sent[0], solution, solution['independent'].name, ['between-subject'], solution['p'][2],solution['eta'][2]))
+            if(solution['p'][2] < 0.05):
+                output += '<br>'+'<br>'.join(self.detect_effect(between_sent[0],solution, variable=solution['independent'].name, p=solution['p'][2], eta=solution['eta'][2]))
+                output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'][2], appendix=solution['independent'].name))
+        else:
+            output += '<br>'+self.mes['F_NOBTFAC']
         if output.replace('<br>','') == '':
             return self.mes['F_NICEREP']
         else:
@@ -1252,7 +1252,7 @@ class ScanFunctions:
             output.append(self.mes['F_NONEG']+variable)
         return output
         
-    def detect_true_scores(self, sent:Doc, solution:dict, num=None) -> List[str]:
+    def fres(self, sent:Doc, solution:dict, num=None) -> List[str]:
         #Define variables
         criteria:list = ['right_comparison', 'right_negation', 'mean_present', 'pop_present','jacked','contrasign']
         pop = 'population' if self.mes['L_ENGLISH'] else 'population'

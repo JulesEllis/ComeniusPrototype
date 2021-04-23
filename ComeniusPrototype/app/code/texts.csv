@@ -27,8 +27,8 @@ Q_RAW;Voer het ruwe effect in dat je hebt berekend.;Enter the raw effect.
 Q_RELATIVE;Voer het relatieve effect in dat je hebt berekend.;Enter the relative effect.
 Q_T;Voer de T-waarde in.;Enter the value of T.
 Q_P;Voer de p-waarde in.;Enter the value of p.
-Q_DECISION;Voer de beslissing in.;Enter the decision.
-Q_INTERPRET;Voer de causale interpretatie in.;Enter the causal interpretation.
+Q_DECISION;Voer de beslissing in (voor factor 1).;Enter the decision (for factor 1).
+Q_INTERPRET;Voer de causale interpretatie in (voor factor 1).;Enter the causal interpretation (for factor 1).
 Q_IND1;Beschrijf de eerste onafhankelijke variabele.;Enter the first independent variable. 
 Q_IND2;Beschrijf de tweede onafhankelijke variabele.;Enter the second independent variable. 
 Q_HYP1;Voer de nulhypothese in voor de eerste onafhankelijke variabele, geformuleerd met “H0” en “mu”.;Enter the null hypothesis for the first variable formulated with “H0” and “mu”.
