@@ -1176,15 +1176,15 @@ class Assignments:
         
         #Generate text
         if self.mes['L_ENGLISH']:
-            output += 'The effect for '+variable+' is significant. ' if p < 0.05 else 'The effect for '+variable+' is not significant'
+            output += 'The effect for '+variable+' is significant' if p < 0.05 else 'The effect for '+variable+' is not significant. '
             if assignment['assignment_type'] in [1,2,3,4,5]:
                 output += ', the population means for '+' and '.join(assignment[n_key].levels)+' are '+eq_sign
             if p < 0.05 and not assignment['assignment_type'] in [1,2] and not no_effect:
                 output += ', the effect here is '+sizes[size_ind]#+'.'
-            else:
-                output += '. '
+            #else:
+            #    output += '. '
         else:
-            output += 'Het effect van '+variable+' is significant. ' if p < 0.05 else 'Het effect van '+variable+' is niet significant'
+            output += 'Het effect van '+variable+' is significant. ' if p < 0.05 else 'Het effect van '+variable+' is niet significant. '
             if assignment['assignment_type'] in [1,2,3,4,5]:
                 output += ', de populatiegemiddelden van '+' en '.join(assignment[n_key].levels)+' zijn '+eq_sign
             if p < 0.05 and not assignment['assignment_type'] in [1,2] and not no_effect:
@@ -1197,13 +1197,13 @@ class Assignments:
         output = ''
         if p < 0.05:
             if assignment['assignment_type'] in [11,12,13,14]:
-                output += '(F = '+str(round(FT,2))+', p = '+str(round(p,3))+', eta<sup>2</sup> = '+str(round(eta,2))+'). '
+                output += ' (F = '+str(round(FT,2))+', p = '+str(round(p,3))+', eta<sup>2</sup> = '+str(round(eta,2))+'). '
             elif assignment['assignment_type'] in [1,2]:
-                output += '(T = '+str(round(FT,2))+', p = '+str(round(p,3))+'). '
+                output += ' (T = '+str(round(FT,2))+', p = '+str(round(p,3))+'). '
             elif multivar:
-                output += '(F = '+str(round(FT,2))+', p = '+str(round(p,3))+'). '
+                output += ' (F = '+str(round(FT,2))+', p = '+str(round(p,3))+'). '
             else:
-                output += '(F = '+str(round(FT,2))+', p = '+str(round(p,3))+', R<sup>2</sup> = '+str(round(eta,2))+'). '
+                output += ' (F = '+str(round(FT,2))+', p = '+str(round(p,3))+', R<sup>2</sup> = '+str(round(eta,2))+'). '
         return output
     
     def answer_decision_subjects(self,assignment) -> str:
@@ -1214,14 +1214,14 @@ class Assignments:
             output+= 'The effect of the subjects is significant' if assignment['p'][1] < 0.05 else 'The effect of the subjects is not significant'
             output+= ', the stepped-up means of the subjects are unequal in the population' if assignment['p'][1] < 0.05 else ', the boosted means of the subjects are equal in the population'
             if assignment['p'][1] < 0.05:
-                output += ', this effect is '+sizes[size_ind]+'.'
+                output += ', this effect is '+sizes[size_ind]
             else:
                 output += '. '
         else:
             output+= 'Het effect van de subjecten is significant' if assignment['p'][1] < 0.05 else 'Het effect van de subjecten is niet significant'
             output+= ', de opgevoerde gemiddelden van de subjecten zijn ongelijk in de populatie' if assignment['p'][1] < 0.05 else ', de opgevoerde gemiddelden van de subjecten zijn gelijk in de populatie'
             if assignment['p'][1] < 0.05:
-                output += ', dit effect is '+sizes[size_ind]+'.'
+                output += ', dit effect is '+sizes[size_ind]
             else:
                 output += '. '
         return output
@@ -1242,9 +1242,9 @@ class Assignments:
                 output += 'Er is geen interactie tussen '+assignment['independent'].name+' en '+assignment['independent2'].name+' in de populatie'
         if assignment['p'][1] < 0.05:
             if self.mes['L_ENGLISH']:
-                output += ', this effect is '+sizes[size_ind]+'. '
+                output += ', this effect is '+sizes[size_ind]
             else:
-                output += ', dit effect is '+sizes[size_ind]+'. '
+                output += ', dit effect is '+sizes[size_ind]
         else:
             output += '. '
         return output
@@ -1264,9 +1264,9 @@ class Assignments:
                 output = 'De proportie verklaarde variantie is niet significant groter dan nul. '
         if assignment['p'][0] < 0.05:
             if self.mes['L_ENGLISH']:
-                output += 'this effect is '+sizes[size_ind]+' '
+                output += 'this effect is '+sizes[size_ind]
             else:
-                output += 'het effect hiervan is '+sizes[size_ind]+' '
+                output += 'het effect hiervan is '+sizes[size_ind]
         return output
         
     def answer_predictors(self,assignment) -> str:
@@ -1308,11 +1308,28 @@ class Assignments:
                 output += cap(assignment['independent'].name) + ', ' + pnames[0] + ' en ' + pnames[1] + ' hebben samen geen significant voorspellend effect op ' + assignment['dependent'].name+'. '
         if assignment['p'][0] < 0.05:
             if self.mes['L_ENGLISH']:
-                output += 'this effect is '+sizes[size_ind]+' '
+                output += 'this effect is '+sizes[size_ind]
             else:
-                output += 'het effect hiervan is '+sizes[size_ind]+' '
+                output += 'het effect hiervan is '+sizes[size_ind]
         return output
-        
+    
+    def answer_contrast(self, assignment, v1:str, v2:str, p:str, interact=False) -> str:
+        output:str = ''
+        if interact:
+            effect = 'The interaction' if self.mes['L_ENGLISH'] else 'De interactie'
+        else:
+            effect = 'The effect' if self.mes['L_ENGLISH'] else 'Het effect'
+        if self.mes['L_ENGLISH']:
+            if p < 0.05:
+                output += effect+' between '+v1+' and '+v2+' is significant(p = '+str(round(p,2))+'). '
+            else:
+                output += effect+' between '+v1+' and '+v2+' is not significant. '
+        else:
+            if p < 0.05:
+                output += effect+' tussen '+v1+' en '+v2+' is significant(p = '+str(round(p,2))+'). '
+            else:
+                output += effect+' tussen '+v1+' en '+v2+' is niet significant. '
+        return output
     
     def answer_report(self,assignment) -> str:
         output:str = self.answer_name(assignment) + self.answer_design(assignment)+'<br>'
@@ -1356,12 +1373,17 @@ class Assignments:
                 output += self.answer_stats(assignment, FT=assignment['F'][4], p=assignment['p'][4],eta=assignment['eta'][4])+'<br>'
         if assignment['assignment_type'] == 13:
             tag = 'the interaction' if self.mes['L_ENGLISH'] else 'de interactie'
+            lvls = assignment['independent'].levels
             output += self.answer_decision(assignment, assignment['independent'].name, 1, FT=assignment['F0'][0], p=assignment['p0'][0],eta=assignment['eta0'][0])
             output += self.answer_stats(assignment, FT=assignment['F0'][0], p=assignment['p0'][0],eta=assignment['eta0'][0])+'<br>'
-            
+            if assignment['p0'][0] < 0.05:
+                output += self.answer_contrast(assignment, lvls[0], lvls[1], assignment['p1'][0])+'<br>'
+                output += self.answer_contrast(assignment, lvls[1], lvls[2], assignment['p1'][1])+'<br>'
             output += self.answer_decision(assignment, tag, 1, FT=assignment['F0'][1], p=assignment['p0'][1],eta=assignment['eta0'][1])
             output += self.answer_stats(assignment, FT=assignment['F0'][1], p=assignment['p0'][1],eta=assignment['eta0'][1])+'<br>'
-            
+            if assignment['p0'][1] < 0.05:
+                output += self.answer_contrast(assignment, lvls[0], lvls[1], assignment['p1'][2], interact=True)+'<br>'
+                output += self.answer_contrast(assignment, lvls[1], lvls[2], assignment['p1'][3], interact=True)+'<br>'
             output += self.answer_decision(assignment, assignment['independent2'].name, 2, FT=assignment['F'][1], p=assignment['p'][1],eta=assignment['eta'][1])
             output += self.answer_stats(assignment, FT=assignment['F'][1], p=assignment['p'][1],eta=assignment['eta'][1])+'<br>'
         return output
