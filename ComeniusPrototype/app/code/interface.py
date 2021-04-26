@@ -133,7 +133,7 @@ class Controller:
             if function in [self.sfs.scan_decision, self.sfs.scan_decision_anova, self.sfs.scan_decision_rmanova, self.sfs.scan_interpretation, 
                             self.sfs.scan_interpretation_anova]:
                 if self.mes['L_ENGLISH']:
-                    nl_nlp = spacy.load('en_core_news_sm') 
+                    nl_nlp = spacy.load('en_core_web_sm') 
                 else: 
                     nl_nlp = spacy.load('nl_core_news_sm')
                 again, output_text = function(nl_nlp(input_text.lower()), *arguments)
