@@ -347,7 +347,10 @@ class Controller:
         output[7].append(self.sfs.scan_number(textfields['inputtext7'], 'relative_effect', self.solution)[1])
         output[8].append(self.sfs.scan_number(textfields['inputtext8'], 'T', self.solution)[1])
         output[9].append(self.sfs.scan_number(textfields['inputtext9'], 'p', self.solution)[1])
-        nl_nlp = spacy.load('nl')
+        if self.mes['L_ENGLISH']:
+            nl_nlp = spacy.load('en_core_web_sm') 
+        else: 
+            nl_nlp = spacy.load('nl_core_news_sm')
         output[10].append(self.sfs.scan_decision(nl_nlp(textfields['inputtext10'].lower()), self.solution, anova=False)[1])
         output[11].append(self.sfs.scan_interpretation(nl_nlp(textfields['inputtext11'].lower()), self.solution, anova=False)[1])
         
@@ -375,7 +378,10 @@ class Controller:
     #Apply scan functions to the input fields of the ANOVA form and return a list of feedback points
     def update_form_anova(self, textfields: Dict) -> [str, list]:
         output:list = [[] for i in range(7)] #Empty list for every type of input field (independent variable, dependent variable, etc.)
-        nl_nlp = spacy.load('nl')
+        if self.mes['L_ENGLISH']:
+            nl_nlp = spacy.load('en_core_web_sm') 
+        else: 
+            nl_nlp = spacy.load('nl_core_news_sm')
         if self.analysis_type == Task.ONEWAY_ANOVA:
             instruction = self.assignments.print_anova(self.assignment)
         elif self.analysis_type == Task.TWOWAY_ANOVA:

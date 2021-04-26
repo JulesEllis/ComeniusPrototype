@@ -713,7 +713,10 @@ class ScanFunctions:
     """
     
     def split_grade_ttest(self, text: str, solution:dict, between_subject:bool) -> str:
-        nl_nlp = spacy.load('nl')
+        if self.mes['L_ENGLISH']:
+            nl_nlp = spacy.load('en_core_web_sm') 
+        else: 
+            nl_nlp = spacy.load('nl_core_news_sm')
         doc = nl_nlp(text.lower())
         output:str = ''
         output += '<br>'+'<br>'.join(self.detect_name(doc,solution))
@@ -728,7 +731,10 @@ class ScanFunctions:
             return self.mes['F_INCOMPLETE'] + re.sub(r'<br>(<br>)+', '<br>', output)
         
     def split_grade_anova(self, text: str, solution:dict, two_way:bool) -> str:
-        nl_nlp = spacy.load('nl')
+        if self.mes['L_ENGLISH']:
+            nl_nlp = spacy.load('en_core_web_sm') 
+        else: 
+            nl_nlp = spacy.load('nl_core_news_sm')
         doc = nl_nlp(text.lower())
         markers = ['squared','interaction'] if self.mes['L_ENGLISH'] else ['kwadraat','interactie']
         
@@ -772,7 +778,10 @@ class ScanFunctions:
             return self.mes['F_INCOMPLETE'] + re.sub(r'<br>(<br>)+', '<br>', output)
             
     def split_grade_rmanova(self, text: str, solution:dict) -> str:
-        nl_nlp = spacy.load('nl')
+        if self.mes['L_ENGLISH']:
+            nl_nlp = spacy.load('en_core_web_sm') 
+        else: 
+            nl_nlp = spacy.load('nl_core_news_sm')
         doc = nl_nlp(text.lower())
         output:str = ''
         output += '<br>'+'<br>'.join(self.detect_name(doc,solution))
@@ -798,7 +807,10 @@ class ScanFunctions:
             return self.mes['F_INCOMPLETE'] + re.sub(r'<br>(<br>)+', '<br>', output)
             
     def split_grade_mregression(self, text:str, solution:dict) -> str:
-        nl_nlp = spacy.load('nl')
+        if self.mes['L_ENGLISH']:
+            nl_nlp = spacy.load('en_core_web_sm') 
+        else: 
+            nl_nlp = spacy.load('nl_core_news_sm')
         doc = nl_nlp(text.lower())
         output:str = ''
         output += '<br>'+'<br>'.join(self.detect_name(doc,solution))
@@ -814,7 +826,10 @@ class ScanFunctions:
             return self.mes['F_INCOMPLETE'] + re.sub(r'<br>(<br>)+', '<br>', output)
      
     def split_grade_manova(self, text:str, solution:dict) -> str:
-        nl_nlp = spacy.load('nl')
+        if self.mes['L_ENGLISH']:
+            nl_nlp = spacy.load('en_core_web_sm') 
+        else: 
+            nl_nlp = spacy.load('nl_core_news_sm')
         doc = nl_nlp(text.lower())
         markers = ['eta-squared','for ','the multivariate decision ','for the multivariate decision ','multivariate','for the decision of '] if self.mes['L_ENGLISH'] \
                     else ['eta-kwadraat','bij ','de multivariate beslissing','bij de multivariate beslissing ','multivariaat','voor de beslissing van ']
@@ -852,7 +867,10 @@ class ScanFunctions:
             return self.mes['F_INCOMPLETE'] + re.sub(r'<br>(<br>)+', '<br>', output)
     
     def split_grade_ancova(self, text:str, solution:dict) -> str:
-        nl_nlp = spacy.load('nl')
+        if self.mes['L_ENGLISH']:
+            nl_nlp = spacy.load('en_core_web_sm') 
+        else: 
+            nl_nlp = spacy.load('nl_core_news_sm')
         doc = nl_nlp(text.lower())
         markers = ['predictive value','predictive'] if self.mes['L_ENGLISH'] else ['voorspellende waarde','voorspellend']
         
@@ -886,7 +904,10 @@ class ScanFunctions:
             return self.mes['F_INCOMPLETE'] + re.sub(r'<br>(<br>)+', '<br>', output)
     
     def split_grade_multirm(self, text:str, solution:dict) -> str:
-        nl_nlp = spacy.load('nl')
+        if self.mes['L_ENGLISH']:
+            nl_nlp = spacy.load('en_core_web_sm') 
+        else: 
+            nl_nlp = spacy.load('nl_core_news_sm')
         doc = nl_nlp(text.lower())
         markers = ['eta-squared','interaction'] if self.mes['L_ENGLISH'] else ['eta-kwadraat','interactie']
         
@@ -951,7 +972,10 @@ class ScanFunctions:
             return self.mes['F_INCOMPLETE'] + re.sub(r'<br>(<br>)+', '<br>', output)
     
     def split_grade_multirm2(self, text:str, solution:dict) -> str:
-        nl_nlp = spacy.load('nl')
+        if self.mes['L_ENGLISH']:
+            nl_nlp = spacy.load('en_core_web_sm') 
+        else: 
+            nl_nlp = spacy.load('nl_core_news_sm')
         doc = nl_nlp(text.lower())
         output:str = ''
         output += '<br>'+'<br>'.join(self.detect_name(doc,solution))
