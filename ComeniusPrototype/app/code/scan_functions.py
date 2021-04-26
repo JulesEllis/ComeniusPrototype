@@ -267,7 +267,7 @@ class ScanFunctions:
         sign:str = ['==','<=','>='][solution['hypothesis']] if 'hypothesis' in list(solution.keys()) else '=='
         tokens: List[str] = text.lower().replace('.','').split() #nltk.word_tokenize(text.lower())
         mus: List[bool] = [lef(['mu('+y+')' for y in x],tokens) for x in solution[i_key].get_all_level_syns()]#[any(['mu('+x+')' in text for x in y]) for y in solution[i_key].get_all_level_syns()]
-        scorepoints: Dict[str, bool] = {'H0': 'h0:' in tokens,
+        scorepoints: Dict[str, bool] = {'H0': 'h0:' in tokens or 'h0' in tokens,
                        'sign': sign in tokens, 
                        'order': True}
         if sign == '==' and '=' in tokens:
@@ -296,7 +296,7 @@ class ScanFunctions:
         markers:list = ['and','total'] if self.mes['L_ENGLISH'] else ['en','totaal'] #Dutch and English words for the different versions
         criteria:list = ['h0', 'mu1some','mu1all','mu2some','mu2all']
         scorepoints = dict([(x,False) for x in criteria])
-        scorepoints['h0'] = bool(re.search(r'h0\(' + re.escape(str(solution['independent'].name)) + r'( )*(x|\*|('+re.escape(markers[0])+'))( )*' + re.escape(str(solution['independent2'].name)) + r'\):', text))
+        scorepoints['h0'] = bool(re.search(r'h0\(' + re.escape(str(solution['independent'].name)) + r'( )*(x|\*|('+re.escape(markers[0])+'))( )*' + re.escape(str(solution['independent2'].name)) + r'\)', text))
         mu1present = [bool(re.search(x, text)) for x in [r'mu\('+re.escape(levels[0]) + r'( )*(&|,|('+re.escape(markers[0])+'))( )*' + re.escape(levels2[0])+r'\)', r'mu\('+re.escape(levels[0])+r'\)',r'mu\('+re.escape(levels2[0])+r'\)',r'mu\('+re.escape(markers[1])+'\)']]
         mu2present = [bool(re.search(x, text)) for x in [r'mu\('+re.escape(levels[-1]) + r'( )*(&|,|('+re.escape(markers[0])+'))( )*' + re.escape(levels2[-1])+r'\)',r'mu\('+re.escape(levels2[-1])+r'\)',r'mu\('+re.escape(markers[1])+'\)']]
         scorepoints['mu1some'] = any(mu1present); scorepoints['mu1all'] = all(mu1present)
@@ -328,7 +328,7 @@ class ScanFunctions:
     def scan_hypothesis_rmanova(self, text: str, solution: Dict) -> [bool, str]:
         #TODO: ADD INTERACTION HYPOTHESIS
         tokens: List[str] = nltk.word_tokenize(text.lower())
-        scorepoints: Dict[str, bool] = {'H0': 'h0:' in text,
+        scorepoints: Dict[str, bool] = {'H0': 'h0:' in text or 'h0' in text,
                        'equal': '==' in tokens or '=' in tokens,
                        'tau1': 'tau(subject 1)' in text, 
                        'tau2': 'tau(subject 2)' in text,
@@ -521,7 +521,7 @@ class ScanFunctions:
         output.extend(self.detect_true_scores(doc, solution, 2))
         vartag = 'the subjects' if self.mes['L_ENGLISH'] else 'de subjecten'
         if solution['p'][1] < 0.05: 
-            output.extend(self.detect_effect(doc, solution, vartag, solution['p'][num-1], solution['eta'][num-1]))
+            output.extend(self.detect_effect(doc, solution, vartag, solution['p'][num-1], solution['r2'][num-1]))
         correct:bool = len(output) == 1 if prefix else output == []
         if correct:
             return False, self.mes['F_DECCORRECT'] if prefix else ''
@@ -638,7 +638,7 @@ class ScanFunctions:
             scorepoints['ind'] = True
             indep_span = indeps[0]
             scorepoints['indcorrect'] = factor_roles[0] in indep_span.text or 'factor' in indep_span.text
-            if solution['assignment_type'] == 2 or solution['assignment_type'] == 13:
+            if solution['assignment_type'] == 5 or solution['assignment_type'] == 13:
                 scorepoints['factor1'] = 'within-subject' in indep_span.text or 'within' in indep_span.text
         if solution['assignment_type'] == 13 or solution['assignment_type'] == 4:    
             indeps2 = [x for x in doc.sents if lef(solution['independent2'].get_all_syns(),[y.text for y in x])]
@@ -1040,6 +1040,56 @@ class ScanFunctions:
                 output.append(self.mes['F_EFFECTSIGN']+appendix)
             if not scorepoints['neg']:
                 output.append(self.mes['F_NEGEFFECT']+appendix)
+        return output
+    
+    def detect_true_scores(self, sent:Doc, solution:dict, num=None) -> List[str]:
+        #Define variables
+        criteria:list = ['right_comparison', 'right_negation', 'mean_present', 'pop_present','jacked','contrasign']
+        pop = 'population' if self.mes['L_ENGLISH'] else 'population'
+        popavgs = ['population average','population averages','population mean','population means'] if self.mes['L_ENGLISH'] else ['populatiegemiddelden','populatiegemiddelde']
+        avgs = ['average','mean','averages','means'] if self.mes['L_ENGLISH'] else ['gemiddeld','gemiddelde','gemiddelden']
+        equal = ['gelijk'] if not self.mes['L_ENGLISH'] else ['equal','same']
+        diff = ['ongelijk','anders','verschillend'] if not self.mes['L_ENGLISH'] else ['different','unequal']
+        stepmark = ['stepped-up'] if self.mes['L_ENGLISH'] else ['opgevoerde']
+        scorepoints:dict = dict([(x,False) for x in criteria])
+        rejected:bool = solution['p'][-1] < 0.05
+        tokens:list = [x.text for x in sent]
+        output:List[str] = []
+        
+        #Controleer input
+        comparisons = [x for x in sent if x.text in equal+diff]
+        if comparisons != []:
+            comproot = comparisons[num-1] if len(comparisons) >= num else comparisons[0]
+            #comptree:List = descendants(comproot)
+            not_present = bool(negation_counter(tokens) % 2)
+            scorepoints['right_comparison'] = comproot.text in equal+diff
+            if comproot.text in diff:
+                scorepoints['right_negation'] = not_present != rejected
+            elif comproot.text in equal:
+                scorepoints['right_negation'] = not_present == rejected
+        else:
+            scorepoints['right_negation'] = True
+        scorepoints['jacked'] = any([x in sent.text for x in stepmark])
+            
+        mean = [x in sent.text for x in avgs]
+        mean_2 = [x in sent.text for x in popavgs]
+        scorepoints['mean_present'] = any(mean) or any(mean_2)
+        scorepoints['pop_present'] = any(mean_2) or pop in [x.text for x in sent] or any([x in tokens for x in ['significant','significante']])
+        scorepoints['contrasign'] = not ((any(mean_2) or pop in tokens) and any([x in tokens for x in ['significant','significante']]))
+        
+        #Add strings
+        if not scorepoints['right_comparison']:
+            output.append(self.mes['F_POPLEVELS'])
+        if not scorepoints['right_negation']:
+            output.append(self.mes['F_INTNEG']+self.mes['S_SUBDEC'])
+        if not scorepoints['mean_present']:
+            output.append(self.mes['F_DECAVGS'])
+        if not scorepoints['pop_present']:
+            output.append(self.mes['F_DECPOP'])
+        if not scorepoints['jacked']:
+            output.append(self.mes['F_JACKEDMEANS'])
+        if not scorepoints['contrasign']:
+            output.append(self.mes['F_BOTHPOP'])
         return output
     
     def detect_criterium(self, doc:Doc, solution:dict, prefix:bool=True):

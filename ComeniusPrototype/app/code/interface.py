@@ -10,7 +10,6 @@ import random
 import numpy as np
 import os
 import spacy
-import logging
 import json
 from scipy import stats
 from app.code.enums import Process, Task
@@ -131,9 +130,12 @@ class Controller:
         elif (input_text == 'skip' and self.skipable) or (input_text == 'prev' and self.prevable): #Hard-set again to false if the user wants to skip
             again = False
         elif process != Process.TABLE:
-            nl_nlp = spacy.load('nl')
             if function in [self.sfs.scan_decision, self.sfs.scan_decision_anova, self.sfs.scan_decision_rmanova, self.sfs.scan_interpretation, 
                             self.sfs.scan_interpretation_anova]:
+                if self.mes['L_ENGLISH']:
+                    nl_nlp = spacy.load('en_core_news_sm') 
+                else: 
+                    nl_nlp = spacy.load('nl_core_news_sm')
                 again, output_text = function(nl_nlp(input_text.lower()), *arguments)
             else:
                 again, output_text = function(input_text.lower(), *arguments)
@@ -411,7 +413,7 @@ class Controller:
             output[4].append(self.sfs.scan_table(textfields, self.solution)[1])
         elif self.assignment['assignment_type'] == 5:
             #Within-subject ANOVA
-            output[0].append(self.sfs.scan_indep_anova(textfields['inputtext1'].lower(), self.solution, num=1, between_subject=True)[1])
+            output[0].append(self.sfs.scan_indep_anova(textfields['inputtext1'].lower(), self.solution, num=1, between_subject=False)[1])
             output[1].append(self.sfs.scan_dep(textfields['inputtext2'].lower(), self.solution)[1])
             output[2].append(self.sfs.scan_control(textfields['inputtext3'].lower(), self.solution)[1])
             output[3].append(self.sfs.scan_hypothesis(textfields['inputtext4'].lower(), self.solution, num=1)[1])

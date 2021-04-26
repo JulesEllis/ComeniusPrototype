@@ -988,7 +988,7 @@ class Assignments:
             output += '<tr><td>'+markers[0]+'</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td></tr>'
             output += format_table([cap(assignment['independent'].name)]+[assignment[x][0] for x in names if len(assignment[x]) > 0])
             output += format_table(['Subject']+[assignment[x][1] for x in names if len(assignment[x]) > 1])
-            output += format_table([markers[1]]+[assignment[x][0] for x in names if len(assignment[x]) > 2])
+            output += format_table([markers[1]]+[assignment[x][2] for x in names if len(assignment[x]) > 2])
             output += format_table([markers[2]]+[assignment[x][3] for x in names if len(assignment[x]) > 3])
             output += '</table></p>'
         if assignment['assignment_type'] == 6:
