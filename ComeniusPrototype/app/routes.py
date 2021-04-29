@@ -82,6 +82,7 @@ def index():
                 form.__getattribute__('std2').label = mes['A_STD']
                 form.__getattribute__('nextt').label.text = mes['B_NEXT']
                 form.__getattribute__('answer').label.text = mes['B_ANSWER']
+                form.__getattribute__('explain').label.text = mes['B_EXPLAIN']
                 controller.formmode = False
                 instruction = controller.print_assignment()
                 #Save controller
@@ -116,6 +117,7 @@ def index():
                 form.__getattribute__('df5').label = mes['A_TOTAL']
                 form.__getattribute__('nextt').label.text = mes['B_NEXT']
                 form.__getattribute__('answer').label.text = mes['B_ANSWER']
+                form.__getattribute__('explain').label.text = mes['B_EXPLAIN']
                 controller.formmode = False
                 instruction = controller.print_assignment()
                 
@@ -131,7 +133,8 @@ def index():
             elif form_shape == 7:
                 form = ReportForm()
                 form.__getattribute__('nextt').label.text = mes['B_NEXT']
-                form.__getattribute__('answer').label.text = mes['B_ANSWER']
+                form.__getattribute__('answer').label.text = mes['B_ANSWER']    
+                form.__getattribute__('explain').label.text = mes['B_EXPLAIN']
                 form.__getattribute__('inputtext').label = mes['Q_SHORTREPORT']
                 controller.formmode = False
                 instruction = output_text
@@ -150,9 +153,13 @@ def index():
             output_text : str = controller.update({'inputtext': 'skip'})
         if form.prev.data:
             output_text : str = controller.update({'inputtext': 'prev'})
-        if form.answer.data or form.explain.data:
-            controller.answer_triggered = not controller.answer_triggered
+        answer_text:str = ''
+        if form.answer.data:
             output_text : str = controller.assignments.print_assignment(controller.assignment) + '<br>' + controller.protocol[controller.index][0]
+            answer_text : str = controller.mes['A_ANSWER']+'<br>'+cap(controller.protocol[controller.index][4])
+        if form.explain.data:
+            output_text : str = controller.assignments.print_assignment(controller.assignment) + '<br>' + controller.protocol[controller.index][0]
+            answer_text : str = controller.mes['A_EXPLANATION']+'<br>'+controller.explain_elementary()
         
         #Retrieve variable names
         if controller.assignment != None: 
@@ -205,11 +212,6 @@ def index():
         skip :bool = controller.skipable
         prev :bool = controller.prevable
         answer :bool = controller.answerable
-        answer_text :str = controller.protocol[controller.index][4] if controller.answer_triggered else ""
-        
-        #Capitalize the first letter of each answer
-        if answer_text != '': 
-            answer_text = answer_text[0].upper() + answer_text[1:]
         
         #Convert textbox to large textbox if appropriate
         submit_field :int = controller.submit_field.value
@@ -239,6 +241,7 @@ def bigform():
     title:str = mes['M_TITLE']
     form.__getattribute__('nextt').label.text = mes['B_NEXT']
     form.__getattribute__('answer').label.text = mes['B_ANSWER']
+    form.__getattribute__('explain').label.text = mes['B_EXPLAIN']
     
     #Fill text positions that will be shown in the form
     if a['assignment_type'] == 4:
@@ -253,10 +256,10 @@ def bigform():
     form.__getattribute__('inputtext3').label = mes['Q_MEASURE']
     form.__getattribute__('inputtext32').label = mes['Q_MEASURE2']
     form.__getattribute__('inputtext4').label = mes['Q_HYP']
-    form.__getattribute__('inputtext42').label = mes['Q_HYP2']
+    form.__getattribute__('inputtext42').label = mes['Q_HYP2'] if controller.assignment['assignment_type'] == 4 else mes['Q_HYPSUB']
     form.__getattribute__('inputtext43').label = mes['Q_HYPINT']
     form.__getattribute__('inputtext5').label = mes['Q_DECISION']
-    form.__getattribute__('inputtext52').label = mes['Q_DECISION2']
+    form.__getattribute__('inputtext52').label = mes['Q_DECISION2'] if controller.assignment['assignment_type'] == 4 else mes['Q_DECSUB']
     form.__getattribute__('inputtext53').label = mes['Q_DECISIONINT']
     form.__getattribute__('inputtext6').label = mes['Q_INTERPRET']
     form.__getattribute__('inputtext62').label = mes['Q_INTERPRET2']
@@ -293,6 +296,11 @@ def bigform():
             form_shape = controller.analysis_type.value
             instruction, outputfields = controller.form_answers_anova()
             return render_template('bigform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames, title=title)
+        elif form.explain.data:
+            form_shape = controller.analysis_type.value
+            instruction = controller.assignments.print_assignment(controller.assignment)
+            outputfields = controller.explain_elementary(anslist=True)
+            return render_template('bigform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames, title=title)
         else:
             print('ERROR: INVALID METHOD')
     else:
@@ -313,6 +321,7 @@ def smallform():
     title:str = controller.mes['M_TITLE']
     form.__getattribute__('nextt').label.text = mes['B_NEXT']
     form.__getattribute__('answer').label.text = mes['B_ANSWER']
+    form.__getattribute__('explain').label.text = mes['B_EXPLAIN']
     
     #Enter text labels
     if a['assignment_type'] == 4:
@@ -363,6 +372,11 @@ def smallform():
             form_shape = controller.analysis_type.value
             instruction, outputfields = controller.form_answers()
             return render_template('smallform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames, title=title)
+        elif form.explain.data:
+            form_shape = controller.analysis_type.value
+            instruction = controller.assignments.print_assignment(controller.assignment)
+            outputfields = controller.explain_elementary(anslist=True)
+            return render_template('smallform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames, title=title)
         else:
             print('ERROR: INVALID METHOD')
     else:
@@ -386,6 +400,7 @@ def reportform():
     form.__getattribute__('nextt').label.text = mes['B_NEXT']
     form.__getattribute__('inputtext').label = mes['Q_SHORTREPORT']
     form.__getattribute__('answer').label.text = mes['B_ANSWER']
+    form.__getattribute__('explain').label.text = mes['B_EXPLAIN']
     
     #Determine rendering parameters based on input button
     if flask.request.method == 'POST':
@@ -412,6 +427,10 @@ def reportform():
         elif form.answer.data:
             instruction = controller.assignments.print_report(controller.assignment)
             output = controller.assignments.answer_report(controller.assignment) #controller.asssignment['answer']
+            return render_template('reportform.html', form=form, instruction=instruction, display=output, title=title)
+        elif form.explain.data:
+            instruction = controller.assignments.print_report(controller.assignment)
+            output = controller.explain_short() #controller.asssignment['answer']
             return render_template('reportform.html', form=form, instruction=instruction, display=output, title=title)
         else:
             print('ERROR: INVALID METHOD')

@@ -1176,7 +1176,7 @@ class Assignments:
         
         #Generate text
         if self.mes['L_ENGLISH']:
-            output += 'The effect for '+variable+' is significant' if p < 0.05 else 'The effect for '+variable+' is not significant. '
+            output += 'The effect for '+variable+' is significant' if p < 0.05 else 'The effect for '+variable+' is not significant'
             if assignment['assignment_type'] in [1,2,3,4,5]:
                 output += ', the population means for '+' and '.join(assignment[n_key].levels)+' are '+eq_sign
             if p < 0.05 and not assignment['assignment_type'] in [1,2] and not no_effect:
@@ -1184,7 +1184,7 @@ class Assignments:
             #else:
             #    output += '. '
         else:
-            output += 'Het effect van '+variable+' is significant. ' if p < 0.05 else 'Het effect van '+variable+' is niet significant. '
+            output += 'Het effect van '+variable+' is significant' if p < 0.05 else 'Het effect van '+variable+' is niet significant'
             if assignment['assignment_type'] in [1,2,3,4,5]:
                 output += ', de populatiegemiddelden van '+' en '.join(assignment[n_key].levels)+' zijn '+eq_sign
             if p < 0.05 and not assignment['assignment_type'] in [1,2] and not no_effect:

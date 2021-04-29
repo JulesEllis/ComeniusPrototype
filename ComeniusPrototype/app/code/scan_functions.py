@@ -505,7 +505,7 @@ class ScanFunctions:
             output.extend(self.detect_significance(doc, solution, num))
         output.extend(self.detect_interaction(doc, solution, True))
         vartag = 'the interaction' if self.mes['L_ENGLISH'] else 'de interactie'
-        output.extend(self.detect_effect(doc, solution, vartag, solution['p'][num-1], solution['eta'][num-1]))
+        output.extend(self.detect_effect(doc, solution, vartag, solution['p'][num-1], solution['r2'][num-1]))
         correct:bool = len(output) == 1 if prefix else output == []
         if correct:
             return False, self.mes['F_DECCORRECT'] if prefix else ''
@@ -575,19 +575,19 @@ class ScanFunctions:
             second_check:str = 'alternatieve'
             unk_checks:list = ['mogelijk','mogelijke','verklaring','verklaringen']
             
-        unk_sents = [x for x in doc.sents if lef(unk_checks,[y for y in x])]
+        unk_sents = [x for x in doc.sents if lef(unk_checks,[y.text for y in x])]
         if unk_sents != []:
             output.extend(self.detect_unk(unk_sents[0], solution))
         else:
             output.append(self.mes['F_MANEXP'])
-        primair_sents = [x for x in doc.sents if lef(primary_checks,[y for y in x])]
+        primair_sents = [x for x in doc.sents if lef(primary_checks,[y.text for y in x])]
         if primair_sents != []:
             output.extend(self.detect_primary_interaction(primair_sents[0], solution))
         else:
             output.append(self.mes['F_PRIMEXP'])
         # EXPLICIETE ALTERNATIEVE VERKLARINGEN HOEVEN NIET BIJ INTERACTIE, STATISMogelijke alternatieve verklaringen zijn storende variabelen en omgekeerde causaliteitTIEK VOOR DE PSYCHOLOGIE 3 PAGINA 80
         if not control:
-            alt_sents = [x for x in doc.sents if lef(second_check,[y for y in x])]
+            alt_sents = [x for x in doc.sents if lef([second_check],[y.text for y in x])]
             if alt_sents != []:
                 output.extend(self.detect_alternative_interaction(alt_sents[0], solution))
             else:

@@ -337,3 +337,4 @@ B_EXPLAIN;Leg uit;Explain
 F_NOWRONGS; -een verkeerde effectsterkte gegeven bij ; -given the wrong effect strength for 
 S_REPSHORT; rapport. ;report. 
 M_BLANK; ; 
+A_EXPLANATION;Opgave: ;Assignment: 
