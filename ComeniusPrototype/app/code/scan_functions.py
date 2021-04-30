@@ -1443,7 +1443,7 @@ class ScanFunctions:
         scorepoints['prim'] = prim in tokens if not control else True
         scorepoints['neg'] = bool(negation_counter(tokens) % 2) != rejected
         if self.mes['L_ENGLISH']:
-            causeverbs:list = [x for x in sent if x.text in ['causes', 'influences', 'influenced', 'responsible','cause', 'creates']]
+            causeverbs:list = [x for x in sent if x.text in ['causes', 'influences', 'influenced', 'influence','responsible','cause', 'creates','create','caused']]
         else:
             causeverbs:list = [x for x in sent if x.text in ['veroorzaakt', 'heeft', 'beinvloedt', 'beinvloed','verantwoordelijk', 'oorzaak', 'invloed']] 
         if any(causeverbs): #effect_children = descendants(causeverbs[0])
@@ -1471,7 +1471,7 @@ class ScanFunctions:
         return output
     
     def detect_primary_interaction(self, sent:Doc, solution:dict) -> List[str]:
-        smarkers = ['same','equal'] if self.mes['L_ENGLISH'] else ['dezelfde','hetzelfde','gelijk','gelijke']
+        smarkers = ['same','equal','similar','similarly'] if self.mes['L_ENGLISH'] else ['dezelfde','hetzelfde','gelijk','gelijke']
         dmarkers = ['ongelijk','verschillend','verschillende'] if not self.mes['L_ENGLISH'] else ['different', 'unequal']
         suffix = ' bij de primaire verklaring' if not self.mes['L_ENGLISH'] else ' for the primary explanation'
         criteria:list = ['interaction', 'negation', 'indy1', 'indy2', 'dep', 'level_present', 'both_levels', 'same']
@@ -1662,6 +1662,7 @@ class ScanFunctions:
     HELP FUNCTIONS
     """
     def check_causality(self, independent:Doc, dependent:Doc, alternative:bool=False) -> bool:
+        #print(independent.dep_ + ' - '+dependent.dep_)
         if not self.mes['L_ENGLISH']: #Dutch
             if not alternative:
                 tuples = [('nsubj', 'obj'),('obj', 'ROOT'),('nsubj', 'nmod'),('obl', 'obj'),('ROOT', 'obj'),
@@ -1671,14 +1672,14 @@ class ScanFunctions:
             else: #Add reverse causality and disturbing variable options
                 tuples = [('obj','obj'),('obj','nsubj'), ('ROOT','obj'),('nmod','nsubj'),('obj','obl'),('obj','ROOT'),('amod','nsubj'),
                                ('nmod','obj'),('obj','amod'),('obl','nsubj'),('obl','obj'),('obj','nmod'),('ROOT','obl'),('nsubj','obl'),
-                               ('obl','obl'), ('csubj','obl'),('nsubj','conj')]
+                               ('obl','obl'), ('csubj','obl'),('nsubj','conj'),('nsubjpass','conj')]
         else: #English
             if not alternative:
                 tuples = [('nsubj','dobj'),('nsubj','ROOT'),('pobj','nsubjpass'),('nsubj','pobj'),('ROOT','obl'), ('amod','ROOT'),
                           ('compound','ROOT'),('amod','amod'),('obl','amod')]
             else:
                 tuples = [('dobj','nsubj'),('ROOT','nsubj'),('nsubjpass','pobj'),('pobj','nsubj'),('obl','ROOT'), ('ROOT','amod'),
-                          ('ROOT','compound'),('compound','obl')]
+                          ('ROOT','compound'),('compound','obl'),('nsubjpass','conj')]
         for t in tuples:
             if independent.dep_ == t[0] and dependent.dep_ == t[1]:
                 return True
