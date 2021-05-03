@@ -430,7 +430,7 @@ def reportform():
             return render_template('reportform.html', form=form, instruction=instruction, display=output, title=title)
         elif form.explain.data:
             instruction = controller.assignments.print_report(controller.assignment)
-            output = controller.explain_short() #controller.asssignment['answer']
+            output = controller.explain_short(0) #controller.asssignment['answer']
             return render_template('reportform.html', form=form, instruction=instruction, display=output, title=title)
         else:
             print('ERROR: INVALID METHOD')

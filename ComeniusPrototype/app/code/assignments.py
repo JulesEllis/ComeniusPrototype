@@ -59,7 +59,7 @@ class Assignments:
             self.mes = mes
         
         #Import variables
-        path = '/home/jelmer/Github/ComeniusPrototype/ComeniusPrototype/app/code/variables.csv' if 'Github' in os.getcwd() else '/var/www/ComeniusPrototype/ComeniusPrototype/app/code/variables.csv'
+        path = '/home/jelmer/Github/ComeniusPrototype/ComeniusPrototype/app/code/messages/variables.csv' if 'Github' in os.getcwd() else '/var/www/ComeniusPrototype/ComeniusPrototype/app/code/messages/variables.csv'
         self.variables = []
         with open(path, encoding='utf-8', errors='ignore') as file:
             for line in file.readlines()[1:]:

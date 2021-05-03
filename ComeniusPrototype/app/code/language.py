@@ -9,19 +9,41 @@ import os
 
 class LanguageInterface:
     def __init__(self, mes:dict=None):
-        path = '/home/jelmer/Github/ComeniusPrototype/ComeniusPrototype/app/code/' if 'Github' in os.getcwd() else '/var/www/ComeniusPrototype/ComeniusPrototype/app/code/'
+        path = '/home/jelmer/Github/ComeniusPrototype/ComeniusPrototype/app/code/messages/' if 'Github' in os.getcwd() \
+                        else '/var/www/ComeniusPrototype/ComeniusPrototype/app/code/messages/'
         dutch_pairs = [('L_ENGLISH',False)]
         english_pairs = [('L_ENGLISH',True)]
-        with open(path+'texts.csv', encoding='utf-8', errors='ignore') as file:
-            for line in file.readlines():
-                parts = line.split(';')
-                dutch_pairs.append((parts[0], parts[1]))
-                english_pairs.append(((parts[0], parts[2][:-1])))
-        with open(path+'tabel_uitlegcodes.csv', encoding='utf-8', errors='ignore') as file:
-            for line in file.readlines():
-                parts = line.split(';')
-                dutch_pairs.append((parts[0], parts[1]))
-                english_pairs.append(((parts[0], parts[2][:-1])))
+        for t in ['texts.csv']:
+            with open(path+t, encoding='utf-8', errors='ignore') as file:
+                for line in file.readlines():
+                    parts = line.split(';')
+                    dutch_pairs.append((parts[0], parts[1]))
+                    english_pairs.append(((parts[0], parts[2][:-1])))
+        for key, t in [('EXPLAIN_SHORT','sjabloon_beknopt.csv')]:
+            with open(path+t, encoding='utf-8', errors='ignore') as file:
+                engparts = []
+                dutchparts = []
+                for line in file.readlines():
+                    parts = line.split(';')
+                    dutchparts.append((parts[0], parts[1]))
+                    engparts.append(((parts[0], parts[2][:-1])))
+                dutch_pairs.append((key+'_NL', dict(dutchparts)))
+                english_pairs.append((key+'_EN', dict(engparts)))
+        for key, t in [('EXPLAIN_ELEM','sjabloon_elementair.csv')]:
+            with open(path+t, encoding='utf-8', errors='ignore') as file:
+                analyses = ['TBETWEEN','TWITHIN','1ANOVA','2ANOVA','RMANOVA']
+                elab_nl = dict([(an,{}) for an in analyses])
+                elab_en = dict([(an,{}) for an in analyses])
+                for line in file.readlines():
+                    parts = line.split(';')
+                    tag = parts[0]
+                    for i in range(1,11):
+                        if i % 2 == 1:
+                            elab_nl[analyses[(i-1) // 2]][tag] = parts[i]
+                        else:
+                            elab_en[analyses[(i-1) // 2]][tag] = parts[i]
+                dutch_pairs.append((key+'_NL', elab_nl))
+                english_pairs.append((key+'_EN', elab_en))
         self.dutch = dict(dutch_pairs)
         self.english = dict(english_pairs)
             

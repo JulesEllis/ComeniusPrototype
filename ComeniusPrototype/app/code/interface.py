@@ -129,10 +129,10 @@ class Controller:
             if function in [self.sfs.scan_decision, self.sfs.scan_decision_anova, self.sfs.scan_decision_rmanova, self.sfs.scan_interpretation, 
                             self.sfs.scan_interpretation_anova]:
                 if self.mes['L_ENGLISH']:
-                    nl_nlp = spacy.load('en_core_web_sm') 
+                    nlp = spacy.load('en_core_web_sm') 
                 else: 
-                    nl_nlp = spacy.load('nl_core_news_sm')
-                again, output_text = function(nl_nlp(input_text.lower()), *arguments)
+                    nlp = spacy.load('nl_core_news_sm')
+                again, output_text = function(nlp(input_text.lower()), *arguments)
             else:
                 again, output_text = function(input_text.lower(), *arguments)
             self.wipetext = not again
@@ -445,7 +445,7 @@ class Controller:
             #One-way ANOVA
             output[0].append(self.mes['A_ANSWER']+self.assignments.print_independent(self.assignment))
             output[1].append(self.mes['A_ANSWER']+self.assignments.print_dependent(self.assignment))
-            output[2].append(self.mes['A_ANSWER']+self.assignment[''])
+            output[2].append(self.mes['A_ANSWER']+self.assignments.print_control(self.assignment))
             output[3].append(self.mes['A_ANSWER']+self.solution['null'])
             output[4].append(self.mes['A_ANSWER']+self.assignments.print_report({**self.assignment, **self.solution}, answer=True))
             output[5].append(self.mes['A_ANSWER']+self.solution['decision'])
@@ -579,45 +579,54 @@ class Controller:
     def print_assignment(self):
         return self.assignments.print_assignment(self.assignment)
     
-    def explain_elementary(self, anslist:bool=False):
+    def explain_elementary(self, anslist:bool=False, button_id:int=0):
+        prefix = ['EXPLAIN_'][button_id]
+        suffix = '_EN' if self.mes['L_ENGLISH'] else '_NL'
+        key = prefix + 'ELEM' + suffix
+        an = 'TBETWEEN' if self.assignment['assignment_type'] == 1 else 'TWITHIN' if self.assignment['assignment_type'] == 2 else '1ANOVA' if \
+                 self.assignment['assignment_type'] == 3 else '2ANOVA' if self.assignment['assignment_type'] == 4 else 'RMANOVA'  #Analysis type
         if self.assignment['assignment_type'] in [1,2]:
             keylist = ['E_ONAFHANKELIJKE_VARIABELE','E_AFHANKELIJKE_VARIABELE','E_MATE_VAN_CONTROLE','E_TABEL_GEMIDDELDEN','E_HYPOTHESE',\
                        'E_VRIJHEIDSGRADEN','E_RUW_EFFECT','E_RELATIEF_EFFECT','E_T_WAARDE','E_P_WAARDE','E_BESLISSING','E_INTERPRETATIE']
-            keysorted = [[self.mes[x]] for x in keylist]
+            keysorted = [[self.mes[key][an][x]] for x in keylist]
         elif self.assignment['assignment_type'] == 3:
             keylist = ['E_ONAFHANKELIJKE_VARIABELE','E_AFHANKELIJKE_VARIABELE','E_MATE_VAN_CONTROLE','E_HYPOTHESE',\
                        'E_TABEL_ANOVA','E_BESLISSING','E_INTERPRETATIE']
-            keysorted = [[self.mes[x]] for x in keylist]
+            keysorted = [[self.mes[key][an][x]] for x in keylist]
         elif self.assignment['assignment_type'] == 4:
             keylist = ['E_ONAFHANKELIJKE_VARIABELE','E_ONAFHANKELIJKE_VARIABELE','E_AFHANKELIJKE_VARIABELE','E_MATE_VAN_CONTROLE','E_MATE_VAN_CONTROLE','E_HYPOTHESE','E_HYPOTHESE','E_HYPOTHESE_INTERACTIE','E_TABEL_ANOVA',\
                        'E_BESLISSING','E_BESLISSING','E_BESLISSING_INTERACTIE','E_INTERPRETATIE','E_INTERPRETATIE','E_INTERPRETATIE_INTERACTIE']
-            keysorted = [[self.mes[x] for x in keylist[:2]]] + [[self.mes[keylist[2]]]] + [[self.mes[x] for x in keylist[3:5]]] + [[self.mes[x] for x in keylist[5:8]]] + [[self.mes[keylist[8]]]] + [[self.mes[x] for x in keylist[9:12]]] + [[self.mes[x] for x in keylist[12:15]]]
+            keysorted = [[self.mes[key][an][x] for x in keylist[:2]]] + [[self.mes[key][an][keylist[2]]]] + [[self.mes[key][an][x] for x in keylist[3:5]]] + \
+                [[self.mes[key][an][x] for x in keylist[5:8]]] + [[self.mes[key][an][keylist[8]]]] + [[self.mes[key][an][x] for x in keylist[9:12]]] + [[self.mes[key][an][x] for x in keylist[12:15]]]
         else:
             keylist = ['E_ONAFHANKELIJKE_VARIABELE','E_AFHANKELIJKE_VARIABELE','E_MATE_VAN_CONTROLE','E_HYPOTHESE','E_HYPOTHESE_SUBJECTEN','E_TABEL_ANOVA','E_BESLISSING',\
                        'E_BESLISSING_SUBJECTEN','E_INTERPRETATIE']
-            keysorted = [[self.mes[x]] for x in keylist[:3]] + [[self.mes[x] for x in keylist[3:5]]] + [[self.mes[keylist[5]]]]+[[self.mes[x] for x in keylist[6:8]]]+[[self.mes[keylist[8]]]]
+            keysorted = [[self.mes[key][an][x]] for x in keylist[:3]] + [[self.mes[key][an][x] for x in keylist[3:5]]] + [[self.mes[key][an][keylist[5]]]]+[[self.mes[key][an][x] for x in keylist[6:8]]]+[[self.mes[key][an][keylist[8]]]]
         if anslist:
-            print(keysorted)
             return keysorted
         else:
-            return self.mes[keylist[self.index]]
+            return self.mes[key][an][keylist[self.index]]
         
-    def explain_short(self):
+    def explain_short(self, button_id:int=0):
+        prefix = ['EXPLAIN_'][button_id]
+        suffix = '_EN' if self.mes['L_ENGLISH'] else '_NL'
+        key = prefix + 'SHORT' + suffix
+        print(self.mes[key])
         if self.assignment['assignment_type'] == 1:
-            return self.mes['E_BEKNOPT_TTEST_BETWEEN']
+            return self.mes[key]['E_BEKNOPT_TTEST_BETWEEN']
         if self.assignment['assignment_type'] == 2:
-            return self.mes['E_BEKNOPT_TTEST_WITHIN']
+            return self.mes[key]['E_BEKNOPT_TTEST_WITHIN']
         if self.assignment['assignment_type'] == 3:
-            return self.mes['E_BEKNOPT_1_ANOVA']
+            return self.mes[key]['E_BEKNOPT_1_ANOVA']
         if self.assignment['assignment_type'] == 4:
-            return self.mes['E_BEKNOPT_2_ANOVA']
+            return self.mes[key]['E_BEKNOPT_2_ANOVA']
         if self.assignment['assignment_type'] == 5:
-            return self.mes['E_BEKNOPT_RMANOVA']
+            return self.mes[key]['E_BEKNOPT_RMANOVA']
         if self.assignment['assignment_type'] == 6:
-            return self.mes['E_BEKNOPT_MREGRESSIE']
+            return self.mes[key]['E_BEKNOPT_MREGRESSIE']
         if self.assignment['assignment_type'] == 11:
-            return self.mes['E_BEKNOPT_MANOVA']
+            return self.mes[key]['E_BEKNOPT_MANOVA']
         if self.assignment['assignment_type'] == 12:
-            return self.mes['E_BEKNOPT_ANCOVA']
+            return self.mes[key]['E_BEKNOPT_ANCOVA']
         if self.assignment['assignment_type'] == 13:
-            return self.mes['E_BEKNOPT_MULTI_RMANOVA']
+            return self.mes[key]['E_BEKNOPT_MULTI_RMANOVA']

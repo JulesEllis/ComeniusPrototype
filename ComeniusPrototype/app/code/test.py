@@ -23,49 +23,36 @@ from scipy import stats
 from typing import Dict, List, Callable, Tuple
 from nltk.corpus import wordnet as wn
 
-class Variable:
-    def __init__(self, name:str, synonyms:list, node:str):
-        self.name = name
-        self.synonyms = []
-        self.node = node
-
-def check_causality(i:Doc, d:Doc, alternative:bool=False) -> bool:
-    print([i.text,i.pos_,i.tag_,i.dep_,i.shape_])
-    print([d.text,d.pos_,d.tag_,d.dep_,d.shape_])
-    #print(independent.dep_ + '-' + dependent.dep_)
-    mes={'L_ENGLISH':False}
-    if not mes['L_ENGLISH']: #Dutch
-        if not alternative:
-            tuples = [('nsubj', 'obj'),('obj', 'ROOT'),('nsubj', 'nmod'),('obl', 'obj'),('ROOT', 'obj'),
-                  ('obj', 'nmod'), ('amod', 'obj'), ('obl','obl'),('nsubj','obl'),('obj','obj'),('nsubj','amod'),
-                  ('obj','obl'),('nmod','obj'),('obl','ROOT'),('obl','nsubj'),('obl','csubj'),('advmod','obj'),
-                  ('advmod','nmod'),('advmod','obj'),('advmod','obl')]
-        else: #Add reverse causality and disturbing variable options
-            tuples = [('obj','obj'),('obj','nsubj'), ('ROOT','obj'),('nmod','nsubj'),('obj','obl'),('obj','ROOT'),('amod','nsubj'),
-                           ('nmod','obj'),('obj','amod'),('obl','nsubj'),('obl','obj'),('obj','nmod'),('ROOT','obl'),('nsubj','obl'),
-                           ('obl','obl'), ('csubj','obl')]
-    else: #English
-        if not alternative:
-            tuples = [('nsubj','dobj'),('nsubj','ROOT'),('pobj','nsubjpass'),('nsubj','pobj'),('ROOT','obl'), ('amod','ROOT'),
-                      ('compound','ROOT'),('amod','amod'),('obl','amod')]
+    def scan_indep_anova(self, text: str, solution: Dict, num: int=1, between_subject:bool=True, coach:bool=False) -> [bool, str]:
+        #Determine which of the necessary elements are present in the answer
+        texts: List[str] = nltk.word_tokenize(text.lower())
+        n_key: str = 'independent' if num == 1 else 'independent' + str(num)
+        scorepoints: Dict = {'factor': any(x in text for x in ['factor', 'between-subjectfactor','within-subjectfactor']), 
+                       'domain': any(x in text for x in ['between','between-subject', 'between-subjectfactor']) if between_subject 
+                       else any(x in text for x in ['within','within-subject', 'within-subjectfactor']), 
+                       'name': lef(solution[n_key].get_all_syns(),texts), 
+                       'levels': [any([x in text for x in y]) for y in solution[n_key].get_all_level_syns()]
+                       }
+        #Determine the response of the chatbot
+        if False in list(scorepoints.values()):
+            if not coach:
+                output: str = self.mes['F_INCOMPLETE']+'<br>' #'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
+                if not scorepoints['factor']:
+                    output += self.mes['F_ISFACTOR']+'<br>' #' -de uitspraak dat deze variabele een factor is<br>'
+                if not scorepoints['domain']:
+                    output += self.mes['F_DOMAIN']+'<br>' #' -het domein van de variabele<br>'
+                if not scorepoints['name']:
+                    output += self.mes['F_VARNAME']+'<br>' #' -de naam van de variabele<br>'
+                if True not in scorepoints['levels']:
+                    output += self.mes['F_INDEPLEVELS']+'<br>' #' -alle niveaus van de onafhankelijke variabele<br>'
+                elif False in scorepoints['levels']:
+                    output += self.mes['F_INDEPLEVEL']+'<br>' #' -enkele niveaus van de onafhankelijke variabele<br>'
+                return True, output
+            else:
+                scorekeys = {'factor':'dat het een factor is','domain':'het domein van de variabele','name':' de naam ','levels':' de niveaus van de variabele'}
+                output: str = 'Mooi, je hebt ' + ' en '.join([if y for x, y in scorepoints.items]) + ' al opgenomen in je antwoord. '
+                return True, output
         else:
-            tuples = [('dobj','nsubj'),('ROOT','nsubj'),('nsubjpass','pobj'),('pobj','nsubj'),('obl','ROOT'), ('ROOT','amod'),
-                      ('ROOT','compound'),('compound','obl')]
-    
-    for t in tuples:
-        if i.dep_ == t[0] and d.dep_ == t[1]:
-            return True
-    return False
+            return False, self.mes['F_CORRECT'] #'Mooi, deze beschrijving klopt. '
 
-#nlp = spacy.load('nl')
-nlp = spacy.load('nl')
-txt = 'Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire is dat ras criminaliteit beinvloedt.'
-sent = nlp(txt)
-nd = dict([(x.text,x) for x in sent])
-print(check_causality(nd['ras'],nd['criminaliteit']))
-#nld - eng
-#synonyms = []
-#for syn in wn.synsets("birthplace", lang='eng'): 
-#    for l in syn.lemmas(lang='eng'): 
-#        synonyms.append(l.name())
-#print(synonyms)
+
