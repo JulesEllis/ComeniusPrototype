@@ -580,7 +580,7 @@ class Controller:
         return self.assignments.print_assignment(self.assignment)
     
     def explain_elementary(self, anslist:bool=False, button_id:int=0):
-        prefix = ['EXPLAIN_'][button_id]
+        prefix = ['EXPLAIN_','B1_','B2_','B3_'][button_id]
         suffix = '_EN' if self.mes['L_ENGLISH'] else '_NL'
         key = prefix + 'ELEM' + suffix
         an = 'TBETWEEN' if self.assignment['assignment_type'] == 1 else 'TWITHIN' if self.assignment['assignment_type'] == 2 else '1ANOVA' if \
@@ -608,10 +608,9 @@ class Controller:
             return self.mes[key][an][keylist[self.index]]
         
     def explain_short(self, button_id:int=0):
-        prefix = ['EXPLAIN_'][button_id]
+        prefix = ['EXPLAIN_','B1_','B2_','B3_'][button_id]
         suffix = '_EN' if self.mes['L_ENGLISH'] else '_NL'
         key = prefix + 'SHORT' + suffix
-        print(self.mes[key])
         if self.assignment['assignment_type'] == 1:
             return self.mes[key]['E_BEKNOPT_TTEST_BETWEEN']
         if self.assignment['assignment_type'] == 2:

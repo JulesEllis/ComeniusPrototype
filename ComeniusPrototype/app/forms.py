@@ -15,6 +15,9 @@ class BaseForm(FlaskForm):
     prev = SubmitField('Vorige')
     answer = SubmitField('Antwoord')
     explain = SubmitField('Leg uit')
+    b1 = SubmitField('Info 1')
+    b2 = SubmitField('Info 2')
+    b3 = SubmitField('Info 3')
     
     mean1 = StringField('')
     std1 = StringField('')
@@ -72,6 +75,9 @@ class SmallForm(FlaskForm):
     answer = SubmitField('Antwoord')
     nextt = SubmitField('Volgende')
     explain = SubmitField('Leg uit')
+    b1 = SubmitField('Info 1')
+    b2 = SubmitField('Info 2')
+    b3 = SubmitField('Info 3')
 
 class BigForm(FlaskForm):
     inputtext1 = StringField('', validators=[DataRequired()])
@@ -95,6 +101,9 @@ class BigForm(FlaskForm):
     answer = SubmitField('Antwoord')
     nextt = SubmitField('Volgende')
     explain = SubmitField('Leg uit')
+    b1 = SubmitField('Info 1')
+    b2 = SubmitField('Info 2')
+    b3 = SubmitField('Info 3')
     
     df1 = StringField('')
     df2 = StringField('')
@@ -129,6 +138,9 @@ class ReportForm(FlaskForm):
     nextt = SubmitField('Volgende')
     answer = SubmitField('Antwoord')
     explain = SubmitField('Leg uit')
+    b1 = SubmitField('Info 1')
+    b2 = SubmitField('Info 2')
+    b3 = SubmitField('Info 3')
     
     
     

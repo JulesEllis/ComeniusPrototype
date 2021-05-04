@@ -338,3 +338,6 @@ F_NOWRONGS; -een verkeerde effectsterkte gegeven bij ; -given the wrong effect s
 S_REPSHORT; rapport. ;report. 
 M_BLANK; ; 
 A_EXPLANATION;Opgave: ;Assignment: 
+B_INFO1;Info 1;Info 1
+B_INFO2;Info 2;Info 2
+B_INFO3;Info 3;Info 3

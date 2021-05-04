@@ -1,19 +1,19 @@
 KEY;TTESTBETWEEN_NL;TTESTBETWEEN_EN;TTESTWITHIN_NL;TTESTWITHIN_EN;1ANOVA_NL;1ANOVA_EN;2ANOVA_NL;2_ANOVA_EN;RMANOVA_NL;RMANOVA_EN
-E_ONAFHANKELIJKE_VARIABELE;Onafhankelijke variabele;;;;Onafhankelijke variabele;;;;;
-E_AFHANKELIJKE_VARIABELE;;;;;;;;;;
-E_MATE_VAN_CONTROLE;;;;;;;;;;
-E_HYPOTHESE;;;;;;;;;;
-E_HYPOTHESE_INTERACTIE;;;;;;;;;;
-E_HYPOTHESE_SUBJECTEN;;;;;;;;;;
-E_TABEL_GEMIDDELDEN;;;;;;;;;;
-E_TABEL_ANOVA;;;;;;;;;;
-E_RUW_EFFECT;;;;;;;;;;
-E_RELATIEF_EFFECT;;;;;;;;;;
-E_T_WAARDE;;;;;;;;;;
-E_P_WAARDE;;;;;;;;;;
-E_VRIJHEIDSGRADEN;;;;;;;;;;
-E_BESLISSING;;;;;;;;;;
-E_BESLISSING_INTERACTIE;;;;;;;;;;
-E_BESLISSING_SUBJECTEN;;;;;;;;;;
-E_INTERPRETATIE;;;;;;;;;;
-E_INTERPRETATIE_INTERACTIE;;;;;;;;;;
+E_ONAFHANKELIJKE_VARIABELE;Onafhankelijke variabele;Independent variable;Onafhankelijke variabele;Independent variable;Onafhankelijke variabele;Independent variable;Onafhankelijke variabele;Independent variable;Onafhankelijke variabele;Independent variable
+E_AFHANKELIJKE_VARIABELE;Afhankelijke variabele;dependent variable;Afhankelijke variabele;dependent variable;Afhankelijke variabele;dependent variable;Afhankelijke variabele;dependent variable;Afhankelijke variabele;dependent variable
+E_MATE_VAN_CONTROLE;mate van controle;control level;mate van controle;control level;mate van controle;control level;mate van controle;control level;mate van controle;control level
+E_HYPOTHESE;hypothese;hypothesis;hypothese;hypothesis;hypothese;hypothesis;hypothese;hypothesis;hypothese;hypothesis
+E_HYPOTHESE_INTERACTIE;interactiehypothese;interaction hypothesis;interactiehypothese;interaction hypothesis;interactiehypothese;interaction hypothesis;interactiehypothese;interaction hypothesis;interactiehypothese;interaction hypothesis
+E_HYPOTHESE_SUBJECTEN;hypothese subjecten;subjects hypothesis;hypothese subjecten;subjects hypothesis;hypothese subjecten;subjects hypothesis;hypothese subjecten;subjects hypothesis;hypothese subjecten;subjects hypothesis
+E_TABEL_GEMIDDELDEN;tabel;table;tabel;table;tabel;table;tabel;table;tabel;table
+E_TABEL_ANOVA;tabel;table;tabel;table;tabel;table;tabel;table;tabel;table
+E_RUW_EFFECT;ruw effect;raw effect;ruw effect;raw effect;ruw effect;raw effect;ruw effect;raw effect;ruw effect;raw effect
+E_RELATIEF_EFFECT;relatief effect;relative effect;relatief effect;relative effect;relatief effect;relative effect;relatief effect;relative effect;relatief effect;relative effect
+E_T_WAARDE;T-waarde;T;T-waarde;T;T-waarde;T;T-waarde;T;T-waarde;T
+E_P_WAARDE;P-waarde;p;P-waarde;p;P-waarde;p;P-waarde;p;P-waarde;p
+E_VRIJHEIDSGRADEN;df;df;df;df;df;df;df;df;df;df
+E_BESLISSING;beslissing;decision;beslissing;decision;beslissing;decision;beslissing;decision;beslissing;decision
+E_BESLISSING_INTERACTIE;interactiebeslissing;decision interaction;interactiebeslissing;decision interaction;interactiebeslissing;decision interaction;interactiebeslissing;decision interaction;interactiebeslissing;decision interaction
+E_BESLISSING_SUBJECTEN;beslissing subjecten;decision of subjects;beslissing subjecten;decision of subjects;beslissing subjecten;decision of subjects;beslissing subjecten;decision of subjects;beslissing subjecten;decision of subjects
+E_INTERPRETATIE;interpretatie;interpretation;interpretatie;interpretation;interpretatie;interpretation;interpretatie;interpretation;interpretatie;interpretation
+E_INTERPRETATIE_INTERACTIE;interpretatie interactie;interaction interpretation;interpretatie interactie;interaction interpretation;interpretatie interactie;interaction interpretation;interpretatie interactie;interaction interpretation;interpretatie interactie;interaction interpretation
