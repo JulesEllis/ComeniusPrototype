@@ -814,7 +814,12 @@ class ScanFunctions:
         doc = nl_nlp(text.lower())
         output:str = ''
         output += '<br>'+'<br>'.join(self.detect_name(doc,solution))
-        output += '<br>'+'<br>'.join(self.detect_comparison_mreg(doc, solution))
+        markers = ['proportion','explained','variance'] if self.mes['L_ENGLISH'] else ['proportie','verklaarde','variantie']
+        pevsent = [sent for sent in doc.sents if all([markers[i] in sent.text for i in range(3)])]
+        if pevsent != []:
+            output += '<br>'+'<br>'.join(self.detect_comparison_mreg(pevsent[0], solution))
+        else:
+            output += '<br>' + self.mes['F_PROPVAR']
         output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'F', solution['F'][0]))
         output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'][0]))
         output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][0], aliases=['r2','r^2','r','kwadraat']))
@@ -883,7 +888,8 @@ class ScanFunctions:
         if multivar_sent != []:
             output += '<br>'+'<br>'.join(self.detect_decision_ancova(multivar_sent[0], solution))
             if(solution['p'][3] < 0.05):
-                output += '<br>'+'<br>'.join(self.detect_effect(multivar_sent[0],solution, variable='multivariate', p=solution['p'][3], eta=solution['eta'][3]))
+                vslice = 'for the multivariate decision' if self.mes['L_ENGLISH'] else 'voor de multivariate beslissing'
+                output += '<br>'+'<br>'.join(self.detect_effect(multivar_sent[0],solution, variable=vslice, p=solution['p'][3], eta=solution['eta'][3]))
         else:
             output += '<br>'+self.mes['F_NOPRED']
         output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'F', solution['F'][3]))
@@ -948,13 +954,12 @@ class ScanFunctions:
             output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p0'][1], appendix=self.mes['S_INTERACT']))
             output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta0'][1], aliases=['eta','eta2',markers[0]],appendix=self.mes['S_INTERACT']))
             if solution['p1'][2] < 0.05:
-                output += '<br>'+'<br>'.join(self.detect_p(doc, 'p', solution['p1'][2], appendix=self.mes['S_CONTRAST']+levels[0]+self.mes['S_AND']+levels[1]+' '+self.mes['S_INTERACT']))
+                output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p1'][2], appendix=self.mes['S_CONTRAST']+levels[0]+self.mes['S_AND']+levels[1]+' '+self.mes['S_INTERACT']))
             if solution['p1'][3] < 0.05:
-                output += '<br>'+'<br>'.join(self.detect_p(doc, 'p', solution['p1'][3], appendix=self.mes['S_CONTRAST']+levels[1]+self.mes['S_AND']+levels[2]+' '+self.mes['S_INTERACT']))
+                output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p1'][3], appendix=self.mes['S_CONTRAST']+levels[1]+self.mes['S_AND']+levels[2]+' '+self.mes['S_INTERACT']))
         
         #Between-subject
         decision_sent3 = [x for x in doc.sents if (lef(solution['independent2'].get_all_syns(),[y.text for y in x]) or 'between-subject' in x.text) and ('significant' in x.text or 'effect' in x.text) and markers[1] not in x.text]
-        print(decision_sent3)
         if decision_sent3 != []:
             num += 1
             user_given_name:str = solution['independent2'].name if solution['independent2'].name in decision_sent3[0].text else 'between-subject'
@@ -1048,7 +1053,11 @@ class ScanFunctions:
             scorepoints['effect'] = True
             tokens:List[str] = [x.text for x in d_root]
             scorepoints['sign'] = 'significant' in tokens
-            scorepoints['neg'] = bool(negation_counter(tokens) % 2) != rejected
+            if scorepoints['sign']:
+                tokens_presig = tokens[:tokens.index('significant')]
+                scorepoints['neg'] = bool(negation_counter(tokens_presig) % 2) != rejected
+            else:
+                scorepoints['neg'] = True
         if num < 2:
             if not scorepoints['effect']:
                 output.append(self.mes['F_EFFECTSIGN'])
@@ -1069,7 +1078,7 @@ class ScanFunctions:
     def detect_true_scores(self, sent:Doc, solution:dict, num=None) -> List[str]:
         #Define variables
         criteria:list = ['right_comparison', 'right_negation', 'mean_present', 'pop_present','jacked','contrasign']
-        pop = 'population' if self.mes['L_ENGLISH'] else 'population'
+        pop = 'population' if self.mes['L_ENGLISH'] else 'populatie'
         popavgs = ['population average','population averages','population mean','population means'] if self.mes['L_ENGLISH'] else ['populatiegemiddelden','populatiegemiddelde']
         avgs = ['average','mean','averages','means'] if self.mes['L_ENGLISH'] else ['gemiddeld','gemiddelde','gemiddelden']
         equal = ['gelijk'] if not self.mes['L_ENGLISH'] else ['equal','same']
@@ -1084,8 +1093,11 @@ class ScanFunctions:
         comparisons = [x for x in sent if x.text in equal+diff]
         if comparisons != []:
             comproot = comparisons[num-1] if len(comparisons) >= num else comparisons[0]
-            #comptree:List = descendants(comproot)
-            not_present = bool(negation_counter(tokens) % 2)
+            comp_index = tokens.index(comparisons[0].text)
+            if comp_index > 2:
+                not_present = bool(negation_counter(tokens[comp_index-2:]) % 2)
+            else:
+                not_present = bool(negation_counter(tokens[comp_index]) % 2)
             scorepoints['right_comparison'] = comproot.text in equal+diff
             if comproot.text in diff:
                 scorepoints['right_negation'] = not_present != rejected
@@ -1099,7 +1111,7 @@ class ScanFunctions:
         mean_2 = [x in sent.text for x in popavgs]
         scorepoints['mean_present'] = any(mean) or any(mean_2)
         scorepoints['pop_present'] = any(mean_2) or pop in [x.text for x in sent] or any([x in tokens for x in ['significant','significante']])
-        scorepoints['contrasign'] = not ((any(mean_2) or pop in tokens) and any([x in tokens for x in ['significant','significante']]))
+        scorepoints['contrasign'] = not (pop in tokens and any([x in tokens for x in ['significant','significante']]))
         
         #Add strings
         if not scorepoints['right_comparison']:
@@ -1112,14 +1124,14 @@ class ScanFunctions:
             output.append(self.mes['F_DECPOP'])
         if not scorepoints['jacked']:
             output.append(self.mes['F_JACKEDMEANS'])
-        if not scorepoints['contrasign']:
-            output.append(self.mes['F_BOTHPOP'])
+        #if not scorepoints['contrasign']: JE MAG NU WEL POPULATIE EN SIGNIFICANT BEIDE NOEMEN
+        #    output.append(self.mes['F_BOTHPOP'])
         return output
     
     def detect_criterium(self, doc:Doc, solution:dict, prefix:bool=True):
         output = []
         if (not 'criterium' in doc.text and not 'afhankelijke' in doc.text and not 'dependent' in doc.text) or \
-                        not lef(solution['independent'].get_all_syns(),[x.text for x in doc]):
+                        lef([self.mes['F_INDSHORT']],[x.text for x in doc]):
             output.append(self.mes['F_DEP'])
         return output
     
@@ -1162,13 +1174,13 @@ class ScanFunctions:
         level_bools:list[bool] = [lef(level_syns[i],[x.text for x in sent]) for i in range(2)]#len(levels))]
         scorepoints['level_present'] = any(level_bools) #or scorepoints['level_present']
         scorepoints['both_present'] = all(level_bools)# or scorepoints['both_present']
-        scorepoints['contrasign'] = not ((any(mean_2) or pop in sent.text) and any([x in sent.text for x in ['significant','significante']]))
+        scorepoints['contrasign'] = not (pop in sent.text and any([x in sent.text for x in ['significant','significante']]))
         subjtext = 'of the subjects' if self.mes['L_ENGLISH'] else 'van de subjecten'
         
         #Add strings:
         appendix:str = '' if num < 2 else self.mes['S_FORFAC'] + str(num) if num < 3 else subjtext if solution['assignment_type']==5 and num==2 else self.mes['S_WITHINT']
-        if not scorepoints['contrasign']:
-            output.append(self.mes['F_BOTHPOP'] + appendix)
+        #if not scorepoints['contrasign']: JE MAG NU WEL POPULATIE EN SIGNIFICANT BEIDE NOEMEN
+            #output.append(self.mes['F_BOTHPOP'] + appendix)
         if not scorepoints['right_comparison']:
             output.append(self.mes['F_JUSTLEVELS']+appendix+self.mes['S_BADCOMPARED'])
         if not scorepoints['right_negation']:
@@ -1295,15 +1307,15 @@ class ScanFunctions:
         tokens:list = [x.text for x in sent]
         suffix = ' bij de beslissing van ' if not self.mes['L_ENGLISH'] else ' for the decision of '
         scorepoints:dict = {'sign_effect': 'significant' in sent.text,
-            'indep': lef(solution['independent'].get_all_syns(),[x.text for x in sent]),
+            #'indep': lef(solution['independent'].get_all_syns(),[x.text for x in sent]),
             'dep': lef(solution[dep_key].get_all_syns(),[x.text for x in sent]) or 'multivariate' in variable,
             'neg': bool(negation_counter(tokens) % 2) != rejected}
         
         output:List[str] = []
         if not scorepoints['sign_effect']:
             output.append(' -'+self.mes['S_NANDEC']+variable+self.mes['S_SIGNEFFECT'])
-        if not scorepoints['indep']:
-            output.append(self.mes['F_NOIND']+suffix+variable)
+        #if not scorepoints['indep']:
+        #    output.append(self.mes['F_NOIND']+suffix+variable)
         if not scorepoints['dep']:
             output.append(self.mes['F_NODEP']+suffix+variable)
         if not scorepoints['neg']:
@@ -1325,8 +1337,9 @@ class ScanFunctions:
         if not scorepoints['neg']:
             output.append(self.mes['F_NONEG']+variable)
         return output
-        
-    def fres(self, sent:Doc, solution:dict, num=None) -> List[str]:
+    
+    """    
+    def detect_true_scores_old(self, sent:Doc, solution:dict, num=None) -> List[str]:
         #Define variables
         criteria:list = ['right_comparison', 'right_negation', 'mean_present', 'pop_present','jacked','contrasign']
         pop = 'population' if self.mes['L_ENGLISH'] else 'population'
@@ -1377,6 +1390,7 @@ class ScanFunctions:
         if not scorepoints['contrasign']:
             output.append(self.mes['F_BOTHPOP']+suffix)
         return output
+    """
     
     def detect_effect(self, sent:Doc, solution:dict, variable:str, p:float, eta:float) -> List[str]:
         output:List[str] = []

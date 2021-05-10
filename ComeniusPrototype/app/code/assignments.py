@@ -1137,8 +1137,14 @@ class Assignments:
         output = ''
         if self.mes['L_ENGLISH']:
             if assignment['assignment_type'] in [4, 13]:
-                output += 'The independent variables are '+assignment['independent'].name+' ('+', '.join(assignment['independent'].levels)+') and '+\
-                    assignment['independent2'].name + ' ('+', '.join(assignment['independent2'].levels)+'). '
+                if assignment['assignment_type'] == 13:
+                    t1 = 'within-subject - ';t2 = 'between-subject - '
+                else:
+                    t1 = '';t2 = ''
+                output += 'The independent variables are '+assignment['independent'].name+' ('+t1+', '.join(assignment['independent'].levels)+') and '+\
+                    assignment['independent2'].name + ' ('+t2+', '.join(assignment['independent2'].levels)+'). '
+            elif assignment['assignment_type'] in [5]:
+                output += 'The within_subject factor is '+assignment['independent'].name+' ('+', '.join(assignment['independent'].levels)+'). '
             elif assignment['assignment_type'] not in [6]:
                 output:str = 'The independent variable is '+assignment['independent'].name+' with levels '+' and '.join(assignment['independent'].levels)+'. '
             if not assignment['assignment_type'] in [11]:
@@ -1153,6 +1159,8 @@ class Assignments:
             if assignment['assignment_type'] in [4, 13]:
                 output += 'De onafhankelijke variabelen zijn '+assignment['independent'].name+' ('+', '.join(assignment['independent'].levels)+') en '+\
                     assignment['independent2'].name + ' ('+', '.join(assignment['independent2'].levels)+'). '
+            elif assignment['assignment_type'] in [5]:
+                output += 'De within_subject factor is '+assignment['independent'].name+' ('+', '.join(assignment['independent'].levels)+'). '
             elif assignment['assignment_type'] not in [6]:
                 output:str = 'De onafhankelijke variabele is '+assignment['independent'].name+' met niveaus '+' en '.join(assignment['independent'].levels)+'. '
             if not assignment['assignment_type'] in [11]:
@@ -1165,9 +1173,8 @@ class Assignments:
                 output +='De predictoren zijn '+' en '.join(assignment['predictor_names'])+'. '
         return output
     
-    def answer_decision(self,assignment, variable:str, num:int,FT:float,p:float,eta:float,no_effect:bool=False) -> str:
+    def answer_decision(self,assignment, variable:str, num:int,FT:float,p:float,eta:float,no_effect:bool=False,multivariate=False) -> str:
         output = ''
-        
         #Set parameters
         eq_sign = self.mes['S_UNQ'] if p < 0.05 else self.mes['S_EQ']
         n_key = 'independent' if num == 1 else 'independent'+str(num)
@@ -1176,15 +1183,17 @@ class Assignments:
         
         #Generate text
         if self.mes['L_ENGLISH']:
-            output += 'The effect for '+variable+' is significant' if p < 0.05 else 'The effect for '+variable+' is not significant'
+            start:str = 'The effect for '+variable if multivariate else 'The multivariate effect'
+            output += start+' is significant' if p < 0.05 else 'The effect for '+variable+' is not significant. '
             if assignment['assignment_type'] in [1,2,3,4,5]:
                 output += ', the population means for '+' and '.join(assignment[n_key].levels)+' are '+eq_sign
             if p < 0.05 and not assignment['assignment_type'] in [1,2] and not no_effect:
                 output += ', the effect here is '+sizes[size_ind]#+'.'
-            #else:
-            #    output += '. '
+            else:
+                output += '. '
         else:
-            output += 'Het effect van '+variable+' is significant' if p < 0.05 else 'Het effect van '+variable+' is niet significant'
+            start:str = 'Het effect van '+variable if multivariate else 'Het multivariate effect'
+            output += 'Het effect van '+variable+' is significant' if p < 0.05 else 'Het effect van '+variable+' is niet significant. '
             if assignment['assignment_type'] in [1,2,3,4,5]:
                 output += ', de populatiegemiddelden van '+' en '.join(assignment[n_key].levels)+' zijn '+eq_sign
             if p < 0.05 and not assignment['assignment_type'] in [1,2] and not no_effect:
@@ -1195,7 +1204,7 @@ class Assignments:
     
     def answer_stats(self,assignment:dict,FT:float,p:float,eta:float,multivar=False):
         output = ''
-        if p < 0.05:
+        if True:#p < 0.05:
             if assignment['assignment_type'] in [11,12,13,14]:
                 output += ' (F = '+str(round(FT,2))+', p = '+str(round(p,3))+', eta<sup>2</sup> = '+str(round(eta,2))+'). '
             elif assignment['assignment_type'] in [1,2]:
@@ -1272,14 +1281,14 @@ class Assignments:
     def answer_predictors(self,assignment) -> str:
         relevants = []
         if assignment['assignment_type'] == 6:
-            names = assignment['predictor_names'][1:]
-            ps = assignment['predictor_p'][1:]
+            names = assignment['levels'][1:]
+            ps = assignment['predictor_p'][1:len(names)]
         else:
             names = assignment['predictor_names']
             ps = assignment['predictor_p'][:len(names)]
         for i, p in enumerate(ps):
             if p < 0.05:
-                relevants.append([names[i] + ' ('+str(round(p,2))+')'])
+                relevants.append(names[i] + ' (p = '+str(round(p,2))+')')
         if self.mes['L_ENGLISH']:
             if relevants == []:
                 return 'There are no predictors with significant effects. '
@@ -1295,18 +1304,18 @@ class Assignments:
         output:str = ''
         pnames = assignment['predictor_names']
         sizes = ['small','moderate','large'] if self.mes['L_ENGLISH'] else ['klein','matig','groot']
-        size_ind = 2 if assignment['eta'][0] > 0.2 else 1 if assignment['eta'][0] > 0.1 else 0
+        size_ind = 2 if assignment['eta'][3] > 0.2 else 1 if assignment['eta'][3] > 0.1 else 0
         if self.mes['L_ENGLISH']:
-            if assignment['p'][0] < 0.05:
-                output += cap(assignment['independent'].name) + ', ' + pnames[0] + ' and ' + pnames[1] + ' together have a significant predictive effect on ' + assignment['dependent'].name+', '
+            if assignment['p'][3] < 0.05:
+                output += cap(assignment['independent'].name) + ', ' + pnames[0] + ' and ' + pnames[1] + ' together have a significant predictive value for ' + assignment['dependent'].name+', '
             else:            
-                output += cap(assignment['independent'].name) + ', ' + pnames[0] + ' and ' + pnames[1] + ' together do not have a significant predictive effect on ' + assignment['dependent'].name+'. '
+                output += cap(assignment['independent'].name) + ', ' + pnames[0] + ' and ' + pnames[1] + ' together do not have a significant predictive value on ' + assignment['dependent'].name+'. '
         else:
-            if assignment['p'][0] < 0.05:
+            if assignment['p'][3] < 0.05:
                 output += cap(assignment['independent'].name) + ', ' + pnames[0] + ' en ' + pnames[1] + ' hebben samen een significant voorspellend effect op ' + assignment['dependent'].name+', '
             else:            
                 output += cap(assignment['independent'].name) + ', ' + pnames[0] + ' en ' + pnames[1] + ' hebben samen geen significant voorspellend effect op ' + assignment['dependent'].name+'. '
-        if assignment['p'][0] < 0.05:
+        if assignment['p'][3] < 0.05:
             if self.mes['L_ENGLISH']:
                 output += 'this effect is '+sizes[size_ind]
             else:
@@ -1321,12 +1330,12 @@ class Assignments:
             effect = 'The effect' if self.mes['L_ENGLISH'] else 'Het effect'
         if self.mes['L_ENGLISH']:
             if p < 0.05:
-                output += effect+' between '+v1+' and '+v2+' is significant(p = '+str(round(p,2))+'). '
+                output += effect+' between '+v1+' and '+v2+' is significant (p = '+str(round(p,2))+'). '
             else:
                 output += effect+' between '+v1+' and '+v2+' is not significant. '
         else:
             if p < 0.05:
-                output += effect+' tussen '+v1+' en '+v2+' is significant(p = '+str(round(p,2))+'). '
+                output += effect+' tussen '+v1+' en '+v2+' is significant (p = '+str(round(p,2))+'). '
             else:
                 output += effect+' tussen '+v1+' en '+v2+' is niet significant. '
         return output
@@ -1356,21 +1365,22 @@ class Assignments:
             output += self.answer_stats(assignment, FT=assignment['F'][0], p=assignment['p'][0],eta=assignment['r2'][0])+'<br>'
             output += self.answer_predictors(assignment)
         if assignment['assignment_type'] == 11:
-            tag = 'het multivariate effect' if not self.mes['L_ENGLISH'] else 'the multivariate effect'
-            output += self.answer_decision(assignment, tag, 0, FT=assignment['F_multivar'], p=assignment['p_multivar'],eta=assignment['eta_multivar'])
+            output += self.answer_decision(assignment, '', 0, FT=assignment['F_multivar'], p=assignment['p_multivar'],eta=assignment['eta_multivar'],multivariate=True)
             output += self.answer_stats(assignment, FT=assignment['F_multivar'], p=assignment['p_multivar'],eta=assignment['eta_multivar'], multivar=True)+'<br>'
             for i in range(3):
                 if assignment['p'+str(i)][0] < 0.05:
-                    d_key = 'dependent' if i == 0 else 'ddependent'+str(i)
-                    output += self.answer_decision(assignment, assignment[d_key].name, 1, FT=assignment['F'+str(i)][0], p=assignment['p'+str(i)][0],eta=assignment['eta'+str(i)][0], no_effect=True)
+                    d_key = 'dependent' if i == 0 else 'dependent'+str(i+1)
+                    output += self.answer_decision(assignment, assignment[d_key].name, 1, FT=assignment['F'+str(i)][0], p=assignment['p'+str(i)][0],eta=assignment['eta'+str(i)][0], no_effect=False)
                     output += self.answer_stats(assignment, FT=assignment['F'+str(i)][0], p=assignment['p'+str(i)][0],eta=assignment['eta'+str(i)][0])+'<br>'
         if assignment['assignment_type'] == 12:
             output += self.answer_ancova(assignment)
-            output += self.answer_stats(assignment, FT=assignment['F'][0], p=assignment['p'][0],eta=assignment['eta'][0])+'<br>'
-            output += self.answer_predictors(assignment)
-            if assignment['p'][4] < 0.05:
-                output += self.answer_decision(assignment, assignment['independent'].name, 1, FT=assignment['F'][4], p=assignment['p'][4],eta=assignment['eta'][4])
-                output += self.answer_stats(assignment, FT=assignment['F'][4], p=assignment['p'][4],eta=assignment['eta'][4])+'<br>'
+            output += self.answer_stats(assignment, FT=assignment['F'][3], p=assignment['p'][3],eta=assignment['eta'][3])+'<br>'
+            output += self.answer_predictors(assignment)+'<br>'
+            output += self.answer_decision(assignment, assignment['independent'].name, 1, FT=assignment['F'][2], p=assignment['p'][2],eta=assignment['eta'][2])
+            if assignment['p'][2] < 0.05:    
+                output += self.answer_stats(assignment, FT=assignment['F'][2], p=assignment['p'][2],eta=assignment['eta'][2])+'<br>'
+            else:
+                output+='. '
         if assignment['assignment_type'] == 13:
             tag = 'the interaction' if self.mes['L_ENGLISH'] else 'de interactie'
             lvls = assignment['independent'].levels

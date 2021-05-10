@@ -148,7 +148,7 @@ F_NODISTURBANCE; -niet gesteld dat storende variabelen een mogelijkheid zijn voo
 F_NOREVERSECAUSE; -niet gesteld dat ongekeerde causaliteit een mogelijkheid is voor de alternatieve verklaring; -not stated that one possibility for the alternative explanation is reversed causality
 F_RIGHTP; -de juiste p-waarde van ; -the right p-value of 
 F_ANALYSIS; -naam van de analyse niet juist genoemd; -the name of the analysis isn’t stated correctly
-F_STRENGTH; -de sterkte van het effect ; -the effect strength 
+F_STRENGTH; -de juiste sterkte van het effect ; -the correct effect strength 
 S_SHORTONLY; kan je alleen een beknopt rapport maken.; can only be used to make a summary report
 S_VAR1; voor de eerste onafhankelijke variabele.;for the first independent variable
 S_VAR2; voor de tweede onafhankelijke variabele.;for the second independent variable
@@ -341,3 +341,4 @@ A_EXPLANATION;Opgave: ;Assignment:
 B_INFO1;Info 1;Info 1
 B_INFO2;Info 2;Info 2
 B_INFO3;Info 3;Info 3
+F_INDSHORT;onafhankelijk;independent
