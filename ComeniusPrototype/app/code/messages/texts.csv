@@ -5,7 +5,7 @@ M_ANALYSIS2;T-toets voor gekoppelde paren;T-test for paired samples
 M_ANALYSIS3;One-way ANOVA;One-way ANOVA
 M_ANALYSIS4;Two-way ANOVA;Two-way ANOVA
 M_ANALYSIS5;Repeated Measures Anova;Repeated Measures Anova
-M_ANALYSIS6;Multipele-regressieanalyse;Multiple-regression analysis
+M_ANALYSIS6;Multipele regressieanalyse;Multiple regression analysis
 M_ANALYSIS7;MANOVA;MANOVA
 M_ANALYSIS8;ANCOVA;ANCOVA
 M_ANALYSIS9;Multivariate RMANOVA;Multivariate RMANOVA
@@ -170,17 +170,17 @@ S_MEDIUM;matig;moderate
 S_SMALL;klein;small
 S_REJECTED;verworpen;rejected
 S_KEPT;behouden;retained
-S_EFFECTIS;Het effect is ;The effect is 
+S_EFFECTIS;Het effect was ;The effect was 
 S_AVGIS;het populatiegemiddelde van;the population average of
 S_IS; is ; is 
 S_THAN; vergeleken met dat van ; compared to that of 
-S_INFLUENCES; invloed heeft op ; influences 
+S_INFLUENCES; invloed had op ; influenced 
 S_DISTURBANCE; wel beinvloedt, maar dat dit niet merkbaar is door een storende variabele.;the former influences the latter, but this is not noticeable because of an interfering variable
 S_VARSARE;de variabelen zijn;the variables are
 S_WITHLEVELS; met niveaus ; with levels 
 S_NULL;H0;H0
 S_AVGSARE;, de populatiegemiddelden van ;, the population means of 
-S_AREAVG; zijn ; are 
+S_AREAVG; waren ; were 
 S_NOT;niet ;not 
 S_DISTURBANCE2;Eventuele alternatieve verklaringen zijn storende variabelen of omgekeerde causaliteit. ;Eventual alternative explanations are interfering variables or reversed causality
 S_FACTOR;van factor;of factor
@@ -271,13 +271,13 @@ I_METWITH;, met;, with
 S_DATAHYP2; rapport van onderstaande data. ;report of the data below. 
 I_DECIMALS2;Voer je antwoorden alsjeblieft tot op 2 decimalen in. ;Enter your answers with two decimals. 
 I_MULTIVAR;De afhankelijke variabelen zijn ;The dependent variables are 
-S_NINFLUENCES; geen invloed heeft op ; does not influence 
+S_NINFLUENCES; geen invloed had op ; did not influence 
 A_NOTICEABLE;, maar dat dit niet merkbaar is door een storende variabele. ;, but that this is cancelled out by an interfering variable. 
 A_BOTHINT; beide worden veroorzaakt door een storende variabele.; are both caused by an interfering variable. 
 S_UNQ;ongelijk;unequal
 S_EQ;gelijk;equal
-S_THEREIS;, er is ;, there is 
-S_BOOLINT1;wel;real
+S_THEREIS;, er was ;, there was 
+S_BOOLINT1;wel;
 S_BOOLINT2;geen;no
 S_INPOP; in de populatie. ; in the population. 
 S_INBETWEEN; interactie tussen ; interaction between 

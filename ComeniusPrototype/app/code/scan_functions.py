@@ -888,7 +888,7 @@ class ScanFunctions:
         if multivar_sent != []:
             output += '<br>'+'<br>'.join(self.detect_decision_ancova(multivar_sent[0], solution))
             if(solution['p'][3] < 0.05):
-                vslice = 'for the multivariate decision' if self.mes['L_ENGLISH'] else 'voor de multivariate beslissing'
+                vslice = 'for '+solution['independent'].name if self.mes['L_ENGLISH'] else 'voor '+solution['independent'].name
                 output += '<br>'+'<br>'.join(self.detect_effect(multivar_sent[0],solution, variable=vslice, p=solution['p'][3], eta=solution['eta'][3]))
         else:
             output += '<br>'+self.mes['F_NOPRED']
@@ -928,7 +928,7 @@ class ScanFunctions:
         if decision_sent != []: 
             num += 1
             user_given_name:str = solution['independent'].name if solution['independent'].name in decision_sent[0].text else 'within-subject'
-            output += '<br>'+'<br>'.join(self.detect_decision_multirm(decision_sent[0],solution,variable=user_given_name,synonyms=['multivariate within-subject'], p=solution['p0'][0], eta=solution['eta0'][0]))
+            output += '<br>'+'<br>'.join(self.detect_decision_multirm(decision_sent[0],solution,variable=user_given_name,synonyms=[], p=solution['p0'][0], eta=solution['eta0'][0]))
             output += '<br>'+'<br>'.join(self.detect_effect(decision_sent[0],solution, variable=solution['independent'].name, p=solution['p0'][0], eta=solution['eta0'][0]))
         else:
             output += '<br>'+self.mes['F_NOMULTIVARWS']
