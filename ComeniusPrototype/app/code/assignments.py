@@ -1203,7 +1203,7 @@ class Assignments:
                 output += '. '
         else:
             start:str = 'Het '+mv+'effect van '+variable
-            output += 'Het effect van '+variable+' was significant' if p < 0.05 else start+' was niet significant. '
+            output += start+' was significant' if p < 0.05 else start+' was niet significant. '
             if assignment['assignment_type'] in [1,2,3,4,5]:
                 output += ', de populatiegemiddelden van '+' en '.join(assignment[n_key].levels)+' zijn '+eq_sign
             if p < 0.05 and not assignment['assignment_type'] in [1,2] and not no_effect:
@@ -1231,7 +1231,7 @@ class Assignments:
         size_ind = 2 if assignment['r2'][1] > 0.2 else 1 if assignment['r2'][1] > 0.1 else 0
         if self.mes['L_ENGLISH']:
             output+= 'The effect of the subjects was significant' if assignment['p'][1] < 0.05 else 'The effect of the subjects was not significant'
-            output+= ', the stepped-up means of the subjects were unequal in the population' if assignment['p'][1] < 0.05 else ', the boosted means of the subjects were equal in the population'
+            output+= ', the stepped-up means of the subjects were unequal in the population' if assignment['p'][1] < 0.05 else ', the stepped-up means of the subjects were equal in the population'
             if assignment['p'][1] < 0.05:
                 output += ', this effect was '+sizes[size_ind]
             else:
@@ -1376,7 +1376,7 @@ class Assignments:
             output += self.answer_predictors(assignment)
         if assignment['assignment_type'] == 11:
             tag = 'the corrected model' if self.mes['L_ENGLISH'] else 'het gecorrigeerde model'
-            output += self.answer_decision(assignment, '', 0, FT=assignment['F_multivar'], p=assignment['p_multivar'],eta=assignment['eta_multivar'],multivariate=True)
+            output += self.answer_decision(assignment, tag, 0, FT=assignment['F_multivar'], p=assignment['p_multivar'],eta=assignment['eta_multivar'],multivariate=True)
             output += self.answer_stats(assignment, FT=assignment['F_multivar'], p=assignment['p_multivar'],eta=assignment['eta_multivar'], multivar=True)+'<br>'
             for i in range(3):
                 if assignment['p'+str(i)][0] < 0.05:
