@@ -963,7 +963,7 @@ class ScanFunctions:
         if decision_sent3 != []:
             num += 1
             user_given_name:str = solution['independent2'].name if solution['independent2'].name in decision_sent3[0].text else 'between-subject'
-            output += '<br>'+'<br>'.join(self.detect_decision_multirm(decision_sent3[0],solution,variable=user_given_name,synonyms=['multivariate between-subject'], p=solution['p'][1], eta=solution['eta'][1]))
+            output += '<br>'+'<br>'.join(self.detect_decision_multirm(decision_sent3[0],solution,variable=user_given_name,synonyms=[], p=solution['p'][1], eta=solution['eta'][1]))
             output += '<br>'+'<br>'.join(self.detect_effect(decision_sent3[0], solution, variable=solution['independent2'].name, p=solution['p'][1], eta=solution['eta'][1]))
         else:
             output += '<br>'+self.mes['F_NOMULTIVARBS']
