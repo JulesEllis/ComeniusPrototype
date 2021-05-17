@@ -1,6 +1,6 @@
 Code;Dutch;English
 A_ANSWER;Antwoord: ;Answer: 
-M_ANALYSIS1;T-toets onafhankelijke variabelen;T-test for independent samples
+M_ANALYSIS1;T-toets voor onafhankelijke variabelen;T-test for independent samples
 M_ANALYSIS2;T-toets voor gekoppelde paren;T-test for paired samples
 M_ANALYSIS3;One-way ANOVA;One-way ANOVA
 M_ANALYSIS4;Two-way ANOVA;Two-way ANOVA
@@ -172,10 +172,10 @@ S_REJECTED;verworpen;rejected
 S_KEPT;behouden;retained
 S_EFFECTIS;Het effect was ;The effect was 
 S_AVGIS;het populatiegemiddelde van;the population average of
-S_IS; is ; is 
+S_IS; was ; was 
 S_THAN; vergeleken met dat van ; compared to that of 
 S_INFLUENCES; invloed had op ; influenced 
-S_DISTURBANCE; wel beinvloedt, maar dat dit niet merkbaar is door een storende variabele.;the former influences the latter, but this is not noticeable because of an interfering variable
+S_DISTURBANCE; wel beinvloedt, maar dat dit niet merkbaar was door een storende variabele.;the former influences the latter, but this was not noticeable because of an interfering variable
 S_VARSARE;de variabelen zijn;the variables are
 S_WITHLEVELS; met niveaus ; with levels 
 S_NULL;H0;H0
@@ -291,16 +291,16 @@ A_BMEANS;, de opgevoerde gemiddelden van de personen in de populatie zijn ;, the
 F_TAU1; -het teken voor het opgevoerde gemiddelde van het eerste subject wordt niet genoemd; -the symbol for the stepped-up mean of the first subject is missing
 F_TAU2; -het teken voor het opgevoerde gemiddelde van het tweede subject wordt niet genoemd; -the symbol for the stepped-up mean of the second subject is missing
 F_TAUN; -het teken voor het opgevoerde gemiddelde van het laatste subject wordt niet genoemd; -the symbol for the stepped-up mean of the last subject is missing
-F_CCORRECT;Mooi, dit cijfer klopt.;Nice, the number is correct. 
-F_CSCORRECT;Mooi, deze cijfers kloppen.;Nice, the numbers are correct. 
-F_HYPCORRECT;Mooi, deze hypothese klopt.;Nice, the hypothesis is correct. 
-F_DECCORRECT;Mooi, deze beslissing klopt.;Nice, the decision is correct. 
-F_INTCORRECT;Mooi, deze interpretatie klopt.;Nice, the interpretation is correct. 
-F_PCORRECT;Mooi, deze waarde van p klopt.;Nice, this p-value is correct. 
+F_CCORRECT;Mooi, dit cijfer klopt. ;Nice, the number is correct. 
+F_CSCORRECT;Mooi, deze cijfers kloppen. ;Nice, the numbers are correct. 
+F_HYPCORRECT;Mooi, deze hypothese klopt. ;Nice, the hypothesis is correct. 
+F_DECCORRECT;Mooi, deze beslissing klopt. ;Nice, the decision is correct. 
+F_INTCORRECT;Mooi, deze interpretatie klopt. ;Nice, the interpretation is correct. 
+F_PCORRECT;Mooi, deze waarde van p klopt. ;Nice, this p-value is correct. 
 F_NOPHERE; -de juiste p-waarde; -the right value of p
 F_WRONGCOMP1; -de populatiegemiddelden worden niet juist met elkaar vergeleken bij de eerste vergelijking; -the population averages are not compared correctly for the first equation
 F_WRONGCOMP2; -de populatiegemiddelden worden niet juist met elkaar vergeleken bij de laatste vergelijking; -the population averages are not compared correctly for the last equation
-F_TABLECORRECT;Mooi, deze tabel klopt.;Nice, this table is correct.
+F_TABLECORRECT;Mooi, deze tabel klopt. ;Nice, this table is correct. 
 F_ONEAVG; -één juiste gemiddelde, namelijk de ; -one correct mean, namely the 
 F_ONESTD; -één juiste standaardeviatie, namelijk de ; -one correct standard deviation, namely the 
 F_ONEN; -één juiste waarde van N, namelijk de ; -one correct value of N, namely the 

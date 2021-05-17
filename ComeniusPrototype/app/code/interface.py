@@ -162,7 +162,7 @@ class Controller:
             hyp_type: int = random.choice([0,1,2])
             instruction: str = ''
             #Select analysis
-            if analysis in ['T-toets onafhankelijke variabelen','T-test for independent samples']:
+            if analysis in ['T-toets voor onafhankelijke variabelen','T-test for independent samples']:
                 self.assignment = self.assignments.create_ttest(True, hyp_type, control)
                 self.solution = self.assignments.solve_ttest(self.assignment, {})
                 instruction = self.assignments.print_ttest(self.assignment)
@@ -188,7 +188,7 @@ class Controller:
                 self.solution = self.assignments.solve_rmanova(self.assignment, {})
                 instruction = self.assignments.print_rmanova(self.assignment)
                 self.analysis_type = Task.WITHIN_ANOVA
-            if analysis in ['Multipele-regressieanalyse', 'Multiple-regression analysis']:
+            if analysis in ['Multipele regressieanalyse', 'Multiple regression analysis']:
                 self.analysis_type = Task.MREGRESSION
                 if report not in ['Beknopt rapport', 'Summary report']:
                     return self.protocol[self.index][0] + '<br><span style="color: blue;">'+self.mes['M_APOLOGIES']+analysis+self.mes['S_SHORTONLY']+'</span>'

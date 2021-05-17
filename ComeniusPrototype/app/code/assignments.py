@@ -296,7 +296,7 @@ class Assignments:
             comparison: str = ['unequal','larger','smaller'][assignment['hypothesis']]
         else:
             comparison: str = ['ongelijk','groter','kleiner'][assignment['hypothesis']]
-        solution['decision']: str = 'H0 ' + decision[0] + ', '+self.mes['S_AVGIS']+' ' + names[0] + ' is ' + decision[1] + comparison + self.mes['S_THAN'] + names[1] + '. ' + decision[2]
+        solution['decision']: str = 'H0 ' + decision[0] + ', '+self.mes['S_AVGIS']+' ' + names[0] + ' was ' + decision[1] + comparison + self.mes['S_THAN'] + names[1] + '. ' + decision[2]
         
         #Causal interpretation
         if solution['p'][0] < 0.05:
@@ -542,7 +542,7 @@ class Assignments:
             solution['interpretation']: str = self.mes['A_ONEINT']+solution['independent'].name+n1+solution['dependent'].name
         else:
             solution['interpretation']: str = self.mes['A_MULTINT']+solution['independent'].name+n1+solution['dependent'].name + '. '+\
-                self.mes['A_ALTINT'] + solution['dependent'].name + self.mes['S_INFLUENCES'] + solution['dependent'].name
+                self.mes['A_ALTINT'] + solution['dependent'].name + self.mes['S_INFLUENCES'] + solution['independent'].name
         return solution
     
     #Create a multiple regression assignment for the given parameters
@@ -1122,17 +1122,18 @@ class Assignments:
         if self.mes['L_ENGLISH']:
             return 'Experiment' if control else 'Passive-observational'
         else:
-            return 'Experiment' if control else 'Passive-observerend'
+            return 'Experiment' if control else 'Passief-observerend'
     
     """
     Functions to generate the standard answers for the short reports
     """
     def answer_name(self,assignment):
-        atype = assignment['assignment_type']
-        analyses = ['M_BLANK','M_ANALYSIS1','M_ANALYSIS2','M_ANALYSIS3','M_ANALYSIS4','M_ANALYSIS5','M_ANALYSIS6','M_BLANK','M_BLANK','M_BLANK','M_BLANK',\
+        atype:int = assignment['assignment_type']
+        analyses:list = ['M_BLANK','M_ANALYSIS1','M_ANALYSIS2','M_ANALYSIS3','M_ANALYSIS4','M_ANALYSIS5','M_ANALYSIS6','M_BLANK','M_BLANK','M_BLANK','M_BLANK',\
                     'M_ANALYSIS7','M_ANALYSIS8','M_ANALYSIS9','M_ANALYSIS10','M_BLANK']
         prefix, suffix = ('An analysis of the type ', ' was carried out. ') if self.mes['L_ENGLISH'] else ('Een ', ' werd uitgevoerd. ')
-        return prefix + self.mes[analyses[atype]] + suffix
+        name:str = self.mes[analyses[atype]] if assignment['assignment_type'] in [1,2,11,12] else uncap(self.mes[analyses[atype]])
+        return prefix + name + suffix
     
     def answer_design(self,assignment) -> str:
         output = ''
@@ -1195,8 +1196,13 @@ class Assignments:
         if self.mes['L_ENGLISH']:
             start:str = 'The '+mv+'effect of '+variable
             output += start+' was significant' if p < 0.05 else start+' was not significant. '
-            if assignment['assignment_type'] in [1,2,3,4,5]:
-                output += ', the population means for '+' and '.join(assignment[n_key].levels)+' are '+eq_sign
+            if assignment['assignment_type'] in [1,2]:
+                gold_comp = ['unequal','larger','smaller'][assignment['hypothesis']]
+                negation = '' if assignment['p'][0] < 0.05 else 'not '
+                levels = assignment[n_key].levels
+                output += ', the population mean for '+levels[0]+' was '+negation+gold_comp+' to that of '+levels[1]
+            if assignment['assignment_type'] in [3,4,5]:
+                output += ', the population means for '+' and '.join(assignment[n_key].levels)+' were '+eq_sign
             if p < 0.05 and not assignment['assignment_type'] in [1,2] and not no_effect:
                 output += ', the effect here was '+sizes[size_ind]#+'.'
             else:
@@ -1204,8 +1210,13 @@ class Assignments:
         else:
             start:str = 'Het '+mv+'effect van '+variable
             output += start+' was significant' if p < 0.05 else start+' was niet significant. '
-            if assignment['assignment_type'] in [1,2,3,4,5]:
-                output += ', de populatiegemiddelden van '+' en '.join(assignment[n_key].levels)+' zijn '+eq_sign
+            if assignment['assignment_type'] in [1,2]:
+                gold_comp = ['ongelijk','groter','kleiner'][assignment['hypothesis']]
+                negation = '' if assignment['p'][0] < 0.05 else 'niet '
+                levels = assignment[n_key].levels
+                output += ', het populatiegemiddelde van '+levels[0]+' was '+negation+gold_comp+' aan dat van '+levels[1]
+            if assignment['assignment_type'] in [3,4,5]:
+                output += ', de populatiegemiddelden van '+' en '.join(assignment[n_key].levels)+' waren '+eq_sign
             if p < 0.05 and not assignment['assignment_type'] in [1,2] and not no_effect:
                 output += ', dit effect was '+sizes[size_ind]#+'.'
             else:
@@ -1238,7 +1249,7 @@ class Assignments:
                 output += '. '
         else:
             output+= 'Het effect van de subjecten was significant' if assignment['p'][1] < 0.05 else 'Het effect van de subjecten was niet significant'
-            output+= ', de opgevoerde gemiddelden van de subjecten wweren ongelijk in de populatie' if assignment['p'][1] < 0.05 else ', de opgevoerde gemiddelden van de subjecten wweren gelijk in de populatie'
+            output+= ', de opgevoerde gemiddelden van de subjecten waren ongelijk in de populatie' if assignment['p'][1] < 0.05 else ', de opgevoerde gemiddelden van de subjecten waren gelijk in de populatie'
             if assignment['p'][1] < 0.05:
                 output += ', dit effect was '+sizes[size_ind]
             else:
@@ -1251,15 +1262,15 @@ class Assignments:
         output:str = ''
         if self.mes['L_ENGLISH']:
             if assignment['p'][2] < 0.05:
-                output += 'There was interaction between '+assignment['independent'].name+' and '+assignment['independent2'].name+' in the population'
+                output += 'There was significant interaction effect between '+assignment['independent'].name+' and '+assignment['independent2'].name+'. '#in the population'
             else:
-                output += 'There was no interaction between '+assignment['independent'].name+' and '+assignment['independent2'].name+' in the population'
+                output += 'There was no significant interaction effect between '+assignment['independent'].name+' and '+assignment['independent2'].name+'. '#in the population'
         else:    
             if assignment['p'][2] < 0.05:
-                output += 'Er was interactie tussen '+assignment['independent'].name+' en '+assignment['independent2'].name+' in de populatie'
+                output += 'Er was een significant interactie-effect tussen '+assignment['independent'].name+' en '+assignment['independent2'].name+'. '#in de populatie'
             else:
-                output += 'Er was geen interactie tussen '+assignment['independent'].name+' en '+assignment['independent2'].name+' in de populatie'
-        if assignment['p'][1] < 0.05:
+                output += 'Er was geen significant interactie-effect tussen '+assignment['independent'].name+' en '+assignment['independent2'].name+'. '#in de populatie'
+        if assignment['p'][2] < 0.05:
             if self.mes['L_ENGLISH']:
                 output += ', this effect was '+sizes[size_ind]
             else:
@@ -1306,9 +1317,9 @@ class Assignments:
                 return 'Predictors with significant effects were '+' and '.join(relevants)+'. '
         else:
             if relevants == []:
-                return 'Er wweren geen predictoren met significante effecten. '
+                return 'Er waren geen predictoren met significante effecten. '
             else:
-                return 'Predictoren met significante effecten wweren '+' en '.join(relevants)+'. '
+                return 'Predictoren met significante effecten waren '+' en '.join(relevants)+'. '
             
     def answer_ancova(self, assignment) -> str:
         output:str = ''
@@ -1322,9 +1333,9 @@ class Assignments:
                 output += cap(assignment['independent'].name) + ', ' + pnames[0] + ' and ' + pnames[1] + ' together do not have a significant predictive value on ' + assignment['dependent'].name+'. '
         else:
             if assignment['p'][3] < 0.05:
-                output += cap(assignment['independent'].name) + ', ' + pnames[0] + ' en ' + pnames[1] + ' hebben samen een significant voorspellend effect op ' + assignment['dependent'].name+', '
+                output += cap(assignment['independent'].name) + ', ' + pnames[0] + ' en ' + pnames[1] + ' hebben samen een significant voorspellende waarde op ' + assignment['dependent'].name+', '
             else:            
-                output += cap(assignment['independent'].name) + ', ' + pnames[0] + ' en ' + pnames[1] + ' hebben samen geen significant voorspellend effect op ' + assignment['dependent'].name+'. '
+                output += cap(assignment['independent'].name) + ', ' + pnames[0] + ' en ' + pnames[1] + ' hebben samen geen significant voorspellende waarde op ' + assignment['dependent'].name+'. '
         if assignment['p'][3] < 0.05:
             if self.mes['L_ENGLISH']:
                 output += 'this effect was '+sizes[size_ind]
@@ -1407,4 +1418,6 @@ class Assignments:
                 output += self.answer_contrast(assignment, lvls[1], lvls[2], assignment['p1'][3], interact=True)+'<br>'
             output += self.answer_decision(assignment, assignment['independent2'].name, 2, FT=assignment['F'][1], p=assignment['p'][1],eta=assignment['eta'][1])
             output += self.answer_stats(assignment, FT=assignment['F'][1], p=assignment['p'][1],eta=assignment['eta'][1])+'<br>'
+        #Fix punctuation
+        output:str = output.replace('. .  (',' (').replace('. , ',', ').replace('. (',' (')
         return output

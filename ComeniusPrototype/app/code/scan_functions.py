@@ -292,7 +292,7 @@ class ScanFunctions:
     #Interaction hypothesis for two-way ANOVA
     def scan_hypothesis_anova(self, text: str, solution: Dict) -> [bool, str]:
         #Remove potential dots to avoid confusion
-        levels = solution['independent'].levels; levels2 = solution['independent2'].levels
+        levels = [x.lower() for x in solution['independent'].levels]; levels2 = [x.lower() for x in solution['independent2'].levels]
         markers:list = ['and','total'] if self.mes['L_ENGLISH'] else ['en','totaal'] #Dutch and English words for the different versions
         criteria:list = ['h0', 'mu1some','mu1all','mu2some','mu2all']
         scorepoints = dict([(x,False) for x in criteria])
@@ -361,7 +361,7 @@ class ScanFunctions:
             else:
                 if textfields[t[0]] == None:
                     textfields[t[0]] = ''
-                elif textfields[t[0]].replace('.','').isdigit():
+                elif textfields[t[0]].replace('.','').replace('-','').isdigit():
                     textfields[t[0]] = float(textfields[t[0]])
                 else: 
                     textfields[t[0]] = 0.0
@@ -380,15 +380,15 @@ class ScanFunctions:
             if not any(scorepoints['mean']):
                 output += self.mes['F_ALLAVG']+'<br>'
             elif not all(scorepoints['mean']):    
-                output += self.mes['F_ONEAVG']+[tags[i] for i in range(2) if not scorepoints['mean'][i]][0]+self.mes['F_FROMABOVE']+'<br>'
+                output += self.mes['F_ONEAVG']+[tags[i] for i in range(2) if not scorepoints['mean'][i]][0]+self.mes['S_FROMABOVE']+'<br>'
             if not any(scorepoints['std']):
                 output += self.mes['F_ALLSTD']+'<br>'
             elif not all(scorepoints['std']):    
-                output += self.mes['F_ONESTD']+[tags[i] for i in range(2) if not scorepoints['std'][i]][0]+self.mes['F_FROMABOVE']+'<br>'
+                output += self.mes['F_ONESTD']+[tags[i] for i in range(2) if not scorepoints['std'][i]][0]+self.mes['S_FROMABOVE']+'<br>'
             if not any(scorepoints['n']):
                 output += self.mes['F_ALLN']+'<br>'
             elif not all(scorepoints['n']):    
-                output += self.mes['F_ONEN']++[tags[i] for i in range(2) if not scorepoints['n'][i]][0]+self.mes['F_FROMABOVE']+'<br>'
+                output += self.mes['F_ONEN']+[tags[i] for i in range(2) if not scorepoints['n'][i]][0]+self.mes['S_FROMABOVE']+'<br>'
             return True, output
         else:
             return False, self.mes['F_TABLECORRECT']
@@ -405,7 +405,7 @@ class ScanFunctions:
             else:
                 if textfields[t[0]] == None:
                     textfields[t[0]] = ''
-                elif textfields[t[0]].replace('.','').isdigit():
+                elif textfields[t[0]].replace('.','').replace('-','').isdigit():
                     textfields[t[0]] = float(textfields[t[0]])
                 elif t[0][0] == 'p':
                     pass
@@ -1034,7 +1034,7 @@ class ScanFunctions:
                        'neg': False
                        }
         diff_words = ['difference','effect'] if self.mes['L_ENGLISH'] else ['verschil','effect']
-        size_words = ['medium','moderate','small','strong','large','tiny'] if self.mes['L_ENGLISH'] else ['zwak','matig','klein','sterk','groot']
+        #size_words = ['medium','moderate','small','strong','large','tiny'] if self.mes['L_ENGLISH'] else ['zwak','matig','klein','sterk','groot']
         output:List[str] = []
         rejected:bool = solution['p'][num-1] < 0.05
         h0_output:list = self.detect_h0(doc, solution, num)
@@ -1042,8 +1042,8 @@ class ScanFunctions:
             return []
         
         if hasattr(doc, 'sents'):
-            difference = [sent for sent in doc.sents if any([y in sent.text for y in diff_words]) 
-                and not any([y in [x.text for x in sent] for y in size_words])]
+            difference = [sent for sent in doc.sents if any([y in sent.text for y in diff_words]) ] 
+                #and not any([y in [x.text for x in sent] for y in size_words])]
         else:
             difference = [doc]
         
@@ -1647,7 +1647,7 @@ class ScanFunctions:
         names:list = []
         if solution['assignment_type'] == 1:
             names = [('t','-','toets','voor','onafhankelijke','variabelen'),('between','-','subject','t','-','test'),('t','-','toets','voor','onafhankelijke','subjecten'),
-                     ('t','-','test','for','independent','samples')]
+                     ('t','-','test','for','independent','samples'),('t','-','toets','voor','onafhankelijke','steekproeven')]
         if solution['assignment_type'] == 2:
             names = [('t','-','toets','voor','gekoppelde','paren'),('within','-','subject','t','-','test'),('t','-','test','for','paired','samples')]
         if solution['assignment_type'] == 3:
@@ -1685,7 +1685,7 @@ class ScanFunctions:
             else: #Add reverse causality and disturbing variable options
                 tuples = [('obj','obj'),('obj','nsubj'), ('ROOT','obj'),('nmod','nsubj'),('obj','obl'),('obj','ROOT'),('amod','nsubj'),
                                ('nmod','obj'),('obj','amod'),('obl','nsubj'),('obl','obj'),('obj','nmod'),('ROOT','obl'),('nsubj','obl'),
-                               ('obl','obl'), ('csubj','obl'),('nsubj','conj'),('nsubjpass','conj')]
+                               ('obl','obl'), ('csubj','obl'),('nsubj','conj'),('nsubjpass','conj'),('obl','conj')]
         else: #English
             if not alternative:
                 tuples = [('nsubj','dobj'),('nsubj','ROOT'),('pobj','nsubjpass'),('nsubj','pobj'),('ROOT','obl'), ('amod','ROOT'),
