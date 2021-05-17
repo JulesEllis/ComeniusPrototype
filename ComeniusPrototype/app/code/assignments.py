@@ -1101,7 +1101,7 @@ class Assignments:
                 return assignment[i_key].name + ', a between-subject factor, with levels ' + levels[0] + ' and ' + levels[1] + '.'
             else:
                 i_key:str = 'independent' if num < 2 else 'independent' + str(num)
-                return assignment[i_key] + ', a within-subject factor with levels ' + ' and '.join(levels) + '.'
+                return assignment[i_key].name + ', a within-subject factor with levels ' + ' and '.join(levels) + '.'
         else:
             if assignment['assignment_type'] < 3:
                 return assignment[i_key].name + ', kwalitatief, met niveaus ' + levels[0] + ' en ' + levels[1] + '.'
