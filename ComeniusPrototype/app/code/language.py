@@ -19,8 +19,8 @@ class LanguageInterface:
                     parts = line.split(';')
                     dutch_pairs.append((parts[0], parts[1]))
                     english_pairs.append(((parts[0], parts[2][:-1])))
-        for key, t in [('EXPLAIN_SHORT','sjabloon_beknopt.csv'),('B1_SHORT','sjabloon_beknopt.csv'),
-                       ('B2_SHORT','sjabloon_beknopt.csv'),('B3_SHORT','sjabloon_beknopt.csv')]:
+        for key, t in [('EXPLAIN_SHORT','sjabloon_beknopt.csv'),('B1_SHORT','Sjabloon_beknopt_Docent.csv'),
+                       ('B2_SHORT','Sjabloon_beknopt_Werkgroepbegeleider.csv'),('B3_SHORT','Sjabloon_beknopt_Student.csv')]:
             with open(path+t, encoding='utf-8', errors='ignore') as file:
                 engparts = []
                 dutchparts = []
@@ -30,8 +30,8 @@ class LanguageInterface:
                     engparts.append(((parts[0], parts[2][:-1])))
                 dutch_pairs.append((key+'_NL', dict(dutchparts)))
                 english_pairs.append((key+'_EN', dict(engparts)))
-        for key, t in [('EXPLAIN_ELEM','sjabloon_elementair.csv'),('B1_ELEM','sjabloon_elementair.csv'),
-                       ('B2_ELEM','sjabloon_elementair.csv'),('B3_ELEM','sjabloon_elementair.csv')]:
+        for key, t in [('EXPLAIN_ELEM','sjabloon_elementair.csv'),('B1_ELEM','Sjabloon_elementair_Docent.csv.csv'),
+                       ('B2_ELEM','Sjabloon_elementair_Werkgroepbegeleider.csv'),('B3_ELEM','Sjabloon_elementair_Student.csv')]:
             with open(path+t, encoding='utf-8', errors='ignore') as file:
                 analyses = ['TBETWEEN','TWITHIN','1ANOVA','2ANOVA','RMANOVA']
                 elab_nl = dict([(an,{}) for an in analyses])
