@@ -32,6 +32,7 @@ class LanguageInterface:
                 english_pairs.append((key+'_EN', dict(engparts)))
         for key, t in [('EXPLAIN_ELEM','sjabloon_elementair.csv'),('B1_ELEM','Sjabloon_elementair_Docent.csv'),
                        ('B2_ELEM','Sjabloon_elementair_Werkgroepbegeleider.csv'),('B3_ELEM','Sjabloon_elementair_Student.csv')]:
+            print(t)
             with open(path+t, encoding='utf-8', errors='ignore') as file:
                 analyses = ['TBETWEEN','TWITHIN','1ANOVA','2ANOVA','RMANOVA']
                 elab_nl = dict([(an,{}) for an in analyses])
@@ -39,7 +40,9 @@ class LanguageInterface:
                 for line in file.readlines():
                     parts = line.split(';')
                     tag = parts[0]
+                    print(line)
                     for i in range(1,11):
+                        print(i)
                         if i % 2 == 1:
                             elab_nl[analyses[(i-1) // 2]][tag] = parts[i]
                         else:
@@ -54,3 +57,4 @@ class LanguageInterface:
             return self.english
         else:
             return self.dutch
+LanguageInterface()
