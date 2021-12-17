@@ -30,7 +30,7 @@ class LanguageInterface:
                     engparts.append(((parts[0], parts[2][:-1])))
                 dutch_pairs.append((key+'_NL', dict(dutchparts)))
                 english_pairs.append((key+'_EN', dict(engparts)))
-        for key, t in [('EXPLAIN_ELEM','sjabloon_elementair.csv'),('B1_ELEM','Sjabloon_elementair_Docent.csv.csv'),
+        for key, t in [('EXPLAIN_ELEM','sjabloon_elementair.csv'),('B1_ELEM','Sjabloon_elementair_Docent.csv'),
                        ('B2_ELEM','Sjabloon_elementair_Werkgroepbegeleider.csv'),('B3_ELEM','Sjabloon_elementair_Student.csv')]:
             with open(path+t, encoding='utf-8', errors='ignore') as file:
                 analyses = ['TBETWEEN','TWITHIN','1ANOVA','2ANOVA','RMANOVA']
