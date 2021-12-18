@@ -340,5 +340,5 @@ M_BLANK; ;
 A_EXPLANATION;Opgave: ;Assignment: 
 B_INFO1;Docent;Teacher
 B_INFO2;Werkgroepbegeleider;Supervisor
-B_INFO3;Student3;Student
+B_INFO3;Student;Student
 F_INDSHORT;onafhankelijk;independent
