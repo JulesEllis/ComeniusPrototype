@@ -83,6 +83,9 @@ def index():
                 form.__getattribute__('nextt').label.text = mes['B_NEXT']
                 form.__getattribute__('answer').label.text = mes['B_ANSWER']
                 form.__getattribute__('explain').label.text = mes['B_EXPLAIN']
+                form.__getattribute__('b1').label.text = mes['B_INFO1']
+                form.__getattribute__('b2').label.text = mes['B_INFO1']
+                form.__getattribute__('b3').label.text = mes['B_INFO3']
                 controller.formmode = False
                 instruction = controller.print_assignment()
                 #Save controller
@@ -118,6 +121,9 @@ def index():
                 form.__getattribute__('nextt').label.text = mes['B_NEXT']
                 form.__getattribute__('answer').label.text = mes['B_ANSWER']
                 form.__getattribute__('explain').label.text = mes['B_EXPLAIN']
+                form.__getattribute__('b1').label.text = mes['B_INFO1']
+                form.__getattribute__('b2').label.text = mes['B_INFO1']
+                form.__getattribute__('b3').label.text = mes['B_INFO3']
                 controller.formmode = False
                 instruction = controller.print_assignment()
                 
@@ -135,6 +141,9 @@ def index():
                 form.__getattribute__('nextt').label.text = mes['B_NEXT']
                 form.__getattribute__('answer').label.text = mes['B_ANSWER']    
                 form.__getattribute__('explain').label.text = mes['B_EXPLAIN']
+                form.__getattribute__('b1').label.text = mes['B_INFO1']
+                form.__getattribute__('b2').label.text = mes['B_INFO1']
+                form.__getattribute__('b3').label.text = mes['B_INFO3']
                 form.__getattribute__('inputtext').label = mes['Q_SHORTREPORT']
                 controller.formmode = False
                 instruction = output_text
@@ -193,6 +202,9 @@ def index():
             form.__getattribute__('prev').label.text = mes['B_PREV']
             form.__getattribute__('answer').label.text = mes['B_ANSWER']
             form.__getattribute__('explain').label.text = mes['B_EXPLAIN']
+            form.__getattribute__('b1').label.text = mes['B_INFO1']
+            form.__getattribute__('b2').label.text = mes['B_INFO1']
+            form.__getattribute__('b3').label.text = mes['B_INFO3']
         if controller.submit_field == Task.CHOICE: #Determine dropdown language options
             mes:dict = controller.mes
             form.__getattribute__('selectanalysis').choices = [mes['M_ANALYSIS' + str(i+1)] for i in range(9)]
@@ -243,6 +255,9 @@ def bigform():
     form.__getattribute__('nextt').label.text = mes['B_NEXT']
     form.__getattribute__('answer').label.text = mes['B_ANSWER']
     form.__getattribute__('explain').label.text = mes['B_EXPLAIN']
+    form.__getattribute__('b1').label.text = mes['B_INFO1']
+    form.__getattribute__('b2').label.text = mes['B_INFO1']
+    form.__getattribute__('b3').label.text = mes['B_INFO3']
     
     #Fill text positions that will be shown in the form
     if a['assignment_type'] == 4:
@@ -324,6 +339,9 @@ def smallform():
     form.__getattribute__('nextt').label.text = mes['B_NEXT']
     form.__getattribute__('answer').label.text = mes['B_ANSWER']
     form.__getattribute__('explain').label.text = mes['B_EXPLAIN']
+    form.__getattribute__('b1').label.text = mes['B_INFO1']
+    form.__getattribute__('b2').label.text = mes['B_INFO1']
+    form.__getattribute__('b3').label.text = mes['B_INFO3']
     
     #Enter text labels
     if a['assignment_type'] == 4:
@@ -404,6 +422,9 @@ def reportform():
     form.__getattribute__('inputtext').label = mes['Q_SHORTREPORT']
     form.__getattribute__('answer').label.text = mes['B_ANSWER']
     form.__getattribute__('explain').label.text = mes['B_EXPLAIN']
+    form.__getattribute__('b1').label.text = mes['B_INFO1']
+    form.__getattribute__('b2').label.text = mes['B_INFO1']
+    form.__getattribute__('b3').label.text = mes['B_INFO3']
     
     #Determine rendering parameters based on input button
     if flask.request.method == 'POST':
