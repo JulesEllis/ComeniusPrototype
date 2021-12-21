@@ -339,6 +339,6 @@ S_REPSHORT; rapport. ;report.
 M_BLANK; ; 
 A_EXPLANATION;Opgave: ;Assignment: 
 B_INFO1;Theorie;Theory
-B_INFO2;Uitleg;Explanation
-B_INFO3;Voorbeeld;Example
+B_INFO2;Voorbeeld;Example
+B_INFO3;Uitleg;Explanation
 F_INDSHORT;onafhankelijk;independent
