@@ -20,7 +20,7 @@ class LanguageInterface:
                     dutch_pairs.append((parts[0], parts[1]))
                     english_pairs.append(((parts[0], parts[2][:-1])))
         for key, t in [('EXPLAIN_SHORT','sjabloon_beknopt.csv'),('B1_SHORT','Sjabloon_beknopt_Docent.csv'),
-                       ('B2_SHORT','Sjabloon_beknopt_Werkgroepbegeleider.csv'),('B3_SHORT','Sjabloon_beknopt_Student.csv')]:
+                       ('B2_SHORT','Sjabloon_beknopt_Student.csv'),('B3_SHORT','Sjabloon_beknopt_Werkgroepbegeleider.csv')]:
             with open(path+t, encoding='utf-8', errors='ignore') as file:
                 engparts = []
                 dutchparts = []
