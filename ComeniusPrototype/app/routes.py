@@ -167,7 +167,7 @@ def index():
             output_text : str = controller.assignments.print_assignment(controller.assignment) + '<br>' + controller.protocol[controller.index][0]
             answer_text : str = controller.mes['A_ANSWER']+'<br>'+cap(controller.protocol[controller.index][4])
         elif form.explain.data or form.b1.data or form.b2.data or form.b3.data:
-            button_id = 0 if form.explain.data else 1 if form.b1.data else 2 if form.b2.data else form.b3.data
+            button_id = 0 if form.explain.data else 1 if form.b1.data else 2 if form.b2.data else 3 #form.b3.data
             output_text : str = controller.assignments.print_assignment(controller.assignment) + '<br>' + controller.protocol[controller.index][0]
             answer_text : str = controller.mes['A_EXPLANATION']+'<br>'+controller.explain_elementary(anslist=False, button_id=button_id)
         
@@ -313,7 +313,7 @@ def bigform():
             instruction, outputfields = controller.form_answers_anova()
             return render_template('bigform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames, title=title)
         elif form.explain.data or form.b1.data or form.b2.data or form.b3.data:
-            button_id = 0 if form.explain.data else 1 if form.b1.data else 2 if form.b2.data else form.b3.data
+            button_id = 0 if form.explain.data else 1 if form.b1.data else 2 if form.b2.data else 3 #form.b3.data
             form_shape = controller.analysis_type.value
             instruction = controller.assignments.print_assignment(controller.assignment)
             outputfields = controller.explain_elementary(anslist=True, button_id=button_id)
@@ -393,7 +393,7 @@ def smallform():
             instruction, outputfields = controller.form_answers()
             return render_template('smallform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames, title=title)
         elif form.explain.data or form.b1.data or form.b2.data or form.b3.data:
-            button_id = 0 if form.explain.data else 1 if form.b1.data else 2 if form.b2.data else form.b3.data
+            button_id = 0 if form.explain.data else 1 if form.b1.data else 2 if form.b2.data else 3 #form.b3.data
             form_shape = controller.analysis_type.value
             instruction = controller.assignments.print_assignment(controller.assignment)
             outputfields = controller.explain_elementary(anslist=True, button_id=button_id)
@@ -453,7 +453,7 @@ def reportform():
             output = controller.assignments.answer_report(controller.assignment) #controller.asssignment['answer']
             return render_template('reportform.html', form=form, instruction=instruction, display=output, title=title)
         elif form.explain.data or form.b1.data or form.b2.data or form.b3.data:
-            button_id = 0 if form.explain.data else 1 if form.b1.data else 2 if form.b2.data else form.b3.data
+            button_id = 0 if form.explain.data else 1 if form.b1.data else 2 if form.b2.data else 3 # form.b3.data
             instruction = controller.assignments.print_report(controller.assignment)
             output = controller.explain_short(button_id) #controller.asssignment['answer']
             return render_template('reportform.html', form=form, instruction=instruction, display=output, title=title)
