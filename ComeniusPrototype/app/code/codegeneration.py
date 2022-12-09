@@ -31,7 +31,7 @@ class EncryptedCodeSaver:
         return returnstr
     
     def decrypt(self,encdata) -> str:
-        #dataarr = bytes(encdata[2::], 'utf-8')
+        dataarr = bytes(encdata[2::], 'utf-8')
         keyarr = bytes(self.key, 'utf-8')
         encoffset = int("0x"+encdata[0:2],16)
         keylen = len(self.key)
@@ -63,3 +63,5 @@ class EncryptedCodeSaver:
 
 
 #data = "2869597;9;8-12-2022;13:23:58"
+#x = EncryptedCodeSaver()
+#print(x.decrypt('2c273e222724353a32222a23355e5d40545e4946554146485f444c5e49594550555e5b5551561d0d0a5947020f'))

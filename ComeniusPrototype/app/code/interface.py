@@ -440,7 +440,8 @@ class Controller:
             _, r_int2, ratio_int2 = self.sfs.scan_interpretation(nl_nlp(textfields['inputtext62'].lower()), self.solution, anova=True, num=2)
             _, r_intint, ratio_intint = self.sfs.scan_interpretation_anova(nl_nlp(textfields['inputtext63'].lower()), self.solution)
             _, r_table, ratio_table = self.sfs.scan_table(textfields, self.solution)
-            ratios = [r_indep, r_indep2, r_dep, r_control, r_control2, r_hyp, r_hyp2, r_hypint, r_dec, r_dec2, r_decint, r_int, r_int2, r_intint, r_table]
+            ratios = [ratio_indep, ratio_indep2, ratio_dep, ratio_control, ratio_control2, ratio_hyp, ratio_hyp2, ratio_hypint, ratio_dec, ratio_dec2, 
+                      ratio_decint, ratio_int, ratio_int2, ratio_intint, ratio_table]
             total_ratio = (sum([x[0] for x in ratios]),sum([x[1] for x in ratios]))
             ratio_output = '<br><br>{} '.format(*total_ratio) + self.mes['F_NMISTAKES']
             output = [[r_indep, r_indep2],[r_dep],[r_control, r_control2],[r_hyp, r_hyp2, r_hypint],[r_table],[r_dec, r_dec2, r_decint],[r_int, r_int2, r_intint + ratio_output]]
