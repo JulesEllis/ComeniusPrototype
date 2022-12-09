@@ -437,6 +437,7 @@ def reportform():
                 json.dump(mc, f) 
             return render_template('reportform.html', form=form, instruction=instruction, display=output, title=title)
         elif form.nextt.data:
+            controller.save_assignment()
             skip :bool = controller.skipable
             prev :bool = controller.prevable
             display = controller.protocol[0][0]

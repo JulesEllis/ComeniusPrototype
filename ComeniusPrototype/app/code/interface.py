@@ -13,6 +13,7 @@ import spacy
 import json
 from scipy import stats
 from app.code.enums import Process, Task
+from app.code.codegeneration import EncryptedCodeSaver
 from app.code.assignments import Assignments
 from app.code.language import LanguageInterface #Regular scan functions
 from app.code.scan_functions import * #Scan functions for decision and interpretation
@@ -43,6 +44,7 @@ class Controller:
                         7:self.sfs.scan_p,8:self.sfs.scan_table_ttest,9:self.sfs.scan_table,10:self.sfs.scan_decision,11:self.sfs.scan_decision_anova,12:self.sfs.scan_interpretation,
                         13:self.sfs.scan_interpretation_anova,14:self.sfs.scan_decision_rmanova,15:self.sfs.scan_dummy, 16:self.sfs.scan_hypothesis_rmanova}
             self.assignments = Assignments(self.mes)
+            self.result_encrypter = EncryptedCodeSaver()
             self.skipable: bool = jsondict['skipable']
             self.prevable: bool = jsondict['prevable']
             self.answerable: bool = jsondict['answerable']
@@ -85,6 +87,10 @@ class Controller:
                   "analysis_type":self.analysis_type.value,
                   "wipetext":self.wipetext}
         return output
+    
+    def save_assignment(self):
+        if self.assignment['feedback_requests'] > 0:
+            self.result_encrypter.encrypt_and_save(self.assignment['assignment_type'], self.assignment['n_mistakes'], self.assignment['feedback_requests'])
     
     #Reset controller attributes to their initial values (called when user reloads URL)
     def reset(self):
@@ -369,9 +375,9 @@ class Controller:
     
     #Return the standard answers for the T-test assignments in a list
     def form_answers(self) -> [str, List[str]]:
+        self.assignment['feedback_requests'] += 1
         output:list = [[] for i in range(12)]
         instruction:str = self.assignments.print_ttest(self.assignment)
-        self.assignment['feedback_requests'] += 1
         output[0].append('Antwoord: '+self.assignments.print_independent(self.assignment))
         output[1].append('Antwoord: '+self.assignments.print_dependent(self.assignment))
         output[2].append('Antwoord: '+self.assignments.print_control(self.assignment))
@@ -388,6 +394,7 @@ class Controller:
     
     #Apply scan functions to the input fields of the ANOVA form and return a list of feedback points
     def update_form_anova(self, textfields: Dict) -> [str, list]:
+        self.assignment['feedback_requests'] += 1
         output:list = [[] for i in range(7)] #Empty list for every type of input field (independent variable, dependent variable, etc.)
         if self.mes['L_ENGLISH']:
             nl_nlp = spacy.load('en_core_web_sm') 
@@ -401,7 +408,6 @@ class Controller:
             instruction = self.assignments.print_rmanova(self.assignment)
         else:    
             print('ERROR: INVALID TABLE SHAPE')
-        self.assignment['feedback_requests'] += 1
             
         if self.assignment['assignment_type'] == 3:
             #One-way ANOVA
@@ -510,8 +516,8 @@ class Controller:
     
     #Update function for the report screen, returns a list of feedback for each field
     def update_form_report(self, textfields: Dict) -> List[str]:
-        instruction = self.assignments.print_report(self.assignment)
         self.assignment['feedback_requests'] += 1
+        instruction = self.assignments.print_report(self.assignment)
         text = textfields['inputtext']
         feedback = None
         if self.assignment['assignment_type'] == 1:
@@ -534,7 +540,8 @@ class Controller:
             feedback = self.sfs.split_grade_multirm(text, self.solution)
         #Count mistakes
         n_mistakes = len(feedback.split(' -')) - 1
-        feedback += '<br><br>' + str(n_mistakes) + ' ' + self.mes['F_NMISTAKES']
+        self.assignment['n_mistakes'] = n_mistakes
+        feedback += '<br>' + str(n_mistakes) + ' ' + self.mes['F_NMISTAKES']
         return instruction, feedback
     
     """
