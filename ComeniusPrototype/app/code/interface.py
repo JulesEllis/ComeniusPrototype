@@ -415,13 +415,13 @@ class Controller:
             _, r_dep, ratio_dep = self.sfs.scan_dep(textfields['inputtext2'].lower(), self.solution)
             _, r_control, ratio_control = self.sfs.scan_control(textfields['inputtext3'].lower(), self.solution)
             _, r_hyp, ratio_hyp = self.sfs.scan_hypothesis(textfields['inputtext4'].lower(), self.solution, num=1)
-            _, r_decision, ratio_decision = self.sfs.scan_decision(nl_nlp(textfields['inputtext5'].lower()), self.solution, anova=True)
-            _, r_interpret, ratio_interpret = self.sfs.scan_interpretation(nl_nlp(textfields['inputtext6'].lower()), self.solution, anova=True, num=1)
+            _, r_dec, ratio_dec = self.sfs.scan_decision(nl_nlp(textfields['inputtext5'].lower()), self.solution, anova=True)
+            _, r_int, ratio_int = self.sfs.scan_interpretation(nl_nlp(textfields['inputtext6'].lower()), self.solution, anova=True, num=1)
             _, r_table, ratio_table = self.sfs.scan_table(textfields, self.solution)
-            ratios = [ratio_indep, ratio_dep, ratio_control, ratio_hyp, ratio_table, ratio_decision, ratio_interpret]
+            ratios = [ratio_indep, ratio_dep, ratio_control, ratio_hyp, ratio_table, ratio_dec, ratio_int]
             total_ratio = (sum([x[0] for x in ratios]),sum([x[1] for x in ratios]))
             ratio_output = '<br><br>{} '.format(*total_ratio) + self.mes['F_NMISTAKES']
-            output = [[r_indep],[r_dep],[r_control],[r_hyp],[r_table],[r_decision],[r_interpret+ratio_output]]
+            output = [[r_indep],[r_dep],[r_control],[r_hyp],[r_table],[r_dec],[r_int+ratio_output]]
             
         elif self.assignment['assignment_type'] == 4:
             #Two-way ANOVA
@@ -457,10 +457,10 @@ class Controller:
             _, r_decision, ratio_decision = self.sfs.scan_decision_rmanova(nl_nlp(textfields['inputtext52'].lower()), self.solution, num=2)
             _, r_int, ratio_int = self.sfs.scan_interpretation(nl_nlp(textfields['inputtext6'].lower()), self.solution, anova=True, num=1)
             _, r_table, ratio_table = self.sfs.scan_table(textfields, self.solution)
-            ratios = [ratio_indep, ratio_dep, ratio_control, ratio_hyp, ratio_hyprm, ratio_table, ratio_decision, ratio_decisionrm, ratio_interpret]
+            ratios = [ratio_indep, ratio_dep, ratio_control, ratio_hyp, ratio_hyprm, ratio_table, ratio_decision, ratio_decisionrm, ratio_int]
             total_ratio = (sum([x[0] for x in ratios]),sum([x[1] for x in ratios]))
             ratio_output = '<br><br>{} '.format(*total_ratio) + self.mes['F_NMISTAKES']
-            output = [[r_indep],[r_dep],[r_control],[r_hyp,r_hyprm],[r_table],[r_decision,r_decisionrm],[r_interpret+ratio_output]]
+            output = [[r_indep],[r_dep],[r_control],[r_hyp,r_hyprm],[r_table],[r_decision,r_decisionrm],[r_int+ratio_output]]
         return instruction, output
     
     #Return the standard answers for the ANOVA assignments in a list
