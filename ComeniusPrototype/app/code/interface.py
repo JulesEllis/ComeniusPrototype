@@ -17,7 +17,18 @@ from app.code.assignments import Assignments
 from app.code.language import LanguageInterface #Regular scan functions
 from app.code.scan_functions import * #Scan functions for decision and interpretation
 from typing import Dict, List, Callable, Tuple
-
+"""
+Feedback per opgave
+-Aantal keer feedback per opgave opslaan
+Fouten tellen
+-Omschrijven functies
+-Printen aantal fouten
+Code
+-Analyze
+-Aantal fouten
+-Tijd
+-Student
+""" 
 #class OuterController:
 class Controller:
     def __init__(self, jsondict:dict=None):
@@ -119,7 +130,7 @@ class Controller:
         _, function, arguments, process, answer = self.protocol[self.index]
         output_text = ''
         if process == Process.TABLE and input_text != 'skip' and input_text != 'prev':                
-            again, output_text = function(textfields, *arguments)
+            again, output_text, correct_ratio = function(textfields, *arguments)
         elif process == Process.CHOOSE_ANALYSIS:
             analysis = textfields['selectanalysis']
             report = textfields['selectreport']
@@ -191,7 +202,7 @@ class Controller:
             if analysis in ['Multipele regressieanalyse', 'Multiple regression analysis']:
                 self.analysis_type = Task.MREGRESSION
                 if report not in ['Beknopt rapport', 'Summary report']:
-                    return self.protocol[self.index][0] + '<br><span style="color: blue;">'+self.mes['M_APOLOGIES']+analysis+self.mes['S_SHORTONLY']+'</span>'
+                    return self.protocol[self.index][0] + '<br><span style="color: blue;">'+self.mes['M_APOLOGIES']+analysis.replace('Multi','multi')+self.mes['S_SHORTONLY']+'</span>'
             if analysis == 'MANOVA':
                 self.analysis_type = Task.MANOVA
                 if report not in ['Beknopt rapport', 'Summary report']:
@@ -203,7 +214,7 @@ class Controller:
             if analysis == 'Multivariate RMANOVA':
                 self.analysis_type = Task.MULTIRM
                 if report not in ['Beknopt rapport', 'Summary report']:
-                    return self.protocol[self.index][0] + '<br><span style="color: blue;">'+self.mes['M_APOLOGIES']+analysis+self.mes['S_SHORTONLY']+'</span>'
+                    return self.protocol[self.index][0] + '<br><span style="color: blue;">'+self.mes['M_APOLOGIES']+analysis.replace('Multi','multi')+self.mes['S_SHORTONLY']+'</span>'
             if analysis in ['Dubbel Multivariate-RMANOVA','Dubble multivariate RMANOVA']:
                 self.analysis_type = Task.MULTIRM2
                 if report not in ['Beknopt rapport', 'Summary report']:
@@ -333,30 +344,34 @@ class Controller:
         output:list = [[] for i in range(12)]
         instruction:str = self.assignments.print_ttest(self.assignment)
         
-        output[0].append(self.sfs.scan_indep(textfields['inputtext1'].lower(), self.solution)[1])
-        output[1].append(self.sfs.scan_dep(textfields['inputtext2'].lower(), self.solution)[1])
-        output[2].append(self.sfs.scan_control(textfields['inputtext3'].lower(), self.solution)[1])
-        output[4].append(self.sfs.scan_hypothesis(textfields['inputtext4'].lower(), self.solution, num=1)[1])
+        _, r_indep, ratio_indep = self.sfs.scan_indep(textfields['inputtext1'].lower(), self.solution)
+        _, r_dep, ratio_dep = self.sfs.scan_dep(textfields['inputtext2'].lower(), self.solution)
+        _, r_control, ratio_control = self.sfs.scan_control(textfields['inputtext3'].lower(), self.solution)
+        _, r_hyp, ratio_hyp = self.sfs.scan_hypothesis(textfields['inputtext4'].lower(), self.solution, num=1)
         
-        output[5].append(self.sfs.scan_number(textfields['inputtext5'], 'df', self.solution)[1])
-        output[6].append(self.sfs.scan_number(textfields['inputtext6'], 'raw_effect', self.solution)[1])
-        output[7].append(self.sfs.scan_number(textfields['inputtext7'], 'relative_effect', self.solution)[1])
-        output[8].append(self.sfs.scan_number(textfields['inputtext8'], 'T', self.solution)[1])
-        output[9].append(self.sfs.scan_number(textfields['inputtext9'], 'p', self.solution)[1])
+        _, r_df, ratio_df = self.sfs.scan_number(textfields['inputtext5'], 'df', self.solution)
+        _, r_raw, ratio_raw = self.sfs.scan_number(textfields['inputtext6'], 'raw_effect', self.solution)
+        _, r_rel, ratio_rel = self.sfs.scan_number(textfields['inputtext7'], 'relative_effect', self.solution)
+        _, r_t, ratio_t = self.sfs.scan_number(textfields['inputtext8'], 'T', self.solution)
+        _, r_p, ratio_p = self.sfs.scan_number(textfields['inputtext9'], 'p', self.solution)
         if self.mes['L_ENGLISH']:
             nl_nlp = spacy.load('en_core_web_sm') 
         else: 
             nl_nlp = spacy.load('nl_core_news_sm')
-        output[10].append(self.sfs.scan_decision(nl_nlp(textfields['inputtext10'].lower()), self.solution, anova=False)[1])
-        output[11].append(self.sfs.scan_interpretation(nl_nlp(textfields['inputtext11'].lower()), self.solution, anova=False)[1])
-        
-        output[3].append(self.sfs.scan_table_ttest(textfields, self.solution)[1])
+        _, r_dec, ratio_dec = self.sfs.scan_decision(nl_nlp(textfields['inputtext10'].lower()), self.solution, anova=False)
+        _, r_int, ratio_int = self.sfs.scan_interpretation(nl_nlp(textfields['inputtext11'].lower()), self.solution, anova=False)
+        _, r_table, ratio_table = self.sfs.scan_table_ttest(textfields, self.solution)
+        ratios = [ratio_indep, ratio_dep, ratio_control, ratio_hyp, ratio_table, ratio_df, ratio_raw, ratio_rel, ratio_t, ratio_p, ratio_dec, ratio_int]
+        total_ratio = (sum([x[0] for x in ratios]),sum([x[1] for x in ratios]))
+        ratio_output = '<br><br>{} '.format(*total_ratio) + self.mes['F_NMISTAKES']
+        output = [[r_indep],[r_dep],[r_control],[r_table],[r_hyp],[r_df],[r_raw],[r_rel], [r_t], [r_p], [r_dec],[r_int + ratio_output]]
         return instruction, output
     
     #Return the standard answers for the T-test assignments in a list
     def form_answers(self) -> [str, List[str]]:
         output:list = [[] for i in range(12)]
         instruction:str = self.assignments.print_ttest(self.assignment)
+        self.assignment['feedback_requests'] += 1
         output[0].append('Antwoord: '+self.assignments.print_independent(self.assignment))
         output[1].append('Antwoord: '+self.assignments.print_dependent(self.assignment))
         output[2].append('Antwoord: '+self.assignments.print_control(self.assignment))
@@ -386,44 +401,59 @@ class Controller:
             instruction = self.assignments.print_rmanova(self.assignment)
         else:    
             print('ERROR: INVALID TABLE SHAPE')
+        self.assignment['feedback_requests'] += 1
             
         if self.assignment['assignment_type'] == 3:
             #One-way ANOVA
-            output[0].append(self.sfs.scan_indep_anova(textfields['inputtext1'].lower(), self.solution, num=1, between_subject=True)[1])
-            output[1].append(self.sfs.scan_dep(textfields['inputtext2'].lower(), self.solution)[1])
-            output[2].append(self.sfs.scan_control(textfields['inputtext3'].lower(), self.solution)[1])
-            output[3].append(self.sfs.scan_hypothesis(textfields['inputtext4'].lower(), self.solution, num=1)[1])
-            output[5].append(self.sfs.scan_decision(nl_nlp(textfields['inputtext5'].lower()), self.solution, anova=True)[1])
-            output[6].append(self.sfs.scan_interpretation(nl_nlp(textfields['inputtext6'].lower()), self.solution, anova=True, num=1)[1])
-            output[4].append(self.sfs.scan_table(textfields, self.solution)[1])
+            _, r_indep, ratio_indep = self.sfs.scan_indep_anova(textfields['inputtext1'].lower(), self.solution, num=1, between_subject=True)
+            _, r_dep, ratio_dep = self.sfs.scan_dep(textfields['inputtext2'].lower(), self.solution)
+            _, r_control, ratio_control = self.sfs.scan_control(textfields['inputtext3'].lower(), self.solution)
+            _, r_hyp, ratio_hyp = self.sfs.scan_hypothesis(textfields['inputtext4'].lower(), self.solution, num=1)
+            _, r_decision, ratio_decision = self.sfs.scan_decision(nl_nlp(textfields['inputtext5'].lower()), self.solution, anova=True)
+            _, r_interpret, ratio_interpret = self.sfs.scan_interpretation(nl_nlp(textfields['inputtext6'].lower()), self.solution, anova=True, num=1)
+            _, r_table, ratio_table = self.sfs.scan_table(textfields, self.solution)
+            ratios = [ratio_indep, ratio_dep, ratio_control, ratio_hyp, ratio_table, ratio_decision, ratio_interpret]
+            total_ratio = (sum([x[0] for x in ratios]),sum([x[1] for x in ratios]))
+            ratio_output = '<br><br>{} '.format(*total_ratio) + self.mes['F_NMISTAKES']
+            output = [[r_indep],[r_dep],[r_control],[r_hyp],[r_table],[r_decision],[r_interpret+ratio_output]]
+            
         elif self.assignment['assignment_type'] == 4:
             #Two-way ANOVA
-            output[0].append(self.sfs.scan_indep_anova(textfields['inputtext1'].lower(), self.solution, num=1, between_subject=True)[1])
-            output[0].append(self.sfs.scan_indep_anova(textfields['inputtext12'].lower(), self.solution, num=2, between_subject=True)[1])
-            output[1].append(self.sfs.scan_dep(textfields['inputtext2'].lower(), self.solution)[1])
-            output[2].append(self.sfs.scan_control(textfields['inputtext3'].lower(), self.solution)[1])
-            output[2].append(self.sfs.scan_control(textfields['inputtext32'].lower(), self.solution, num=2)[1])
-            output[3].append(self.sfs.scan_hypothesis(textfields['inputtext4'].lower(), self.solution, num=1)[1])
-            output[3].append(self.sfs.scan_hypothesis(textfields['inputtext42'].lower(), self.solution, num=2)[1])
-            output[3].append(self.sfs.scan_hypothesis_anova(textfields['inputtext43'].lower(), self.solution)[1])
-            output[5].append(self.sfs.scan_decision(nl_nlp(textfields['inputtext5'].lower()), self.solution, anova=True, num=1)[1])
-            output[5].append(self.sfs.scan_decision(nl_nlp(textfields['inputtext52'].lower()), self.solution, anova=True, num=2)[1])
-            output[5].append(self.sfs.scan_decision_anova(nl_nlp(textfields['inputtext53'].lower()), self.solution)[1])
-            output[6].append(self.sfs.scan_interpretation(nl_nlp(textfields['inputtext6'].lower()), self.solution, anova=True, num=1)[1])
-            output[6].append(self.sfs.scan_interpretation(nl_nlp(textfields['inputtext62'].lower()), self.solution, anova=True, num=2)[1])
-            output[6].append(self.sfs.scan_interpretation_anova(nl_nlp(textfields['inputtext63'].lower()), self.solution)[1])
-            output[4].append(self.sfs.scan_table(textfields, self.solution)[1])
+            _, r_indep, ratio_indep = self.sfs.scan_indep_anova(textfields['inputtext1'].lower(), self.solution, num=1, between_subject=True)
+            _, r_indep2, ratio_indep2 = self.sfs.scan_indep_anova(textfields['inputtext12'].lower(), self.solution, num=2, between_subject=True)
+            _, r_dep, ratio_dep = self.sfs.scan_dep(textfields['inputtext2'].lower(), self.solution)
+            _, r_control, ratio_control = self.sfs.scan_control(textfields['inputtext3'].lower(), self.solution)
+            _, r_control2, ratio_control2 = self.sfs.scan_control(textfields['inputtext32'].lower(), self.solution, num=2)
+            _, r_hyp, ratio_hyp = self.sfs.scan_hypothesis(textfields['inputtext4'].lower(), self.solution, num=1)
+            _, r_hyp2, ratio_hyp2 = self.sfs.scan_hypothesis(textfields['inputtext42'].lower(), self.solution, num=2)
+            _, r_hypint, ratio_hypint = self.sfs.scan_hypothesis_anova(textfields['inputtext43'].lower(), self.solution)
+            _, r_dec, ratio_dec = self.sfs.scan_decision(nl_nlp(textfields['inputtext5'].lower()), self.solution, anova=True, num=1)
+            _, r_dec2, ratio_dec2 = self.sfs.scan_decision(nl_nlp(textfields['inputtext52'].lower()), self.solution, anova=True, num=2)
+            _, r_decint, ratio_decint = self.sfs.scan_decision_anova(nl_nlp(textfields['inputtext53'].lower()), self.solution)
+            _, r_int, ratio_int = self.sfs.scan_interpretation(nl_nlp(textfields['inputtext6'].lower()), self.solution, anova=True, num=1)
+            _, r_int2, ratio_int2 = self.sfs.scan_interpretation(nl_nlp(textfields['inputtext62'].lower()), self.solution, anova=True, num=2)
+            _, r_intint, ratio_intint = self.sfs.scan_interpretation_anova(nl_nlp(textfields['inputtext63'].lower()), self.solution)
+            _, r_table, ratio_table = self.sfs.scan_table(textfields, self.solution)
+            ratios = [r_indep, r_indep2, r_dep, r_control, r_control2, r_hyp, r_hyp2, r_hypint, r_dec, r_dec2, r_decint, r_int, r_int2, r_intint, r_table]
+            total_ratio = (sum([x[0] for x in ratios]),sum([x[1] for x in ratios]))
+            ratio_output = '<br><br>{} '.format(*total_ratio) + self.mes['F_NMISTAKES']
+            output = [[r_indep, r_indep2],[r_dep],[r_control, r_control2],[r_hyp, r_hyp2, r_hypint],[r_table],[r_dec, r_dec2, r_decint],[r_int, r_int2, r_intint + ratio_output]]
+            
         elif self.assignment['assignment_type'] == 5:
             #Within-subject ANOVA
-            output[0].append(self.sfs.scan_indep_anova(textfields['inputtext1'].lower(), self.solution, num=1, between_subject=False)[1])
-            output[1].append(self.sfs.scan_dep(textfields['inputtext2'].lower(), self.solution)[1])
-            output[2].append(self.sfs.scan_control(textfields['inputtext3'].lower(), self.solution)[1])
-            output[3].append(self.sfs.scan_hypothesis(textfields['inputtext4'].lower(), self.solution, num=1)[1])
-            output[3].append(self.sfs.scan_hypothesis_rmanova(textfields['inputtext42'].lower(), self.solution)[1])
-            output[5].append(self.sfs.scan_decision(nl_nlp(textfields['inputtext5'].lower()), self.solution, anova=True)[1])
-            output[5].append(self.sfs.scan_decision_rmanova(nl_nlp(textfields['inputtext52'].lower()), self.solution, num=2)[1])
-            output[6].append(self.sfs.scan_interpretation(nl_nlp(textfields['inputtext6'].lower()), self.solution, anova=True, num=1)[1])
-            output[4].append(self.sfs.scan_table(textfields, self.solution)[1])
+            _, r_indep, ratio_indep = self.sfs.scan_indep_anova(textfields['inputtext1'].lower(), self.solution, num=1, between_subject=False)
+            _, r_dep, ratio_dep = self.sfs.scan_dep(textfields['inputtext2'].lower(), self.solution)
+            _, r_control, ratio_control = self.sfs.scan_control(textfields['inputtext3'].lower(), self.solution)
+            _, r_hyp, ratio_hyp = self.sfs.scan_hypothesis(textfields['inputtext4'].lower(), self.solution, num=1)
+            _, r_hyprm, ratio_hyprm = self.sfs.scan_hypothesis_rmanova(textfields['inputtext42'].lower(), self.solution)
+            _, r_decisionrm, ratio_decisionrm = self.sfs.scan_decision(nl_nlp(textfields['inputtext5'].lower()), self.solution, anova=True)
+            _, r_decision, ratio_decision = self.sfs.scan_decision_rmanova(nl_nlp(textfields['inputtext52'].lower()), self.solution, num=2)
+            _, r_int, ratio_int = self.sfs.scan_interpretation(nl_nlp(textfields['inputtext6'].lower()), self.solution, anova=True, num=1)
+            _, r_table, ratio_table = self.sfs.scan_table(textfields, self.solution)
+            ratios = [ratio_indep, ratio_dep, ratio_control, ratio_hyp, ratio_hyprm, ratio_table, ratio_decision, ratio_decisionrm, ratio_interpret]
+            total_ratio = (sum([x[0] for x in ratios]),sum([x[1] for x in ratios]))
+            ratio_output = '<br><br>{} '.format(*total_ratio) + self.mes['F_NMISTAKES']
+            output = [[r_indep],[r_dep],[r_control],[r_hyp,r_hyprm],[r_table],[r_decision,r_decisionrm],[r_interpret+ratio_output]]
         return instruction, output
     
     #Return the standard answers for the ANOVA assignments in a list
@@ -481,6 +511,7 @@ class Controller:
     #Update function for the report screen, returns a list of feedback for each field
     def update_form_report(self, textfields: Dict) -> List[str]:
         instruction = self.assignments.print_report(self.assignment)
+        self.assignment['feedback_requests'] += 1
         text = textfields['inputtext']
         feedback = None
         if self.assignment['assignment_type'] == 1:
@@ -501,6 +532,9 @@ class Controller:
             feedback = self.sfs.split_grade_ancova(text, self.solution)
         if self.assignment['assignment_type'] == 13:
             feedback = self.sfs.split_grade_multirm(text, self.solution)
+        #Count mistakes
+        n_mistakes = len(feedback.split('\n -')) - 1
+        feedback += '<br><br>' + str(n_mistakes) + ' ' + self.mes['F_NMISTAKES']
         return instruction, feedback
     
     """

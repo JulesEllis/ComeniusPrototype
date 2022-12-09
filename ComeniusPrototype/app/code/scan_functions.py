@@ -39,10 +39,13 @@ class ScanFunctions:
     def scan_yesno(self, input_text : str) -> [bool, bool]:
         return False, parse_yes_no(input_text)
     
-    def scan_dummy(self, input_Text : str)  -> [bool, str]:
-        return False, ''
+    def scan_dummy(self, input_Text : str)  -> [bool, str, tuple]:
+        return False, '', (0,0)
     
-    def scan_indep(self, text :str, solution :Dict) -> [bool, str]:
+    def scan_indep(self, text :str, solution :Dict) -> [bool, str, tuple]:
+        total_elements:int = 4
+        mistakes:int = 0
+        
         #Determine which of the necessary elements are present in the answer
         texts: List[str] = nltk.word_tokenize(text)
         altmarkers = ['qualitative'] if self.mes['L_ENGLISH'] else ['kwalitatieve','kwalitatief']
@@ -55,18 +58,21 @@ class ScanFunctions:
         if False in list(scorepoints.values()):
             output: str = self.mes['F_INCOMPLETE']+'<br>' #'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
             if not scorepoints['var']:
-                output += self.mes['F_IND']+'<br>' #' -de juiste onafhankelijke variabele<br>'
+                output += self.mes['F_IND']+'<br>'; mistakes += 1 #' -de juiste onafhankelijke variabele<br>'
             if not scorepoints['measure']:
-                output += self.mes['F_MEASURE']+'<br>' #' -het juiste meetniveau<br>'
+                output += self.mes['F_MEASURE']+'<br>'; mistakes += 1 #' -het juiste meetniveau<br>'
             if scorepoints['level1'] != scorepoints['level2']:
-                output += self.mes['F_1LEVEL']+'<br>' #' -één niveau van de onafhankelijke variabele<br>'
+                output += self.mes['F_1LEVEL']+'<br>'; mistakes += 1 #' -één niveau van de onafhankelijke variabele<br>'
             elif not scorepoints['level1'] and not scorepoints['level2']:
-                output += self.mes['F_2LEVEL']+'<br>' #' -beide niveaus van de onafhankelijke variabele<br>'
-            return True, output
+                output += self.mes['F_2LEVEL']+'<br>'; mistakes += 2 #' -beide niveaus van de onafhankelijke variabele<br>'
+            return True, output, (mistakes,total_elements)
         else:
-            return False, self.mes['F_CORRECT'] #'Mooi, deze beschrijving klopt. '
+            return False, self.mes['F_CORRECT'], (mistakes,total_elements) #'Mooi, deze beschrijving klopt. '
         
-    def scan_indep_anova(self, text: str, solution: Dict, num: int=1, between_subject=True) -> [bool, str]:
+    def scan_indep_anova(self, text: str, solution: Dict, num: int=1, between_subject=True) -> [bool, str, tuple]:
+        total_elements:int = 5
+        mistakes:int = 0
+        
         #Determine which of the necessary elements are present in the answer
         texts: List[str] = nltk.word_tokenize(text.lower())
         n_key: str = 'independent' if num == 1 else 'independent' + str(num)
@@ -80,20 +86,23 @@ class ScanFunctions:
         if False in list(scorepoints.values()):
             output: str = self.mes['F_INCOMPLETE']+'<br>' #'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
             if not scorepoints['factor']:
-                output += self.mes['F_ISFACTOR']+'<br>' #' -de uitspraak dat deze variabele een factor is<br>'
+                output += self.mes['F_ISFACTOR']+'<br>'; mistakes+=1 #' -de uitspraak dat deze variabele een factor is<br>'
             if not scorepoints['domain']:
-                output += self.mes['F_DOMAIN']+'<br>' #' -het domein van de variabele<br>'
+                output += self.mes['F_DOMAIN']+'<br>'; mistakes+=1 #' -het domein van de variabele<br>'
             if not scorepoints['name']:
-                output += self.mes['F_VARNAME']+'<br>' #' -de naam van de variabele<br>'
+                output += self.mes['F_VARNAME']+'<br>'; mistakes+=1 #' -de naam van de variabele<br>'
             if True not in scorepoints['levels']:
-                output += self.mes['F_INDEPLEVELS']+'<br>' #' -alle niveaus van de onafhankelijke variabele<br>'
+                output += self.mes['F_INDEPLEVELS']+'<br>'; mistakes+=2 #' -alle niveaus van de onafhankelijke variabele<br>'
             elif False in scorepoints['levels']:
-                output += self.mes['F_INDEPLEVEL']+'<br>' #' -enkele niveaus van de onafhankelijke variabele<br>'
-            return True, output
+                output += self.mes['F_INDEPLEVEL']+'<br>'; mistakes+=1 #' -enkele niveaus van de onafhankelijke variabele<br>'
+            return True, output, (total_elements - mistakes,total_elements)
         else:
-            return False, self.mes['F_CORRECT'] #'Mooi, deze beschrijving klopt. '
+            return False, self.mes['F_CORRECT'], (mistakes,total_elements) #'Mooi, deze beschrijving klopt. '
     
-    def scan_dep(self, text: str, solution: Dict) -> [bool, str]:
+    def scan_dep(self, text: str, solution: Dict) -> [bool, str, tuple]:
+        total_elements:int = 2
+        mistakes:int = 0
+        
         #Determine which of the necessary elements are present in the answer
         texts: List[str] = nltk.word_tokenize(text.lower())
         altmarkers = ['quantitative'] if self.mes['L_ENGLISH'] else ['kwantitatieve','kwantitatief']
@@ -104,14 +113,16 @@ class ScanFunctions:
         if False in list(scorepoints.values()):
             output: str = self.mes['F_INCOMPLETE']+'<br>' #'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
             if not scorepoints['var']:
-                output += self.mes['F_DEP']+'<br>' #' -de juiste afhankelijke variabele<br>'
+                output += self.mes['F_DEP']+'<br>'; mistakes+=1 #' -de juiste afhankelijke variabele<br>'
             if not scorepoints['measure']:
-                output += self.mes['F_MEASURE']+'<br>' #' -het juiste meetniveau<br>'
-            return True, output
+                output += self.mes['F_MEASURE']+'<br>'; mistakes+=1 #' -het juiste meetniveau<br>'
+            return True, output, (mistakes,total_elements)
         else:
-            return False, self.mes['F_CORRECT'] #'Mooi, deze beschrijving klopt. '
+            return False, self.mes['F_CORRECT'], (mistakes,total_elements) #'Mooi, deze beschrijving klopt. '
         
-    def scan_control(self, text: str, solution: Dict, num:int=1) -> [bool, str]:
+    def scan_control(self, text: str, solution: Dict, num:int=1) -> [bool, str, tuple]:
+        total_elements:int = 1
+        
         tokens: List[str] = nltk.word_tokenize(text.lower())
         control: float = solution['control'] if num < 2 else solution['control'+str(num)]
         n_negations: int = negation_counter(tokens)
@@ -121,24 +132,24 @@ class ScanFunctions:
                                     self.mes['L_ENGLISH'] else [['experiment','experimental'],['passive','passive-observing']]
         if any([x in tokens for x in keywords[0]]):
             if control != bool(n_negations % 2):
-                return False, self.mes['F_CORRECT']
+                return False, self.mes['F_CORRECT'],  (0,total_elements)
             else:
                 if control:
-                    return True, self.mes['F_INCOMPLETE']+'<br>'+self.mes['F_NOX']
+                    return True, self.mes['F_INCOMPLETE']+'<br>'+self.mes['F_NOX'],  (1,total_elements)
                 else:
-                    return True, self.mes['F_INCOMPLETE']+'<br>'+self.mes['F_EX']
+                    return True, self.mes['F_INCOMPLETE']+'<br>'+self.mes['F_EX'],  (1,total_elements)
         elif any([x in tokens for x in keywords[1]]): #and 'observerend' in tokens):
             if control == bool(n_negations % 2):
-                return False, self.mes['F_CORRECT']
+                return False, self.mes['F_CORRECT'],  (0,total_elements)
             else:
                 if control:
-                    return True, self.mes['F_INCOMPLETE']+'<br>'+self.mes['F_PAS']
+                    return True, self.mes['F_INCOMPLETE']+'<br>'+self.mes['F_PAS'],  (1,total_elements)
                 else:
-                    return True, self.mes['F_INCOMPLETE']+'<br>'+self.mes['F_NPAS']
+                    return True, self.mes['F_INCOMPLETE']+'<br>'+self.mes['F_NPAS'],  (1,total_elements)
         else:
-            return True, self.mes['F_INCOMPLETE']+'<br>'+self.mes['F_X']
+            return True, self.mes['F_INCOMPLETE']+'<br>'+self.mes['F_X'],  (1,total_elements)
             
-        #Determine the response of the program
+        """#Determine the response of the program
         if False in list(scorepoints.values()):
             output: str = self.mes['F_INCOMPLETE']+'<br>' #'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
             if not scorepoints['experiment']:
@@ -149,9 +160,11 @@ class ScanFunctions:
                 output += self.mes['F_EX']+'<br>' #' -je hebt ten onrechte gesteld dat het onderzoek een experiment is<br>'
             return True, output
         else:
-            return False, self.mes['F_CORRECT']
+            return False, self.mes['F_CORRECT']"""
     
-    def scan_numbers(self, text: str, stat: str, solution: Dict, margin: float) -> [bool, str]:
+    def scan_numbers(self, text: str, stat: str, solution: Dict, margin: float) -> [bool, str, tuple]:
+        total_elements:int = 2
+        mistakes:int = 0
         tokens: List[str] = nltk.word_tokenize(text.lower())
         numbers: List[float] = []
         for t in tokens:
@@ -177,14 +190,15 @@ class ScanFunctions:
         if 0 in scorepoints:
             output: str = self.mes['F_INCOMPLETE']+'<br>'
             if 1 not in scorepoints:
-                output += self.mes['F_ALLVALS'] + fancynames(stat) + self.mes['S_LACKING']+'<br>' #Alle juiste waarden ontbreken
+                output += self.mes['F_ALLVALS'] + fancynames(stat) + self.mes['S_LACKING']+'<br>'; mistakes += 2 #Alle juiste waarden ontbreken
             else:
-                output += self.mes['F_ONEVAL'] + fancynames(stat) + self.mes['S_LACKING']+'<br>' #Sommige juiste waarden ontbreken
-            return True, output
+                output += self.mes['F_ONEVAL'] + fancynames(stat) + self.mes['S_LACKING']+'<br>'; mistakes += 1 #Sommige juiste waarden ontbreken
+            return True, output, (mistakes, total_elements)
         else:
-            return False, self.mes['F_CSCORRECT']
+            return False, self.mes['F_CSCORRECT'], (mistakes, total_elements)
         
-    def scan_number(self, text: str, stat: str, solution: Dict, margin: float=0.01) -> [bool, str]:
+    def scan_number(self, text: str, stat: str, solution: Dict, margin: float=0.01) -> [bool, str, tuple]:
+        total_elements:int = 1
         if self.mes['L_ENGLISH']:
             fancynames: Dict[str, str] = {'df':'the degrees of freedom (df)', 'raw_effect': 'the raw effect',
                       'T':'T', 'p':'p', 'relative_effect': 'the relative effect', 'F': 'F','r2':'the correlation','ns':'N'}
@@ -209,11 +223,12 @@ class ScanFunctions:
         if right_number == []:
             output: str = self.mes['F_INCOMPLETE']+'<br> -'+\
                 self.mes['S_RIGHTVALUE'] + fancynames[stat] + '<br>'
-            return True, output
+            return True, output, (1, total_elements)
         else:
-            return False, self.mes['F_CCORRECT']
+            return False, self.mes['F_CCORRECT'], (0, total_elements)
         
-    def scan_p(self, text:str, solution: Dict, margin: float=0.01) -> [bool, str]:
+    def scan_p(self, text:str, solution: Dict, margin: float=0.01) -> [bool, str, tuple]:
+        total_elements:int = 1
         tokens: List[str] = nltk.word_tokenize(text.lower())
         numbers: List[float] = []
         for t in tokens:
@@ -231,37 +246,40 @@ class ScanFunctions:
         
         if numbers != []:
             if right_number and len(numbers) == len(tokens):#Als er alleen cijfers in het veld staan
-                return False, self.mes['F_PCORRECT']
+                return False, self.mes['F_PCORRECT'], (0,total_elements)
             elif any([x in tokens for x in ['<','minder','kleiner']]):
                 if boundary_100 and gold < 0.10 and gold > 0.05:
-                    return False, self.mes['F_PCORRECT']
+                    return False, self.mes['F_PCORRECT'], (0,total_elements)
                 elif boundary_050 and gold < 0.05 and gold > 0.01:
-                    return False, self.mes['F_PCORRECT']
+                    return False, self.mes['F_PCORRECT'], (0,total_elements)
                 elif boundary_010 and gold < 0.01 and gold > 0.005:
-                    return False, self.mes['F_PCORRECT']
+                    return False, self.mes['F_PCORRECT'], (0,total_elements)
                 elif boundary_005 and gold < 0.005 and gold > 0.001:
-                    return False, self.mes['F_PCORRECT']
+                    return False, self.mes['F_PCORRECT'], (0,total_elements)
                 elif boundary_001 and gold < 0.001:
-                    return False, self.mes['F_PCORRECT']
-                else: return True, self.mes['F_INCOMPLETE']+'<br>'+self.mes['F_NOPHERE']
+                    return False, self.mes['F_PCORRECT'], (0,total_elements)
+                else: return True, self.mes['F_INCOMPLETE']+'<br>'+self.mes['F_NOPHERE'], (1,total_elements)
             elif any([x in tokens for x in ['>','meer','groter']]):
                 if boundary_100 and gold > 0.10:
-                    return False,self.mes['F_PCORRECT']
+                    return False,self.mes['F_PCORRECT'], (0,total_elements)
                 elif boundary_050 and gold > 0.05 and gold < 0.10:
-                    return False, self.mes['F_PCORRECT']
+                    return False, self.mes['F_PCORRECT'], (0,total_elements)
                 elif boundary_010 and gold > 0.01 and gold < 0.05:
-                    return False, self.mes['F_PCORRECT']
+                    return False, self.mes['F_PCORRECT'], (0,total_elements)
                 elif boundary_005 and gold > 0.005 and gold < 0.01:
-                    return False, self.mes['F_PCORRECT']
+                    return False, self.mes['F_PCORRECT'], (0,total_elements)
                 elif boundary_001 and gold > 0.001 and gold < 0.005:
-                    return False, self.mes['F_PCORRECT']
-                else: return True, self.mes['F_INCOMPLETE']+'<br>'+self.mes['F_NOPHERE']
+                    return False, self.mes['F_PCORRECT'], (0,total_elements)
+                else: return True, self.mes['F_INCOMPLETE']+'<br>'+self.mes['F_NOPHERE'], (1,total_elements)
             else: 
-                return True, self.mes['F_INCOMPLETE']+'<br>'+self.mes['F_NOPHERE']
+                return True, self.mes['F_INCOMPLETE']+'<br>'+self.mes['F_NOPHERE'], (1,total_elements)
         else:
-            return True, self.mes['F_INCOMPLETE']+'<br>'+self.mes['F_NOPHERE']
+            return True, self.mes['F_INCOMPLETE']+'<br>'+self.mes['F_NOPHERE'], (1,total_elements)
             
-    def scan_hypothesis(self, text: str, solution: Dict, num: int=1) -> [bool, str]:
+    def scan_hypothesis(self, text: str, solution: Dict, num: int=1) -> [bool, str, tuple]:
+        total_elements:int = 5
+        mistakes:int = 0
+        
         #Remove potential dots to avoid confusion
         i_key: str = 'independent' if num < 2 else 'independent' + str(num)
         sign:str = ['==','<=','>='][solution['hypothesis']] if 'hypothesis' in list(solution.keys()) else '=='
@@ -276,21 +294,23 @@ class ScanFunctions:
         if False in list(scorepoints.values()) + mus:
             output: str = self.mes['F_INCOMPLETE']+'<br>'
             if not scorepoints['H0']:
-                output += self.mes['F_H0SIGN']+'<br>'
+                output += self.mes['F_H0SIGN']+'<br>'; mistakes += 1
             if not scorepoints['sign']:
-                output += self.mes['F_COMPARISON']+'<br>'
+                output += self.mes['F_COMPARISON']+'<br>'; mistakes += 1
             if not scorepoints['order']:
-                output += self.mes['F_ORDER']+'<br>'
+                output += self.mes['F_ORDER']+'<br>'; mistakes += 1
             if True not in mus:
-                output += self.mes['F_AVGSMULTI']+'<br>'
+                output += self.mes['F_AVGSMULTI']+'<br>'; mistakes += 1
             elif False in mus:
-                output += self.mes['F_AVGSONE']+'<br>'
-            return True, output
+                output += self.mes['F_AVGSONE']+'<br>'; mistakes += 1
+            return True, output, (mistakes,total_elements)
         else:
-            return False, self.mes['F_HYPCORRECT']
+            return False, self.mes['F_HYPCORRECT'], (mistakes,total_elements)
     
     #Interaction hypothesis for two-way ANOVA
-    def scan_hypothesis_anova(self, text: str, solution: Dict) -> [bool, str]:
+    def scan_hypothesis_anova(self, text: str, solution: Dict) -> [bool, str, tuple]:
+        total_elements:int = 7
+        mistakes:int = 0
         #Remove potential dots to avoid confusion
         levels = [x.lower() for x in solution['independent'].levels]; levels2 = [x.lower() for x in solution['independent2'].levels]
         markers:list = ['and','total'] if self.mes['L_ENGLISH'] else ['en','totaal'] #Dutch and English words for the different versions
@@ -307,25 +327,27 @@ class ScanFunctions:
         if False in list(scorepoints.values()):
             output: str = self.mes['F_INCOMPLETE']+'<br>'
             if not scorepoints['h0']:
-                output += self.mes['F_H0SIGN']+'<br>'
+                output += self.mes['F_H0SIGN']+'<br>'; mistakes += 1
             if not scorepoints['mu1some'] and not scorepoints['mu1all']:
-                output += self.mes['F_ALLSIGNS'] + self.mes['S_COMP1'] + '<br>' #' -alle tekens voor populatiegemiddelden bij de eerste vergelijking<br>'
+                output += self.mes['F_ALLSIGNS'] + self.mes['S_COMP1'] + '<br>'; mistakes += 2 #' -alle tekens voor populatiegemiddelden bij de eerste vergelijking<br>'
             elif not scorepoints['mu1all']:
-                output += self.mes['F_SOMESIGNS'] + self.mes['S_COMP1'] + '<br>' #' -enkele tekens voor populatiegemiddelden bij de eerste vergelijking<br>'
+                output += self.mes['F_SOMESIGNS'] + self.mes['S_COMP1'] + '<br>'; mistakes += 1 #' -enkele tekens voor populatiegemiddelden bij de eerste vergelijking<br>'
             if not scorepoints['mu2some'] and not scorepoints['mu2all']:
-                output += self.mes['F_ALLSIGNS'] + self.mes['S_COMP2'] + '<br>' #' -alle tekens voor populatiegemiddelden bij de laatste vergelijking<br>'
+                output += self.mes['F_ALLSIGNS'] + self.mes['S_COMP2'] + '<br>'; mistakes += 2 #' -alle tekens voor populatiegemiddelden bij de laatste vergelijking<br>'
             elif not scorepoints['mu2all']:
-                output += self.mes['F_SOMESIGNS'] + self.mes['S_COMP2'] + '<br>' #' -enkele tekens voor populatiegemiddelden bij de laatste vergelijking<br>'
+                output += self.mes['F_SOMESIGNS'] + self.mes['S_COMP2'] + '<br>'; mistakes += 1 #' -enkele tekens voor populatiegemiddelden bij de laatste vergelijking<br>'
             if not scorepoints['mu1order']:
-                output += self.mes['F_WRONGCOMP1'] + '<br>' #' -de populatiegemiddelden worden niet juist met elkaar vergeleken bij de eerste vergelijking<br>'
+                output += self.mes['F_WRONGCOMP1'] + '<br>'; mistakes += 1 #' -de populatiegemiddelden worden niet juist met elkaar vergeleken bij de eerste vergelijking<br>'
             if not scorepoints['mu2order']:
-                output += self.mes['F_WRONGCOMP2'] + '<br>' #' -de populatiegemiddelden worden niet juist met elkaar vergeleken bij de laatste vergelijking<br>'
-            return True, output
+                output += self.mes['F_WRONGCOMP2'] + '<br>'; mistakes += 1 #' -de populatiegemiddelden worden niet juist met elkaar vergeleken bij de laatste vergelijking<br>'
+            return True, output, (mistakes,total_elements)
         else:
-            return False, self.mes['F_HYPCORRECT']
+            return False, self.mes['F_HYPCORRECT'], (mistakes,total_elements)
     
     #Between-person hypothesis for within-subject ANOVA
-    def scan_hypothesis_rmanova(self, text: str, solution: Dict) -> [bool, str]:
+    def scan_hypothesis_rmanova(self, text: str, solution: Dict) -> [bool, str, tuple]:
+        total_elements:int = 5
+        mistakes:int = 0
         #TODO: ADD INTERACTION HYPOTHESIS
         tokens: List[str] = nltk.word_tokenize(text.lower())
         scorepoints: Dict[str, bool] = {'H0': 'h0:' in text or 'h0' in text,
@@ -337,20 +359,22 @@ class ScanFunctions:
         if False in list(scorepoints.values()):
             output: str = self.mes['F_INCOMPLETE']+'<br>' #'Er ontbreekt nog wat aan je antwoord, namelijk:<br>'
             if not scorepoints['H0']:
-                output += self.mes['F_H0SIGN']+'<br>' #' -H0 teken niet genoemd<br>'
+                output += self.mes['F_H0SIGN']+'<br>'; mistakes += 1 #' -H0 teken niet genoemd<br>'
             if not scorepoints['equal']:
-                output += self.mes['F_COMPARISON']+'<br>'#' -Het juiste vergelijkingsteken<br>'
+                output += self.mes['F_COMPARISON']+'<br>'; mistakes += 1  #' -Het juiste vergelijkingsteken<br>'
             if not scorepoints['tau1']:
-                output += self.mes['F_TAU1']+'<br>'
+                output += self.mes['F_TAU1']+'<br>'; mistakes += 1
             if not scorepoints['tau2']:
-                output += self.mes['F_TAU2']+'<br>'
+                output += self.mes['F_TAU2']+'<br>'; mistakes += 1
             if not scorepoints['taun']:
-                output += self.mes['F_TAUN']+'<br>'
-            return True, output
+                output += self.mes['F_TAUN']+'<br>'; mistakes += 1
+            return True, output, (mistakes,total_elements)
         else:
-            return False, self.mes['F_HYPCORRECT']
+            return False, self.mes['F_HYPCORRECT'], (mistakes,total_elements)
     
-    def scan_table_ttest(self, textfields: Dict, solution: Dict, margin:float=0.01) -> [bool, str]:
+    def scan_table_ttest(self, textfields: Dict, solution: Dict, margin:float=0.01) -> [bool, str, tuple]:
+        total_elements:int = 6
+        mistakes:int = 0
         if type(textfields) != dict:
             exit()
             print('Wrong data sent to table scan function')
@@ -378,22 +402,28 @@ class ScanFunctions:
         if False in [all(x) for x in list(scorepoints.values())]:
             output: str = self.mes['F_INCOMPLETE']+'<br>'
             if not any(scorepoints['mean']):
-                output += self.mes['F_ALLAVG']+'<br>'
+                output += self.mes['F_ALLAVG']+'<br>'; mistakes += 2
             elif not all(scorepoints['mean']):    
                 output += self.mes['F_ONEAVG']+[tags[i] for i in range(2) if not scorepoints['mean'][i]][0]+self.mes['S_FROMABOVE']+'<br>'
+                mistakes += 1
             if not any(scorepoints['std']):
-                output += self.mes['F_ALLSTD']+'<br>'
+                output += self.mes['F_ALLSTD']+'<br>'; mistakes += 2
             elif not all(scorepoints['std']):    
                 output += self.mes['F_ONESTD']+[tags[i] for i in range(2) if not scorepoints['std'][i]][0]+self.mes['S_FROMABOVE']+'<br>'
+                mistakes += 1
             if not any(scorepoints['n']):
-                output += self.mes['F_ALLN']+'<br>'
+                output += self.mes['F_ALLN']+'<br>'; mistakes += 2
             elif not all(scorepoints['n']):    
                 output += self.mes['F_ONEN']+[tags[i] for i in range(2) if not scorepoints['n'][i]][0]+self.mes['S_FROMABOVE']+'<br>'
-            return True, output
+                mistakes += 1
+            return True, output, (mistakes,total_elements)
         else:
-            return False, self.mes['F_TABLECORRECT']
+            return False, self.mes['F_TABLECORRECT'], (mistakes,total_elements)
     
-    def scan_table(self, textfields: Dict, solution: Dict, margin:float=0.01) -> [bool, str]:
+    def scan_table(self, textfields: Dict, solution: Dict, margin:float=0.01) -> [bool, str, tuple]:
+        total_elements:int = 12
+        mistakes:int = 0
+        
         #Convert fieldinput to float
         if type(textfields) != dict:
             exit()
@@ -430,32 +460,38 @@ class ScanFunctions:
         if False in [all(x) for x in list(scorepoints.values())]:
             output: str = self.mes['F_INCOMPLETE']+'<br>'
             if not any(scorepoints['df']):
-                output += self.mes['F_ALLVALS']+'df<br>'
+                output += self.mes['F_ALLVALS']+'df<br>'; mistakes += 2
             elif not all(scorepoints['df']):
                 output += self.mes['F_ONEPLUS']+'df'+self.mes['S_INCL']+self.mes['S_AND'].join([nametags[i] for i in range(len(scorepoints['df'])) if not scorepoints['df'][i]])+self.mes['S_FROMABOVE']+'<br>'
+                mistakes += 1
             if not any(scorepoints['ss']):
-                output += self.mes['F_ALLVALS']+'ss<br>'
+                output += self.mes['F_ALLVALS']+'ss<br>'; mistakes += 2
             elif not all(scorepoints['ss']):
                 output += self.mes['F_ONEPLUS']+'ss'+self.mes['S_INCL']+self.mes['S_AND'].join([nametags[i] for i in range(len(scorepoints['ss'])) if not scorepoints['ss'][i]])+self.mes['S_FROMABOVE']+'<br>'
+                mistakes += 1
             if not any(scorepoints['ms']):
-                output += self.mes['F_ALLVALS']+'ms<br>'
+                output += self.mes['F_ALLVALS']+'ms<br>'; mistakes += 2
             elif not all(scorepoints['ms']):
                 output += self.mes['F_ONEPLUS']+'ms'+self.mes['S_INCL']+self.mes['S_AND'].join([nametags[i] for i in range(len(scorepoints['ms'])) if not scorepoints['ms'][i]])+self.mes['S_FROMABOVE']+'<br>'
+                mistakes += 1
             if not any(scorepoints['F']):
-                output += self.mes['F_ALLVALS']+'F<br>'
+                output += self.mes['F_ALLVALS']+'F<br>'; mistakes += 2
             elif not all(scorepoints['F']):
                 output += self.mes['F_ONEPLUS']+'F'+self.mes['S_INCL']+self.mes['S_AND'].join([nametags[i] for i in range(len(scorepoints['F'])) if not scorepoints['F'][i]])+self.mes['S_FROMABOVE']+'<br>'
+                mistakes += 1
             if not any(scorepoints['p']):
-                output += self.mes['F_ALLVALS']+'p<br>'
+                output += self.mes['F_ALLVALS']+'p<br>'; mistakes += 2
             elif not all(scorepoints['p']):
                 output += self.mes['F_ONEPLUS']+'p'+self.mes['S_INCL']+self.mes['S_AND'].join([nametags[i] for i in range(len(scorepoints['p'])) if not scorepoints['p'][i]])+self.mes['S_FROMABOVE']+'<br>'
+                mistakes += 1
             if not any(scorepoints['r2']):
-                output += self.mes['F_ALLVALS']+'R<sup>2</sup><br>'
+                output += self.mes['F_ALLVALS']+'R<sup>2</sup><br>'; mistakes += 2
             elif not all(scorepoints['r2']):
                 output += self.mes['F_ONEPLUS']+'R<sup>2</sup>'+self.mes['S_INCL']+self.mes['S_AND'].join([nametags[i] for i in range(len(scorepoints['r2'])) if not scorepoints['r2'][i]])+self.mes['S_FROMABOVE']+'<br>'
-            return True, output
+                mistakes += 1
+            return True, output, (mistakes,total_elements)
         else:
-            return False, self.mes['F_TABLECORRECT']
+            return False, self.mes['F_TABLECORRECT'], (mistakes,total_elements)
     
     #Flexible scan function that checks the given answer for a list of keywords. These are given as a dictionary so
     #that they can be dynamically defined in the protocol function in interface.py where this function is called
@@ -481,54 +517,97 @@ class ScanFunctions:
     THESE TAKE THE INPUT TEXT IN DOC INSTEAD OF STRING
     """
     
-    def scan_decision(self, doc:Doc, solution:dict, anova:bool, num:int=1, prefix=True, elementair=True) -> [bool, List[str]]:
+    def scan_decision(self, doc:Doc, solution:dict, anova:bool, num:int=1, prefix=True, elementair=True) -> [bool, str, tuple]:
+        total_elements:int = 6 # 6 for comparison detection
+        mistakes:int = 0
+        
         output = [self.mes['F_INCOMPLETE']] if prefix else []
         if elementair:
-            output.extend(self.detect_h0(doc, solution, num))
+            feedback = self.detect_h0(doc, solution, num)
+            output.extend(feedback)
+            total_elements += 1
+            mistakes += len(feedback)
         else:
-            output.extend(self.detect_significance(doc, solution, num))
-        output.extend(self.detect_comparison(doc, solution, anova, num))
+            feedback = self.detect_significance(doc, solution, num)
+            output.extend(feedback)
+            total_elements += 3
+            mistakes += len(feedback)
+        
+        comp_feedback = self.detect_comparison(doc, solution, anova, num)
+        output.extend(comp_feedback)
         vartag = 'independent' if num == 1 else 'independent2'
         if solution['p'][num - 1] < 0.05 and solution['assignment_type'] > 2: #self, sent:Doc, solution:dict, variable:str, p:float, eta:float) -> List[str]
-            output.extend(self.detect_effect(doc, solution, solution[vartag].name, solution['p'][num-1], solution['r2'][num-1]))
+            effect_feedback = self.detect_effect(doc, solution, solution[vartag].name, solution['p'][num-1], solution['r2'][num-1])
+            output.extend(self.detect_effect(effect_feedback))
+            total_elements += 3
+            mistakes += len(effect_feedback)
         correct:bool = len(output) == 1 if prefix else output == []
         if correct:
-            return False, self.mes['F_DECCORRECT'] if prefix else ''
+            return False, self.mes['F_DECCORRECT'] if prefix else '', (mistakes,total_elements)
         else:
-            return True, '<br>'.join(output)
+            return True, '<br>'.join(output), (mistakes,total_elements)
         
-    def scan_decision_anova(self, doc:Doc, solution:dict, num:int=3, prefix=True, elementair=True) -> [bool, List[str]]:
+    def scan_decision_anova(self, doc:Doc, solution:dict, num:int=3, prefix=True, elementair=True) -> [bool, str, tuple]:
+        total_elements:int = 14 # 6 for comparison detection, 3 for effect, 5 for interaction
+        mistakes:int = 0
+        
         output = [self.mes['F_INCOMPLETE']] if prefix else []
         if elementair:
-            output.extend(self.detect_h0(doc, solution, num))
+            feedback = self.detect_h0(doc, solution, num)
+            output.extend(feedback)
+            total_elements += 1
+            mistakes += len(feedback)
         else:
-            output.extend(self.detect_significance(doc, solution, num))
-        output.extend(self.detect_interaction(doc, solution, True))
+            feedback = self.detect_significance(doc, solution, num)
+            output.extend(feedback)
+            total_elements += 3
+            mistakes += len(feedback)
+        int_feedback = self.detect_interaction(doc, solution, True)
+        output.extend(int_feedback)
+        mistakes += len(int_feedback)
         vartag = 'the interaction' if self.mes['L_ENGLISH'] else 'de interactie'
-        output.extend(self.detect_effect(doc, solution, vartag, solution['p'][num-1], solution['r2'][num-1]))
+        effect_feedback = self.detect_effect(doc, solution, vartag, solution['p'][num-1], solution['r2'][num-1])
+        output.extend(effect_feedback)
+        mistakes += len(effect_feedback)
         correct:bool = len(output) == 1 if prefix else output == []
         if correct:
-            return False, self.mes['F_DECCORRECT'] if prefix else ''
+            return False, self.mes['F_DECCORRECT'] if prefix else '', (mistakes,total_elements)
         else:
-            return True, '<br>'.join(output)
+            return True, '<br>'.join(output), (mistakes,total_elements)
         
-    def scan_decision_rmanova(self, doc:Doc, solution:dict, num:int=2, prefix=True, elementair=True) -> [bool, List[str]]:
+    def scan_decision_rmanova(self, doc:Doc, solution:dict, num:int=2, prefix=True, elementair=True) -> [bool, str, tuple]:
+        total_elements:int = 5 # 5 for truescore feedback
+        mistakes:int = 0
         output = [self.mes['F_INCOMPLETE']] if prefix else []
         if elementair:
-            output.extend(self.detect_h0(doc, solution, num))
+            feedback = self.detect_h0(doc, solution, num)
+            output.extend(feedback)
+            total_elements += 1
+            mistakes += len(feedback)
         else:
-            output.extend(self.detect_significance(doc, solution, num))
-        output.extend(self.detect_true_scores(doc, solution, 2))
+            feedback = self.detect_significance(doc, solution, num)
+            output.extend(feedback)
+            total_elements += 3
+            mistakes += len(feedback)
+        truescore_feedback = self.detect_true_scores(doc, solution, 2)
+        mistakes += len(truescore_feedback)
+        output.extend(truescore_feedback)
         vartag = 'the subjects' if self.mes['L_ENGLISH'] else 'de subjecten'
-        if solution['p'][1] < 0.05: 
-            output.extend(self.detect_effect(doc, solution, vartag, solution['p'][num-1], solution['r2'][num-1]))
+        if solution['p'][1] < 0.05:
+            effect_feedback = self.detect_effect(doc, solution, vartag, solution['p'][num-1], solution['r2'][num-1])
+            total_elements += 3
+            mistakes += len(effect_feedback)
+            output.extend(effect_feedback)
         correct:bool = len(output) == 1 if prefix else output == []
         if correct:
-            return False, self.mes['F_DECCORRECT'] if prefix else ''
+            return False, self.mes['F_DECCORRECT'] if prefix else '', (mistakes,total_elements)
         else:
-            return True, '<br>'.join(output)
+            return True, '<br>'.join(output), (mistakes,total_elements)
         
-    def scan_interpretation(self, doc:Doc, solution:dict, anova:bool, num:int=1, prefix=True):
+    def scan_interpretation(self, doc:Doc, solution:dict, anova:bool, num:int=1, prefix=True) -> [bool, str, tuple]:
+        total_elements:int = 7 # 1 for unk, 6 for primaire verklaring, 
+        mistakes:int = 0
+        
         output = [self.mes['F_INCOMPLETE']] if prefix else []
         control: bool = solution['control'] if num < 2 else solution['control'+str(num)]
         if self.mes['L_ENGLISH']:
@@ -542,28 +621,37 @@ class ScanFunctions:
         
         unk_sents = [x for x in doc.sents if any([y in [z.text for z in x] for y in unk_checks])]
         if unk_sents != []:
-            output.extend(self.detect_unk(unk_sents[0], solution, num))
+            unk_feedback = self.detect_unk(unk_sents[0], solution, num)
+            mistakes += len(unk_feedback)
+            output.extend(unk_feedback)
         else:
-            output.append(self.mes['F_MANEXP'])
+            output.append(self.mes['F_MANEXP']); mistakes += 1
         primair_sents = [x for x in doc.sents if any([z in x.text for z in primary_checks])]
         if primair_sents != []:
-            output.extend(self.detect_primary(primair_sents[0], solution, num))
+            prim_feedback = self.detect_primary(primair_sents[0], solution, num)
+            output.extend(prim_feedback)
+            mistakes += len(prim_feedback)
         else:
-            output.append(self.mes['F_PRIMEXP'])
+            output.append(self.mes['F_PRIMEXP']); mistakes += 6
         if not control:
             alt_sents = [x for x in doc.sents if second_check in [y.text for y in x]]
-            #displacy.serve(alt_sents[0])
+            total_elements += 5
             if alt_sents != []:
-                output.extend(self.detect_alternative(alt_sents[0], solution, num))
+                alt_feedback = self.detect_alternative(alt_sents[0], solution, num)
+                mistakes += len(alt_feedback)
+                output.extend(alt_feedback)
             else:
-                output.append(self.mes['F_ALTEXP'])
+                output.append(self.mes['F_ALTEXP']); mistakes += 5
         correct:bool = len(output) == 1 if prefix else output == []
         if correct:
-            return False, self.mes['F_INTCORRECT'] if prefix else ''
+            return False, self.mes['F_INTCORRECT'] if prefix else '', (mistakes,total_elements)
         else:
-            return True, '<br>'.join(output)
+            return True, '<br>'.join(output), (mistakes,total_elements)
         
-    def scan_interpretation_anova(self, doc:Doc, solution:dict, num:int=3, prefix=True):
+    def scan_interpretation_anova(self, doc:Doc, solution:dict, num:int=3, prefix=True) -> [bool, str, tuple]:
+        total_elements:int = 7 # 1 for unk, 6 for primaire verklaring, 
+        mistakes:int = 0
+        
         output = [self.mes['F_INCOMPLETE']] if prefix else []
         control:bool = solution['control'] or solution['control2']
         if self.mes['L_ENGLISH']:
@@ -577,32 +665,41 @@ class ScanFunctions:
             
         unk_sents = [x for x in doc.sents if lef(unk_checks,[y.text for y in x])]
         if unk_sents != []:
-            output.extend(self.detect_unk(unk_sents[0], solution))
+            unk_feedback = self.detect_unk(unk_sents[0], solution, num)
+            mistakes += len(unk_feedback)
+            output.extend(unk_feedback)
         else:
-            output.append(self.mes['F_MANEXP'])
+            output.append(self.mes['F_MANEXP']); mistakes += 1
         primair_sents = [x for x in doc.sents if lef(primary_checks,[y.text for y in x])]
         if primair_sents != []:
-            output.extend(self.detect_primary_interaction(primair_sents[0], solution))
+            prim_feedback = self.detect_primary(primair_sents[0], solution, num)
+            output.extend(prim_feedback)
+            mistakes += len(prim_feedback)
         else:
-            output.append(self.mes['F_PRIMEXP'])
+            output.append(self.mes['F_PRIMEXP']); mistakes += 6
         # EXPLICIETE ALTERNATIEVE VERKLARINGEN HOEVEN NIET BIJ INTERACTIE, STATISMogelijke alternatieve verklaringen zijn storende variabelen en omgekeerde causaliteitTIEK VOOR DE PSYCHOLOGIE 3 PAGINA 80
         if not control:
             alt_sents = [x for x in doc.sents if lef([second_check],[y.text for y in x])]
+            total_elements += 2
             if alt_sents != []:
-                output.extend(self.detect_alternative_interaction(alt_sents[0], solution))
+                altint_feedback = self.detect_alternative_interaction(alt_sents[0], solution)
+                output.extend(altint_feedback)
+                mistakes += len(altint_feedback)
             else:
-                output.append(self.mes['F_MANALT'])
+                output.append(self.mes['F_MANALT']); mistakes += 2
         correct:bool = len(output) == 1 if prefix else output == []
         if correct:
-            return False, self.mes['F_INTCORRECT'] if prefix else ''
+            return False, self.mes['F_INTCORRECT'] if prefix else '', (mistakes,total_elements)
         else:
-            return True, '<br>'.join(output)
+            return True, '<br>'.join(output), (mistakes,total_elements)
     
-    def scan_predictors(self, doc:Doc, solution:dict, prefix:bool=True):
+    def scan_predictors(self, doc:Doc, solution:dict, prefix:bool=True) -> [bool, str, tuple]:        
         tokens = [x.text for x in doc]
         output = [self.mes['F_INCOMPLETE']] if prefix else []
         varnames = [x.lower() for x in solution['data']['predictoren'][1:]] if solution['assignment_type'] == 6 \
                         else [x.lower() for x in solution['data']['predictoren']]
+        total_elements:int = len(varnames) * 2 # P en naam voor elke predictor
+        mistakes:int = 0
         for x in varnames:
             if ' ' in x:
                 names = x.split()
@@ -618,13 +715,17 @@ class ScanFunctions:
                 index = i
             if solution['predictor_p'][i] < 0.05:
                 output.extend(self.detect_p(doc, solution['predictor_p'][i], label=varnames[index]))
+                mistakes += 1
         correct:bool = len(output) == 1 if prefix else output == []
         if correct:
-            return False, self.mes['F_INTCORRECT'] if prefix else ''
+            return False, self.mes['F_INTCORRECT'] if prefix else '', (mistakes,total_elements)
         else:
-            return True, '<br>'.join(output)
+            return True, '<br>'.join(output), (mistakes,total_elements)
     
-    def scan_design(self, doc:Doc, solution:dict, prefix:bool=True) -> [bool, List[str]]:
+    def scan_design(self, doc:Doc, solution:dict, prefix:bool=True) -> [bool, str, tuple]:
+        total_elements:int = 8
+        mistakes:int = 0
+        
         criteria = ['ind', 'indcorrect','ind2','ind2correct','dep','depcorrect','factor1','factor2']
         marker_ind = 'independent' if self.mes['L_ENGLISH'] else 'onafhankelijke'
         scorepoints = dict([(x,False) for x in criteria])
@@ -658,27 +759,30 @@ class ScanFunctions:
         
         #Add feedback text
         if not scorepoints['ind']:
-            output.append(self.mes['F_IND'] + self.mes['S_INDES'])
+            output.append(self.mes['F_IND'] + self.mes['S_INDES']); mistakes += 1
         if not scorepoints['indcorrect'] and scorepoints['ind']:
-            output.append(self.mes['F_INDROLE'] + self.mes['S_INDES'])
+            output.append(self.mes['F_INDROLE'] + self.mes['S_INDES']); mistakes += 1
         if not scorepoints['ind2']:
-            output.append(self.mes['F_IND2'] + self.mes['S_INDES'])
+            output.append(self.mes['F_IND2'] + self.mes['S_INDES']); mistakes += 1
         if not scorepoints['ind2correct'] and scorepoints['ind2']:
-            output.append(self.mes['F_IND2ROLE'] + self.mes['S_INDES'])
+            output.append(self.mes['F_IND2ROLE'] + self.mes['S_INDES']); mistakes += 1
         if not scorepoints['dep']:
-            output.append(self.mes['F_DEPROLE'] + self.mes['S_INDES'])
+            output.append(self.mes['F_DEPROLE'] + self.mes['S_INDES']); mistakes += 1
         if not scorepoints['factor1']:
-            output.append(self.mes['F_WHATFACTOR1'])
+            output.append(self.mes['F_WHATFACTOR1']); mistakes += 1
         if not scorepoints['factor2']:
-            output.append(self.mes['F_WHATFACTOR2'])
+            output.append(self.mes['F_WHATFACTOR2']); mistakes += 1
         if not scorepoints['depcorrect'] and scorepoints['dep']:
-            output.append(self.mes['F_DEPROLE'] + self.mes['S_INDES'])
+            output.append(self.mes['F_DEPROLE'] + self.mes['S_INDES']); mistakes += 1
         if not False in list(scorepoints.values()):        
-            return False, self.mes['F_NICEDES'] if prefix else ''
+            return False, self.mes['F_NICEDES'] if prefix else '', (mistakes,total_elements)
         else:
-            return True, '<br>'.join(output)
+            return True, '<br>'.join(output), (mistakes,total_elements)
         
-    def scan_design_manova(self, doc:Doc, solution:dict, prefix:bool=True):
+    def scan_design_manova(self, doc:Doc, solution:dict, prefix:bool=True) -> [bool, str, tuple]:
+        total_elements:int = 4
+        mistakes:int = 0
+        
         text = doc.text
         factor_roles:list = ['independent','dependent'] if self.mes['L_ENGLISH'] else ['onafhankelijke', 'afhankelijke']
         scorepoints = {'indcorrect':False,
@@ -694,19 +798,19 @@ class ScanFunctions:
         
         output:List[str] = []
         if not scorepoints['dep1']:
-            output.append(self.mes['F_DEP1'])
+            output.append(self.mes['F_DEP1']); mistakes += 1
         if not scorepoints['dep2']:
-            output.append(self.mes['F_DEP2'])
+            output.append(self.mes['F_DEP2']); mistakes += 1
         if not scorepoints['dep3']:
-            output.append(self.mes['F_DEP3'])
+            output.append(self.mes['F_DEP3']); mistakes += 1
         if not scorepoints['indcorrect']:
-            output.append(self.mes['F_IND'])
+            output.append(self.mes['F_IND']); mistakes += 1
         elif not scorepoints['mes']:
-            output.append(self.mes['F_ALLDEPS'])
+            output.append(self.mes['F_ALLDEPS']); mistakes += 1
         if not False in list(scorepoints.values()):
-            return False, self.mes['F_NICEDES'] if prefix else ''
+            return False, self.mes['F_NICEDES'] if prefix else '', (mistakes,total_elements)
         else:
-            return True, '<br>'.join(output)
+            return True, '<br>'.join(output), (mistakes,total_elements)
     
     """
     SPLIT GRADE FUNCTIONS: THESE ARE CALLED ON THE INPUT FOR A SHORT REPORT

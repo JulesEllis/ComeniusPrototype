@@ -228,7 +228,8 @@ class Assignments:
                'assignment_type':1 if between_subject else 2,
                'independent':independent,
                'A': [round(random.gauss(mean1,std1), 2) for i in range(n1)], 
-               'B': [round(random.gauss(mean2,std2), 2) for i in range(n2)]
+               'B': [round(random.gauss(mean2,std2), 2) for i in range(n2)],
+               'feedback_requests':0
                }
     
     #Calculate internally all of the numbers and string values the student has to present
@@ -318,7 +319,7 @@ class Assignments:
         output = {'two_way':two_way, 'control':control}
         output['instruction']: str = None
         output['assignment_type']: int = 4 if two_way else 3
-        
+        output['feedback_requests'] = 0
         output['independent'], intro = self.get_factor(within_subject=False, control=control,ttest=False)
         output['dependent'], depintro = self.get_dependent()
         if two_way:
@@ -470,7 +471,7 @@ class Assignments:
     #Create an RMANVOA assignment for the given parameters
     def create_rmanova(self, control: bool, elementary:bool=True) -> Dict:
         #Determine variable shape and names
-        output = {'control': control, 'two_way':False, 'assignment_type':5}
+        output = {'control': control, 'two_way':False, 'assignment_type':5, 'feedback_requests' : 0}
         n_conditions = random.randint(2,4)
         n_subjects = int(random.uniform(8,15))
         
@@ -548,7 +549,7 @@ class Assignments:
     #Create a multiple regression assignment for the given parameters
     def create_mregression(self, control: bool, elementary:bool=False):
         report_type = self.mes['S_ELEM'] if elementary else self.mes['S_SHORT']
-        output = {'assignment_type':6}
+        output = {'assignment_type':6, 'feedback_requests':0}
         N = 50 + int(150 * random.random())
         output['ns'] = [N]
         n_predictors = random.choice([3,4,5,6])
@@ -600,7 +601,7 @@ class Assignments:
     #Create an ANCOVA assignment for the given parameters
     def create_ancova(self, control: bool, elementary:bool=False):
         report_type = self.mes['S_ELEM'] if elementary else self.mes['S_SHORT']
-        output = {'assignment_type':12}
+        output = {'assignment_type':12, 'feedback_requests':0}
         output['independent'], intro = self.get_factor(within_subject=False, control=control,ttest=False)
         N = N = 50 + int(150 * random.random())
         output['ns'] = [N]
@@ -656,7 +657,7 @@ class Assignments:
 
     #Create an MANOVA assignment for the given parameters
     def create_manova(self, control: bool, control2:bool=False, elementary:bool=False):
-        output = {'assignment_type':12}
+        output = {'assignment_type':12, 'feedback_requests':0}
         report_type = self.mes['S_ELEM'] if elementary else self.mes['S_SHORT']
         p = random.random() * 0.05 if random.choice([True, False]) else random.random() * 0.95 + 0.05
         s = 3 * random.random()
@@ -726,7 +727,7 @@ class Assignments:
     
     #Create a multiple repeated-measures ANOVA assignment for the given parameters
     def create_multirm(self, control: bool, control2:bool=False, elementary:bool=False) -> dict:
-        output = {'assignment_type':13}
+        output = {'assignment_type':13, 'feedback_requests':0}
         report_type = self.mes['S_ELEM'] if elementary else self.mes['S_SHORT']
         p = random.random() * 0.05 if random.choice([True, False]) else random.random() * 0.95 + 0.05
         s = 3 * random.random()
@@ -1089,6 +1090,7 @@ class Assignments:
         if assignment['assignment_type'] == 14:
             output += self.print_analysis(assignment)
             output += '</table></p>'
+        output += '<br><br>' + str(assignment['feedback_requests']) + ' ' + self.mes['F_NREQUESTS']
         return output
     
     def print_independent(self, assignment:dict, num:int=1) -> str:
