@@ -652,7 +652,7 @@ class Controller:
             return self.mes[key][an][keylist[self.index]]
         
     def explain_short(self, button_id:int=0):
-        if assignment['feedback_requests'] > 0:
+        if self.assignment['feedback_requests'] > 0:
             assignment_code = '</span><br>'+self.mes['F_ASSIGNMENT_CODE']+'<b>'+self.assignment['assignment_code']+'</b><span style="color: blue;">'
         else:
             assignment_code = ''
