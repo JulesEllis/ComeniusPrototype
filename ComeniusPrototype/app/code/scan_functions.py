@@ -538,7 +538,7 @@ class ScanFunctions:
         vartag = 'independent' if num == 1 else 'independent2'
         if solution['p'][num - 1] < 0.05 and solution['assignment_type'] > 2: #self, sent:Doc, solution:dict, variable:str, p:float, eta:float) -> List[str]
             effect_feedback = self.detect_effect(doc, solution, solution[vartag].name, solution['p'][num-1], solution['r2'][num-1])
-            output.extend(self.detect_effect(effect_feedback))
+            output.extend(effect_feedback)
             total_elements += 3
             mistakes += len(effect_feedback)
         correct:bool = len(output) == 1 if prefix else output == []
