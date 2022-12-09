@@ -541,7 +541,7 @@ class Controller:
         #Count mistakes
         n_mistakes = len(feedback.split(' -')) - 1
         self.assignment['n_mistakes'] = n_mistakes
-        feedback += '<br>' + str(n_mistakes) + ' ' + self.mes['F_NMISTAKES']
+        feedback += '<br><br>' + str(n_mistakes) + ' ' + self.mes['F_NMISTAKES']
         return instruction, feedback
     
     """

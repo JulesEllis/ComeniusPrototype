@@ -57,7 +57,7 @@ class EncryptedCodeSaver:
                             14:'MULTIRM2'}
         to_encrypt = ';'.join([analysis_name_dict[analysis_type],str(n_mistakes),str(n_attempts),str(datetime.now() + timedelta(hours=1))])
         assignment_code = self.encrypt(to_encrypt)
-        with open('/var/www/ComeniusPrototype/ComeniusPrototype/app/result_codes','a') as f:
+        with open('/var/www/ComeniusPrototype/ComeniusPrototype/app/result_codes.csv','a') as f:
             f.write(assignment_code + '\n')
 
 
