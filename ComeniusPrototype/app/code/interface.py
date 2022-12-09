@@ -533,7 +533,7 @@ class Controller:
         if self.assignment['assignment_type'] == 13:
             feedback = self.sfs.split_grade_multirm(text, self.solution)
         #Count mistakes
-        n_mistakes = len(feedback.split('\n -')) - 1
+        n_mistakes = len(feedback.split(' -')) - 1
         feedback += '<br><br>' + str(n_mistakes) + ' ' + self.mes['F_NMISTAKES']
         return instruction, feedback
     

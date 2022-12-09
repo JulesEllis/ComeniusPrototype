@@ -1090,7 +1090,7 @@ class Assignments:
         if assignment['assignment_type'] == 14:
             output += self.print_analysis(assignment)
             output += '</table></p>'
-        output += '<br><br>' + str(assignment['feedback_requests']) + ' ' + self.mes['F_NREQUESTS']
+        output += '<br>' + str(assignment['feedback_requests']) + ' ' + self.mes['F_NREQUESTS']
         return output
     
     def print_independent(self, assignment:dict, num:int=1) -> str:
