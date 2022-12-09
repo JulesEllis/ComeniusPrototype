@@ -347,6 +347,7 @@ class Controller:
     
     #Apply scan functions to the input fields of the T-test form and return a list of feedback
     def update_form_ttest(self, textfields: Dict) -> [str, List[str]]:
+        self.assignment['feedback_requests'] += 1
         output:list = [[] for i in range(12)]
         instruction:str = self.assignments.print_ttest(self.assignment)
         
@@ -375,7 +376,6 @@ class Controller:
     
     #Return the standard answers for the T-test assignments in a list
     def form_answers(self) -> [str, List[str]]:
-        self.assignment['feedback_requests'] += 1
         output:list = [[] for i in range(12)]
         instruction:str = self.assignments.print_ttest(self.assignment)
         output[0].append('Antwoord: '+self.assignments.print_independent(self.assignment))
@@ -544,7 +544,7 @@ class Controller:
         self.assignment['n_mistakes'] = n_mistakes
         feedback += '<br><br>' + str(n_mistakes) + ' ' + self.mes['F_NMISTAKES']
         self.assignment['assignment_code'] = self.result_encrypter.encrypt_assignment(self.assignment)
-        feedback += '</span><br>'+self.mes['F_ASSIGNMENT_CODE']+'<b>'+self.assignment['assignment_code']+'</b><span style="color: blue;">'
+        feedback += '</span><br><p style=”font-family : arial;”>'+self.mes['F_ASSIGNMENT_CODE']+'<b>'+self.assignment['assignment_code']+'</b></p><span style="color: blue;">'
         return instruction, feedback
     
     """
