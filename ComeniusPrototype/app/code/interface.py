@@ -130,7 +130,7 @@ class Controller:
         _, function, arguments, process, answer = self.protocol[self.index]
         output_text = ''
         if process == Process.TABLE and input_text != 'skip' and input_text != 'prev':                
-            again, output_text, correct_ratio = function(textfields, *arguments)
+            again, output_text, _ = function(textfields, *arguments)
         elif process == Process.CHOOSE_ANALYSIS:
             analysis = textfields['selectanalysis']
             report = textfields['selectreport']
@@ -143,9 +143,9 @@ class Controller:
                     nlp = spacy.load('en_core_web_sm') 
                 else: 
                     nlp = spacy.load('nl_core_news_sm')
-                again, output_text = function(nlp(input_text.lower()), *arguments)
+                again, output_text, _ = function(nlp(input_text.lower()), *arguments)
             else:
-                again, output_text = function(input_text.lower(), *arguments)
+                again, output_text, _ = function(input_text.lower(), *arguments)
             self.wipetext = not again
         
         #Execute the correct response
