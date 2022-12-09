@@ -89,8 +89,8 @@ class Controller:
         return output
     
     def save_assignment(self):
-        if self.assignment['feedback_requests'] > 0:
-            self.result_encrypter.encrypt_and_save(self.assignment['assignment_type'], self.assignment['n_mistakes'], self.assignment['feedback_requests'])
+        with open('/var/www/ComeniusPrototype/ComeniusPrototype/app/result_codes.csv','a') as f:
+            f.write(self.assignment['assignment_code'] + '\n')
     
     #Reset controller attributes to their initial values (called when user reloads URL)
     def reset(self):
@@ -543,6 +543,8 @@ class Controller:
         n_mistakes = len(feedback.split(' -')) - 1
         self.assignment['n_mistakes'] = n_mistakes
         feedback += '<br><br>' + str(n_mistakes) + ' ' + self.mes['F_NMISTAKES']
+        self.assignment['assignment_code'] = self.result_encrypter.encrypt_assignment(self.assignment)
+        feedback += '</span><br>'+self.mes['F_ASSIGNMENT_CODE']+'<b>'+self.assignment['assignment_code']+'</b><span style="color: blue;">'
         return instruction, feedback
     
     """

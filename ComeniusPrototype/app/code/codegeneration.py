@@ -11,6 +11,16 @@ class EncryptedCodeSaver:
     def __init__(self):
         self.key = "simpelesleutelvoortestenvanpythoncode349ms49"
         self.offset = 44
+        self.analysis_name_dict = {1:'TTEST_BETWEEN',
+                            2:' TTEST_WITHIN', 
+                            3:'ONEWAY_ANOVA',
+                            4:'TWOWAY_ANOVA',
+                            5:'WITHIN_ANOVA', 
+                            6:'MREGRESSION', 
+                            11:'MANOVA',
+                            12:'ANCOVA',
+                            13:'MULTIRM',
+                            14:'MULTIRM2'}
     
     def dec2hex(self,dec) -> str:
         hexstr: str = hex(dec)
@@ -44,21 +54,10 @@ class EncryptedCodeSaver:
             returnstr.append(newchar)
         return str(bytes(returnstr), 'utf-8')
     
-    def encrypt_and_save(self,analysis_type:int, n_mistakes:int, n_attempts:int):
-        analysis_name_dict = {1:'TTEST_BETWEEN',
-                            2:' TTEST_WITHIN', 
-                            3:'ONEWAY_ANOVA',
-                            4:'TWOWAY_ANOVA',
-                            5:'WITHIN_ANOVA', 
-                            6:'MREGRESSION', 
-                            11:'MANOVA',
-                            12:'ANCOVA',
-                            13:'MULTIRM',
-                            14:'MULTIRM2'}
-        to_encrypt = ';'.join([analysis_name_dict[analysis_type],str(n_mistakes),str(n_attempts),str(datetime.now() + timedelta(hours=1))])
-        assignment_code = self.encrypt(to_encrypt)
-        with open('/var/www/ComeniusPrototype/ComeniusPrototype/app/result_codes.csv','a') as f:
-            f.write(assignment_code + '\n')
+    def encrypt_assignment(self,assignment:dict):
+        to_encrypt = ';'.join([self.analysis_name_dict[assignment['assignment_type']],str(assignment['n_mistakes']),str(assignment['feedback_requests']),str(datetime.now() + timedelta(hours=1))])
+        return self.encrypt(to_encrypt)
+        
 
 
 
