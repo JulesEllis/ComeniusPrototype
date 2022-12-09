@@ -544,7 +544,7 @@ class Controller:
         self.assignment['n_mistakes'] = n_mistakes
         feedback += '<br><br>' + str(n_mistakes) + ' ' + self.mes['F_NMISTAKES']
         self.assignment['assignment_code'] = self.result_encrypter.encrypt_assignment(self.assignment)
-        feedback += '</span><br><p style=”font-family : arial;”>'+self.mes['F_ASSIGNMENT_CODE']+'<b>'+self.assignment['assignment_code']+'</b></p><span style="color: blue;">'
+        feedback += '</span><br>'+self.mes['F_ASSIGNMENT_CODE']+'<b>'+self.assignment['assignment_code']+'</b><span style="color: blue;">'
         return instruction, feedback
     
     """
@@ -652,24 +652,28 @@ class Controller:
             return self.mes[key][an][keylist[self.index]]
         
     def explain_short(self, button_id:int=0):
+        if assignment['feedback_requests'] > 0:
+            assignment_code = '</span><br>'+self.mes['F_ASSIGNMENT_CODE']+'<b>'+self.assignment['assignment_code']+'</b><span style="color: blue;">'
+        else:
+            assignment_code = ''
         prefix = ['EXPLAIN_','B1_','B2_','B3_'][button_id]
         suffix = '_EN' if self.mes['L_ENGLISH'] else '_NL'
         key = prefix + 'SHORT' + suffix
         if self.assignment['assignment_type'] == 1:
-            return self.mes[key]['E_BEKNOPT_TTEST_BETWEEN']
+            return self.mes[key]['E_BEKNOPT_TTEST_BETWEEN'] + assignment_code
         if self.assignment['assignment_type'] == 2:
-            return self.mes[key]['E_BEKNOPT_TTEST_WITHIN']
+            return self.mes[key]['E_BEKNOPT_TTEST_WITHIN'] + assignment_code
         if self.assignment['assignment_type'] == 3:
-            return self.mes[key]['E_BEKNOPT_1_ANOVA']
+            return self.mes[key]['E_BEKNOPT_1_ANOVA'] + assignment_code
         if self.assignment['assignment_type'] == 4:
-            return self.mes[key]['E_BEKNOPT_2_ANOVA']
+            return self.mes[key]['E_BEKNOPT_2_ANOVA'] + assignment_code
         if self.assignment['assignment_type'] == 5:
-            return self.mes[key]['E_BEKNOPT_RMANOVA']
+            return self.mes[key]['E_BEKNOPT_RMANOVA'] + assignment_code
         if self.assignment['assignment_type'] == 6:
-            return self.mes[key]['E_BEKNOPT_MREGRESSIE']
+            return self.mes[key]['E_BEKNOPT_MREGRESSIE'] + assignment_code
         if self.assignment['assignment_type'] == 11:
-            return self.mes[key]['E_BEKNOPT_MANOVA']
+            return self.mes[key]['E_BEKNOPT_MANOVA'] + assignment_code
         if self.assignment['assignment_type'] == 12:
-            return self.mes[key]['E_BEKNOPT_ANCOVA']
+            return self.mes[key]['E_BEKNOPT_ANCOVA'] + assignment_code
         if self.assignment['assignment_type'] == 13:
-            return self.mes[key]['E_BEKNOPT_MULTI_RMANOVA']
+            return self.mes[key]['E_BEKNOPT_MULTI_RMANOVA'] + assignment_code
