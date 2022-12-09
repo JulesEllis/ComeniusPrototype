@@ -880,7 +880,8 @@ class Assignments:
                 output_text += '<tr><td>' + d1 + '</td><td>' + d2 + '</td></tr>'
             else:
                 output_text += '<tr><td>' + str(i+1) + '</td><td>' + d1 + '</td><td>' + d2 + '</td></tr>'
-        return output_text + '</table>'
+        output_text += '</table>'
+        return output_text + '<br>' + str(assignment['feedback_requests']) + ' ' + self.mes['F_NREQUESTS']
     
     def print_anova(self, assignment: Dict) -> str: 
         data: Dict = assignment['data']
@@ -907,7 +908,8 @@ class Assignments:
             output_text += '<tr><td>'+self.mes['A_LEVEL']+'</td><td>' + data['varnames'][1][1] + '</td><td>' + data['varnames'][1][2] + '</td></tr>'
             output_text += '<tr><td>' + data['varnames'][0][1] + '</td><td>' + str(data['ns'][0]) + '</td><td>' + str(data['ns'][1]) + '</td></tr>'
             output_text += '<tr><td>' + data['varnames'][0][2] + '</td><td>' + str(data['ns'][2]) + '</td><td>' + str(data['ns'][3]) + '</td></tr>'
-        return output_text + '</table>'
+        output_text += '</table>'
+        return output_text + '<br>' + str(assignment['feedback_requests']) + ' ' + self.mes['F_NREQUESTS']
     
     def print_rmanova(self, assignment: Dict) -> str:
         data: Dict = assignment['data']
@@ -923,7 +925,8 @@ class Assignments:
         output_text += '<tr><td>Subject</td>' + ''.join(['<td>'+cap(x)+'</td>' for x in levels[:n_conditions]]) + '<td>'+self.mes['A_BOOSTED']+'</td></tr>'
         for i in range(assignment['data']['n_subjects']):
             output_text += '<tr><td>'+str(i+1)+'</td>' + ''.join(['<td>'+str(x)+'</td>' for x in [data['scores'][j][i] for j in range(n_conditions)]]) + '<td>' + str(round(data['jackedmeans'][i],2)) + '</td></tr>'
-        return output_text + '</table>'
+        output_text += '</table>'
+        return output_text + '<br>' + str(assignment['feedback_requests']) + ' ' + self.mes['F_NREQUESTS']
     
     def print_analysis(self, assignment: Dict):
         return assignment['instruction'] + '<br>'  
@@ -1090,7 +1093,8 @@ class Assignments:
         if assignment['assignment_type'] == 14:
             output += self.print_analysis(assignment)
             output += '</table></p>'
-        output += '<br>' + str(assignment['feedback_requests']) + ' ' + self.mes['F_NREQUESTS']
+        if not answer:
+            output += '<br>' + str(assignment['feedback_requests']) + ' ' + self.mes['F_NREQUESTS']
         return output
     
     def print_independent(self, assignment:dict, num:int=1) -> str:
