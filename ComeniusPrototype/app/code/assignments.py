@@ -860,7 +860,7 @@ class Assignments:
         output['assignment_type'] = choice
         return output
             
-    def print_ttest(self, assignment: Dict) -> str:
+    def print_ttest(self, assignment: Dict, add_attempts:bool=True) -> str:
         output_text = assignment['instruction'] + '<br>'
         varnames: List[str] = assignment['independent'].get_varnames()
         data: List = [assignment['A'], assignment['B']]
@@ -881,9 +881,11 @@ class Assignments:
             else:
                 output_text += '<tr><td>' + str(i+1) + '</td><td>' + d1 + '</td><td>' + d2 + '</td></tr>'
         output_text += '</table>'
-        return output_text + '<br>' + str(assignment['feedback_requests']) + ' ' + self.mes['F_NREQUESTS']
+        if add_attempts:
+            output_text += '<br>' + str(assignment['feedback_requests']) + ' ' + self.mes['F_NREQUESTS']
+        return output_text
     
-    def print_anova(self, assignment: Dict) -> str: 
+    def print_anova(self, assignment: Dict, add_attempts:bool=True) -> str: 
         data: Dict = assignment['data']
         data['varnames'] = [assignment['independent'].get_varnames()]
         if assignment['assignment_type'] == 4:
@@ -909,9 +911,11 @@ class Assignments:
             output_text += '<tr><td>' + data['varnames'][0][1] + '</td><td>' + str(data['ns'][0]) + '</td><td>' + str(data['ns'][1]) + '</td></tr>'
             output_text += '<tr><td>' + data['varnames'][0][2] + '</td><td>' + str(data['ns'][2]) + '</td><td>' + str(data['ns'][3]) + '</td></tr>'
         output_text += '</table>'
-        return output_text + '<br>' + str(assignment['feedback_requests']) + ' ' + self.mes['F_NREQUESTS']
+        if add_attempts:
+            output_text += '<br>' + str(assignment['feedback_requests']) + ' ' + self.mes['F_NREQUESTS']
+        return output_text
     
-    def print_rmanova(self, assignment: Dict) -> str:
+    def print_rmanova(self, assignment: Dict, add_attempts:bool=True) -> str:
         data: Dict = assignment['data']
         n_conditions = len(data['means'])
         levels = assignment['independent'].levels
@@ -926,7 +930,9 @@ class Assignments:
         for i in range(assignment['data']['n_subjects']):
             output_text += '<tr><td>'+str(i+1)+'</td>' + ''.join(['<td>'+str(x)+'</td>' for x in [data['scores'][j][i] for j in range(n_conditions)]]) + '<td>' + str(round(data['jackedmeans'][i],2)) + '</td></tr>'
         output_text += '</table>'
-        return output_text + '<br>' + str(assignment['feedback_requests']) + ' ' + self.mes['F_NREQUESTS']
+        if add_attempts:
+            output_text += '<br>' + str(assignment['feedback_requests']) + ' ' + self.mes['F_NREQUESTS']
+        return output_text
     
     def print_analysis(self, assignment: Dict):
         return assignment['instruction'] + '<br>'  
@@ -939,7 +945,7 @@ class Assignments:
         if assignment['assignment_type'] in [1,2]:
             markers = ['Differential scores'] if self.mes['L_ENGLISH'] else ['Verschilscores']
             if not answer:
-                output += self.print_ttest(assignment)
+                output += self.print_ttest(assignment, add_attempts=False)
             if assignment['assignment_type'] == 1:
                 output += '<p><table style="width:20%">'
                 levels = assignment['independent'].levels
@@ -963,7 +969,7 @@ class Assignments:
                 output += '</table></p>'
         if assignment['assignment_type'] == 3:
             if not answer:
-                output += self.print_anova(assignment)
+                output += self.print_anova(assignment, add_attempts=False)
             markers = ['Source'] if self.mes['L_ENGLISH'] else ['Bron']
             output += '<p><table style="width:20%">'
             output += '<tr><td>'+markers[0]+'</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td></tr>'
@@ -973,7 +979,7 @@ class Assignments:
             output += '</table></p>'
         if assignment['assignment_type'] == 4:
             if not answer:
-                output += self.print_anova(assignment)
+                output += self.print_anova(assignment, add_attempts=False)
             markers = ['Source','Interaction','Total'] if self.mes['L_ENGLISH'] else ['Bron','Interactie','Totaal']
             output += '<p><table style="width:20%">'
             output += '<tr><td>'+markers[0]+'</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td></tr>'
@@ -986,7 +992,7 @@ class Assignments:
             output += '</table></p>'
         if assignment['assignment_type'] == 5:
             if not answer:
-                output += self.print_rmanova(assignment)
+                output += self.print_rmanova(assignment, add_attempts=False)
             markers = ['Source','Interaction','Total'] if self.mes['L_ENGLISH'] else ['Bron','Interactie','Totaal']
             output += '<p><table style="width:20%">'
             output += '<tr><td>'+markers[0]+'</td><td>df</td><td>SS</td><td>MS</td><td>F</td><td>p</td><td>R<sup>2</sup></td></tr>'
