@@ -819,22 +819,7 @@ class ScanFunctions:
         if pevsent != []:
             output += '<br>'+'<br>'.join(self.detect_comparison_mreg(pevsent[0], solution))
         else:
-            markers = ['effect'] if self.mes['L_ENGLISH'] else ['effect']
-            pevsent = [sent for sent in doc.sents if all([markers[i] in sent.text for i in range(1)])]
-            if pevsent != []:
-                output += '<br>'+'<br>'.join(self.detect_comparison_mreg(pevsent[0], solution))
-            else:
-                markers = ['R-squared'] if self.mes['L_ENGLISH'] else ['R-kwadraat']
-                pevsent = [sent for sent in doc.sents if all([markers[i] in sent.text for i in range(1)])]
-                if pevsent != []:
-                    output += '<br>'+'<br>'.join(self.detect_comparison_mreg(pevsent[0], solution))
-                else:
-                    markers = ['R2'] if self.mes['L_ENGLISH'] else ['R2']
-                    pevsent = [sent for sent in doc.sents if all([markers[i] in sent.text for i in range(1)])]
-                    if pevsent != []:
-                        output += '<br>'+'<br>'.join(self.detect_comparison_mreg(pevsent[0], solution))
-                    else:
-                        output += '<br>' + self.mes['F_PROPVAR']
+            output += '<br>' + self.mes['F_PROPVAR']
         output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'F', solution['F'][0]))
         output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'][0]))
         output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][0], aliases=['r2','r^2','r','kwadraat']))
