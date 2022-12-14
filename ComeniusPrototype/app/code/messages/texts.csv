@@ -115,9 +115,9 @@ F_NEGEFFECT; -ten onrechte een negatie toegevoegd of weggelaten bij de beschrijv
 F_DECISION; -niet genoemd dat de beslissing ; -not stated that the decision 
 F_INDEPLEVELS; -de niveaus van de onafhankelijke variabele ; -the levels of the independent variable 
 F_INDEPLEVEL; -enkele niveaus van de onafhankelijke variabele ; -some levels of the independent variable
-F_PROPVARNONULL; -niet genoemd of het proportie verklaarde variantie significant groter dan nul is; -not stated whether the proportion of explained variance is greater than zero
-F_PROPVARNEG; -ten onrechte een negatie toegevoegd of weggelaten bij de beslissing over het proportie verklaarde variantie; -incorrectly left out or added a negation while describing the proportion of explained variance
-F_PROPVARSIGN; -niet genoemd of het verschil van het proportie verklaarde variantie met nul significant is; -not stated whether the proportion of explained variance is significantly greater than zero
+F_PROPVARNONULL; -niet genoemd of het proportie verklaarde variantie significant groter dan nul is; -not stated whether the proportion of variance is larger than zero
+F_PROPVARNEG; -ten onrechte een negatie toegevoegd of weggelaten bij de beslissing over het proportie verklaarde variantie; -incorrectly left out or added a negation while describing the proportion of variance
+F_PROPVARSIGN; -niet genoemd of het verschil van het proportie verklaarde variantie met nul significant is; -not stated whether the proportion of variance is significantly larger than zero
 F_PROPVAR; -het proportie verklaarde variantie word niet genoemd; -the proportion explained variance
 F_PROPVARCOMP; -nul niet genoemd bij de vergelijking van het proportie verklaarde variantie; -not compared the proportion of explained variance with zero
 F_PROPVARNULL; -het proportie verklaarde variantie word niet juist vergeleken met nul; -incorrectly compared the proportion of explained variance with zero

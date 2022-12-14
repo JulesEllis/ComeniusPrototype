@@ -173,7 +173,7 @@ def scan_numbers(text: str, stat: str, solution: Dict, margin: float) -> [bool, 
     
 def scan_number(text: str, stat: str, solution: Dict, margin: float=0.01) -> [bool, str]:
     fancynames: Dict[str, str] = {'df':'het aantal vrijheidsgraden', 'raw_effect': 'het ruwe effect',
-                  'T':'T', 'p':'p', 'standardized_effect': 'het relatieve effect', 'F': 'F','r2':'de correlatie','ns':'N'}
+                  'T':'T', 'p':'p', 'relative_effect': 'het relatieve effect', 'F': 'F','r2':'de correlatie','ns':'N'}
     tokens: List[str] = nltk.word_tokenize(text.lower())
     numbers: List[float] = []
     for t in tokens:

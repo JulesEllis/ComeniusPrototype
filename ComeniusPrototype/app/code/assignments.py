@@ -1281,7 +1281,7 @@ class Assignments:
         return output
     
     def answer_propvar(self,assignment) -> str:
-        sizes = ['small','medium','large'] if self.mes['L_ENGLISH'] else ['klein','matig','groot']
+        sizes = ['small','moderate','large'] if self.mes['L_ENGLISH'] else ['klein','matig','groot']
         size_ind = 2 if assignment['r2'][0] > 0.2 else 1 if assignment['r2'][0] > 0.1 else 0
         if self.mes['L_ENGLISH']:
             if assignment['p'][0] < 0.05:
