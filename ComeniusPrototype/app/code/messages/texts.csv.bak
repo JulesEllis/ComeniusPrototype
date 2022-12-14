@@ -2,20 +2,20 @@ Code;Dutch;English
 A_ANSWER;Antwoord: ;Answer: 
 M_ANALYSIS1;T-toets voor onafhankelijke variabelen;T-test for independent samples
 M_ANALYSIS2;T-toets voor gekoppelde paren;T-test for paired samples
-M_ANALYSIS3;One-way ANOVA;One-way ANOVA
-M_ANALYSIS4;Two-way ANOVA;Two-way ANOVA
+M_ANALYSIS3;One-factor ANOVA;One-factor ANOVA
+M_ANALYSIS4;Two-factor ANOVA;Two-factor ANOVA
 M_ANALYSIS5;Repeated Measures Anova;Repeated Measures Anova
-M_ANALYSIS6;Multipele regressieanalyse;Multiple regression analysis
+M_ANALYSIS6;Multiple regressieanalyse;Multiple regression analysis
 M_ANALYSIS7;MANOVA;MANOVA
 M_ANALYSIS8;ANCOVA;ANCOVA
 M_ANALYSIS9;Multivariate RMANOVA;Multivariate RMANOVA
-M_ANALYSIS10;Dubbel multivariate RMANOVA;Dubble multivariate RMANOVA
-M_REPORT1;Elementair rapport (oefenmodus);Elementary report (practice mode)
-M_REPORT2;Elementair rapport (tentamenmodus);Elementary report (examination mode)
-M_REPORT3;Beknopt rapport;Summary report
+M_ANALYSIS10;Dubbel multivariate RMANOVA;Double multivariate RMANOVA
+M_REPORT1;Elementair rapport (oefenmodus);Basic report (practice mode)
+M_REPORT2;Elementair rapport (tentamenmodus);Basic report (examination mode)
+M_REPORT3;Beknopt rapport;Short report
 M_APOLOGIES;Sorry, bij ;Sorry, 
-Q_INTRO;Hoi, met dit programma kan je elementaire en beknopte rapporten oefenen. Klik op de knop hieronder om verder te gaan.;Hey, this program allows you to practice both elementary and summary reports. Click the button below to progress.
-Q_COMPLETION;Gefeliciteerd, je rapport is af! Klik op de knop hieronder om verder te gaan.;Congratulations! Your report is finished. Click the button below to progress.,
+Q_INTRO;Hoi, met dit programma kan je elementaire en beknopte rapporten oefenen. Klik op de knop hieronder om verder te gaan.;Hey, this program allows you to practice both basic and short reports. Click the button below to continue.
+Q_COMPLETION;Gefeliciteerd, je rapport is af! Klik op de knop hieronder om verder te gaan.;Congratulations! Your report is finished. Click the button below to continue.,
 Q_CHOICE;Voer hieronder het soort opgave in dat je wil oefenen.;Enter the type of assignment you want to practice below. 
 Q_IND;Beschrijf de onafhankelijke variabele.;Describe the independent variable.
 Q_DEP;Beschrijf de afhankelijke variabele.;Describe the dependent variable.
@@ -24,7 +24,7 @@ Q_TABLE;Voer de onderstaande tabel in (schrijf decimalen achter een punt, niet a
 Q_HYP;Voer de nulhypothese in, met de griekse letters uitgeschreven (mu(x), beta(x), tau(x), etc.);Enter the null hypothesis, with the Greek letters written out (mu(x), beta(x), tau(x), etc.)
 Q_DF;Voer het aantal vrijheidsgraden (df) in.;Enter the degrees of freedom (df).
 Q_RAW;Voer het ruwe effect in dat je hebt berekend.;Enter the raw effect.
-Q_RELATIVE;Voer het relatieve effect in dat je hebt berekend.;Enter the relative effect.
+Q_RELATIVE;Voer het relatieve effect in dat je hebt berekend.;Enter the standardised effect size.
 Q_T;Voer de T-waarde in.;Enter the value of T.
 Q_P;Voer de p-waarde in.;Enter the value of p.
 Q_DECISION;Voer de beslissing in (voor factor 1).;Enter the decision (for factor 1).
@@ -36,16 +36,16 @@ Q_HYP2;Voer de nulhypothese in voor de tweede onafhankelijke variabele, geformul
 Q_HYPINT;Voer de interactienulhypothese in. Je mag deze inkorten door alleen de eerste en laatste vergelijking van de hypothese te geven. ;Enter the interaction null hypothesis. You may abbreviate this one by only writing the first and last equation.
 Q_DEPRM;Beschrijf de afhankelijke variabele (het aantal metingen per persoon hoef je niet te geven). ;Describe the dependent variable (it’s not necessary to give the number of measurements per person).
 I_CREATE;Maak een ;Create a
-I_SUBJECTBETWEEN;De proefpersonen doen een experiment, waarin ze worden ingedeeld op hun ;The subjects take part in an experiment, being sorted based on their 
+I_SUBJECTBETWEEN;De proefpersonen doen een experiment, waarin ze worden ingedeeld op hun ;The subjects take part in an experiment, being categorised based on their 
 I_SUBJECTWITHIN;De proefpersonen doen allemaal mee aan een experiment, met als ;The subjects all take part in an experiment, with 
-I_RANDOMBETWEEN;De personen van elke groep zijn willekeurig geselecteerd. ;The persons of all groups were selected randomly. 
-I_RANDOMWITHIN;De volgorde van de toetsen was gerandomiseerd. ;The order of the tests was randomized. 
+I_RANDOMBETWEEN;De personen zijn random aan groepen toegewezen. ;The persons were randomly assigned to groups. 
+I_RANDOMWITHIN;De volgorde van de condities was gerandomiseerd. ;The order of the conditions was randomized. 
 I_DECIMALS;Voer je antwoorden alsjeblieft tot op 2 decimalen in, en gebruik dezelfde vergelijking van de gemiddelden in je antwoord als in de vraagstelling staat (e.g. “groter” of “kleiner”). ;Enter your answers with two decimals, and use the same comparison of means in your answer as you can read in the question (e.g. “smaller”). 
 A_ONEINT;Experiment, dus er is slechts een verklaring mogelijk. Dit is namelijk dat ;Experiment, so only one explanation is possible, namely that 
 A_MULTINT;Geen experiment, dus er zijn meerdere verklaringen mogelijk. De primaire verklaring is dat ;No experiment, so multiple explanations are possible. The primary explanation is that 
-A_ALTINT;De alternatieve verklaring is dat ;The alternative explanation is that 
-I_FULLRANDOM;De deelnemers zijn willekeurig gekozen voor beide factoren. ;The participants are sorted randomly for both factors. 
-I_RANDOMFACTOR;De deelnemers zijn willekeurig verdeeld bij de factor ;The participants are sorted randomly for factor 
+A_ALTINT;Een alternatieve verklaring is dat ;An alternative explanation is that 
+I_FULLRANDOM;De deelnemers zijn random toegewezen aan de niveaus van beide factoren. ;The participants were assigned randomly to the levels of both factors. 
+I_RANDOMFACTOR;De deelnemers zijn random toegewezen aan de niveaus van de factor ;The participants were assigned randomly to the levels of factor 
 A_TRUESCORES;H0: De personen hebben gelijke ware scores op de opgevoerde meting in de populatie.;H0: The persons have the same true scores for the stepped-up measurement in the population
 A_JACKEDMEANS;de opgevoerde gemiddelden van de personen in de populatie zijn ;The stepped-up measurements in the population are
 I_DIMENSIONS;De afhankelijke variabelen zijn dimensies van de variabele ;The dependent variables are dimensions of the variable 
@@ -80,7 +80,7 @@ F_AVGSONE; -ten minste één van de populatiegemiddelden; -at least one of the p
 F_SOMESIGNS; -enkele tekens voor populatiegemiddelden; -some signs representing the population means
 F_ALLSIGNS; -alle tekens voor populatiegemiddelden; -all signs representing the population means
 F_SCORES; -niet gesteld dat het om de scores van de personen gaat; -not stated that this concerns the subjects’ scores
-F_EQUALSCORES; -niet gesteld dat de personen gelijke scores hebben; -not stated that the subjects have equal scores
+F_EQUALSCORES; -niet gesteld dat de personen gelijke ware scores hebben; -not stated that the subjects have equal true scores
 F_JACKEDSCORES; -niet gesteld dat het om de opgevoerde metingen gaat; -not stated that this concerns the stepped-up measurements
 F_POP; -er wordt niet aangegeven dat het om de populatie gaat; -not stated that this is about the population
 F_ALLSTD; -alle juiste standaardeviaties; -all correct standard deviations
@@ -115,18 +115,18 @@ F_NEGEFFECT; -ten onrechte een negatie toegevoegd of weggelaten bij de beschrijv
 F_DECISION; -niet genoemd dat de beslissing ; -not stated that the decision 
 F_INDEPLEVELS; -de niveaus van de onafhankelijke variabele ; -the levels of the independent variable 
 F_INDEPLEVEL; -enkele niveaus van de onafhankelijke variabele ; -some levels of the independent variable
-F_PROPVARNONULL; -niet genoemd of het proportie verklaarde variantie significant groter dan nul is; -not stated whether the proportion of variance is larger than zero
-F_PROPVARNEG; -ten onrechte een negatie toegevoegd of weggelaten bij de beslissing over het proportie verklaarde variantie; -incorrectly left out or added a negation while describing the proportion of variance
-F_PROPVARSIGN; -niet genoemd of het verschil van het proportie verklaarde variantie met nul significant is; -not stated whether the proportion of variance is significantly larger than zero
-F_PROPVAR; -het proportie verklaarde variantie word niet genoemd; -the proportion declared variance
-F_PROPVARCOMP; -nul niet genoemd bij de vergelijking van het proportie verklaarde variantie; -not compared the proportion of variance with zero
-F_PROPVARNULL; -het proportie verklaarde variantie word niet juist vergeleken met nul; -incorrectly compared the proportion of variance with zero
+F_PROPVARNONULL; -niet genoemd of het proportie verklaarde variantie significant groter dan nul is; -not stated whether the proportion of explained variance is larger than zero
+F_PROPVARNEG; -ten onrechte een negatie toegevoegd of weggelaten bij de beslissing over het proportie verklaarde variantie; -incorrectly left out or added a negation while describing the proportion of explained variance
+F_PROPVARSIGN; -niet genoemd of het verschil van het proportie verklaarde variantie met nul significant is; -not stated whether the proportion of explained variance is significantly larger than zero
+F_PROPVAR; -het proportie verklaarde variantie word niet genoemd; -the proportion explained variance
+F_PROPVARCOMP; -nul niet genoemd bij de vergelijking van het proportie verklaarde variantie; -not compared the proportion of explained variance with zero
+F_PROPVARNULL; -het proportie verklaarde variantie word niet juist vergeleken met nul; -incorrectly compared the proportion of explained variance with zero
 F_INTDECISION; -niet gesteld dat de interactiebeslissing over interactie gaat; -not stated that the interaction decision concerns interaction
 F_INTNEG; -ten onrechte een negatie toegevoegd of weggelaten ; -incorrectly left out or added a negation 
 F_INTPOP; -niet gesteld dat de interactiebeslissing over de populatie gaat; -not stated that the interaction decision concerns the population
 F_INDINT; -de onafhankelijke variabelen ontbreken bij de interactiebeslissing; -the independent variables are missing from the interaction decision
 F_IND1INT; -een van de onafhankelijke variabelen ontbreekt bij de interactiebeslissing; -one independent variable is missing from the interaction decision
-F_BOTHPOP; -zowel “populatie” en “significant” genoemd, haal een van de twee weg ; -stated both “population” and “interaction”, please remove one 
+F_BOTHPOP; -zowel “populatie” en “significant” genoemd, haal een van deze twee woorden weg ; -stated both “population” and “significant”, please remove one of these words
 F_PRED; -significant voorspellende waarde niet genoemd in de hoofdbeslissing; -the significant predictive value in the main decision
 F_2COV; -beide covariaten niet genoemd in de hoofdbeslissing; -both covariates in the main decision
 F_1COV; -een van de covariaten niet genoemd in de hoofdbeslissing; -one covariate in the main decision
@@ -144,12 +144,12 @@ F_NOLEVELS1; -de niveaus van een van de onafhankelijke variabelen worden nog nie
 F_NOCAUSE; -niet duidelijk genoemd hoe het effect wordt veroorzaakt; -the cause of the effect
 F_NOALT; -de alternatieve verlaring wordt niet genoemd; -the alternative explanation
 F_WRONGCAUSATION; -de relatie tussen de onafhankelijke en afhankelijke variabele is niet geldig hier omdat dit een alternatieve verklaring is; -the relationship between the independent and dependent variables is incorrect here since this concerns an alternative explanation
-F_NODISTURBANCE; -niet gesteld dat storende variabelen een mogelijkheid zijn voor de alternatieve verklaring; -not stated that one possibility for the alternative explanation is interfering variables
+F_NODISTURBANCE; -niet gesteld dat storende variabelen een mogelijkheid zijn voor de alternatieve verklaring; -not stated that one possibility for the alternative explanation is confounding variables
 F_NOREVERSECAUSE; -niet gesteld dat ongekeerde causaliteit een mogelijkheid is voor de alternatieve verklaring; -not stated that one possibility for the alternative explanation is reversed causality
 F_RIGHTP; -de juiste p-waarde van ; -the right p-value of 
 F_ANALYSIS; -naam van de analyse niet juist genoemd; -the name of the analysis isn’t stated correctly
 F_STRENGTH; -de juiste sterkte van het effect ; -the correct effect strength 
-S_SHORTONLY; kan je alleen een beknopt rapport maken.; can only be used to make a summary report
+S_SHORTONLY; kan je alleen een beknopt rapport maken.; can only be used to make a short report
 S_VAR1; voor de eerste onafhankelijke variabele.;for the first independent variable
 S_VAR2; voor de tweede onafhankelijke variabele.;for the second independent variable
 S_VARINT; voor de interactie;for the interaction
@@ -175,14 +175,14 @@ S_AVGIS;het populatiegemiddelde van;the population average of
 S_IS; was ; was 
 S_THAN; vergeleken met dat van ; compared to that of 
 S_INFLUENCES; invloed had op ; influenced 
-S_DISTURBANCE; wel beinvloedt, maar dat dit niet merkbaar was door een storende variabele.;the former influences the latter, but this was not noticeable because of an interfering variable
+S_DISTURBANCE; wel beinvloedt, maar dat dit niet merkbaar was door een storende variabele.;the former influences the latter, but this was not noticeable because of an confounding variable
 S_VARSARE;de variabelen zijn;the variables are
 S_WITHLEVELS; met niveaus ; with levels 
 S_NULL;H0;H0
 S_AVGSARE;, de populatiegemiddelden van ;, the population means of 
 S_AREAVG; waren ; were 
 S_NOT;niet ;not 
-S_DISTURBANCE2;Eventuele alternatieve verklaringen zijn storende variabelen of omgekeerde causaliteit. ;Eventual alternative explanations are interfering variables or reversed causality
+S_DISTURBANCE2;Eventuele alternatieve verklaringen zijn storende variabelen of omgekeerde causaliteit. ;Eventual alternative explanations are confounding variables or reversed causality
 S_FACTOR;van factor;of factor
 S_PREDICTORS; als predictoren; as predictors
 S_CRITERIUM; als criterium; as criterium
@@ -199,7 +199,7 @@ S_INTERACT;bij de interactie ;for the interaction
 S_WITHINFACTOR;bij de within-subject factor ;for the within-subject factor 
 S_BETWEENFACTOR;bij de between-subject factor ;for the between-subject factor 
 S_SWITCHEROO; wordt verworpen als deze wordt behouden of andersom; is rejected when it should be retained or the other way around
-S_DOUBLEPOP;zowel “populatie” en “significant” genoemd, haal een van de twee weg;mentioned both “population” and “significant”, please remove one of the two
+S_DOUBLEPOP;zowel “populatie” en “significant” genoemd, haal een van de twee woorden weg;mentioned both “population” and “significant”, please remove one of these two words
 S_LEVELS;niveaus;levels
 S_BADCOMPARED; in de populatie niet of niet juist met elkaar vergeleken; not compared correctly in the population
 S_POPAVGS;om populatiegemiddelden gaat;concerns the population averages
@@ -249,7 +249,7 @@ A_LEVEL;Niveau;Level
 A_OGSCORES;Originele scores:;Original scores:
 A_BOOSTED;Opgevoerde meting;Stepped-up measurement
 A_RAW;Ruw effect;Raw effect
-A_RELATIVE;Relatief effect;Relative effect
+A_RELATIVE;Relatief effect;Standardised effect size
 A_DF;Vrijheidsgraden;Degrees of freedom
 A_VALUE;Waarde;Value
 A_MULTIVAR;Multivariate Tests;Multivariate Tests
@@ -257,7 +257,7 @@ A_WITHINCON;Tests van Within-Subject Contrasten;Tests of Within-Subjects Contras
 A_BETWEEN;Tests van Between-Subject Contrasten;Tests of Between-Subjects Effects
 A_WITHIN;Tests of Within-Subject Effects;Tests of Within-Subject Effects
 S_WITH; bij ; with 
-S_ELEM;elementair;n elementary 
+S_ELEM;elementair; basic 
 S_SHORT;beknopt; short 
 S_CAND;, en ;, and 
 S_CLEVELS;, met niveaus ;, with levels 
@@ -272,8 +272,8 @@ S_DATAHYP2; rapport van onderstaande data. ;report of the data below.
 I_DECIMALS2;Voer je antwoorden alsjeblieft tot op 2 decimalen in. ;Enter your answers with two decimals. 
 I_MULTIVAR;De afhankelijke variabelen zijn ;The dependent variables are 
 S_NINFLUENCES; geen invloed had op ; did not influence 
-A_NOTICEABLE;, maar dat dit niet merkbaar is door een storende variabele. ;, but that this is cancelled out by an interfering variable. 
-A_BOTHINT; beide worden veroorzaakt door een storende variabele.; are both caused by an interfering variable. 
+A_NOTICEABLE;, maar dat dit niet merkbaar is door een storende variabele. ;, but that this is cancelled out by an confounding variable. 
+A_BOTHINT; beide worden veroorzaakt door een storende variabele.; are both caused by an confounding variable. 
 S_UNQ;ongelijk;unequal
 S_EQ;gelijk;equal
 S_THEREIS;, er was ;, there was 
@@ -339,6 +339,9 @@ S_REPSHORT; rapport. ;report.
 M_BLANK; ; 
 A_EXPLANATION;Opgave: ;Assignment: 
 B_INFO1;Theorie;Theory
-B_INFO2;Uitleg;Explanation
-B_INFO3;Voorbeeld;Example
+B_INFO2;Voorbeeld;Example
+B_INFO3;Uitleg;Explanation
 F_INDSHORT;onafhankelijk;independent
+F_NMISTAKES;fouten gemaakt;mistakes made
+F_NREQUESTS;keer feedback aangevraagd;feedback requests sent
+F_ASSIGNMENT_CODE;Opgavecode: ;Assignment code: 
