@@ -11,7 +11,6 @@ import secrets
 class EncryptedCodeSaver:
     def __init__(self):
         self.key = "simpelesleutelvoortestenvanpythoncode349ms49"
-        self.offset = 44
         self.analysis_name_dict = {1:'TTEST_BETWEEN',
                             2:' TTEST_WITHIN', 
                             3:'ONEWAY_ANOVA',
