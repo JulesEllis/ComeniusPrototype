@@ -189,12 +189,12 @@ class Controller:
                 self.solution = self.assignments.solve_ttest(self.assignment, {})
                 instruction = self.assignments.print_ttest(self.assignment)
                 self.analysis_type = Task.TTEST_WITHIN
-            if analysis == 'One-way ANOVA':
+            if analysis == 'One-factor ANOVA':
                 self.assignment = self.assignments.create_anova(False, control)
                 self.solution = self.assignments.solve_anova(self.assignment, {})
                 instruction = self.assignments.print_anova(self.assignment)
                 self.analysis_type = Task.ONEWAY_ANOVA
-            if analysis == 'Two-way ANOVA':
+            if analysis == 'Two-factor ANOVA':
                 control2 = random.choice([True,False])
                 self.assignment = self.assignments.create_anova(True, control, control2=control2, elementary=True)
                 self.solution = self.assignments.solve_anova(self.assignment, {})
@@ -205,30 +205,30 @@ class Controller:
                 self.solution = self.assignments.solve_rmanova(self.assignment, {})
                 instruction = self.assignments.print_rmanova(self.assignment)
                 self.analysis_type = Task.WITHIN_ANOVA
-            if analysis in ['Multipele regressieanalyse', 'Multiple regression analysis']:
+            if analysis in ['Multiple regressieanalyse', 'Multiple regression analysis']:
                 self.analysis_type = Task.MREGRESSION
-                if report not in ['Beknopt rapport', 'Summary report']:
+                if report not in ['Beknopt rapport', 'Short report']:
                     return self.protocol[self.index][0] + '<br><span style="color: blue;">'+self.mes['M_APOLOGIES']+analysis.replace('Multi','multi')+self.mes['S_SHORTONLY']+'</span>'
             if analysis == 'MANOVA':
                 self.analysis_type = Task.MANOVA
-                if report not in ['Beknopt rapport', 'Summary report']:
+                if report not in ['Beknopt rapport', 'Short report']:
                     return self.protocol[self.index][0] + '<br><span style="color: blue;">'+self.mes['M_APOLOGIES']+analysis+self.mes['S_SHORTONLY']+'</span>'
             if analysis == 'ANCOVA':
                 self.analysis_type = Task.ANCOVA
-                if report not in ['Beknopt rapport', 'Summary report']:
+                if report not in ['Beknopt rapport', 'Short report']:
                     return self.protocol[self.index][0] + '<br><span style="color: blue;">'+self.mes['M_APOLOGIES']+analysis+self.mes['S_SHORTONLY']+'</span>'
             if analysis == 'Multivariate RMANOVA':
                 self.analysis_type = Task.MULTIRM
-                if report not in ['Beknopt rapport', 'Summary report']:
+                if report not in ['Beknopt rapport', 'Short report']:
                     return self.protocol[self.index][0] + '<br><span style="color: blue;">'+self.mes['M_APOLOGIES']+analysis.replace('Multi','multi')+self.mes['S_SHORTONLY']+'</span>'
-            if analysis in ['Dubbel Multivariate-RMANOVA','Dubble multivariate RMANOVA']:
+            if analysis in ['Dubbel Multivariate-RMANOVA','Double multivariate RMANOVA']:
                 self.analysis_type = Task.MULTIRM2
-                if report not in ['Beknopt rapport', 'Summary report']:
+                if report not in ['Beknopt rapport', 'Short report']:
                     return self.protocol[self.index][0] + '<br><span style="color: blue;">'+self.mes['M_APOLOGIES']+analysis+self.mes['S_SHORTONLY']+'</span>'
             
             #Select report type
             self.index = 0
-            if report in ['Elementair rapport (oefenmodus)','Elementary report (practice mode)']:
+            if report in ['Elementair rapport (oefenmodus)','Basic report (practice mode)']:
                 self.skipable = True
                 self.answerable = True
                 self.submit_field = Task.TEXT_FIELD
@@ -242,12 +242,12 @@ class Controller:
                     self.protocol = self.anova_protocol()
                 if self.analysis_type == Task.WITHIN_ANOVA:
                     self.protocol = self.rmanova_protocol()
-            if report in ['Elementair rapport (tentamenmodus)','Elementary report (examination mode)']:
+            if report in ['Elementair rapport (tentamenmodus)','Basic report (examination mode)']:
                 self.submit_field = Task.FINISHED #Task.INTRO
                 self.skipable = False
                 self.formmode = True
                 self.protocol = self.completion_protocol()
-            if report in ['Beknopt rapport', 'Summary report']:
+            if report in ['Beknopt rapport', 'Short report']:
                 self.submit_field = Task.FINISHED
                 self.skipable = False
                 self.formmode= True
