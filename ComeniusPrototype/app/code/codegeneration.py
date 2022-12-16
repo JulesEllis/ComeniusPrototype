@@ -35,7 +35,6 @@ class EncryptedCodeSaver:
             padlengthpre = secrets.randbelow(padlength)
             padpre = genkey(padlengthpre) + ";"
             padlengthpost = padlength - padlengthpre
-            print(padlengthpost)
             padpost = ";" + genkey(padlengthpost)
             encdata = padpre + encdata + padpost
         dataarr = bytes(encdata, 'utf-8')
