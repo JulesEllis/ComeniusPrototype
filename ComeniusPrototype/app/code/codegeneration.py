@@ -9,7 +9,7 @@ import secrets
 
 class EncryptedCodeSaver:
     def __init__(self):
-        self.key = "simpelesleutelvoortestenvanpythoncode349ms490"
+        self.key = "ZRGt99Ss10txmIuMciVrmVuC3HSHs8KG7r87fbpOVqYuxinDoK00TaXRUzFltjQhwAC07EycUTpLFGwXuNnmYGywKOSbYb6zmKxELOEl7PJRmaZNNGBVLrmKjAhlwbKcJIkpcJnscdwQnJZy5mDITgwOTV7C2FRsj2gDFpHWSdyLvYXlgLZjOulBSXws3jGR55VizH3wsGJ76c9eLpvwlNy9tRfBRLTiOLX9iULnnJqSMK4cNKnXqjhJNJFOLzkv"
         self.analysis_name_dict = {1:'TTEST_BETWEEN',
                             2:' TTEST_WITHIN', 
                             3:'ONEWAY_ANOVA',
@@ -55,7 +55,7 @@ class EncryptedCodeSaver:
         return str(bytes(returnstr), 'utf-8')
     
     def encrypt_assignment(self,assignment:dict):
-        to_encrypt = ';'.join([self.analysis_name_dict[assignment['assignment_type']],str(assignment['n_mistakes']),str(assignment['feedback_requests']),str(datetime.now() + timedelta(hours=1))])
+        to_encrypt = ';'.join([self.analysis_name_dict[assignment['assignment_type']],str(assignment['feedback_requests']),str(assignment['n_mistakes']),str(datetime.now() + timedelta(hours=1))])
         return self.encrypt(to_encrypt)
         
 
