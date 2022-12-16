@@ -656,7 +656,6 @@ class Controller:
             assignment_code = '</span><br>'+self.mes['F_ASSIGNMENT_CODE']+'<b>'+self.assignment['assignment_code']+'</b><span style="color: blue;">'
         else:
             assignment_code = ''
-        self.assignment['feedback_requests'] += 1
         prefix = ['EXPLAIN_','B1_','B2_','B3_'][button_id]
         suffix = '_EN' if self.mes['L_ENGLISH'] else '_NL'
         key = prefix + 'SHORT' + suffix
