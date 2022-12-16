@@ -6,11 +6,11 @@ Created on Fri Dec  9 17:16:58 2022
 @author: jelmer
 """
 from datetime import datetime, timedelta
-import secrets
 
 class EncryptedCodeSaver:
     def __init__(self):
         self.key = "simpelesleutelvoortestenvanpythoncode349ms49"
+        self.offset = 44
         self.analysis_name_dict = {1:'TTEST_BETWEEN',
                             2:' TTEST_WITHIN', 
                             3:'ONEWAY_ANOVA',
@@ -29,14 +29,13 @@ class EncryptedCodeSaver:
             returnstr = "0"+returnstr
         return returnstr
 
-    def encrypt(self, encdata) -> str:
+    def encrypt(self,encdata) -> str:
         dataarr = bytes(encdata, 'utf-8')
         keyarr = bytes(self.key, 'utf-8')
-        encoffset = secrets.randbits(8)
-        returnstr = self.dec2hex(encoffset)
+        returnstr = self.dec2hex(self.offset)
         keylen = len(self.key)
         for i in range(len(encdata)):
-            keypos = (i + encoffset) % keylen
+            keypos = (i + self.offset) % keylen
             newchar = (dataarr[i])^(keyarr[keypos])
             returnstr = returnstr + self.dec2hex(newchar)
         return returnstr
@@ -64,4 +63,4 @@ class EncryptedCodeSaver:
 
 #data = "2869597;9;8-12-2022;13:23:58"
 #x = EncryptedCodeSaver()
-#print(x.encrypt('2869597;9;8-12-2022;13:23:58'))
+#print(x.decrypt('2c273e222724353a32222a23355e5d40545e4946554146485f444c5e49594550555e5b5551561d0d0a5947020f'))
