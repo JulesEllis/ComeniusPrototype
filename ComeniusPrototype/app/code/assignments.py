@@ -1433,7 +1433,7 @@ class Assignments:
             output += self.answer_stats(assignment, FT=assignment['F'][1], p=assignment['p'][1],eta=assignment['eta'][1])+'<br>'
         #Fix punctuation
         output:str = output.replace('. .  (',' (').replace('. , ',', ').replace('. (',' (')
-        assignment['feedback_requests']=assignment['feedback_requests']+1
+        assignment['feedback_requests']=10
         if assignment['feedback_requests'] > 0:
             output += '</span><br>'+self.mes['F_ASSIGNMENT_CODE']+'<b>'+assignment['assignment_code']+'</b><span style="color: blue;">'
         return output
