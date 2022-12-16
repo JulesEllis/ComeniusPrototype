@@ -7,6 +7,8 @@ Created on Fri Dec  9 17:16:58 2022
 from datetime import datetime, timedelta
 import secrets
 
+padlength = 10
+
 class EncryptedCodeSaver:
     def __init__(self):
         self.key = "ZRGt99Ss10txmIuMciVrmVuC3HSHs8KG7r87fbpOVqYuxinDoK00TaXRUzFltjQhwAC07EycUTpLFGwXuNnmYGywKOSbYb6zmKxELOEl7PJRmaZNNGBVLrmKjAhlwbKcJIkpcJnscdwQnJZy5mDITgwOTV7C2FRsj2gDFpHWSdyLvYXlgLZjOulBSXws3jGR55VizH3wsGJ76c9eLpvwlNy9tRfBRLTiOLX9iULnnJqSMK4cNKnXqjhJNJFOLzkv"
@@ -29,6 +31,13 @@ class EncryptedCodeSaver:
         return returnstr
 
     def encrypt(self, encdata) -> str:
+        if padlength > 0:
+            padlengthpre = secrets.randbelow(padlength)
+            padpre = genkey(padlengthpre) + ";"
+            padlengthpost = padlength - padlengthpre
+            print(padlengthpost)
+            padpost = ";" + genkey(padlengthpost)
+            encdata = padpre + encdata + padpost
         dataarr = bytes(encdata, 'utf-8')
         keyarr = bytes(self.key, 'utf-8')
         encoffset = secrets.randbits(8)
@@ -58,6 +67,9 @@ class EncryptedCodeSaver:
         to_encrypt = ';'.join([self.analysis_name_dict[assignment['assignment_type']],str(assignment['feedback_requests']),str(assignment['n_mistakes']),str(datetime.now() + timedelta(hours=1))])
         return self.encrypt(to_encrypt)
         
+    def genkey(len) -> str:
+        alphabet = string.ascii_letters + string.digits
+        return ''.join(secrets.choice(alphabet) for i in range(len))
 
 
 
