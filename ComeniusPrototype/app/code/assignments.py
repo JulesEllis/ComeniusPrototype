@@ -1375,7 +1375,7 @@ class Assignments:
         return output
     
     def answer_report(self,assignment) -> str:
-        assignment['feedback_requests'] = 2
+        assignment['feedback_requests'] += 1
         output:str = self.answer_name(assignment) + self.answer_design(assignment)+'<br>'
         if assignment['assignment_type'] in [1,2]:
             output += self.answer_decision(assignment, assignment['independent'].name, 1, FT=assignment['T'][0], p=assignment['p'][0],eta=0)
