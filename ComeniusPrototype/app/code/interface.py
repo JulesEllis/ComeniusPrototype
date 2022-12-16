@@ -465,6 +465,7 @@ class Controller:
     
     #Return the standard answers for the ANOVA assignments in a list
     def form_answers_anova(self) -> [str, list]:
+        self.assignment['feedback_requests'] += 1
         output = [[] for i in range(7)]
         
         #Determine instruction
