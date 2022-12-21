@@ -457,6 +457,7 @@ def reportform():
             field = controller.submit_field.value
             return render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=field, varnames=varnames, title=title)
         elif form.answer.data:
+            controller.assignment['feedback_requests'] += 1
             instruction = controller.assignments.print_report(controller.assignment)
             output = controller.assignments.answer_report(controller.assignment) #controller.assignment['answer']
             with open(path, 'w') as f:
