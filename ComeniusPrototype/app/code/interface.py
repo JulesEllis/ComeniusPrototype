@@ -376,6 +376,7 @@ class Controller:
     
     #Return the standard answers for the T-test assignments in a list
     def form_answers(self) -> [str, List[str]]:
+        self.assignment['feedback_requests'] += 1
         output:list = [[] for i in range(12)]
         instruction:str = self.assignments.print_ttest(self.assignment)
         output[0].append('Antwoord: '+self.assignments.print_independent(self.assignment))
@@ -465,6 +466,7 @@ class Controller:
     
     #Return the standard answers for the ANOVA assignments in a list
     def form_answers_anova(self) -> [str, list]:
+        self.assignment['feedback_requests'] += 1
         output = [[] for i in range(7)]
         
         #Determine instruction

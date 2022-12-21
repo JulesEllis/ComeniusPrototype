@@ -229,7 +229,8 @@ class Assignments:
                'independent':independent,
                'A': [round(random.gauss(mean1,std1), 2) for i in range(n1)], 
                'B': [round(random.gauss(mean2,std2), 2) for i in range(n2)],
-               'feedback_requests':0
+               'feedback_requests':0,
+               'assignment_code':''
                }
     
     #Calculate internally all of the numbers and string values the student has to present
@@ -320,6 +321,7 @@ class Assignments:
         output['instruction']: str = None
         output['assignment_type']: int = 4 if two_way else 3
         output['feedback_requests'] = 0
+        output['assignment_code'] = ''
         output['independent'], intro = self.get_factor(within_subject=False, control=control,ttest=False)
         output['dependent'], depintro = self.get_dependent()
         if two_way:
@@ -471,7 +473,7 @@ class Assignments:
     #Create an RMANVOA assignment for the given parameters
     def create_rmanova(self, control: bool, elementary:bool=True) -> Dict:
         #Determine variable shape and names
-        output = {'control': control, 'two_way':False, 'assignment_type':5, 'feedback_requests' : 0}
+        output = {'control': control, 'two_way':False, 'assignment_type':5, 'feedback_requests' : 0, 'assignment_code' : ''}
         n_conditions = random.randint(2,4)
         n_subjects = int(random.uniform(8,15))
         
@@ -549,7 +551,7 @@ class Assignments:
     #Create a multiple regression assignment for the given parameters
     def create_mregression(self, control: bool, elementary:bool=False):
         report_type = self.mes['S_ELEM'] if elementary else self.mes['S_SHORT']
-        output = {'assignment_type':6, 'feedback_requests':0}
+        output = {'assignment_type':6, 'feedback_requests':0, 'assignment_code' : ''}
         N = 50 + int(150 * random.random())
         output['ns'] = [N]
         n_predictors = random.choice([3,4,5,6])
@@ -602,7 +604,7 @@ class Assignments:
     #Create an ANCOVA assignment for the given parameters
     def create_ancova(self, control: bool, elementary:bool=False):
         report_type = self.mes['S_ELEM'] if elementary else self.mes['S_SHORT']
-        output = {'assignment_type':12, 'feedback_requests':0}
+        output = {'assignment_type':12, 'feedback_requests':0, 'assignment_code' : ''}
         output['independent'], intro = self.get_factor(within_subject=False, control=control,ttest=False)
         N = N = 50 + int(150 * random.random())
         output['ns'] = [N]
@@ -658,7 +660,7 @@ class Assignments:
 
     #Create an MANOVA assignment for the given parameters
     def create_manova(self, control: bool, control2:bool=False, elementary:bool=False):
-        output = {'assignment_type':12, 'feedback_requests':0}
+        output = {'assignment_type':12, 'feedback_requests':0, 'assignment_code' : ''}
         report_type = self.mes['S_ELEM'] if elementary else self.mes['S_SHORT']
         p = random.random() * 0.05 if random.choice([True, False]) else random.random() * 0.95 + 0.05
         s = 3 * random.random()
@@ -728,7 +730,7 @@ class Assignments:
     
     #Create a multiple repeated-measures ANOVA assignment for the given parameters
     def create_multirm(self, control: bool, control2:bool=False, elementary:bool=False) -> dict:
-        output = {'assignment_type':13, 'feedback_requests':0}
+        output = {'assignment_type':13, 'feedback_requests':0, 'assignment_code': ''}
         report_type = self.mes['S_ELEM'] if elementary else self.mes['S_SHORT']
         p = random.random() * 0.05 if random.choice([True, False]) else random.random() * 0.95 + 0.05
         s = 3 * random.random()
@@ -1375,6 +1377,7 @@ class Assignments:
         return output
     
     def answer_report(self,assignment) -> str:
+        self.assignment['feedback_requests'] += 1
         output:str = self.answer_name(assignment) + self.answer_design(assignment)+'<br>'
         if assignment['assignment_type'] in [1,2]:
             output += self.answer_decision(assignment, assignment['independent'].name, 1, FT=assignment['T'][0], p=assignment['p'][0],eta=0)
