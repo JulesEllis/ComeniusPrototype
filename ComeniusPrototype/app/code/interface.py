@@ -395,6 +395,7 @@ class Controller:
     
     #Apply scan functions to the input fields of the ANOVA form and return a list of feedback points
     def update_form_anova(self, textfields: Dict) -> [str, list]:
+        self.assignment['feedback_requests'] += 1
         output:list = [[] for i in range(7)] #Empty list for every type of input field (independent variable, dependent variable, etc.)
         if self.mes['L_ENGLISH']:
             nl_nlp = spacy.load('en_core_web_sm') 
@@ -465,6 +466,7 @@ class Controller:
     
     #Return the standard answers for the ANOVA assignments in a list
     def form_answers_anova(self) -> [str, list]:
+        self.assignment['feedback_requests'] += 1
         output = [[] for i in range(7)]
         
         #Determine instruction

@@ -309,9 +309,11 @@ def bigform():
             field = controller.submit_field.value
             return render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=field, varnames=varnames, title=title)
         elif form.answer.data:
-            controller.assignment['feedback_requests'] += 1
             form_shape = controller.analysis_type.value
             instruction, outputfields = controller.form_answers_anova()
+            with open(path, 'w') as f:
+                mc[ipcode] = controller.serialize()
+                json.dump(mc, f) 
             return render_template('bigform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames, title=title)
         elif form.explain.data or form.b1.data or form.b2.data or form.b3.data:
             button_id = 0 if form.explain.data else 1 if form.b1.data else 2 if form.b2.data else 3 #form.b3.data
@@ -390,9 +392,11 @@ def smallform():
             field = controller.submit_field.value
             return render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=field, varnames=varnames, title=title)
         elif form.answer.data:
-            controller.assignment['feedback_requests'] += 1
             form_shape = controller.analysis_type.value
             instruction, outputfields = controller.form_answers()
+            with open(path, 'w') as f:
+                mc[ipcode] = controller.serialize()
+                json.dump(mc, f) 
             return render_template('smallform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames, title=title)
         elif form.explain.data or form.b1.data or form.b2.data or form.b3.data:
             button_id = 0 if form.explain.data else 1 if form.b1.data else 2 if form.b2.data else 3 #form.b3.data
@@ -439,7 +443,6 @@ def reportform():
                 json.dump(mc, f) 
             return render_template('reportform.html', form=form, instruction=instruction, display=output, title=title)
         elif form.nextt.data:
-            controller.assignment['feedback_requests'] += 1
             if controller.assignment['feedback_requests'] > 0:
                 controller.save_assignment()
             skip :bool = controller.skipable
@@ -456,6 +459,9 @@ def reportform():
         elif form.answer.data:
             instruction = controller.assignments.print_report(controller.assignment)
             output = controller.assignments.answer_report(controller.assignment) #controller.assignment['answer']
+            with open(path, 'w') as f:
+                mc[ipcode] = controller.serialize()
+                json.dump(mc, f) 
             return render_template('reportform.html', form=form, instruction=instruction, display=output, title=title)
         elif form.explain.data or form.b1.data or form.b2.data or form.b3.data:
             button_id = 0 if form.explain.data else 1 if form.b1.data else 2 if form.b2.data else 3 # form.b3.data
