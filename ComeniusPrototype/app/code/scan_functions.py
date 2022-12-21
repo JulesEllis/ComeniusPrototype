@@ -1334,7 +1334,7 @@ class ScanFunctions:
         if not scorepoints['zero_present'] and scorepoints['bigger']:
             output.append(self.mes['F_PROPVARCOMP'])
         if not scorepoints['conj'] and scorepoints['bigger']: #TODO FIX CONJ
-            output.append(self.mes['F_PROPVARNULL'] + ' ' + zero[0].dep)    
+            output.append(self.mes['F_PROPVARNULL'] + ' ' + str(zero[0].dep))    
         return output
     
     def detect_interaction(self, doc:Doc, solution:dict, anova:bool) -> List[str]:
