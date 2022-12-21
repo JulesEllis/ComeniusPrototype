@@ -1320,7 +1320,7 @@ class ScanFunctions:
             zero = [x for x in sent if x.text in markers[1]]
             if zero != []:
                 scorepoints['zero_present'] = True
-                scorepoints['conj'] = zero[0].dep_ in ['obl','nummod','attr','pobj']
+                scorepoints['conj'] = zero[0].dep_ in ['obl','nummod','attr','pobj','advcl']
         
         #Add strings:
         if not scorepoints['bigger']:
@@ -1334,7 +1334,7 @@ class ScanFunctions:
         if not scorepoints['zero_present'] and scorepoints['bigger']:
             output.append(self.mes['F_PROPVARCOMP'])
         if not scorepoints['conj'] and scorepoints['bigger']: #TODO FIX CONJ
-            output.append(self.mes['F_PROPVARNULL'] + ' ' + str(zero[0].dep))    
+            output.append(self.mes['F_PROPVARNULL'])    
         return output
     
     def detect_interaction(self, doc:Doc, solution:dict, anova:bool) -> List[str]:
