@@ -708,19 +708,20 @@ class ScanFunctions:
             else:
                 if not x in tokens:
                     output.append(' -predictor ' + x + self.mes['S_NONAME'])
-        for i in range(len(varnames)):
-            if varnames[0] == 'Intercept':
-                index = i - 1
-            else:
-                index = i
-            if solution['predictor_p'][i] < 0.05:
-                output.extend(self.detect_p(doc, solution['predictor_p'][i], label=varnames[index]))
+        if solution['assignment_type'] == 6:
+            for i in range(1,len(varnames) + 1):
+                if solution['predictor_p'][i] < 0.05:
+                    output.extend(self.detect_p(doc, solution['predictor_p'][i], label=varnames[i-1]))
+        else:
+            for i in range(len(varnames)):
+                if solution['predictor_p'][i] < 0.05:
+                    output.extend(self.detect_p(doc, solution['predictor_p'][i], label=varnames[i]))
         correct:bool = len(output) == 1 if prefix else output == []
         mistakes = len(output) if prefix else len(output) - 1
         if correct:
             return False, self.mes['F_INTCORRECT'] if prefix else '', (mistakes,total_elements)
         else:
-            return True, '<br>'.join(output)+'<br>{}-{}-{}'.format(str([x.text for x in doc]),str(solution['data']['predictoren']),str(solution['predictor_p'])), (mistakes,total_elements)
+            return True, '<br>'.join(output), (mistakes,total_elements)
     
     def scan_design(self, doc:Doc, solution:dict, prefix:bool=True) -> [bool, str, tuple]:
         total_elements:int = 8

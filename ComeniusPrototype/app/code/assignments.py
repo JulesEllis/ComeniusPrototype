@@ -1318,7 +1318,7 @@ class Assignments:
         relevants = []
         if assignment['assignment_type'] == 6:
             names = assignment['levels'][1:]
-            ps = assignment['predictor_p'][1:len(names)]
+            ps = assignment['predictor_p'][1:len(names)+1]
         else:
             names = assignment['predictor_names']
             ps = assignment['predictor_p'][:len(names)]
