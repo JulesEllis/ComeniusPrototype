@@ -720,7 +720,7 @@ class ScanFunctions:
         if correct:
             return False, self.mes['F_INTCORRECT'] if prefix else '', (mistakes,total_elements)
         else:
-            return True, '<br>'.join(output), (mistakes,total_elements)
+            return True, '<br>'.join(output)+'<br>{}-{}-{}'.format(str([x.text for x in doc]),str(solution['data']['predictoren']),str(solution['predictor_p'])), (mistakes,total_elements)
     
     def scan_design(self, doc:Doc, solution:dict, prefix:bool=True) -> [bool, str, tuple]:
         total_elements:int = 8
