@@ -588,7 +588,7 @@ class Assignments:
         
         #Compute p-values
         n_predictors = assignment['n_predictors']
-        solution['predictor_p'] = [random.random() * 0.05 if random.choice([True, False]) else random.random() * 0.95 + 0.05 for x in range(n_predictors+1)]
+        solution['predictor_p'] = [random.random() * 0.05 if random.choice([True, False]) else random.random() * 0.95 + 0.05 for x in range(n_predictors)]
         for i in range(len(solution['predictor_p'])):
             if round(solution['predictor_p'][i], 2) == 0.05:
                 solution['predictor_p'][i] += 0.01
