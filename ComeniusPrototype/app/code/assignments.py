@@ -592,10 +592,10 @@ class Assignments:
         for i in range(len(solution['predictor_p'])):
             if round(solution['predictor_p'][i], 2) == 0.05:
                 solution['predictor_p'][i] += 0.01
-        solution['predictor_t'] = [stats.t.isf(solution['predictor_p'][i],1,N - 3 - 1) for i in range(n_predictors+1)]
+        solution['predictor_t'] = [stats.t.isf(solution['predictor_p'][i],1,N - 3 - 1) for i in range(n_predictors)]
         solution['predictor_beta'] = [np.mean([random.uniform(60,120)])] + [abs(random.gauss(0,0.5)) for i in range(n_predictors)]
         solution['predictor_b'] = [x * np.sqrt(assignment['var_pred']) for x in solution['predictor_beta']]
-        solution['predictor_se'] = [solution['predictor_b'][i]/solution['predictor_t'][i] for i in range(n_predictors+1)]
+        solution['predictor_se'] = [solution['predictor_b'][i]/solution['predictor_t'][i] for i in range(n_predictors)]
         
         #Verbal answers
         solution['null'] = 'H0: ' + ' = '.join(['beta(' + str(i) + ')' for i in range(1,4)]) + ' = 0'
