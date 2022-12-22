@@ -716,7 +716,7 @@ class ScanFunctions:
             if solution['predictor_p'][i] < 0.05:
                 output.extend(self.detect_p(doc, solution['predictor_p'][i], label=varnames[index]))
         correct:bool = len(output) == 1 if prefix else output == []
-        mistakes = len(output.split(' -')) - 1
+        mistakes = len(output) if prefix else len(output) - 1
         if correct:
             return False, self.mes['F_INTCORRECT'] if prefix else '', (mistakes,total_elements)
         else:
