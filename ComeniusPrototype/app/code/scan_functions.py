@@ -758,8 +758,8 @@ class ScanFunctions:
             dep_span = deps[0]
             scorepoints['depcorrect'] = factor_roles[1] in dep_span.text and not marker_ind in dep_span.text
         
-        ispan1 = indep_span if indep_span != None else ''
-        ispan2 = indep2_span if indep2_span != None else ''
+        ispan1 = indep_span.text if indep_span != None else ''
+        ispan2 = indep2_span.text if indep2_span != None else ''
         #Add feedback text
         if not scorepoints['ind']:
             output.append(self.mes['F_IND'] + self.mes['S_INDES']); mistakes += 1
