@@ -735,6 +735,7 @@ class ScanFunctions:
         output:List[str] = []
         factor_roles:list = ['independent','dependent'] if self.mes['L_ENGLISH'] else ['onafhankelijke', 'afhankelijke']
         
+        indep_span = None; indep2_span = None
         indeps = [x for x in doc.sents if lef(solution['independent'].get_all_syns(),[y.text for y in x])]#if x.text == solution['independent']]
         if indeps != []:
             scorepoints['ind'] = True
@@ -757,6 +758,7 @@ class ScanFunctions:
             scorepoints['dep'] = True
             dep_span = deps[0]
             scorepoints['depcorrect'] = factor_roles[1] in dep_span.text and not marker_ind in dep_span.text
+        
         
         ispan1 = indep_span.text if indep_span != None else ''
         ispan2 = indep2_span.text if indep2_span != None else ''
