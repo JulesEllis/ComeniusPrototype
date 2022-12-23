@@ -4,11 +4,11 @@ M_ANALYSIS1;T-toets voor onafhankelijke variabelen;T-test for independent sample
 M_ANALYSIS2;T-toets voor gekoppelde paren;T-test for paired samples
 M_ANALYSIS3;One-factor ANOVA;One-factor ANOVA
 M_ANALYSIS4;Two-factor ANOVA;Two-factor ANOVA
-M_ANALYSIS5;Repeated Measures Anova;Repeated Measures Anova
+M_ANALYSIS5;Repeated measures ANOVA;Repeated measures ANOVA
 M_ANALYSIS6;Multiple regressieanalyse;Multiple regression analysis
 M_ANALYSIS7;MANOVA;MANOVA
 M_ANALYSIS8;ANCOVA;ANCOVA
-M_ANALYSIS9;Repeated Measures Anova;Repeated Measures Anova
+M_ANALYSIS9;Multivariate repeated measures ANOVA;Multivariate repeated measures ANOVA
 M_ANALYSIS10;Dubbel multivariate RMANOVA;Double multivariate RMANOVA
 M_REPORT1;Elementair rapport (oefenmodus);Basic report (practice mode)
 M_REPORT2;Elementair rapport (tentamenmodus);Basic report (examination mode)
