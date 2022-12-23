@@ -758,6 +758,8 @@ class ScanFunctions:
             dep_span = deps[0]
             scorepoints['depcorrect'] = factor_roles[1] in dep_span.text and not marker_ind in dep_span.text
         
+        ispan1 = indep_span if indep_span != None else ''
+        ispan2 = indep2_span if indep2_span != None else ''
         #Add feedback text
         if not scorepoints['ind']:
             output.append(self.mes['F_IND'] + self.mes['S_INDES']); mistakes += 1
@@ -778,7 +780,7 @@ class ScanFunctions:
         if not False in list(scorepoints.values()):        
             return False, self.mes['F_NICEDES'] if prefix else '', (mistakes,total_elements)
         else:
-            return True, '<br>'.join(output), (mistakes,total_elements)
+            return True, '<br>'.join(output) + '<br>{} - {}'.format(ispan1,ispan2), (mistakes,total_elements)
         
     def scan_design_manova(self, doc:Doc, solution:dict, prefix:bool=True) -> [bool, str, tuple]:
         total_elements:int = 4
@@ -1021,16 +1023,15 @@ class ScanFunctions:
         doc = nl_nlp(text.lower())
         markers = ['eta-squared','interaction'] if self.mes['L_ENGLISH'] else ['eta-kwadraat','interactie']
         
-        output:str = '';num:int = 0
+        output:str = '';
         output += '<br>'+'<br>'.join(self.detect_name(doc,solution))
         output += '<br>'+self.scan_design(doc,solution,prefix=False)[1]
         levels = solution['independent'].levels
         
-        #Multivar within subject
+        #Multivariate within subject
         decision_sent = [x for x in doc.sents if (lef(solution['independent'].get_all_syns(),[y.text for y in x]) or 'within-subject' in x.text) \
                              and ('significant' in x.text or 'effect' in x.text) and markers[1] not in x.text]
         if decision_sent != []: 
-            num += 1
             user_given_name:str = solution['independent'].name if solution['independent'].name in decision_sent[0].text else 'within-subject'
             output += '<br>'+'<br>'.join(self.detect_decision_multirm(decision_sent[0],solution,variable=user_given_name,synonyms=[], p=solution['p0'][0], eta=solution['eta0'][0]))
             output += '<br>'+'<br>'.join(self.detect_effect(decision_sent[0],solution, variable=solution['independent'].name, p=solution['p0'][0], eta=solution['eta0'][0]))
@@ -1045,10 +1046,9 @@ class ScanFunctions:
             if solution['p1'][1] < 0.05:
                 output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p1'][1], appendix=self.mes['S_CONTRAST']+levels[1]+self.mes['S_AND']+levels[2]+' '))
         
-        #Multivar interaction
+        #Multivariate interaction
         decision_sent2 = [x for x in doc.sents if (markers[1] in x.text) and ('significant' in x.text or 'effect' in x.text)]
         if decision_sent2 != []:
-            num += 1
             output += '<br>'+'<br>'.join(self.detect_decision_multirm(decision_sent2[0],solution,variable=markers[1],synonyms=[], p=solution['p0'][1], eta=solution['eta0'][1]))
             output += '<br>'+'<br>'.join(self.detect_effect(decision_sent2[0],solution, variable=markers[1], p=solution['p0'][1], eta=solution['eta0'][1]))
         else:
@@ -1065,7 +1065,6 @@ class ScanFunctions:
         #Between-subject
         decision_sent3 = [x for x in doc.sents if (lef(solution['independent2'].get_all_syns(),[y.text for y in x]) or 'between-subject' in x.text) and ('significant' in x.text or 'effect' in x.text) and markers[1] not in x.text]
         if decision_sent3 != []:
-            num += 1
             user_given_name:str = solution['independent2'].name if solution['independent2'].name in decision_sent3[0].text else 'between-subject'
             output += '<br>'+'<br>'.join(self.detect_decision_multirm(decision_sent3[0],solution,variable=user_given_name,synonyms=[], p=solution['p'][1], eta=solution['eta'][1]))
             output += '<br>'+'<br>'.join(self.detect_effect(decision_sent3[0], solution, variable=solution['independent2'].name, p=solution['p'][1], eta=solution['eta'][1]))
@@ -1075,6 +1074,7 @@ class ScanFunctions:
             output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'F', solution['F'][1], appendix=self.mes['S_BETWEENFACTOR']))
             output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'][1], appendix=self.mes['S_BETWEENFACTOR']))
             output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta'][1], aliases=['eta','eta2',markers[0]],appendix=self.mes['S_BETWEENFACTOR']))
+        
         if output.replace('<br>','') == '':
             return self.mes['F_NICEREP']
         else:
@@ -1770,7 +1770,8 @@ class ScanFunctions:
         if solution['assignment_type'] == 13:
             names = [('multipele','repeated-measures','anova'),('multipele','rmanova'),('multivariate','repeated-measures-anova'),
                      ('multivariate','repeated-measures','anova'),('multivariate','variantieanalyse'),('multivariate','rmanova'),
-                     ('multiple','rmanova'),('multiple','repeated-measures','anova')]
+                     ('multiple','rmanova'),('multiple','repeated-measures','anova'),('multivariate','repeated','measures','anova'),
+                     ('multivariate','rm','anova')]
         if any([all([x in doc.text for x in y]) for y in names]):
             return ['']
         else:

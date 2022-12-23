@@ -557,8 +557,11 @@ class Assignments:
         n_predictors = random.choice([3,4,5,6])
         output['n_predictors'] = n_predictors
         
-        p = random.random()
-        p= (p*0.4)**3
+        #p = random.random()
+        #p = (p*0.4)**3
+        #if p == round(p,2) == 0.05:
+        #    p = 0.04
+        p = random.random() * 0.04 if random.choice([True, False]) else random.random() * 0.94 + 0.06
         s = 3 * random.random()
         output['var_obs'] = (1 + chi2.ppf(p, df=10)) * 10 ** s
         r2 = random.random() ** 2
@@ -610,7 +613,7 @@ class Assignments:
         output['ns'] = [N]
         output['n_predictors'] = 2
         
-        p = random.random() * 0.05 if random.choice([True, False]) else random.random() * 0.95 + 0.05
+        p = random.random() * 0.04 if random.choice([True, False]) else random.random() * 0.94 + 0.06
         s = 3 * random.random()
         output['var_obs'] = (1 + chi2.ppf(p, df=10)) * 10 ** s
         r2 = random.random() ** 2
@@ -662,7 +665,7 @@ class Assignments:
     def create_manova(self, control: bool, control2:bool=False, elementary:bool=False):
         output = {'assignment_type':12, 'feedback_requests':0, 'assignment_code' : ''}
         report_type = self.mes['S_ELEM'] if elementary else self.mes['S_SHORT']
-        p = random.random() * 0.05 if random.choice([True, False]) else random.random() * 0.95 + 0.05
+        p = random.random() * 0.04 if random.choice([True, False]) else random.random() * 0.94 + 0.06
         s = 3 * random.random()
         output['var_obs'] = (1 + chi2.ppf(p, df=10)) * 10 ** s
         output['var_pred'] = [output['var_obs'] * random.random() ** 2 for i in range(3)]
@@ -732,7 +735,7 @@ class Assignments:
     def create_multirm(self, control: bool, control2:bool=False, elementary:bool=False) -> dict:
         output = {'assignment_type':13, 'feedback_requests':0, 'assignment_code': ''}
         report_type = self.mes['S_ELEM'] if elementary else self.mes['S_SHORT']
-        p = random.random() * 0.05 if random.choice([True, False]) else random.random() * 0.95 + 0.05
+        p = random.random() * 0.04 if random.choice([True, False]) else random.random() * 0.94 + 0.06
         s = 3 * random.random()
         output['ns'] = [int(random.random() * 65) + 10, int(random.random() * 65) + 10]
         output['var_obs'] = (1 + chi2.ppf(p, df=10)) * 10 ** s
