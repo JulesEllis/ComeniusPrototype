@@ -217,7 +217,7 @@ class Controller:
                 self.analysis_type = Task.ANCOVA
                 if report not in ['Beknopt rapport', 'Short report']:
                     return self.protocol[self.index][0] + '<br><span style="color: blue;">'+self.mes['M_APOLOGIES']+analysis+self.mes['S_SHORTONLY']+'</span>'
-            if analysis == 'Multivariate RMANOVA':
+            if analysis in ['Multivariate repeated measures ANOVA']:
                 self.analysis_type = Task.MULTIRM
                 if report not in ['Beknopt rapport', 'Short report']:
                     return self.protocol[self.index][0] + '<br><span style="color: blue;">'+self.mes['M_APOLOGIES']+analysis.replace('Multi','multi')+self.mes['S_SHORTONLY']+'</span>'
