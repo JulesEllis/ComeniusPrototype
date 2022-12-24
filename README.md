@@ -7,6 +7,8 @@ The 'basic report' (Dutch: elementair rapport) assignments provide raw data and 
 The 'short report' (Dutch: beknopt rapport) assignments provide SPSS-like output, and ask for a report in natural language,
 as one would write in the Results section of an APA-style article.
 
-This app is a prototype that was created in the Comenius Senior Fellow 2020 project titled "Coaching App for Statistical Writing".
+This app is a prototype that was created in the Comenius Senior Fellow 2020 project titled "Coaching App for Statistical Writing"
+on the Faculty of Social Sciences of the Radboud University Nijmegen in 2020-2023.
+
 The app was developed by Jelmer Jansen, under supervision of Jules Ellis. Design advises were given by Marleen Hofman,
 Kimberly Wanders, Loreen Simons, Jule Klapdor, Minke Coort, Sara Pieters.
