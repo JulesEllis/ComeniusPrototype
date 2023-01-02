@@ -736,7 +736,7 @@ class ScanFunctions:
         factor_roles:list = ['independent','dependent'] if self.mes['L_ENGLISH'] else ['onafhankelijke', 'afhankelijke']
         
         tokens = [x.text for x in doc]
-        indtoken = [x for x in tokens if solution['independent'] in x]
+        indtoken = [x for x in tokens if simple_lef(solution['independent'].get_all_syns(),x)]
         if indtoken != []:
             scorepoints['ind'] = True
             token_location = tokens.index(indtoken[0])
@@ -745,7 +745,7 @@ class ScanFunctions:
             if solution['assignment_type'] == 5 or solution['assignment_type'] == 13:
                 scorepoints['factor1'] = 'within' in indep_span
         if solution['assignment_type'] == 13 or solution['assignment_type'] == 4:   
-            ind2token = [x for x in tokens if solution['independent'] in x]
+            ind2token = [x for x in tokens if simple_lef(solution['independent2'].get_all_syns(),x)]
             if ind2token != []:
                 scorepoints['ind2'] = True
                 token2_location = tokens.index(ind2token[0])
@@ -1838,6 +1838,12 @@ def lef(synonyms:list,texts:list) -> float:
         for s in synonyms:
             if edit_distance(t,s) < 2 or s in fusedtext:
                 return True
+    return False
+
+def simple_lef(synonyms:list, text:str) -> bool:
+    for s in synonyms:
+        if edit_distance(text,s) < 2 or s in text:
+            return True
     return False
 
 def sim(gold_numbers :List, numbers :List, margin:float) -> True: #Return true if there is a similar number to num in the given list/float/integer in the solution
