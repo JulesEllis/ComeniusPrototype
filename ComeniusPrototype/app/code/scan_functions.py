@@ -740,7 +740,7 @@ class ScanFunctions:
         if indtoken != []:
             scorepoints['ind'] = True
             token_location = tokens.index(indtoken[0])
-            indep_span = ' '.join(tokens[token_location - 2:token_location + 2])
+            indep_span = ' '.join(tokens[token_location - 2:token_location + 4])
             scorepoints['indcorrect'] = factor_roles[0] in indep_span or 'factor' in indep_span
             if solution['assignment_type'] == 5 or solution['assignment_type'] == 13:
                 scorepoints['factor1'] = 'within' in indep_span
@@ -749,7 +749,7 @@ class ScanFunctions:
             if ind2token != []:
                 scorepoints['ind2'] = True
                 token2_location = tokens.index(ind2token[0])
-                indep2_span = ' '.join(tokens[token_location - 2:token2_location + 2])
+                indep2_span = ' '.join(tokens[token_location - 2:token2_location + 4])
                 scorepoints['ind2correct'] = factor_roles[0] in indep2_span or 'factor' in indep2_span
                 if solution['assignment_type'] == 13:
                     scorepoints['factor2'] = 'between' in indep2_span
