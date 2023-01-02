@@ -735,22 +735,24 @@ class ScanFunctions:
         output:List[str] = []
         factor_roles:list = ['independent','dependent'] if self.mes['L_ENGLISH'] else ['onafhankelijke', 'afhankelijke']
         
-        indep_span = None; indep2_span = None
-        indeps = [x for x in doc.sents if lef(solution['independent'].get_all_syns(),[y.text for y in x])]#if x.text == solution['independent']]
-        if indeps != []:
+        tokens = [x for x in doc.text.split(' ')]
+        indtokens = [x for x in tokens if solution['independent'] in x]
+        if indtokens != []:
             scorepoints['ind'] = True
-            indep_span = indeps[0]
-            scorepoints['indcorrect'] = factor_roles[0] in indep_span.text or 'factor' in indep_span.text
+            token_location = tokens.index(indtokens[0])
+            indep_span = ' '.join(tokens[token_location - 2:token_location + 2])
+            scorepoints['indcorrect'] = factor_roles[0] in indep_span or 'factor' in indep_span
             if solution['assignment_type'] == 5 or solution['assignment_type'] == 13:
-                scorepoints['factor1'] = 'within-subject' in indep_span.text or 'within' in indep_span.text
-        if solution['assignment_type'] == 13 or solution['assignment_type'] == 4:    
-            indeps2 = [x for x in doc.sents if lef(solution['independent2'].get_all_syns(),[y.text for y in x])]
-            if indeps2 != []:
+                scorepoints['factor1'] = 'within' in indep_span
+        if solution['assignment_type'] == 13 or solution['assignment_type'] == 4:   
+            ind2tokens = [x for x in tokens if solution['independent'] in x]
+            if ind2tokens != []:
                 scorepoints['ind2'] = True
-                indep2_span = indeps2[0]
-                scorepoints['ind2correct'] = factor_roles[0] in indep2_span.text or 'factor' in indep2_span.text 
+                token_location = tokens.index(indtokens[0])
+                indep2_span = ' '.join(tokens[token_location - 2:token_location + 2])
+                scorepoints['ind2correct'] = factor_roles[0] in indep2_span or 'factor' in indep2_span
                 if solution['assignment_type'] == 13:
-                    scorepoints['factor2'] = 'between-subject' in indep2_span.text or 'between' in indep2_span.text
+                    scorepoints['factor2'] = 'between' in indep2_span
         else:
             scorepoints['ind2'] = True;scorepoints['ind2correct'] = True
         deps = [x for x in doc.sents if lef(solution['dependent'].get_all_syns(),[y.text for y in x])]
@@ -759,9 +761,6 @@ class ScanFunctions:
             dep_span = deps[0]
             scorepoints['depcorrect'] = factor_roles[1] in dep_span.text and not marker_ind in dep_span.text
         
-        
-        ispan1 = indep_span.text if indep_span != None else ''
-        ispan2 = indep2_span.text if indep2_span != None else ''
         #Add feedback text
         if not scorepoints['ind']:
             output.append(self.mes['F_IND'] + self.mes['S_INDES']); mistakes += 1
@@ -782,7 +781,7 @@ class ScanFunctions:
         if not False in list(scorepoints.values()):        
             return False, self.mes['F_NICEDES'] if prefix else '', (mistakes,total_elements)
         else:
-            return True, '<br>'.join(output) + '<br>{} - {}'.format(ispan1,ispan2), (mistakes,total_elements)
+            return True, '<br>'.join(output) + '<br>{}'.format(str('')), (mistakes,total_elements)
         
     def scan_design_manova(self, doc:Doc, solution:dict, prefix:bool=True) -> [bool, str, tuple]:
         total_elements:int = 4
@@ -1382,7 +1381,7 @@ class ScanFunctions:
     
     def detect_decision_ancova(self, sent:Doc, solution:dict) -> List[str]:
         rejected:bool = solution['p'][3] < 0.05
-        suffix = ' in de hoofdbeslissing' if self.mes['L_ENGLISH'] else ' for the main decision'
+        suffix =  ' for the main decision' if self.mes['L_ENGLISH'] else ' in de hoofdbeslissing'
         marker = 'significant predictive value' if self.mes['L_ENGLISH'] else 'significant voorspellende waarde'
         tokens:list = [x.text for x in sent]
         scorepoints:dict = {'sign_val': marker in sent.text,
