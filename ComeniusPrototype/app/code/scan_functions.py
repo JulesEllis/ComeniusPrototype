@@ -740,7 +740,7 @@ class ScanFunctions:
         if indtoken != []:
             scorepoints['ind'] = True
             token_location = tokens.index(indtoken[0])
-            indep_span = ' '.join(tokens[token_location - 2:token_location + 4])
+            indep_span = ' '.join(tokens[token_location - 4:token_location + 4])
             scorepoints['indcorrect'] = factor_roles[0] in indep_span or 'factor' in indep_span
             if solution['assignment_type'] == 5 or solution['assignment_type'] == 13:
                 scorepoints['factor1'] = 'within' in indep_span
