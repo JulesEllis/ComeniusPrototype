@@ -1412,6 +1412,7 @@ class Assignments:
                 output += self.answer_decision(assignment, assignment[d_key].name, 1, FT=assignment['F'+str(i)][0], p=assignment['p'+str(i)][0],eta=assignment['eta'+str(i)][0], no_effect=False)
                 if assignment['p'+str(i)][0] < 0.05:
                     output += self.answer_stats(assignment, FT=assignment['F'+str(i)][0], p=assignment['p'+str(i)][0],eta=assignment['eta'+str(i)][0])+'<br>'
+            output = output.replace('. . ','. ')
         if assignment['assignment_type'] == 12:
             output += self.answer_ancova(assignment)
             output += self.answer_stats(assignment, FT=assignment['F'][3], p=assignment['p'][3],eta=assignment['eta'][3])+'<br>'
