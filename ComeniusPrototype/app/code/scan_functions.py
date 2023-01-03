@@ -1383,8 +1383,9 @@ class ScanFunctions:
         rejected:bool = solution['p'][3] < 0.05
         suffix =  ' for the main decision' if self.mes['L_ENGLISH'] else ' in de hoofdbeslissing'
         marker = 'significant predictive value' if self.mes['L_ENGLISH'] else 'significant voorspellende waarde'
+        altmarker = ['significant','predictive value'] if self.mes['L_ENGLISH'] else ['significant','voorspellende waarde']
         tokens:list = [x.text for x in sent]
-        scorepoints:dict = {'sign_val': marker in sent.text,
+        scorepoints:dict = {'sign_val': marker in sent.text or all([x in sent.text for x in altmarker]),
             'indep': lef(solution['independent'].get_all_syns(),[x.text for x in sent]),
             'cov1': solution['predictor_names'][0] in sent.text or any([x in sent.text for x in solution['predictor_syns'][0]]),
             'cov2': solution['predictor_names'][1] in sent.text or any([x in sent.text for x in solution['predictor_syns'][1]]),
