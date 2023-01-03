@@ -952,13 +952,13 @@ class ScanFunctions:
         output += '<br>' + self.scan_design_manova(doc, solution, prefix=False)[1]
         for i in range(3):
             var_key = 'dependent' if i < 1 else 'dependent' + str(i+1)
-            if solution['p'+str(i)][0] < 0.05: #solution['p_multivar'] < 0.05 and solution['p_multivar'] < 0.05:
-                decision_sent = [x for x in doc.sents if lef(solution[var_key].get_all_syns(),[y.text for y in x]) and ('significant' in x.text or 'effect' in x.text)]
-                if decision_sent != []:
-                    output += '<br>'+'<br>'.join(self.detect_decision_manova(decision_sent[0],solution, variable=solution[var_key].name, synonyms=[], p=solution['p'+str(i)][0], eta=solution['eta'+str(i)][0], num=i+1))
-                    output += '<br>'+'<br>'.join(self.detect_effect(decision_sent[0],solution, variable=markers[1]+solution[var_key].name, p=solution['p'+str(i)][0], eta=solution['eta'+str(i)][0]))
-                else:
-                    output += '<br>'+self.mes['F_NODEC']+ solution[var_key].name + self.mes['S_LACKING1']
+            #if solution['p'+str(i)][0] < 0.05: #solution['p_multivar'] < 0.05 and solution['p_multivar'] < 0.05:
+            decision_sent = [x for x in doc.sents if lef(solution[var_key].get_all_syns(),[y.text for y in x]) and ('significant' in x.text or 'effect' in x.text)]
+            if decision_sent != []:
+                output += '<br>'+'<br>'.join(self.detect_decision_manova(decision_sent[0],solution, variable=solution[var_key].name, synonyms=[], p=solution['p'+str(i)][0], eta=solution['eta'+str(i)][0], num=i+1))
+                output += '<br>'+'<br>'.join(self.detect_effect(decision_sent[0],solution, variable=markers[1]+solution[var_key].name, p=solution['p'+str(i)][0], eta=solution['eta'+str(i)][0]))
+            else:
+                output += '<br>'+self.mes['F_NODEC']+ solution[var_key].name + self.mes['S_LACKING1']
             if solution['p'+str(i)][0] < 0.05 and solution['p_multivar'] < 0.05:
                 output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'F', solution['F'+str(i)][0], appendix=markers[5]+solution[var_key].name+' '))
                 output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'+str(i)][0], appendix=markers[5]+solution[var_key].name+' '))
