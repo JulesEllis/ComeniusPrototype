@@ -43,7 +43,10 @@ def index():
             json.dump(mc, f)
             
         #Render page
-        return render_template('index.html', display=instruction, form=form, skip=False, submit_field=8, varnames=varnames, title=title)
+        resp = make_response(render_template('index.html', display=instruction, form=form, skip=False, submit_field=8, varnames=varnames, title=title))
+        resp.set_cookie('sessionID', session_id)
+        return resp
+    
     elif flask.request.method == 'POST':        
         #Isolate text fields
         mes = controller.mes
@@ -97,7 +100,9 @@ def index():
                     json.dump(mc, f)        
                 
                 #Render page
-                return render_template('smallform.html', form=form, instruction=instruction, displays=[[''] for i in range(12)], shape=form_shape, varnames=varnames, title=title)
+                resp = make_response(render_template('smallform.html', form=form, instruction=instruction, displays=[[''] for i in range(12)], shape=form_shape, varnames=varnames, title=title))
+                resp.set_cookie('sessionID', session_id)
+                return resp
             
             #If the user chose an ANOVA or RM-ANOVA in exam mode
             elif controller.formmode and form_shape > 2 and form_shape < 6:
@@ -136,7 +141,9 @@ def index():
                     json.dump(mc, f)            
                 
                 #Render page
-                return render_template('bigform.html', form=form, instruction=instruction, displays=[[''] for i in range(7)], shape=form_shape, varnames=varnames, title=title)
+                resp = make_response(render_template('bigform.html', form=form, instruction=instruction, displays=[[''] for i in range(7)], shape=form_shape, varnames=varnames, title=title))
+                resp.set_cookie('sessionID', session_id)
+                return resp
             
             #If the user chose to make a short report
             elif form_shape == 7:
@@ -157,7 +164,9 @@ def index():
                     json.dump(mc, f)    
                 
                 #Render page
-                return render_template('reportform.html', form=form, instruction=instruction, display='', title=title)
+                resp = make_response(render_template('reportform.html', form=form, instruction=instruction, display='', title=title))
+                resp.set_cookie('sessionID', session_id)
+                return resp
         
         ## Other HTML pages ruled out: The user has chosen to do an elementary report in practice mode, or is at one of the starting pages
         #Detect which button triggered the current screen
@@ -238,9 +247,9 @@ def index():
             json.dump(mc, f)    
         
         #Render page
-        return render_template('index.html', display=output_text, answer_text=answer_text, form=form, skip=skip, prev=prev, answer=answer, submit_field=submit_field, varnames=varnames, title=title)
-        resp = make_response(render_template('readcookie.html'))
+        resp = make_response(render_template('index.html', display=output_text, answer_text=answer_text, form=form, skip=skip, prev=prev, answer=answer, submit_field=submit_field, varnames=varnames, title=title))
         resp.set_cookie('sessionID', session_id)
+        return resp
     else:
         print('ERROR: INVALID METHOD')
 
