@@ -4,28 +4,34 @@ from app.forms import BaseForm, BigForm, SmallForm, ReportForm
 from app.code.interface import Controller #OuterController
 from app.code.enums import Task, Process
 from app.code.assignments import cap
+from os import listdir
+from os.path import isfile, join
 import flask
 import os
 import json
 import hashlib
 
+def get_session():
+    session_id = request.cookies.get('sessionID')
+    session_list = listdir('/var/www/ComeniusPrototype/ComeniusPrototype/app/states')
+    ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
+    ipcode = hashlib.md5(ip.encode('utf-8')).hexdigest()
+    if session_id == None: #Create new session ID if session is not present
+        session_id = ipcode + '-' + str(len([x for x in session_list if ipcode in x]) + 1)
+    path = 'app/controller.json' if 'Github' in os.getcwd() else '/var/www/ComeniusPrototype/ComeniusPrototype/app/states/{}.json'.format(session_id)
+    if not session_id+'.json' in session_list:
+        controller = Controller()
+    else:
+        with open(path, 'r') as f:
+            state_json = json.load(f)
+        controller = Controller(jsondict=state_json)
+    return path, controller, session_id
+
 @app.route('/')
 @app.route('/index', methods=['GET','POST'])
 def index():
     #Get controller
-    path = 'app/controller.json' if 'Github' in os.getcwd() else '/var/www/ComeniusPrototype/ComeniusPrototype/app/controller.json'
-    with open(path, 'r') as f:
-        mc:dict = json.load(f)
-        session_id = request.cookies.get('sessionID')
-        ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
-        ipcode = hashlib.md5(ip.encode('utf-8')).hexdigest()
-        if session_id == None: #Create new session ID if session is not present
-            session_id = ipcode + '-' + str(len([x for x in list(mc.keys()) if ipcode in x]) + 1)
-        if not session_id in list(mc.keys()):
-            mc[session_id] = Controller()
-            controller = mc[session_id]
-        else:
-            controller = Controller(jsondict=mc[session_id])
+    path, controller, session_id = get_session()
         
     #Assign local variables
     varnames = [['dummy1'],['dummy2']]
@@ -39,8 +45,7 @@ def index():
         
         #Save controller
         with open(path, 'w') as f:
-            mc[session_id] = controller.serialize()
-            json.dump(mc, f)
+            json.dump(controller.serialize(), f)
             
         #Render page
         resp = make_response(render_template('index.html', display=instruction, form=form, skip=False, submit_field=8, varnames=varnames, title=title))
@@ -95,9 +100,8 @@ def index():
                 controller.formmode = False
                 instruction = controller.print_assignment()
                 #Save controller
-                with open(path, 'w') as f:        
-                    mc[session_id] = controller.serialize()
-                    json.dump(mc, f)        
+                with open(path, 'w') as f:
+                    json.dump(controller.serialize(), f)      
                 
                 #Render page
                 resp = make_response(render_template('smallform.html', form=form, instruction=instruction, displays=[[''] for i in range(12)], shape=form_shape, varnames=varnames, title=title))
@@ -137,8 +141,7 @@ def index():
                 
                 #Store controller
                 with open(path, 'w') as f:
-                    mc[session_id] = controller.serialize()
-                    json.dump(mc, f)            
+                    json.dump(controller.serialize(), f)       
                 
                 #Render page
                 resp = make_response(render_template('bigform.html', form=form, instruction=instruction, displays=[[''] for i in range(7)], shape=form_shape, varnames=varnames, title=title))
@@ -160,8 +163,7 @@ def index():
                 
                 #Store controller
                 with open(path, 'w') as f:
-                    mc[session_id] = controller.serialize()
-                    json.dump(mc, f)    
+                    json.dump(controller.serialize(), f)   
                 
                 #Render page
                 resp = make_response(render_template('reportform.html', form=form, instruction=instruction, display='', title=title))
@@ -243,8 +245,7 @@ def index():
         
         #Store controller
         with open(path, 'w') as f:
-            mc[session_id] = controller.serialize()
-            json.dump(mc, f)    
+            json.dump(controller.serialize(), f)    
         
         #Render page
         resp = make_response(render_template('index.html', display=output_text, answer_text=answer_text, form=form, skip=skip, prev=prev, answer=answer, submit_field=submit_field, varnames=varnames, title=title))
@@ -256,19 +257,8 @@ def index():
 @app.route('/bigform', methods=['POST'])
 def bigform():
     #Get controller
-    path = 'app/controller.json' if 'Github' in os.getcwd() else '/var/www/ComeniusPrototype/ComeniusPrototype/app/controller.json'
-    with open(path, 'r') as f:
-        mc:dict = json.load(f)
-        session_id = request.cookies.get('sessionID')
-        ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
-        ipcode = hashlib.md5(ip.encode('utf-8')).hexdigest()
-        if session_id == None: #Create new session ID if session is not present
-            session_id = ipcode + '-' + str(len([x for x in list(mc.keys()) if ipcode in x]) + 1)
-        if not session_id in list(mc.keys()):
-            mc[session_id] = Controller()
-            controller = mc[session_id]
-        else:
-            controller = Controller(jsondict=mc[session_id])
+    path, controller, session_id = get_session()
+    
     mes:dict = controller.mes
     a = controller.assignment
     form = BigForm()
@@ -315,8 +305,7 @@ def bigform():
             textdict = dict([(x, form.__getattribute__(x).data) for x in textfields])
             instruction, outputfields = controller.update_form_anova(textdict)
             with open(path, 'w') as f:
-                mc[session_id] = controller.serialize()
-                json.dump(mc, f) 
+                json.dump(controller.serialize(), f)  
             resp = make_response(render_template('bigform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames, title=title))
             resp.set_cookie('sessionID', session_id)
             return resp
@@ -337,8 +326,7 @@ def bigform():
             form_shape = controller.analysis_type.value
             instruction, outputfields = controller.form_answers_anova()
             with open(path, 'w') as f:
-                mc[session_id] = controller.serialize()
-                json.dump(mc, f) 
+                json.dump(controller.serialize(), f)  
             resp = make_response(render_template('bigform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames, title=title))
             resp.set_cookie('sessionID', session_id)
             return resp
@@ -358,19 +346,8 @@ def bigform():
 @app.route('/smallform', methods=['POST'])
 def smallform():
     #Get controller and associated objects
-    path = 'app/controller.json' if 'Github' in os.getcwd() else '/var/www/ComeniusPrototype/ComeniusPrototype/app/controller.json'
-    with open(path, 'r') as f:
-        mc:dict = json.load(f)
-        session_id = request.cookies.get('sessionID')
-        ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
-        ipcode = hashlib.md5(ip.encode('utf-8')).hexdigest()
-        if session_id == None: #Create new session ID if session is not present
-            session_id = ipcode + '-' + str(len([x for x in list(mc.keys()) if ipcode in x]) + 1)
-        if not session_id in list(mc.keys()):
-            mc[session_id] = Controller()
-            controller = mc[session_id]
-        else:
-            controller = Controller(jsondict=mc[session_id])
+    path, controller, session_id = get_session()
+    
     mes:dict = controller.mes
     a = controller.assignment
     form = SmallForm()
@@ -413,8 +390,7 @@ def smallform():
             textdict = dict([(x, form.__getattribute__(x).data) for x in textfields])
             instruction, outputfields = controller.update_form_ttest(textdict)
             with open(path, 'w') as f:
-                mc[session_id] = controller.serialize()
-                json.dump(mc, f) 
+                json.dump(controller.serialize(), f)  
             resp = make_response(render_template('smallform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames, title=title))
             resp.set_cookie('sessionID', session_id)
             return resp
@@ -435,8 +411,7 @@ def smallform():
             form_shape = controller.analysis_type.value
             instruction, outputfields = controller.form_answers()
             with open(path, 'w') as f:
-                mc[session_id] = controller.serialize()
-                json.dump(mc, f) 
+                json.dump(controller.serialize(), f)  
             resp = make_response(render_template('smallform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames, title=title))
             resp.set_cookie('sessionID', session_id)
             return resp
@@ -456,19 +431,8 @@ def smallform():
 @app.route('/reportform', methods=['POST'])
 def reportform():
     #Get controller
-    path = 'app/controller.json' if 'Github' in os.getcwd() else '/var/www/ComeniusPrototype/ComeniusPrototype/app/controller.json'
-    with open(path, 'r') as f:
-        mc:dict = json.load(f)
-        session_id = request.cookies.get('sessionID')
-        ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
-        ipcode = hashlib.md5(ip.encode('utf-8')).hexdigest()
-        if session_id == None: #Create new session ID if session is not present
-            session_id = ipcode + '-' + str(len([x for x in list(mc.keys()) if ipcode in x]) + 1)
-        if not session_id in list(mc.keys()):
-            mc[session_id] = Controller()
-            controller = mc[session_id]
-        else:
-            controller = Controller(jsondict=mc[session_id])
+    path, controller, session_id = get_session()
+    
     mes:dict = controller.mes
     varnames:list = []
     form = ReportForm()
@@ -490,8 +454,7 @@ def reportform():
             textdict = dict([(x, form.__getattribute__(x).data) for x in textfields])
             instruction, output = controller.update_form_report(textdict)
             with open(path, 'w') as f:
-                mc[session_id] = controller.serialize()
-                json.dump(mc, f) 
+                json.dump(controller.serialize(), f)  
             resp = make_response(render_template('reportform.html', form=form, instruction=instruction, display=output, title=title))
             resp.set_cookie('sessionID', session_id)
             return resp
@@ -516,8 +479,7 @@ def reportform():
             instruction = controller.assignments.print_report(controller.assignment)
             output = controller.assignments.answer_report(controller.assignment) #controller.assignment['answer']
             with open(path, 'w') as f:
-                mc[session_id] = controller.serialize()
-                json.dump(mc, f) 
+                json.dump(controller.serialize(), f)  
             resp = make_response(render_template('reportform.html', form=form, instruction=instruction, display=output, title=title))
             resp.set_cookie('sessionID', session_id)
             return resp
