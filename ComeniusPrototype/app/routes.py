@@ -39,7 +39,7 @@ def index():
         
         #Save controller
         with open(path, 'w') as f:
-            mc[ipcode] = controller.serialize()
+            mc[session_id] = controller.serialize()
             json.dump(mc, f)
             
         #Render page
@@ -93,7 +93,7 @@ def index():
                 instruction = controller.print_assignment()
                 #Save controller
                 with open(path, 'w') as f:        
-                    mc[ipcode] = controller.serialize()
+                    mc[session_id] = controller.serialize()
                     json.dump(mc, f)        
                 
                 #Render page
@@ -132,7 +132,7 @@ def index():
                 
                 #Store controller
                 with open(path, 'w') as f:
-                    mc[ipcode] = controller.serialize()
+                    mc[session_id] = controller.serialize()
                     json.dump(mc, f)            
                 
                 #Render page
@@ -153,7 +153,7 @@ def index():
                 
                 #Store controller
                 with open(path, 'w') as f:
-                    mc[ipcode] = controller.serialize()
+                    mc[session_id] = controller.serialize()
                     json.dump(mc, f)    
                 
                 #Render page
@@ -234,7 +234,7 @@ def index():
         
         #Store controller
         with open(path, 'w') as f:
-            mc[ipcode] = controller.serialize()
+            mc[session_id] = controller.serialize()
             json.dump(mc, f)    
         
         #Render page
