@@ -992,8 +992,12 @@ class ScanFunctions:
         output += '<br>' + self.scan_predictors(doc, solution, prefix=False)[1]
         
         multivar_sent = [x for x in doc.sents if markers[0] in x.text]
-        if not 'effect' in multivar_sent[0].text and len(multivar_sent) > 1: #Hotfix: merge first two sentences if tokenizer mistakenly splits conclusion in two
-            multivar_sent = nl_nlp(multivar_sent[0].text + multivar_sent[1]) + multivar_sent[2:]
+        #TODO: Replace sentence tokenization. Hotfix: merge first two sentences if tokenizer mistakenly splits conclusion in two
+        if not 'effect' in multivar_sent[0].text: 
+            sents = list(doc.sents)
+            mindex = sents.index(multivar_sent[0])
+            if len(sents) > mindex + 1:
+                multivar_sent = [nl_nlp(sents[mindex].text + sents[mindex+1].text)]
         if multivar_sent != []:
             output += '<br>'+'<br>'.join(self.detect_decision_ancova(multivar_sent[0], solution))
             if(solution['p'][3] < 0.05):
