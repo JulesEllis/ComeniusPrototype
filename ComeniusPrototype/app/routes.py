@@ -22,9 +22,12 @@ def get_session():
     if not session_id+'.json' in session_list:
         controller = Controller()
     else:
-        with open(path, 'r') as f:
-            state_json = json.load(f)
-        controller = Controller(jsondict=state_json)
+        try:
+            with open(path, 'r') as f:
+                state_json = json.load(f)
+            controller = Controller(jsondict=state_json)
+        except ValueError:
+            controller = Controller()
     return path, controller, session_id
 
 @app.route('/')
