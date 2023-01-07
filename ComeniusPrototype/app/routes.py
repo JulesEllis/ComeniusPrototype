@@ -315,7 +315,7 @@ def bigform():
             textdict = dict([(x, form.__getattribute__(x).data) for x in textfields])
             instruction, outputfields = controller.update_form_anova(textdict)
             with open(path, 'w') as f:
-                mc[ipcode] = controller.serialize()
+                mc[session_id] = controller.serialize()
                 json.dump(mc, f) 
             resp = make_response(render_template('bigform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames, title=title))
             resp.set_cookie('sessionID', session_id)
@@ -337,7 +337,7 @@ def bigform():
             form_shape = controller.analysis_type.value
             instruction, outputfields = controller.form_answers_anova()
             with open(path, 'w') as f:
-                mc[ipcode] = controller.serialize()
+                mc[session_id] = controller.serialize()
                 json.dump(mc, f) 
             resp = make_response(render_template('bigform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames, title=title))
             resp.set_cookie('sessionID', session_id)
@@ -413,7 +413,7 @@ def smallform():
             textdict = dict([(x, form.__getattribute__(x).data) for x in textfields])
             instruction, outputfields = controller.update_form_ttest(textdict)
             with open(path, 'w') as f:
-                mc[ipcode] = controller.serialize()
+                mc[session_id] = controller.serialize()
                 json.dump(mc, f) 
             resp = make_response(render_template('smallform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames, title=title))
             resp.set_cookie('sessionID', session_id)
@@ -435,7 +435,7 @@ def smallform():
             form_shape = controller.analysis_type.value
             instruction, outputfields = controller.form_answers()
             with open(path, 'w') as f:
-                mc[ipcode] = controller.serialize()
+                mc[session_id] = controller.serialize()
                 json.dump(mc, f) 
             resp = make_response(render_template('smallform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames, title=title))
             resp.set_cookie('sessionID', session_id)
@@ -490,7 +490,7 @@ def reportform():
             textdict = dict([(x, form.__getattribute__(x).data) for x in textfields])
             instruction, output = controller.update_form_report(textdict)
             with open(path, 'w') as f:
-                mc[ipcode] = controller.serialize()
+                mc[session_id] = controller.serialize()
                 json.dump(mc, f) 
             resp = make_response(render_template('reportform.html', form=form, instruction=instruction, display=output, title=title))
             resp.set_cookie('sessionID', session_id)
@@ -516,7 +516,7 @@ def reportform():
             instruction = controller.assignments.print_report(controller.assignment)
             output = controller.assignments.answer_report(controller.assignment) #controller.assignment['answer']
             with open(path, 'w') as f:
-                mc[ipcode] = controller.serialize()
+                mc[session_id] = controller.serialize()
                 json.dump(mc, f) 
             resp = make_response(render_template('reportform.html', form=form, instruction=instruction, display=output, title=title))
             resp.set_cookie('sessionID', session_id)
