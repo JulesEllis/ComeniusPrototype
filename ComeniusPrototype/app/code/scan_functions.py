@@ -1014,7 +1014,7 @@ class ScanFunctions:
         if output.replace('<br>','') == '':
             return self.mes['F_NICEREP']
         else:
-            return self.mes['F_INCOMPLETE'] + re.sub(r'<br>(<br>)+', '<br>', output) + str([between_sent.text])
+            return self.mes['F_INCOMPLETE'] + re.sub(r'<br>(<br>)+', '<br>', output) + str([between_sent[0].text])
     
     def split_grade_multirm(self, text:str, solution:dict) -> str:
         if self.mes['L_ENGLISH']:
