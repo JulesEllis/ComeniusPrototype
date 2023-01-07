@@ -14,9 +14,9 @@ import hashlib
 def get_session():
     session_id = request.cookies.get('sessionID')
     session_list = listdir('/var/www/ComeniusPrototype/ComeniusPrototype/app/states')
-    ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
-    ipcode = hashlib.md5(ip.encode('utf-8')).hexdigest()
     if session_id == None: #Create new session ID if session is not present
+        ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
+        ipcode = hashlib.md5(ip.encode('utf-8')).hexdigest()
         session_id = ipcode + '-' + str(len([x for x in session_list if ipcode in x]) + 1)
     path = 'app/controller.json' if 'Github' in os.getcwd() else '/var/www/ComeniusPrototype/ComeniusPrototype/app/states/{}.json'.format(session_id)
     if not session_id+'.json' in session_list:

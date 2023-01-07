@@ -1007,7 +1007,7 @@ class ScanFunctions:
         if between_sent != []:
             output += '<br>'+'<br>'.join(self.detect_decision_multirm(between_sent[0], solution, solution['independent'].name, ['between-subject'], solution['p'][2],solution['eta'][2]))
             if(solution['p'][2] < 0.05):
-                output += '<br>'+'<br>'.join(self.detect_effect(between_sent[0],solution, variable=solution['independent'].name, p=solution['p'][2], eta=solution['eta'][2]))
+                output += '<br>'+'<br>'.join(self.detect_effect(between_sent[0], solution, variable=solution['independent'].name, p=solution['p'][2], eta=solution['eta'][2]))
                 output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'][2], appendix=solution['independent'].name))
         else:
             output += '<br>'+self.mes['F_NOBTFAC']
@@ -1521,9 +1521,9 @@ class ScanFunctions:
         if not scorepoints['effect_present'] and scorepoints['strength_present']:
             output.append(self.mes['F_NOSIZE']+variable+self.mes['S_NONAME'])
         if not scorepoints['strength_present']:
-            output.append(self.mes['F_STRENGTH']+variable+self.mes['S_NONAME'])
+            output.append(self.mes['F_STRENGTH']+variable+self.mes['S_NONAME']+' '.join([x.text for x in sent]))
         elif scorepoints['effect_present'] and not scorepoints['right_strength']:
-            output.append(self.mes['F_STRENGTH']+variable+self.mes['S_NONAME'])
+            output.append(self.mes['F_STRENGTH']+variable+self.mes['S_NONAME']+' '.join([x.text for x in sent]))
         elif scorepoints['effect_present'] and not scorepoints['no_wrongs']:
             output.append(self.mes['F_STRENGTH']+variable)
         return output
