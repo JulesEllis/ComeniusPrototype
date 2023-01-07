@@ -97,13 +97,11 @@ class Assignments:
         if assignment['assignment_type'] == 7:
             return self.print_report(assignment) #Beknopt rapport
         elif assignment['assignment_type'] in [1,2]:
-            return self.print_ttest(assignment) #T-Test
+            return self.print_ttest(assignment, add_attempts=False) #T-Test
         elif assignment['assignment_type'] in [3,4]:
-            return self.print_anova(assignment) #Repeated-measures ANOVA
+            return self.print_anova(assignment, add_attempts=False) #Repeated-measures ANOVA
         elif assignment['assignment_type'] == 5:
-            return self.print_rmanova(assignment) #Repeated-measures ANOVA
-        elif assignment['assignment_type'] == 6:
-            return self.print_mregression(assignment) #Repeated-measures ANOVA
+            return self.print_rmanova(assignment, add_attempts=False) #Repeated-measures ANOVA
         else:
             print('ERROR: ASSIGNMENT TYPE NOT RECOGNIZED')
             return None

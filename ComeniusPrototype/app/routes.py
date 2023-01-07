@@ -259,9 +259,16 @@ def bigform():
     path = 'app/controller.json' if 'Github' in os.getcwd() else '/var/www/ComeniusPrototype/ComeniusPrototype/app/controller.json'
     with open(path, 'r') as f:
         mc:dict = json.load(f)
+        session_id = request.cookies.get('sessionID')
         ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
         ipcode = hashlib.md5(ip.encode('utf-8')).hexdigest()
-        controller = Controller(jsondict=mc[ipcode])
+        if session_id == None: #Create new session ID if session is not present
+            session_id = ipcode + '-' + str(len([x for x in list(mc.keys()) if ipcode in x]) + 1)
+        if not session_id in list(mc.keys()):
+            mc[session_id] = Controller()
+            controller = mc[session_id]
+        else:
+            controller = Controller(jsondict=mc[session_id])
     mes:dict = controller.mes
     a = controller.assignment
     form = BigForm()
@@ -310,7 +317,9 @@ def bigform():
             with open(path, 'w') as f:
                 mc[ipcode] = controller.serialize()
                 json.dump(mc, f) 
-            return render_template('bigform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames, title=title)
+            resp = make_response(render_template('bigform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames, title=title))
+            resp.set_cookie('sessionID', session_id)
+            return resp
         elif form.nextt.data:
             skip:bool = controller.skipable
             prev:bool = controller.prevable
@@ -321,20 +330,26 @@ def bigform():
             else:
                 form.submit.label.text = 'Continue'
             field = controller.submit_field.value
-            return render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=field, varnames=varnames, title=title)
+            resp = make_response(render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=field, varnames=varnames, title=title))
+            resp.set_cookie('sessionID', session_id)
+            return resp
         elif form.answer.data:
             form_shape = controller.analysis_type.value
             instruction, outputfields = controller.form_answers_anova()
             with open(path, 'w') as f:
                 mc[ipcode] = controller.serialize()
                 json.dump(mc, f) 
-            return render_template('bigform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames, title=title)
+            resp = make_response(render_template('bigform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames, title=title))
+            resp.set_cookie('sessionID', session_id)
+            return resp
         elif form.explain.data or form.b1.data or form.b2.data or form.b3.data:
             button_id = 0 if form.explain.data else 1 if form.b1.data else 2 if form.b2.data else 3 #form.b3.data
             form_shape = controller.analysis_type.value
             instruction = controller.assignments.print_assignment(controller.assignment)
             outputfields = controller.explain_elementary(anslist=True, button_id=button_id)
-            return render_template('bigform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames, title=title)
+            resp = make_response(render_template('bigform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames, title=title))
+            resp.set_cookie('sessionID', session_id)
+            return resp
         else:
             print('ERROR: INVALID METHOD')
     else:
@@ -346,9 +361,16 @@ def smallform():
     path = 'app/controller.json' if 'Github' in os.getcwd() else '/var/www/ComeniusPrototype/ComeniusPrototype/app/controller.json'
     with open(path, 'r') as f:
         mc:dict = json.load(f)
+        session_id = request.cookies.get('sessionID')
         ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
         ipcode = hashlib.md5(ip.encode('utf-8')).hexdigest()
-        controller = Controller(jsondict=mc[ipcode])
+        if session_id == None: #Create new session ID if session is not present
+            session_id = ipcode + '-' + str(len([x for x in list(mc.keys()) if ipcode in x]) + 1)
+        if not session_id in list(mc.keys()):
+            mc[session_id] = Controller()
+            controller = mc[session_id]
+        else:
+            controller = Controller(jsondict=mc[session_id])
     mes:dict = controller.mes
     a = controller.assignment
     form = SmallForm()
@@ -393,7 +415,9 @@ def smallform():
             with open(path, 'w') as f:
                 mc[ipcode] = controller.serialize()
                 json.dump(mc, f) 
-            return render_template('smallform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames, title=title)
+            resp = make_response(render_template('smallform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames, title=title))
+            resp.set_cookie('sessionID', session_id)
+            return resp
         elif form.nextt.data:
             skip :bool = controller.skipable
             prev :bool = controller.prevable
@@ -404,20 +428,26 @@ def smallform():
             else:
                 form.submit.label.text = 'Continue'
             field = controller.submit_field.value
-            return render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=field, varnames=varnames, title=title)
+            resp = make_response(render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=field, varnames=varnames, title=title))
+            resp.set_cookie('sessionID', session_id)
+            return resp
         elif form.answer.data:
             form_shape = controller.analysis_type.value
             instruction, outputfields = controller.form_answers()
             with open(path, 'w') as f:
                 mc[ipcode] = controller.serialize()
                 json.dump(mc, f) 
-            return render_template('smallform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames, title=title)
+            resp = make_response(render_template('smallform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames, title=title))
+            resp.set_cookie('sessionID', session_id)
+            return resp
         elif form.explain.data or form.b1.data or form.b2.data or form.b3.data:
             button_id = 0 if form.explain.data else 1 if form.b1.data else 2 if form.b2.data else 3 #form.b3.data
             form_shape = controller.analysis_type.value
             instruction = controller.assignments.print_assignment(controller.assignment)
             outputfields = controller.explain_elementary(anslist=True, button_id=button_id)
-            return render_template('smallform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames, title=title)
+            resp = make_response(render_template('smallform.html', form=form, instruction=instruction, displays=outputfields, shape=form_shape, varnames=varnames, title=title))
+            resp.set_cookie('sessionID', session_id)
+            return resp
         else:
             print('ERROR: INVALID METHOD')
     else:
@@ -429,9 +459,16 @@ def reportform():
     path = 'app/controller.json' if 'Github' in os.getcwd() else '/var/www/ComeniusPrototype/ComeniusPrototype/app/controller.json'
     with open(path, 'r') as f:
         mc:dict = json.load(f)
+        session_id = request.cookies.get('sessionID')
         ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
         ipcode = hashlib.md5(ip.encode('utf-8')).hexdigest()
-        controller = Controller(jsondict=mc[ipcode])
+        if session_id == None: #Create new session ID if session is not present
+            session_id = ipcode + '-' + str(len([x for x in list(mc.keys()) if ipcode in x]) + 1)
+        if not session_id in list(mc.keys()):
+            mc[session_id] = Controller()
+            controller = mc[session_id]
+        else:
+            controller = Controller(jsondict=mc[session_id])
     mes:dict = controller.mes
     varnames:list = []
     form = ReportForm()
@@ -455,7 +492,9 @@ def reportform():
             with open(path, 'w') as f:
                 mc[ipcode] = controller.serialize()
                 json.dump(mc, f) 
-            return render_template('reportform.html', form=form, instruction=instruction, display=output, title=title)
+            resp = make_response(render_template('reportform.html', form=form, instruction=instruction, display=output, title=title))
+            resp.set_cookie('sessionID', session_id)
+            return resp
         elif form.nextt.data:
             if controller.assignment['feedback_requests'] > 0:
                 controller.save_assignment()
@@ -469,7 +508,9 @@ def reportform():
                 form.submit.label.text = 'Continue'
             form.inputtext.data = ""
             field = controller.submit_field.value
-            return render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=field, varnames=varnames, title=title)
+            resp = make_response(render_template('index.html', display=display, form=form, skip=skip, prev=prev, submit_field=field, varnames=varnames, title=title))
+            resp.set_cookie('sessionID', session_id)
+            return resp
         elif form.answer.data:
             controller.assignment['feedback_requests'] += 1
             instruction = controller.assignments.print_report(controller.assignment)
@@ -477,12 +518,16 @@ def reportform():
             with open(path, 'w') as f:
                 mc[ipcode] = controller.serialize()
                 json.dump(mc, f) 
-            return render_template('reportform.html', form=form, instruction=instruction, display=output, title=title)
+            resp = make_response(render_template('reportform.html', form=form, instruction=instruction, display=output, title=title))
+            resp.set_cookie('sessionID', session_id)
+            return resp
         elif form.explain.data or form.b1.data or form.b2.data or form.b3.data:
             button_id = 0 if form.explain.data else 1 if form.b1.data else 2 if form.b2.data else 3 # form.b3.data
             instruction = controller.assignments.print_report(controller.assignment)
             output = controller.explain_short(button_id) #controller.asssignment['answer']
-            return render_template('reportform.html', form=form, instruction=instruction, display=output, title=title)
+            resp = make_response(render_template('reportform.html', form=form, instruction=instruction, display=output, title=title))
+            resp.set_cookie('sessionID', session_id)
+            return resp
         else:
             print('ERROR: INVALID METHOD')
     else:
