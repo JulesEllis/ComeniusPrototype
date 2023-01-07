@@ -20,7 +20,7 @@ def index():
         ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
         ipcode = hashlib.md5(ip.encode('utf-8')).hexdigest()
         if session_id == None: #Create new session ID if session is not present
-            session_id = ipcode + '-' + str(len([x for x in list(mc.keys) if ipcode in x]) + 1)
+            session_id = ipcode + '-' + str(len([x for x in list(mc.keys()) if ipcode in x]) + 1)
         if not session_id in list(mc.keys()):
             mc[session_id] = Controller()
             controller = mc[session_id]
