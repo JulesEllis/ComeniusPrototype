@@ -1526,7 +1526,7 @@ class ScanFunctions:
             output.append(self.mes['F_STRENGTH']+variable+self.mes['S_NONAME'])
         elif scorepoints['effect_present'] and not scorepoints['no_wrongs']:
             output.append(self.mes['F_STRENGTH']+variable)
-        return output + '<br>' + str(scorepoints) + '<br>'
+        return output + [str(scorepoints)]
     
     def detect_unk(self, sent:Doc, solution:dict, num:int=1):
         #Define variables
