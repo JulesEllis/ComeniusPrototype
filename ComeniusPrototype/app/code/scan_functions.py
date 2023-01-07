@@ -992,6 +992,8 @@ class ScanFunctions:
         output += '<br>' + self.scan_predictors(doc, solution, prefix=False)[1]
         
         multivar_sent = [x for x in doc.sents if markers[0] in x.text]
+        if not 'effect' in multivar_sent[0].text and len(multivar_sent) > 1: #Hotfix: merge first two sentences if tokenizer mistakenly splits conclusion in two
+            multivar_sent = nl_nlp(multivar_sent[0].text + multivar_sent[1]) + multivar_sent[2:]
         if multivar_sent != []:
             output += '<br>'+'<br>'.join(self.detect_decision_ancova(multivar_sent[0], solution))
             if(solution['p'][3] < 0.05):
@@ -1002,7 +1004,6 @@ class ScanFunctions:
         output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'F', solution['F'][3]))
         output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'][3]))
         output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta'][3], aliases=['eta2','eta']))
-        
         between_sent = [x for x in doc.sents if (lef(solution['independent'].get_all_syns(),[y.text for y in x]) or 'between-subject' in x.text) and ('significant' in x.text or 'effect' in x.text) and (not markers[1] in x.text)]
         if between_sent != []:
             output += '<br>'+'<br>'.join(self.detect_decision_multirm(between_sent[0], solution, solution['independent'].name, ['between-subject'], solution['p'][2],solution['eta'][2]))
@@ -1526,7 +1527,7 @@ class ScanFunctions:
             output.append(self.mes['F_STRENGTH']+variable+self.mes['S_NONAME'])
         elif scorepoints['effect_present'] and not scorepoints['no_wrongs']:
             output.append(self.mes['F_STRENGTH']+variable)
-        return output + [str(scorepoints)]
+        return output
     
     def detect_unk(self, sent:Doc, solution:dict, num:int=1):
         #Define variables
