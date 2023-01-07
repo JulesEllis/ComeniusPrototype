@@ -240,7 +240,7 @@ def index():
         #Render page
         return render_template('index.html', display=output_text, answer_text=answer_text, form=form, skip=skip, prev=prev, answer=answer, submit_field=submit_field, varnames=varnames, title=title)
         resp = make_response(render_template('readcookie.html'))
-        resp.set_cookie('sessionID', user)
+        resp.set_cookie('sessionID', session_id)
     else:
         print('ERROR: INVALID METHOD')
 
