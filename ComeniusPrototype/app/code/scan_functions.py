@@ -1521,9 +1521,9 @@ class ScanFunctions:
         if not scorepoints['effect_present'] and scorepoints['strength_present']:
             output.append(self.mes['F_NOSIZE']+variable+self.mes['S_NONAME'])
         if not scorepoints['strength_present']:
-            output.append(self.mes['F_STRENGTH']+variable+self.mes['S_NONAME']+' ['+sent.text+'] '+str('voorspellend' in sent.text))
+            output.append(self.mes['F_STRENGTH']+variable+self.mes['S_NONAME']+' ['+str([x.text for x in sent])+'] '+str('voorspellend' in sent.text))
         elif scorepoints['effect_present'] and not scorepoints['right_strength']:
-            output.append(self.mes['F_STRENGTH']+variable+self.mes['S_NONAME']+' ['+sent.text+'] '+str('voorspellend' in sent.text))
+            output.append(self.mes['F_STRENGTH']+variable+self.mes['S_NONAME']+' ['+str([x.text for x in sent])+'] '+str('voorspellend' in sent.text))
         elif scorepoints['effect_present'] and not scorepoints['no_wrongs']:
             output.append(self.mes['F_STRENGTH']+variable)
         return output
