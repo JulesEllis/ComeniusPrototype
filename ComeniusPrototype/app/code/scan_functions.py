@@ -1003,7 +1003,7 @@ class ScanFunctions:
         output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'][3]))
         output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta'][3], aliases=['eta2','eta']))
         
-        between_sent = [x for x in doc.sents if (lef(solution['independent'].get_all_syns(),[y.text for y in x]) or 'between-subject' in x.text) and ('significant' in x.text or 'effect' in x.text) and (not 'voorspellend' in x.text)]
+        between_sent = [x for x in doc.sents if (lef(solution['independent'].get_all_syns(),[y.text for y in x]) or 'between-subject' in x.text) and ('significant' in x.text or 'effect' in x.text) and (not markers[1] in x.text)]
         if between_sent != []:
             output += '<br>'+'<br>'.join(self.detect_decision_multirm(between_sent[0], solution, solution['independent'].name, ['between-subject'], solution['p'][2],solution['eta'][2]))
             if(solution['p'][2] < 0.05):
@@ -1014,7 +1014,7 @@ class ScanFunctions:
         if output.replace('<br>','') == '':
             return self.mes['F_NICEREP']
         else:
-            return self.mes['F_INCOMPLETE'] + re.sub(r'<br>(<br>)+', '<br>', output)
+            return self.mes['F_INCOMPLETE'] + re.sub(r'<br>(<br>)+', '<br>', output) + str([between_sent.text])
     
     def split_grade_multirm(self, text:str, solution:dict) -> str:
         if self.mes['L_ENGLISH']:
@@ -1521,9 +1521,9 @@ class ScanFunctions:
         if not scorepoints['effect_present'] and scorepoints['strength_present']:
             output.append(self.mes['F_NOSIZE']+variable+self.mes['S_NONAME'])
         if not scorepoints['strength_present']:
-            output.append(self.mes['F_STRENGTH']+variable+self.mes['S_NONAME']+' ['+str([x.text for x in sent])+'] '+str('voorspellend' in sent.text))
+            output.append(self.mes['F_STRENGTH']+variable+self.mes['S_NONAME'])
         elif scorepoints['effect_present'] and not scorepoints['right_strength']:
-            output.append(self.mes['F_STRENGTH']+variable+self.mes['S_NONAME']+' ['+str([x.text for x in sent])+'] '+str('voorspellend' in sent.text))
+            output.append(self.mes['F_STRENGTH']+variable+self.mes['S_NONAME'])
         elif scorepoints['effect_present'] and not scorepoints['no_wrongs']:
             output.append(self.mes['F_STRENGTH']+variable)
         return output
