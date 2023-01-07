@@ -1,4 +1,4 @@
-from flask import render_template, flash, redirect, url_for, request
+from flask import render_template, flash, redirect, url_for, request, make_response
 from app import app
 from app.forms import BaseForm, BigForm, SmallForm, ReportForm
 from app.code.interface import Controller #OuterController
@@ -16,13 +16,16 @@ def index():
     path = 'app/controller.json' if 'Github' in os.getcwd() else '/var/www/ComeniusPrototype/ComeniusPrototype/app/controller.json'
     with open(path, 'r') as f:
         mc:dict = json.load(f)
+        session_id = request.cookies.get('sessionID')
         ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
         ipcode = hashlib.md5(ip.encode('utf-8')).hexdigest()
-        if not ipcode in list(mc.keys()):
-            mc[ipcode] = Controller()
-            controller = mc[ipcode]
+        if session_id == None: #Create new session ID if session is not present
+            session_id = ipcode + '-' + str(len([x for x in list(mc.keys) if ipcode in x]) + 1)
+        if not session_id in list(mc.keys()):
+            mc[session_id] = Controller()
+            controller = mc[session_id]
         else:
-            controller = Controller(jsondict=mc[ipcode])
+            controller = Controller(jsondict=mc[session_id])
         
     #Assign local variables
     varnames = [['dummy1'],['dummy2']]
@@ -236,6 +239,8 @@ def index():
         
         #Render page
         return render_template('index.html', display=output_text, answer_text=answer_text, form=form, skip=skip, prev=prev, answer=answer, submit_field=submit_field, varnames=varnames, title=title)
+        resp = make_response(render_template('readcookie.html'))
+        resp.set_cookie('sessionID', user)
     else:
         print('ERROR: INVALID METHOD')
 
