@@ -984,7 +984,7 @@ class ScanFunctions:
         else: 
             nl_nlp = spacy.load('nl_core_news_sm')
         doc = nl_nlp(text.lower())
-        markers = ['predictive value','predictive'] if self.mes['L_ENGLISH'] else ['voorspellende waarde','voorspellend']
+        markers = ['predictive value',('predictive')] if self.mes['L_ENGLISH'] else ['voorspellende waarde',('voorspellend','voorspellende')]
         
         output:str = ''
         output += '<br>'+'<br>'.join(self.detect_name(doc,solution))
@@ -1003,7 +1003,7 @@ class ScanFunctions:
         output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'][3]))
         output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta'][3], aliases=['eta2','eta']))
         
-        between_sent = [x for x in doc.sents if (lef(solution['independent'].get_all_syns(),[y.text for y in x]) or 'between-subject' in x.text) and ('significant' in x.text or 'effect' in x.text) and not markers[1] in x.text]
+        between_sent = [x for x in doc.sents if (lef(solution['independent'].get_all_syns(),[y.text for y in x]) or 'between-subject' in x.text) and ('significant' in x.text or 'effect' in x.text) and not any([x in text for x in markers[1]])]
         if between_sent != []:
             output += '<br>'+'<br>'.join(self.detect_decision_multirm(between_sent[0], solution, solution['independent'].name, ['between-subject'], solution['p'][2],solution['eta'][2]))
             if(solution['p'][2] < 0.05):
