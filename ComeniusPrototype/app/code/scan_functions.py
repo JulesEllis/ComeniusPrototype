@@ -845,6 +845,7 @@ class ScanFunctions:
             nl_nlp = spacy.load('nl_core_news_sm')
         doc = nl_nlp(text.lower())
         markers = ['squared','interaction'] if self.mes['L_ENGLISH'] else ['kwadraat','interactie']
+        sents = text.split('. ')
         
         output:str = ''
         output += '<br>'+'<br>'.join(self.detect_name(doc,solution))
@@ -869,13 +870,13 @@ class ScanFunctions:
                     comparisons = ['unequal','equal','different','same'] if i < 2 else ['']
                 else:
                     comparisons = ['ongelijk','gelijk','anders','verschillend'] if i < 2 else ['']
-                decision_sent = [x for x in doc.sents if any([y in x.text for y in comparisons]) \
-                                 and all([y.lower() in x.text for y in levels[i]])]
+                decision_sent = [x for x in sents if any([y in x for y in comparisons]) \
+                                 and all([y.lower() in x for y in levels[i]])]
                 if decision_sent != []: 
                     if i < 2:
-                        output += '<br>' + self.scan_decision(decision_sent[0], solution, anova=True, num=i+1, prefix=False, elementair=False)[1]
+                        output += '<br>' + self.scan_decision(nl_nlp(decision_sent[0]), solution, anova=True, num=i+1, prefix=False, elementair=False)[1]
                     else:
-                        output += '<br>' + self.scan_decision_anova(decision_sent[0], solution, num=i+1, prefix=False, elementair=False)[1]
+                        output += '<br>' + self.scan_decision_anova(nl_nlp(decision_sent[0]), solution, num=i+1, prefix=False, elementair=False)[1]
                 else:
                     varss = [solution['independent'].name,solution['independent2'].name,markers[1]]
                     output += '<br>'+self.mes['F_NODEC']+ varss[i] + self.mes['S_LACKING1']
@@ -891,22 +892,24 @@ class ScanFunctions:
         else: 
             nl_nlp = spacy.load('nl_core_news_sm')
         doc = nl_nlp(text.lower())
+        sents = text.split('. ')
         output:str = ''
         output += '<br>'+'<br>'.join(self.detect_name(doc,solution))
         output += '<br>' + self.scan_design(doc, solution, prefix=False)[1]
+        
         if solution['p'][0] < 0.05:
             output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'F', solution['F'][0], aliases=['F(' + solution['independent'].name + ')']))
             output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'][0]))
             output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'R<sup>2</sup>', solution['r2'][0], aliases=['r2','r^2','r','kwadraat']))
         markers = ['h0','significant','subjecten','de subjecten','opgevoerde'] if not self.mes['L_ENGLISH'] else ['h0','significant','subjects','the subjects','stepped-up']
-        d1_sents = [sent for sent in doc.sents if markers[0] in sent.text or markers[1] in sent.text]
+        d1_sents = [sent for sent in sents if markers[0] in sent or markers[1] in sent]
         if d1_sents != []:
-            output += '<br>' + self.scan_decision(d1_sents[0], solution, anova=True, num=1, prefix=False, elementair=False)[1]
+            output += '<br>' + self.scan_decision(nl_nlp(d1_sents[0]), solution, anova=True, num=1, prefix=False, elementair=False)[1]
         else:
             output += '<br>'+self.mes['F_NODEC'] + solution['independent'].name + self.mes['S_NONAME']
-        d2_sents = [sent for sent in doc.sents if (markers[0] in sent.text or markers[1] in sent.text) and (markers[2] in sent.text or markers[4] in sent.text)]
+        d2_sents = [sent for sent in sents if (markers[0] in sent or markers[1] in sent) and (markers[2] in sent or markers[4] in sent)]
         if d2_sents != []:
-            output += '<br>' + self.scan_decision_rmanova(d2_sents[0], solution, num=2, prefix=False, elementair=False)[1]
+            output += '<br>' + self.scan_decision_rmanova(nl_nlp(d2_sents[0]), solution, num=2, prefix=False, elementair=False)[1]
         else:
             output += '<br>'+self.mes['F_NODEC'] + markers[3] + self.mes['S_NONAME']
         if output.replace('<br>','') == '':
@@ -920,12 +923,13 @@ class ScanFunctions:
         else: 
             nl_nlp = spacy.load('nl_core_news_sm')
         doc = nl_nlp(text.lower())
+        sents = text.split('. ')
         output:str = ''
         output += '<br>'+'<br>'.join(self.detect_name(doc,solution))
         markers = ['proportion','explained','variance'] if self.mes['L_ENGLISH'] else ['proportie','verklaarde','variantie']
-        pevsent = [sent for sent in doc.sents if all([markers[i] in sent.text for i in range(3)])]
+        pevsent = [sent for sent in sents if all([markers[i] in sent for i in range(3)])]
         if pevsent != []:
-            output += '<br>'+'<br>'.join(self.detect_comparison_mreg(pevsent[0], solution))
+            output += '<br>'+'<br>'.join(self.detect_comparison_mreg(nl_nlp(pevsent[0]), solution))
         else:
             output += '<br>' + self.mes['F_PROPVAR']
         output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'F', solution['F'][0]))
@@ -944,6 +948,7 @@ class ScanFunctions:
         else: 
             nl_nlp = spacy.load('nl_core_news_sm')
         doc = nl_nlp(text.lower())
+        sents = text.split('. ')
         markers = ['eta-squared','for ','the multivariate decision ','for the multivariate decision ','multivariate','for the decision of '] if self.mes['L_ENGLISH'] \
                     else ['eta-kwadraat','bij ','de multivariate beslissing','bij de multivariate beslissing ','multivariaat','voor de beslissing van ']
         
@@ -953,10 +958,10 @@ class ScanFunctions:
         for i in range(3):
             var_key = 'dependent' if i < 1 else 'dependent' + str(i+1)
             #if solution['p'+str(i)][0] < 0.05: #solution['p_multivar'] < 0.05 and solution['p_multivar'] < 0.05:
-            decision_sent = [x for x in doc.sents if lef(solution[var_key].get_all_syns(),[y.text for y in x]) and ('significant' in x.text or 'effect' in x.text)]
+            decision_sent = [x for x in sents if simple_lef(solution[var_key].get_all_syns(),x) and ('significant' in x or 'effect' in x)]
             if decision_sent != []:
-                output += '<br>'+'<br>'.join(self.detect_decision_manova(decision_sent[0],solution, variable=solution[var_key].name, synonyms=[], p=solution['p'+str(i)][0], eta=solution['eta'+str(i)][0], num=i+1))
-                output += '<br>'+'<br>'.join(self.detect_effect(decision_sent[0],solution, variable=markers[1]+solution[var_key].name, p=solution['p'+str(i)][0], eta=solution['eta'+str(i)][0]))
+                output += '<br>'+'<br>'.join(self.detect_decision_manova(nl_nlp(decision_sent[0]),solution, variable=solution[var_key].name, synonyms=[], p=solution['p'+str(i)][0], eta=solution['eta'+str(i)][0], num=i+1))
+                output += '<br>'+'<br>'.join(self.detect_effect(nl_nlp(decision_sent[0]),solution, variable=markers[1]+solution[var_key].name, p=solution['p'+str(i)][0], eta=solution['eta'+str(i)][0]))
             else:
                 output += '<br>'+self.mes['F_NODEC']+ solution[var_key].name + self.mes['S_LACKING1']
             if solution['p'+str(i)][0] < 0.05 and solution['p_multivar'] < 0.05:
@@ -966,11 +971,11 @@ class ScanFunctions:
         output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'F', solution['F_multivar'], appendix=markers[3]))
         output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p_multivar'], appendix=markers[3]))
         #output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta_multivar'], aliases=['eta','eta2',markers[0]], appendix=markers[3]))
-        decision_sent = [x for x in doc.sents if ('multivariate' in x.text or 'multivariaat' in x.text) \
-                             and ('significant' in x.text or 'effect' in x.text)]
+        decision_sent = [x for x in sents if ('multivariate' in x or 'multivariaat' in x) \
+                             and ('significant' in x or 'effect' in x)]
         if decision_sent != []:
-            output += '<br>'+'<br>'.join(self.detect_decision_manova(decision_sent[0],solution,variable=markers[2],synonyms=['multivariate'], p=solution['p_multivar'], eta=solution['eta_multivar'], num=0))
-            output += '<br>'+'<br>'.join(self.detect_effect(decision_sent[0],solution, variable=markers[3], p=solution['p_multivar'], eta=solution['eta_multivar']))
+            output += '<br>'+'<br>'.join(self.detect_decision_manova(nl_nlp(decision_sent[0]),solution,variable=markers[2],synonyms=['multivariate'], p=solution['p_multivar'], eta=solution['eta_multivar'], num=0))
+            output += '<br>'+'<br>'.join(self.detect_effect(nl_nlp(decision_sent[0]),solution, variable=markers[3], p=solution['p_multivar'], eta=solution['eta_multivar']))
         else:
             output += '<br>' + self.mes['F_NOMULTIVAR']
         if output.replace('<br>','') == '':
@@ -984,6 +989,7 @@ class ScanFunctions:
         else: 
             nl_nlp = spacy.load('nl_core_news_sm')
         doc = nl_nlp(text.lower())
+        sents = text.split('. ')
         markers = ['predictive value','predictive'] if self.mes['L_ENGLISH'] else ['voorspellende waarde','voorspellend']
         
         output:str = ''
@@ -991,28 +997,22 @@ class ScanFunctions:
         output += '<br>' + self.scan_design(doc, solution, prefix=False)[1]
         output += '<br>' + self.scan_predictors(doc, solution, prefix=False)[1]
         
-        multivar_sent = [x for x in doc.sents if markers[0] in x.text]
-        #TODO: Replace sentence tokenization. Hotfix: merge first two sentences if tokenizer mistakenly splits conclusion in two
-        if not 'effect' in multivar_sent[0].text: 
-            sents = list(doc.sents)
-            mindex = sents.index(multivar_sent[0])
-            if len(sents) > mindex + 1:
-                multivar_sent = [nl_nlp(sents[mindex].text + sents[mindex+1].text)]
+        multivar_sent = [x for x in sents if markers[0] in x]
         if multivar_sent != []:
-            output += '<br>'+'<br>'.join(self.detect_decision_ancova(multivar_sent[0], solution))
+            output += '<br>'+'<br>'.join(self.detect_decision_ancova(nl_nlp(multivar_sent[0]), solution))
             if(solution['p'][3] < 0.05):
                 vslice = 'for '+solution['independent'].name if self.mes['L_ENGLISH'] else 'voor '+solution['independent'].name
-                output += '<br>'+'<br>'.join(self.detect_effect(multivar_sent[0],solution, variable=vslice, p=solution['p'][3], eta=solution['eta'][3]))
+                output += '<br>'+'<br>'.join(self.detect_effect(nl_nlp(multivar_sent[0]),solution, variable=vslice, p=solution['p'][3], eta=solution['eta'][3]))
         else:
             output += '<br>'+self.mes['F_NOPRED']
         output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'F', solution['F'][3]))
         output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'][3]))
         output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta'][3], aliases=['eta2','eta']))
-        between_sent = [x for x in doc.sents if (lef(solution['independent'].get_all_syns(),[y.text for y in x]) or 'between-subject' in x.text) and ('significant' in x.text or 'effect' in x.text) and (not markers[1] in x.text)]
+        between_sent = [x for x in sents if (simple_lef(solution['independent'].get_all_syns(),x) or 'between-subject' in x) and ('significant' in x or 'effect' in x) and (not markers[1] in x)]
         if between_sent != []:
-            output += '<br>'+'<br>'.join(self.detect_decision_multirm(between_sent[0], solution, solution['independent'].name, ['between-subject'], solution['p'][2],solution['eta'][2]))
+            output += '<br>'+'<br>'.join(self.detect_decision_multirm(nl_nlp(between_sent[0]), solution, solution['independent'].name, ['between-subject'], solution['p'][2],solution['eta'][2]))
             if(solution['p'][2] < 0.05):
-                output += '<br>'+'<br>'.join(self.detect_effect(between_sent[0], solution, variable=solution['independent'].name, p=solution['p'][2], eta=solution['eta'][2]))
+                output += '<br>'+'<br>'.join(self.detect_effect(nl_nlp(between_sent[0]), solution, variable=solution['independent'].name, p=solution['p'][2], eta=solution['eta'][2]))
                 output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'][2], appendix=solution['independent'].name))
         else:
             output += '<br>'+self.mes['F_NOBTFAC']
@@ -1027,6 +1027,7 @@ class ScanFunctions:
         else: 
             nl_nlp = spacy.load('nl_core_news_sm')
         doc = nl_nlp(text.lower())
+        sents = text.split('. ')
         markers = ['eta-squared','interaction'] if self.mes['L_ENGLISH'] else ['eta-kwadraat','interactie']
         
         output:str = '';
@@ -1035,12 +1036,12 @@ class ScanFunctions:
         levels = solution['independent'].levels
         
         #Multivariate within subject
-        decision_sent = [x for x in doc.sents if (lef(solution['independent'].get_all_syns(),[y.text for y in x]) or 'within-subject' in x.text) \
-                             and ('significant' in x.text or 'effect' in x.text) and markers[1] not in x.text]
+        decision_sent = [x for x in sents if (simple_lef(solution['independent'].get_all_syns(),x) or 'within-subject' in x) \
+                             and ('significant' in x or 'effect' in x) and markers[1] not in x]
         if decision_sent != []: 
-            user_given_name:str = solution['independent'].name if solution['independent'].name in decision_sent[0].text else 'within-subject'
-            output += '<br>'+'<br>'.join(self.detect_decision_multirm(decision_sent[0],solution,variable=user_given_name,synonyms=[], p=solution['p0'][0], eta=solution['eta0'][0]))
-            output += '<br>'+'<br>'.join(self.detect_effect(decision_sent[0],solution, variable=solution['independent'].name, p=solution['p0'][0], eta=solution['eta0'][0]))
+            user_given_name:str = solution['independent'].name if solution['independent'].name in decision_sent[0] else 'within-subject'
+            output += '<br>'+'<br>'.join(self.detect_decision_multirm(nl_nlp(decision_sent[0]),solution,variable=user_given_name,synonyms=[], p=solution['p0'][0], eta=solution['eta0'][0]))
+            output += '<br>'+'<br>'.join(self.detect_effect(nl_nlp(decision_sent[0]),solution, variable=solution['independent'].name, p=solution['p0'][0], eta=solution['eta0'][0]))
         else:
             output += '<br>'+self.mes['F_NOMULTIVARWS']
         if solution['p0'][0] < 0.05:
@@ -1053,10 +1054,10 @@ class ScanFunctions:
                 output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p1'][1], appendix=self.mes['S_CONTRAST']+levels[1]+self.mes['S_AND']+levels[2]+' '))
         
         #Multivariate interaction
-        decision_sent2 = [x for x in doc.sents if (markers[1] in x.text) and ('significant' in x.text or 'effect' in x.text)]
+        decision_sent2 = [x for x in sents if (markers[1] in x) and ('significant' in x or 'effect' in x)]
         if decision_sent2 != []:
-            output += '<br>'+'<br>'.join(self.detect_decision_multirm(decision_sent2[0],solution,variable=markers[1],synonyms=[], p=solution['p0'][1], eta=solution['eta0'][1]))
-            output += '<br>'+'<br>'.join(self.detect_effect(decision_sent2[0],solution, variable=markers[1], p=solution['p0'][1], eta=solution['eta0'][1]))
+            output += '<br>'+'<br>'.join(self.detect_decision_multirm(nl_nlp(decision_sent2[0]),solution,variable=markers[1],synonyms=[], p=solution['p0'][1], eta=solution['eta0'][1]))
+            output += '<br>'+'<br>'.join(self.detect_effect(nl_nlp(decision_sent2[0]),solution, variable=markers[1], p=solution['p0'][1], eta=solution['eta0'][1]))
         else:
             output += '<br>'+self.mes['F_NOMULTIVARINT']
         if solution['p0'][1] < 0.05:
@@ -1069,11 +1070,11 @@ class ScanFunctions:
                 output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p1'][3], appendix=self.mes['S_CONTRAST']+levels[1]+self.mes['S_AND']+levels[2]+' '+self.mes['S_INTERACT']))
         
         #Between-subject
-        decision_sent3 = [x for x in doc.sents if (lef(solution['independent2'].get_all_syns(),[y.text for y in x]) or 'between-subject' in x.text) and ('significant' in x.text or 'effect' in x.text) and markers[1] not in x.text]
+        decision_sent3 = [x for x in sents if (simple_lef(solution['independent2'].get_all_syns(),x) or 'between-subject' in x) and ('significant' in x or 'effect' in x) and markers[1] not in x]
         if decision_sent3 != []:
-            user_given_name:str = solution['independent2'].name if solution['independent2'].name in decision_sent3[0].text else 'between-subject'
-            output += '<br>'+'<br>'.join(self.detect_decision_multirm(decision_sent3[0],solution,variable=user_given_name,synonyms=[], p=solution['p'][1], eta=solution['eta'][1]))
-            output += '<br>'+'<br>'.join(self.detect_effect(decision_sent3[0], solution, variable=solution['independent2'].name, p=solution['p'][1], eta=solution['eta'][1]))
+            user_given_name:str = solution['independent2'].name if solution['independent2'].name in decision_sent3[0] else 'between-subject'
+            output += '<br>'+'<br>'.join(self.detect_decision_multirm(nl_nlp(decision_sent3[0]),solution,variable=user_given_name,synonyms=[], p=solution['p'][1], eta=solution['eta'][1]))
+            output += '<br>'+'<br>'.join(self.detect_effect(nl_nlp(decision_sent3[0]), solution, variable=solution['independent2'].name, p=solution['p'][1], eta=solution['eta'][1]))
         else:
             output += '<br>'+self.mes['F_NOMULTIVARBS']
         if solution['p'][1] < 0.05:
