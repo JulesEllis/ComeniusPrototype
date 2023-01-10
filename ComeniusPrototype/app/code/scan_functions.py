@@ -749,7 +749,7 @@ class ScanFunctions:
             if ind2token != []:
                 scorepoints['ind2'] = True
                 token2_location = tokens.index(ind2token[0])
-                indep2_span = ' '.join(tokens[token_location - 2:token2_location + 4])
+                indep2_span = ' '.join(tokens[token2_location - 2:token2_location + 4])
                 scorepoints['ind2correct'] = factor_roles[0] in indep2_span or 'factor' in indep2_span
                 if solution['assignment_type'] == 13:
                     scorepoints['factor2'] = 'between' in indep2_span
