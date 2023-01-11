@@ -810,7 +810,7 @@ class Assignments:
     
     def fix_p_and_eta_values(self, solution):
         output = {}
-        for key in solution.keys:
+        for key in solution:
             if key[0] == 'p' and key[:8] != 'predictor':
                 output[key] = [x if round(x,2) != 0.05 else x - 0.01 for x in solution[key]]
             elif key[:3] == 'eta':
