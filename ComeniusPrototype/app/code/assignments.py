@@ -232,7 +232,7 @@ class Assignments:
                }
     
     #Calculate internally all of the numbers and string values the student has to present
-    def solve_ttest(self, assignment: Dict, solution: Dict) -> Dict:
+    def solve_ttest(self, assignment: Dict, solution: Dict, short: bool) -> Dict:
         numbers: List = [assignment['A'], assignment['B']]
         names: List[str] = assignment['independent'].levels
         between_subject: bool = assignment['between_subject']
@@ -311,6 +311,9 @@ class Assignments:
             else:
                 solution['interpretation']: str = self.mes['A_MULTINT'] + solution['independent'].name + self.mes['S_NINFLUENCES'] + solution['dependent'].name + '. '+\
                 self.mes['A_ALTINT'] + solution['independent'].name + self.mes['S_INFLUENCES'] + solution['dependent'].name + self.mes['A_NOTICEABLE']
+        
+        if short:
+            solution = self.fix_p_and_eta_values(solution)
         return solution
     
     #Create ANOVA assignment
@@ -360,7 +363,7 @@ class Assignments:
         return output
     
     #Create standard answer for the given ANVOA assignment
-    def solve_anova(self, assignment: Dict, solution: Dict) -> Dict:
+    def solve_anova(self, assignment: Dict, solution: Dict, short: bool) -> Dict:
         data: Dict = assignment['data']
         two_way: bool = assignment['two_way']
         solution['assignment_type'] = assignment['assignment_type']
@@ -466,6 +469,9 @@ class Assignments:
             else:
                 solution['interpretation3']: str = self.mes['A_MULTINT']+solution['independent'].name+n3+solution['dependent'].name+self.mes['A_FORLEVELS']+self.mes['S_AND'].join(levels2) + self.mes['A_OFFACTOR'] + solution['independent2'].name + '. '+\
                     self.mes['S_DISTURBANCE2']
+        
+        if short:
+            solution = self.fix_p_and_eta_values(solution)
         return solution
     
     #Create an RMANVOA assignment for the given parameters
@@ -495,7 +501,7 @@ class Assignments:
         return output
     
     #Create standard answer for the given RMANVOA assignment
-    def solve_rmanova(self, assignment: Dict, solution: Dict) -> Dict: 
+    def solve_rmanova(self, assignment: Dict, solution: Dict, short: bool) -> Dict: 
         data: Dict = assignment['data']
         n_conditions = len(data['means'])
         solution['independent'] = assignment['independent']
@@ -544,6 +550,9 @@ class Assignments:
         else:
             solution['interpretation']: str = self.mes['A_MULTINT']+solution['independent'].name+n1+solution['dependent'].name + '. '+\
                 self.mes['A_ALTINT'] + solution['dependent'].name + self.mes['S_INFLUENCES'] + solution['independent'].name
+        
+        if short:
+            solution = self.fix_p_and_eta_values(solution)
         return solution
     
     #Create a multiple regression assignment for the given parameters
@@ -573,7 +582,7 @@ class Assignments:
         return output
     
     #Create a standard answer for the given multiple regression assignment
-    def solve_mregression(self, assignment: Dict, solution:Dict) -> Dict:
+    def solve_mregression(self, assignment: Dict, solution:Dict, short: bool) -> Dict:
         N = assignment['ns'][0]
         solution['assignment_type'] = assignment['assignment_type']
     
@@ -600,6 +609,9 @@ class Assignments:
         
         #Verbal answers
         solution['null'] = 'H0: ' + ' = '.join(['beta(' + str(i) + ')' for i in range(1,4)]) + ' = 0'
+        
+        if short:
+            solution = self.fix_p_and_eta_values(solution)
         return solution
     
     #Create an ANCOVA assignment for the given parameters
@@ -625,7 +637,7 @@ class Assignments:
         return output
     
     #Create a standard answer for the given ANCOVA assignment
-    def solve_ancova(self, assignment: Dict, solution:Dict) -> Dict:
+    def solve_ancova(self, assignment: Dict, solution:Dict, short: bool) -> Dict:
         N = assignment['ns'][0]
         solution['assignment_type'] = assignment['assignment_type']
     
@@ -657,6 +669,9 @@ class Assignments:
         
         #Verbal answers
         solution['null'] = 'H0: ' + ' = '.join(['beta(' + str(i) + ')' for i in range(1,4)]) + ' = 0'
+        
+        if short:
+            solution = self.fix_p_and_eta_values(solution)
         return solution
 
     #Create an MANOVA assignment for the given parameters
@@ -687,7 +702,7 @@ class Assignments:
         return output
     
     #Create a standard answer for the given MANOVA assignment
-    def solve_manova(self, assignment: Dict, solution:Dict) -> Dict:
+    def solve_manova(self, assignment: Dict, solution:Dict, short: bool) -> Dict:
         solution = {}
         N = assignment['ns'][0]
         for key, value in list(assignment.items()):
@@ -727,6 +742,9 @@ class Assignments:
         solution['F_t2'] = [solution['ms_t2'][i] / solution['ms'+str(i%3)][1] for i in range(9)]
         solution['p_t2'] = [1-stats.f.cdf(solution['F_t2'][i],dfs[i],nt-nl-1) for i in range(9)]
         solution['eta_t2'] = [solution['ss_t2'][i] / solution['ss'+str(i%3)][2] for i in range(9)]
+        
+        if short:
+            solution = self.fix_p_and_eta_values(solution)
         return solution
     
     #Create a multiple repeated-measures ANOVA assignment for the given parameters
@@ -751,7 +769,7 @@ class Assignments:
         return output
     
     #Create a standard answer for the given multiple repeated-measures ANOVA assignment
-    def solve_multirm(self, assignment: Dict, solution:Dict) -> Dict:
+    def solve_multirm(self, assignment: Dict, solution:Dict, short: bool) -> Dict:
         solution = {}
         N = sum(assignment['ns']); 
         ntimes = assignment['independent'].nlevels; 
@@ -785,82 +803,52 @@ class Assignments:
         solution['ms1'] = [solution['F1'][i] * mse[i%2] for i in range(4)] + mse
         solution['ss1'] = [solution['ms1'][i] * solution['df1'][i] for i in range(6)]
         solution['eta1'] = [solution['ss1'][i] / (solution['ss1'][i] + solution['ss1'][4+i%2]) for i in range(4)]
-        return solution
         
-    def create_multirm2(self, control: bool, control2:bool=False, elementary:bool=False):
-        output = {'assignment_type':13}
-        return output
+        if short:
+            solution = self.fix_p_and_eta_values(solution)
+        return solution
     
-    def solve_multirm2(self, assignment: Dict, solution:Dict) -> Dict:
-        solution = {}
-        N = sum(assignment['ns']); ntimes = len(assignment['independent'].levels); nlevels = len(assignment['independent2'].levels)
-        for key, value in list(assignment.items()):
-            solution[key] = value
-        
-        # Tests of Between-Subject Effects
-        ssm = [(N-1) * assignment['var_pred'][j] for j in range(2)]
-        sstotal = [(N-1) * assignment['var_obs'][j] for j in range(2)]
-        nlev = assignment['independent2'].nlevels
-        
-        solution['df']: List[float] = [1,1,nlev - 1, nlev - 1,N - nlev, N - nlev]
-        solution['p'] = [random.random() * 0.05 if random.choice([True, False]) else random.random() * 0.95 + 0.05 for i in range(4)]
-        solution['F'] = [stats.f.isf(abs(solution['p'][i]),solution['df'][i],solution['df'][(i+4) % 2]) for i in range(4)]
-        mse = [(sstotal[i] - ssm[i]) * solution['df'][i+4] for i in range(2)]
-        solution['ms'] = [solution['F'][i] * mse[i%2] for i in range(4)] + mse
-        solution['ss'] = [solution['ms'][i] * solution['df'][i] for i in range(6)]
-        solution['eta'] = [solution['ss'][i]/(solution['ss'][i] + mse[i%2]) for i in range(4)]
-        
-        # Multivariate Tests
-        solution['value'] = [random.random() for i in range(16)]
-        solution['hdf'] = [(nlevels-1) * 2 for i in range(2)] + [(ntimes-1) * 2 for i in range(2)]
-        solution['edf'] = [N - 1 - (nlevels-1) * 2 for i in range(2)] + [N - 1 - (ntimes-1) * 2 for i in range(2)]
-        solution['F0'] = [assignment['var_obs'][i%2] * random.random() ** 2 for i in range(4)]
-        solution['p0'] = [random.random() * 0.05 if random.choice([True, False]) else random.random() * 0.95 + 0.05 for i in range(4)]
-        solution['eta0'] = [solution['value'][4*i] for i in range(4)]
-        
-        # Tests of Within-Subjects Effects
-        solution['df1'] = [1 for i in range(8)] + [N-2 for i in range(4)]
-        solution['p1'] = [random.random() * 0.05 if random.choice([True, False]) else random.random() * 0.95 + 0.05 for i in range(8)]
-        solution['F1'] = [stats.f.isf(abs(solution['p1'][i]),solution['df1'][i],solution['df1'][(i+4) % 2]) for i in range(8)]
-        mse = [random.random() * 40 for i in range(4)]
-        solution['ms1'] = [solution['F1'][i] * mse[i%4] for i in range(8)] + mse
-        solution['ss1'] = [solution['ms1'][i] * solution['df1'][i] for i in range(12)]
-        solution['eta1'] = [solution['ss1'][i] / (solution['ss1'][i] + solution['ss1'][4+i%2]) for i in range(8)]
-        return solution
+    def fix_p_and_eta_values(self, solution):
+        output = {}
+        for key in solution.keys:
+            if key[0] == 'p' and key[:8] != 'predictor':
+                output[key] = [x if round(x,2) != 0.05 else x - 0.01 for x in solution[key]]
+            elif key[:3] == 'eta':
+                output[key] = [x if round(x,2) not in (0.10,0.20) else x - 0.01 for x in solution[key]]
+            else:
+                output[key] = solution[key]
+        return output
 	
     #Create a merged assignment/solution dictionary for the given assignment type
     def create_report(self, control: bool, choice: int=0):
         hyp_type = random.choice([0,1,2])
         if choice == 1:
             assignment = self.create_ttest(True, hyp_type, control, False)
-            output = {**assignment, **self.solve_ttest(assignment, {})}
+            output = {**assignment, **self.solve_ttest(assignment, {}, short=True)}
         if choice == 2:
             assignment = self.create_ttest(False, hyp_type, True, False)
-            output = {**assignment, **self.solve_ttest(assignment, {})}
+            output = {**assignment, **self.solve_ttest(assignment, {}, short=True)}
         if choice == 3:
             assignment = self.create_anova(False, control, False)
-            output = {**assignment, **self.solve_anova(assignment, {})}
+            output = {**assignment, **self.solve_anova(assignment, {}, short=True)}
         if choice == 4:
             assignment = self.create_anova(True, control, False)
-            output = {**assignment, **self.solve_anova(assignment, {})}
+            output = {**assignment, **self.solve_anova(assignment, {}, short=True)}
         if choice == 5:
             assignment = self.create_rmanova(control, False)
-            output = {**assignment, **self.solve_rmanova(assignment, {})}
+            output = {**assignment, **self.solve_rmanova(assignment, {}, short=True)}
         if choice == 6:    
             assignment = self.create_mregression(control, False)
-            output = {**assignment, **self.solve_mregression(assignment, {})}
+            output = {**assignment, **self.solve_mregression(assignment, {}, short=True)}
         if choice == 11:    
             assignment = self.create_manova(control, False)
-            output = {**assignment, **self.solve_manova(assignment, {})}
+            output = {**assignment, **self.solve_manova(assignment, {}, short=True)}
         if choice == 12:    
             assignment = self.create_ancova(control, False)
-            output = {**assignment, **self.solve_ancova(assignment, {})}
+            output = {**assignment, **self.solve_ancova(assignment, {}, short=True)}
         if choice == 13:    
             assignment = self.create_multirm(control, False)
-            output = {**assignment, **self.solve_multirm(assignment, {})}
-        if choice == 14:    
-            assignment = self.create_multirm2(control, False)
-            output = {**assignment, **self.solve_multirm2(assignment, {})}
+            output = {**assignment, **self.solve_multirm(assignment, {}, short=True)}
         output['assignment_type'] = choice
         return output
             

@@ -19,7 +19,6 @@ class Task(Enum):
     MANOVA = 11
     ANCOVA = 12
     MULTIRM = 13
-    MULTIRM2 = 14
     FINISHED = 15
     
 #Variable indicating whether and how the given function from the protocol index (e.g. scan_dependent) should be called
