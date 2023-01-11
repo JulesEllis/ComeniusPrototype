@@ -200,7 +200,7 @@ class Controller:
                 self.solution = self.assignments.solve_anova(self.assignment, {})
                 instruction = self.assignments.print_anova(self.assignment)
                 self.analysis_type = Task.TWOWAY_ANOVA
-            if analysis == 'Repeated measures Anova':
+            if analysis == 'Repeated measures ANOVA':
                 self.assignment = self.assignments.create_rmanova(control)
                 self.solution = self.assignments.solve_rmanova(self.assignment, {})
                 instruction = self.assignments.print_rmanova(self.assignment)
