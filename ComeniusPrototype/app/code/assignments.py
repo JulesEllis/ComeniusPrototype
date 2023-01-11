@@ -232,7 +232,7 @@ class Assignments:
                }
     
     #Calculate internally all of the numbers and string values the student has to present
-    def solve_ttest(self, assignment: Dict, solution: Dict, short: bool) -> Dict:
+    def solve_ttest(self, assignment: Dict, solution: Dict, short: bool=False) -> Dict:
         numbers: List = [assignment['A'], assignment['B']]
         names: List[str] = assignment['independent'].levels
         between_subject: bool = assignment['between_subject']
@@ -363,7 +363,7 @@ class Assignments:
         return output
     
     #Create standard answer for the given ANVOA assignment
-    def solve_anova(self, assignment: Dict, solution: Dict, short: bool) -> Dict:
+    def solve_anova(self, assignment: Dict, solution: Dict, short: bool=False) -> Dict:
         data: Dict = assignment['data']
         two_way: bool = assignment['two_way']
         solution['assignment_type'] = assignment['assignment_type']
@@ -501,7 +501,7 @@ class Assignments:
         return output
     
     #Create standard answer for the given RMANVOA assignment
-    def solve_rmanova(self, assignment: Dict, solution: Dict, short: bool) -> Dict: 
+    def solve_rmanova(self, assignment: Dict, solution: Dict, short: bool=False) -> Dict: 
         data: Dict = assignment['data']
         n_conditions = len(data['means'])
         solution['independent'] = assignment['independent']
@@ -582,7 +582,7 @@ class Assignments:
         return output
     
     #Create a standard answer for the given multiple regression assignment
-    def solve_mregression(self, assignment: Dict, solution:Dict, short: bool) -> Dict:
+    def solve_mregression(self, assignment: Dict, solution:Dict, short: bool=False) -> Dict:
         N = assignment['ns'][0]
         solution['assignment_type'] = assignment['assignment_type']
     
@@ -637,7 +637,7 @@ class Assignments:
         return output
     
     #Create a standard answer for the given ANCOVA assignment
-    def solve_ancova(self, assignment: Dict, solution:Dict, short: bool) -> Dict:
+    def solve_ancova(self, assignment: Dict, solution:Dict, short: bool=False) -> Dict:
         N = assignment['ns'][0]
         solution['assignment_type'] = assignment['assignment_type']
     
@@ -702,7 +702,7 @@ class Assignments:
         return output
     
     #Create a standard answer for the given MANOVA assignment
-    def solve_manova(self, assignment: Dict, solution:Dict, short: bool) -> Dict:
+    def solve_manova(self, assignment: Dict, solution:Dict, short: bool=False) -> Dict:
         solution = {}
         N = assignment['ns'][0]
         for key, value in list(assignment.items()):
@@ -769,7 +769,7 @@ class Assignments:
         return output
     
     #Create a standard answer for the given multiple repeated-measures ANOVA assignment
-    def solve_multirm(self, assignment: Dict, solution:Dict, short: bool) -> Dict:
+    def solve_multirm(self, assignment: Dict, solution:Dict, short: bool=False) -> Dict:
         solution = {}
         N = sum(assignment['ns']); 
         ntimes = assignment['independent'].nlevels; 
