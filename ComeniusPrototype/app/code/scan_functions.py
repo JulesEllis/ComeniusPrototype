@@ -756,6 +756,7 @@ class ScanFunctions:
         elif solution['assignment_type'] == 4:
             ind2token = [x for x in tokens if simple_lef(solution['independent2'].get_all_syns(),x)]
             if ind2token != []:
+                scorepoints['ind2'] = True
                 token2_sent = [x for x in doc.text.split('. ') if simple_lef(solution['independent2'].get_all_syns(),x)][0]
                 scorepoints['ind2correct'] = (factor_roles[0] in token2_sent or 'factor' in token2_sent) and not (factor_roles[1] in token2_sent)
         else:
