@@ -786,7 +786,7 @@ class ScanFunctions:
         if not False in list(scorepoints.values()):        
             return False, self.mes['F_NICEDES'] if prefix else '', (mistakes,total_elements)
         else:
-            return True, '<br>'.join(output) + '<br>{}'.format(str(''))+'<br>'+token2_sent, (mistakes,total_elements)
+            return True, '<br>'.join(output) + '<br>{}'.format(str(''))+'<br>'+token2_sent[0], (mistakes,total_elements)
         
     def scan_design_manova(self, doc:Doc, solution:dict, prefix:bool=True) -> [bool, str, tuple]:
         total_elements:int = 4
