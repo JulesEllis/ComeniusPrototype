@@ -733,7 +733,7 @@ class ScanFunctions:
         if solution['assignment_type'] != 13:
             scorepoints['factor1'] = True;scorepoints['factor2'] = True
         output:List[str] = []
-        factor_roles:list = ['independent','dependent'] if self.mes['L_ENGLISH'] else ['onafhankelijke', 'afhankelijke']
+        factor_roles:list = ['independent','dependent',' dependent'] if self.mes['L_ENGLISH'] else ['onafhankelijke', 'afhankelijke',' afhankelijke']
         
         tokens = [x.text for x in doc]
         indtoken = [x for x in tokens if simple_lef(solution['independent'].get_all_syns(),x)]
@@ -758,7 +758,7 @@ class ScanFunctions:
             if ind2token != []:
                 scorepoints['ind2'] = True
                 token2_sent = [x for x in doc.text.split('. ') if simple_lef(solution['independent2'].get_all_syns(),x)][0]
-                scorepoints['ind2correct'] = (factor_roles[0] in token2_sent or 'factor' in token2_sent) and not (factor_roles[1] in token2_sent)
+                scorepoints['ind2correct'] = (factor_roles[0] in token2_sent or 'factor' in token2_sent) and not (factor_roles[2] in token2_sent)
         else:
             scorepoints['ind2'] = True;scorepoints['ind2correct'] = True
         deps = [x for x in doc.sents if lef(solution['dependent'].get_all_syns(),[y.text for y in x])]
