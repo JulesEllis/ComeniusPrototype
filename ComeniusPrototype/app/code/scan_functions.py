@@ -737,6 +737,7 @@ class ScanFunctions:
         
         tokens = [x.text for x in doc]
         indtoken = [x for x in tokens if simple_lef(solution['independent'].get_all_syns(),x)]
+        token2_sent = 'test'
         if indtoken != []:
             scorepoints['ind'] = True
             token_location = tokens.index(indtoken[0])
@@ -751,15 +752,12 @@ class ScanFunctions:
                 token2_location = tokens.index(ind2token[0])
                 indep2_span = ' '.join(tokens[token2_location - 2:token2_location + 4])
                 scorepoints['ind2correct'] = (factor_roles[0] in doc.text or 'factor' in doc.text) and not (factor_roles[1] in doc.text)
-                if solution['assignment_type'] == 13:
-                    scorepoints['factor2'] = 'between' in indep2_span
+                scorepoints['factor2'] = 'between' in indep2_span
         elif solution['assignment_type'] == 4:
             ind2token = [x for x in tokens if simple_lef(solution['independent2'].get_all_syns(),x)]
             if ind2token != []:
                 token2_sent = [x for x in doc.text.split('. ') if simple_lef(solution['independent2'].get_all_syns(),x)]
                 scorepoints['ind2correct'] = (factor_roles[0] in token2_sent or 'factor' in token2_sent) and not (factor_roles[1] in token2_sent)
-                if solution['assignment_type'] == 13:
-                    scorepoints['factor2'] = 'between' in token2_sent
         else:
             scorepoints['ind2'] = True;scorepoints['ind2correct'] = True
         deps = [x for x in doc.sents if lef(solution['dependent'].get_all_syns(),[y.text for y in x])]
