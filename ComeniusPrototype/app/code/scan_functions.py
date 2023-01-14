@@ -750,7 +750,7 @@ class ScanFunctions:
                 scorepoints['ind2'] = True
                 token2_location = tokens.index(ind2token[0])
                 indep2_span = ' '.join(tokens[token2_location - 2:token2_location + 4])
-                scorepoints['ind2correct'] = factor_roles[0] in indep2_span or 'factor' in indep2_span
+                scorepoints['ind2correct'] = (factor_roles[0] in doc.text or 'factor' in doc.text) and not (factor_roles[1] in doc.text)
                 if solution['assignment_type'] == 13:
                     scorepoints['factor2'] = 'between' in indep2_span
         else:
@@ -950,8 +950,8 @@ class ScanFunctions:
         output:str = ''
         output += '<br>'+'<br>'.join(self.detect_name(doc,solution))
         output += '<br>' + self.scan_design_manova(doc, solution, prefix=False)[1]
-        for i in range(3):
-            if solution['p_multivar'] < 0.05:
+        if solution['p_multivar'] < 0.05:
+            for i in range(3):
                 var_key = 'dependent' if i < 1 else 'dependent' + str(i+1)
                 #if solution['p'+str(i)][0] < 0.05: #solution['p_multivar'] < 0.05 and solution['p_multivar'] < 0.05:
                 decision_sent = [x for x in doc.sents if lef(solution[var_key].get_all_syns(),[y.text for y in x]) and ('significant' in x.text or 'effect' in x.text)]
@@ -1450,80 +1450,22 @@ class ScanFunctions:
             output.append(self.mes['F_NONEG']+variable)
         return output
     
-    """    
-    def detect_true_scores_old(self, sent:Doc, solution:dict, num=None) -> List[str]:
-        #Define variables
-        criteria:list = ['right_comparison', 'right_negation', 'mean_present', 'pop_present','jacked','contrasign']
-        pop = 'population' if self.mes['L_ENGLISH'] else 'population'
-        popavgs = ['population average','population averages','population mean','population means'] if self.mes['L_ENGLISH'] else ['populatiegemiddelden','populatiegemiddelde']
-        avgs = ['average','mean','averages','means'] if self.mes['L_ENGLISH'] else ['gemiddeld','gemiddelde','gemiddelden']
-        equal = ['gelijk'] if not self.mes['L_ENGLISH'] else ['equal','same']
-        diff = ['ongelijk','anders','verschillend'] if not self.mes['L_ENGLISH'] else ['different','unequal']
-        stepmark = ['stepped-up'] if self.mes['L_ENGLISH'] else ['opgevoerde']
-        scorepoints:dict = dict([(x,False) for x in criteria])
-        rejected:bool = solution['p'][-1] < 0.05
-        tokens:list = [x.text for x in sent]
-        output:List[str] = []
-        
-        #Controleer input
-        comparisons = [x for x in sent if x.text in equal+diff]
-        if comparisons != []:
-            comproot = comparisons[num-1] if len(comparisons) >= num else comparisons[0]
-            #comptree:List = descendants(comproot)
-            #not_present = bool(negation_counter(tokens) % 2)
-            scorepoints['right_comparison'] = comproot.text in equal+diff
-            scorepoints['right_negation'] = bool(comproot.text in diff) == rejected
-            #if comproot.text in diff:
-            #    scorepoints['right_negation'] = not_present != rejected
-            #elif comproot.text in equal:
-            #    scorepoints['right_negation'] = not_present == rejected
-        else:
-            scorepoints['right_negation'] = True
-        scorepoints['jacked'] = any([x in sent.text for x in stepmark])
-            
-        mean = [x in sent.text for x in avgs]
-        mean_2 = [x in sent.text for x in popavgs]
-        scorepoints['mean_present'] = any(mean) or any(mean_2)
-        scorepoints['pop_present'] = any(mean_2) or pop in [x.text for x in sent] or any([x in tokens for x in ['significant','significante']])
-        scorepoints['contrasign'] = not ((any(mean_2) or pop in tokens) and any([x in tokens for x in ['significant','significante']]))
-        
-        #Add strings
-        suffix = ' for the decision of subjects' if self.mes['L_ENGLISH'] else ' voor de beslissing van de subjecten'
-        if not scorepoints['right_comparison']:
-            output.append(self.mes['F_POPLEVELS']+suffix)
-        if not scorepoints['right_negation']:
-            output.append(self.mes['F_INTNEG']+suffix)
-        if not scorepoints['mean_present']:
-            output.append(self.mes['F_DECAVGS']+suffix)
-        if not scorepoints['pop_present']:
-            output.append(self.mes['F_DECPOP']+suffix)
-        if not scorepoints['jacked']:
-            output.append(self.mes['F_JACKEDMEANS']+suffix)
-        if not scorepoints['contrasign']:
-            output.append(self.mes['F_BOTHPOP']+suffix)
-        return output
-    """
-    
     def detect_effect(self, sent:Doc, solution:dict, variable:str, p:float, eta:float) -> List[str]:
         output:List[str] = []
         if p > 0.05:
             return output
-        scorepoints:dict ={'effect_present': False,
-            'strength_present': False,
-            'right_strength': False,
-            'no_wrongs': False}
         gold_strength: int = 2 if eta > 0.2 else 1 if eta > 0.1 else 0
         sizes = ['medium','moderate','small','strong','large','tiny'] if self.mes['L_ENGLISH'] else ['klein','zwak','matig','groot','sterk']
         large = ['strong','large'] if self.mes['L_ENGLISH'] else ['sterk','groot']
         med = ['medium','moderate'] if self.mes['L_ENGLISH'] else ['matig']
         small = ['small','weak'] if self.mes['L_ENGLISH'] else ['klein','zwak']
         effect = [x.text for x in sent if x.text in sizes]
-        scorepoints['effect_present'] = 'effect' in sent.text
-        scorepoints['strength_present'] = any([x in sent.text for x in sizes])
-        scorepoints['right_strength'] = any([x in large if gold_strength == 2 else x in med if gold_strength == 1 else x in small for x in effect])
-        scorepoints['no_wrongs'] = not any([x in large or x in med for x in effect]) if gold_strength == 0 else \
+        scorepoints = {'effect_present': 'effect' in sent.text,
+            'strength_present' : any([x in sent.text for x in sizes]),
+            'right_strength' : any([x in large if gold_strength == 2 else x in med if gold_strength == 1 else x in small for x in effect]),
+            'no_wrongs' : not any([x in large or x in med for x in effect]) if gold_strength == 0 else \
                                    not any([x in large or x in small for x in effect]) if gold_strength == 1 else \
-                                   not any([x in med or x in small for x in effect])
+                                   not any([x in med or x in small for x in effect])}
         if not scorepoints['effect_present'] and scorepoints['strength_present']:
             output.append(self.mes['F_NOSIZE']+variable+self.mes['S_NONAME'])
         if not scorepoints['strength_present']:
@@ -1533,6 +1475,39 @@ class ScanFunctions:
         elif scorepoints['effect_present'] and not scorepoints['no_wrongs']:
             output.append(self.mes['F_STRENGTH']+variable)
         return output
+    
+    def detect_effect_vertical(self, answer:Doc, solution:dict, variable:str, p:float, eta:float, includes:List[str], excludes:List[str]) -> List[str]:
+        output:List[str] = []
+        if p > 0.05:
+            return output
+        else:
+            text = answer.text
+            sents = [x for x in text.split('. ') if all([y in x for y in includes]) and all([y not in x for y in excludes])]
+            if sents == []:
+                return [self.mes['F_STRENGTH']+variable+self.mes['S_NONAME']]
+            else:
+                sent = sents[0]
+                gold_strength: int = 2 if eta > 0.2 else 1 if eta > 0.1 else 0
+                sizes = ['medium','moderate','small','strong','large','tiny'] if self.mes['L_ENGLISH'] else ['klein','zwak','matig','groot','sterk']
+                large = ['strong','large'] if self.mes['L_ENGLISH'] else ['sterk','groot']
+                med = ['medium','moderate'] if self.mes['L_ENGLISH'] else ['matig']
+                small = ['small','weak'] if self.mes['L_ENGLISH'] else ['klein','zwak']
+                effect = [x for x in sizes if x in sent]
+                scorepoints = {'effect_present': 'effect' in sent,
+                    'strength_present' : any([x in sent for x in sizes]),
+                    'right_strength' : any([x in large if gold_strength == 2 else x in med if gold_strength == 1 else x in small for x in effect]),
+                    'no_wrongs' : not any([x in large or x in med for x in effect]) if gold_strength == 0 else \
+                                           not any([x in large or x in small for x in effect]) if gold_strength == 1 else \
+                                           not any([x in med or x in small for x in effect])}
+                if not scorepoints['effect_present'] and scorepoints['strength_present']:
+                    output.append(self.mes['F_NOSIZE']+variable+self.mes['S_NONAME'])
+                if not scorepoints['strength_present']:
+                    output.append(self.mes['F_STRENGTH']+variable+self.mes['S_NONAME'])
+                elif scorepoints['effect_present'] and not scorepoints['right_strength']:
+                    output.append(self.mes['F_STRENGTH']+variable+self.mes['S_NONAME'])
+                elif scorepoints['effect_present'] and not scorepoints['no_wrongs']:
+                    output.append(self.mes['F_STRENGTH']+variable)
+                return output
     
     def detect_unk(self, sent:Doc, solution:dict, num:int=1):
         #Define variables
@@ -1764,9 +1739,9 @@ class ScanFunctions:
         if solution['assignment_type'] == 2:
             names = [('t','-','toets','voor','gekoppelde','paren'),('within','-','subject','t','-','test'),('t','-','test','for','paired','samples')]
         if solution['assignment_type'] == 3:
-            names = [('one','-','way','anova'), ('1-factor','anova'),('1','-','way','anova')]
+            names = [('one','-','way','anova'), ('1-factor','anova'),('1','-','way','anova'),('one','-','factor','anova'),('een',-'','factor','anova')]
         if solution['assignment_type'] == 4:
-            names = [('two','-','way','anova'), ('2-factor','anova'),('2','-','way','anova')]
+            names = [('two','-','way','anova'), ('2-factor','anova'),('2','-','way','anova'),('two','-','factor','anova'),('twee','-','factor','anova')]
         if solution['assignment_type'] == 5:
             names = [('repeated','-','measures','anova'), ('repeated','-','measures','-','anova'),('rmanova')]
         if solution['assignment_type'] == 6:
