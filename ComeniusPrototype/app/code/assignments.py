@@ -1396,11 +1396,12 @@ class Assignments:
             tag = 'the corrected model' if self.mes['L_ENGLISH'] else 'het gecorrigeerde model'
             output += self.answer_decision(assignment, tag, 0, FT=assignment['F_multivar'], p=assignment['p_multivar'],eta=assignment['eta_multivar'],multivariate=True)
             output += self.answer_stats(assignment, FT=assignment['F_multivar'], p=assignment['p_multivar'],eta=assignment['eta_multivar'], multivar=True)+'<br>'
-            for i in range(3):
-                d_key = 'dependent' if i == 0 else 'dependent'+str(i+1)
-                output += self.answer_decision(assignment, assignment[d_key].name, 1, FT=assignment['F'+str(i)][0], p=assignment['p'+str(i)][0],eta=assignment['eta'+str(i)][0], no_effect=False)
-                if assignment['p'+str(i)][0] < 0.05:
-                    output += self.answer_stats(assignment, FT=assignment['F'+str(i)][0], p=assignment['p'+str(i)][0],eta=assignment['eta'+str(i)][0])+'<br>'
+            if assignment['p_multivar'] < 0.05:
+                for i in range(3):
+                    d_key = 'dependent' if i == 0 else 'dependent'+str(i+1)
+                    output += self.answer_decision(assignment, assignment[d_key].name, 1, FT=assignment['F'+str(i)][0], p=assignment['p'+str(i)][0],eta=assignment['eta'+str(i)][0], no_effect=False)
+                    if assignment['p'+str(i)][0] < 0.05:
+                        output += self.answer_stats(assignment, FT=assignment['F'+str(i)][0], p=assignment['p'+str(i)][0],eta=assignment['eta'+str(i)][0])+'<br>'
             output = output.replace('. . ','. ')
         if assignment['assignment_type'] == 12:
             output += self.answer_ancova(assignment)
