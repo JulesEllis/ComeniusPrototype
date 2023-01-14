@@ -756,7 +756,7 @@ class ScanFunctions:
         elif solution['assignment_type'] == 4:
             ind2token = [x for x in tokens if simple_lef(solution['independent2'].get_all_syns(),x)]
             if ind2token != []:
-                token2_sent = [x for x in doc.text.split('. ') if simple_lef(solution['independent2'].get_all_syns(),x)]
+                token2_sent = [x for x in doc.text.split('. ') if simple_lef(solution['independent2'].get_all_syns(),x)][0]
                 scorepoints['ind2correct'] = (factor_roles[0] in token2_sent or 'factor' in token2_sent) and not (factor_roles[1] in token2_sent)
         else:
             scorepoints['ind2'] = True;scorepoints['ind2correct'] = True
@@ -786,7 +786,7 @@ class ScanFunctions:
         if not False in list(scorepoints.values()):        
             return False, self.mes['F_NICEDES'] if prefix else '', (mistakes,total_elements)
         else:
-            return True, '<br>'.join(output) + '<br>{}'.format(str(''))+'<br>'+token2_sent[0], (mistakes,total_elements)
+            return True, '<br>'.join(output) + '<br>{}'.format(str('')), (mistakes,total_elements)
         
     def scan_design_manova(self, doc:Doc, solution:dict, prefix:bool=True) -> [bool, str, tuple]:
         total_elements:int = 4
