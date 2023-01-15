@@ -1016,7 +1016,7 @@ class ScanFunctions:
         output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'][3]))
         output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta'][3], aliases=['eta2','eta']))
         if solution['p'][3] < 0.05:
-            output += '<br>'+self.answer_predictors(solution)
+            output += '<br>'+self.scan_predictors(doc, solution, prefix=False)[1]
             between_sent = [x for x in doc.sents if (lef(solution['independent'].get_all_syns(),[y.text for y in x]) or 'between-subject' in x.text) and ('significant' in x.text or 'effect' in x.text) and (not markers[1] in x.text)]
             if between_sent != []:
                 output += '<br>'+'<br>'.join(self.detect_decision_multirm(between_sent[0], solution, solution['independent'].name, ['between-subject'], solution['p'][2],solution['eta'][2]))
