@@ -737,12 +737,12 @@ class ScanFunctions:
         
         tokens = [x.text for x in doc]
         indtoken = [x for x in tokens if simple_lef(solution['independent'].get_all_syns(),x)]
-        token2_sent = 'test'
         if indtoken != []:
             scorepoints['ind'] = True
             token_location = tokens.index(indtoken[0])
+            token_sent = [x for x in doc.text.split('. ') if simple_lef(solution['independent'].get_all_syns(),x)][0]
             indep_span = ' '.join(tokens[token_location - 4:token_location + 4])
-            scorepoints['indcorrect'] = factor_roles[0] in indep_span or 'factor' in indep_span
+            scorepoints['indcorrect'] = factor_roles[0] in token_sent or 'factor' in token_sent
             if solution['assignment_type'] == 5 or solution['assignment_type'] == 13:
                 scorepoints['factor1'] = 'within' in indep_span
         if solution['assignment_type'] == 13:   
@@ -997,7 +997,6 @@ class ScanFunctions:
         output:str = ''
         output += '<br>'+'<br>'.join(self.detect_name(doc,solution))
         output += '<br>' + self.scan_design(doc, solution, prefix=False)[1]
-        output += '<br>' + self.scan_predictors(doc, solution, prefix=False)[1]
         
         multivar_sent = [x for x in doc.sents if markers[0] in x.text]
         if multivar_sent != []:
@@ -1016,12 +1015,14 @@ class ScanFunctions:
         output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'F', solution['F'][3]))
         output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'][3]))
         output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'eta<sup>2</sup>', solution['eta'][3], aliases=['eta2','eta']))
-        between_sent = [x for x in doc.sents if (lef(solution['independent'].get_all_syns(),[y.text for y in x]) or 'between-subject' in x.text) and ('significant' in x.text or 'effect' in x.text) and (not markers[1] in x.text)]
-        if between_sent != []:
-            output += '<br>'+'<br>'.join(self.detect_decision_multirm(between_sent[0], solution, solution['independent'].name, ['between-subject'], solution['p'][2],solution['eta'][2]))
-            if(solution['p'][2] < 0.05):
-                output += '<br>'+'<br>'.join(self.detect_effect(between_sent[0], solution, variable=solution['independent'].name, p=solution['p'][2], eta=solution['eta'][2]))
-                output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'][2], appendix=solution['independent'].name))
+        if solution['p'][3] < 0.05:
+            output += '<br>'+self.answer_predictors(solution)
+            between_sent = [x for x in doc.sents if (lef(solution['independent'].get_all_syns(),[y.text for y in x]) or 'between-subject' in x.text) and ('significant' in x.text or 'effect' in x.text) and (not markers[1] in x.text)]
+            if between_sent != []:
+                output += '<br>'+'<br>'.join(self.detect_decision_multirm(between_sent[0], solution, solution['independent'].name, ['between-subject'], solution['p'][2],solution['eta'][2]))
+                if(solution['p'][2] < 0.05):
+                    output += '<br>'+'<br>'.join(self.detect_effect(between_sent[0], solution, variable=solution['independent'].name, p=solution['p'][2], eta=solution['eta'][2]))
+                    output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'][2], appendix=solution['independent'].name))
         else:
             output += '<br>'+self.mes['F_NOBTFAC']
         if output.replace('<br>','') == '':
