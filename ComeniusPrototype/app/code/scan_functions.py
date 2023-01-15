@@ -1023,8 +1023,8 @@ class ScanFunctions:
                 if(solution['p'][2] < 0.05):
                     output += '<br>'+'<br>'.join(self.detect_effect(between_sent[0], solution, variable=solution['independent'].name, p=solution['p'][2], eta=solution['eta'][2]))
                     output += '<br>'+'<br>'.join(self.detect_report_stat(doc, 'p', solution['p'][2], appendix=solution['independent'].name))
-        else:
-            output += '<br>'+self.mes['F_NOBTFAC']
+            else:
+                output += '<br>'+self.mes['F_NOBTFAC']
         if output.replace('<br>','') == '':
             return self.mes['F_NICEREP']
         else:

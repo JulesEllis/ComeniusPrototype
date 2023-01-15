@@ -5,7 +5,7 @@ leeftijd;WITHIN;0;1;leeftijden;leeftijd;kind,jong,volwassen,oud;kinderen;jongere
 age;WITHIN;1;1;ages;age;child,teenager,adult,old;children;teenagers;adults;;The subjects are tested at different ages to compare their scores. ;Besides this, the scores they reached at different ages are compared. 
 epoch;WITHIN;1;1;epochs;epoch;precambrian,silurian,paleolithic,quaternary;;;;;The subjects are shown information about a number of prehistoric epochs. ;They are also shown information about a number of prehistoric epochs. 
 tijdperk;WITHIN;0;1;tijdperken;tijdperk;precambrium,siluur,paleolithicum,quartair;;;;;De subjecten krijgen informatie te zien over een aantal tijdperken uit de prehistorie. ;Hiernaast krijgen ze informatie te zien over een aantal tijdperken uit de prehistorie. 
-stimulus shape;BETWEEN;1;1;stimuli;stimulus;round,square;;;;;The subjects are shown two stimuli, one round and one square. ;They are also shown two stimuli, one circular and one square. 
+stimulus shape;BETWEEN;1;1;stimuli,stimulus;stimulus;round,square;;;;;The subjects are shown two stimuli, one round and one square. ;They are also shown two stimuli, one circular and one square. 
 stimulusvorm;BETWEEN;0;1;stimulusvormen;stimulusvorm;rond,vierkant;ronde;vierkante;;;De subjecten krijgen twee stimuli te zien, een vierkant en een cirkel. ;Ze krijgen tegelijkertijd twee stimuli te zien, een vierkant en een cirkel. 
 weather;BETWEEN;1;1;;weather;sun,rain;;;;;The subjects are tested in different weather conditions. ;They are tested under two different weather conditions, sun and rain. 
 weer;BETWEEN;0;1;;weer;zon,regen;;;;;De subjecten worden getest onder twee verschillende weersomstandigheden, zon en regen. ;Ze worden getest onder twee verschillende weersmonstandigheden, zon en regen. 
