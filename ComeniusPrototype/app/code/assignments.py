@@ -533,7 +533,7 @@ class Assignments:
         solution['null']: str = 'H0: ' + ' = '.join(['mu(' + x + ')' for x in assignment['independent'].levels])
         solution['null2']: str = 'H0: tau(subject 1) = tau(subject 2) [...] = tau(subject '+str(data['n_subjects'])+')'
         rejected: Tuple[str] = (self.mes['S_REJECTED'],self.mes['S_UNQ']) if solution['p'][0] < 0.05 else (self.mes['S_KEPT'],self.mes['S_EQ'])
-        solution['decision']: str = 'H0 ' + rejected[0] + self.mes['S_AVGSARE']+solution['dependent'].name+self.mes['A_FORLEVELS']+ self.mes['S_AND'].join(assignment['independent'].levels[:assignment['data']['n_conditions']]) + self.mes['S_AREAVG'] + rejected[1] + '. '
+        solution['decision']: str = 'H0 ' + rejected[0] + self.mes['S_AVGSARE']+solution['dependent'].name+self.mes['A_FORLEVELS']+ self.mes['S_AND'].join(assignment['independent'].levels[:nc]) + self.mes['S_AREAVG'] + rejected[1] + '. '
         if solution['p'][0]:
             sterkte:str = self.mes['S_STRONG'] if solution['r2'][0] > 0.2 else self.mes['S_MEDIUM'] if solution['r2'][0] > 0.1 else self.mes['S_SMALL']
             solution['decision'] += self.mes['S_EFFECTIS']+sterkte+'.'
