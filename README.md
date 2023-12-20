@@ -1,2 +1,4 @@
-# Comenius homework application
-This project contains the Comenius homework application for the Radbout University social sciences faculty. 
+# CASWIC
+This project contains CASWIC: Coaching App for Statistical Writing in Introductory Course.
+This app was created in the Radbout University, Faculty of Social Sciences, with a Comenius Senior grant. 
+
